@@ -100,8 +100,8 @@
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
 
 # phenotype
-'EOM': 'http://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
-
+'EOM': 'https://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
+'EOM_IMG': 'https://elementsofmorphology.nih.gov/images/terms/'
 # publication/reference sources
 'DOI': 'http://dx.doi.org/'                                         # Digital Object identifier
 'GeneReviews': 'http://www.ncbi.nlm.nih.gov/books/'                 # NCBI gene and diseases
