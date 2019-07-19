@@ -172,12 +172,12 @@ class HGNC(OMIMSource):
                 # refseq_accession = row[col.index('refseq_accession')]
                 # ccds_id = row[col.index('ccds_id')]
                 # uniprot_ids = row[col.index('uniprot_ids')]
-                pubmed_ids = row[col.index('pubmed_id')].strip()  # pipe seperated!
+                pubmed_ids = row[col.index('pubmed_id')].strip()  # pipe separated!
                 # mgd_id = row[col.index('mgd_id')]
                 # rgd_id = row[col.index('rgd_id')]
                 # lsdb = row[col.index('lsdb')]
                 # cosmic = row[col.index('cosmic')]
-                omim_ids = row[col.index('omim_id')].strip()  # pipe seperated!
+                omim_ids = row[col.index('omim_id')].strip()  # pipe separated!
                 # mirbase = row[col.index('mirbase')]
                 # homeodb = row[col.index('homeodb')]
                 # snornabase = row[col.index('snornabase')]
