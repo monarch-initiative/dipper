@@ -192,7 +192,7 @@ class UCSCBands(Source):
             self.test_mode = True
 
         for taxon in self.tax_ids:
-            self._get_chrbands(limit, str(taxon))
+            self._get_chrbands(limit, taxon, 'UCSC:'+self.files[taxon]['build_num'])
 
         self._create_genome_builds()
 
@@ -200,7 +200,7 @@ class UCSCBands(Source):
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
 
-    def _get_chrbands(self, limit, taxon):
+    def _get_chrbands(self, limit, taxon, genome_id):
         """
         :param limit:
         :return:
@@ -228,7 +228,7 @@ class UCSCBands(Source):
         model.addClassToGraph(taxon_id, None)
         model.addSynonym(taxon_id, genome_label)
 
-        geno.addGenome(taxon_id, genome_label)
+        geno.addGenome(taxon_id, genome_label, genome_id)
 
         # add the build and the taxon it's in
         build_num = self.files[taxon]['build_num']

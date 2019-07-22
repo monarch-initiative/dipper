@@ -169,12 +169,14 @@ class Monochrom(Source):
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
 
-    def _get_chrbands(self, limit, taxon):
+    def _get_chrbands(self, limit, taxon, genome_id=None):
         """
         For the given taxon, it will fetch the chr band file.
         We will not deal with the coordinate information with this parser.
         Here, we only are concerned with building the partonomy.
         :param limit:
+        :param: taxon:
+        :param: genome
         :return:
 
         """
@@ -192,7 +194,8 @@ class Monochrom(Source):
         model.addClassToGraph(taxon_id, None)
         model.addSynonym(taxon_id, genome_label)
 
-        genome_id = geno.makeGenomeID(taxon_id)
+        if genome_id is None:
+            genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node allways
         geno.addGenome(taxon_id, genome_label)
         model.addOWLPropertyClassRestriction(
             genome_id, self.globaltt['in taxon'], taxon_id)
