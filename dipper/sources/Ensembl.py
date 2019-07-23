@@ -185,7 +185,7 @@ class Ensembl(Source):
             line = line.rstrip()
             row = line.split('\t')
             line_num += 1
-            if len(row) != len(col) or row[col.index('ensembl_peptide_id')] == '':
+            if len(row) != len(col_exp) or row[col.index('ensembl_peptide_id')] == '':
                 # LOG.warning('line %i is: %s', line_num, row)
                 # ... many rows have no protein id
                 pass
@@ -247,7 +247,7 @@ class Ensembl(Source):
         if taxid != '9606' and 'hgnc_id' in cols_to_fetch:
             cols_to_fetch.remove('hgnc_id')
 
-        LOG.info('Fetching columns', cols_to_fetch)
+        LOG.info('Fetching columns %s', cols_to_fetch)
 
         query_attributes = {
             "virtualSchemaName": "default", "formatter": "TSV", "header": "1",
