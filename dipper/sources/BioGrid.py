@@ -55,7 +55,7 @@ class BioGrid(Source):
         # our favorite animals
         # taxids = [9606,10090,10116,7227,7955,6239,8355]
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
+            self.tax_ids = ['9606', '10090', '7955']
 
         if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
@@ -154,8 +154,8 @@ class BioGrid(Source):
                 else:
                     graph = self.graph
                     # when not in test mode, filter by taxon
-                    if int(taxid_a.split(':')[-1]) not in self.tax_ids or \
-                            int(taxid_b.split(':')[-1]) not in self.tax_ids:
+                    if taxid_a.split(':')[-1] not in self.tax_ids or \
+                            taxid_b.split(':')[-1] not in self.tax_ids:
                         continue
                     else:
                         matchcounter += 1
