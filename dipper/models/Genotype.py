@@ -442,7 +442,7 @@ class Genotype():
 
         genome_label = taxon_label + ' genome'
         if genome_id is None:
-            genome_id = self.makeGenomeID(taxon_id)
+            genome_id = self.makeGenomeID(taxon_num)
         self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'])
 
         return
