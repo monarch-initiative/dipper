@@ -133,10 +133,9 @@ class StringDB(Source):
             ensembl = Ensembl(self.graph_type, self.are_bnodes_skized)
             string_file_path = '/'.join((
                 self.rawdir, protein_paths[taxon]['file']))
-
+            p2gene_map = dict()
             with gzip.open(string_file_path, 'rb') as reader:
                 dataframe = pd.read_csv(reader, sep=r'\s+')
-            p2gene_map = dict()
 
             if taxon in self.id_map_files:
                 LOG.info("Using string provided id_map files")
@@ -144,11 +143,8 @@ class StringDB(Source):
 
                 with gzip.open(map_file, 'rt') as reader:
                     line = next(reader).strip()
-                    if line != '# NCBI taxid / entrez / STRING':
-                        LOG.error(
-                            'Expected Headers:\t%s\nRecived Headers:\t%s\n', col, line)
-                        exit(-1)
-
+                    if not self.check_fileheader(col, line[1:]):
+                        pass
                     for line in reader.readlines():
                         row = line.rstrip('\n').split('\t')
                         # tax = row[col.index(''NCBI taxid')].strip()
@@ -161,9 +157,7 @@ class StringDB(Source):
             else:
                 LOG.info("Fetching ensembl proteins for taxon %s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
-                for key in p2gene_map:
-                    for phen, gene in enumerate(p2gene_map[key]):
-                        p2gene_map[key][phen] = "ENSEMBL:{}".format(gene)
+                p2gene_map.update({k: ['ENSEMBL:'+p2gene_map[k]] for k in p2gene_map})
 
             LOG.info(
                 "Finished fetching ENSP ID mappings, fetched %i proteins",
