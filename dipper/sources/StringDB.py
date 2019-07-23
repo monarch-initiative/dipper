@@ -142,8 +142,9 @@ class StringDB(Source):
                 map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
                 with gzip.open(map_file, 'rt') as reader:
-                    line = next(reader).strip()
-                    if not self.check_fileheader(col, line[1:]):
+                    line = next(reader)
+                    row = line[2:-2].split(' / ')
+                    if not self.check_fileheader(col, row):
                         pass
                     for line in reader.readlines():
                         row = line.rstrip('\n').split('\t')
