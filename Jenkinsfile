@@ -41,7 +41,7 @@ pipeline {
                     )
                     sh '''
                         cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                        virtualenv -p /usr/bin/python3 venv
+                        virtualenv -p /usr/bin/python3.6 venv
                         venv/bin/pip install -r requirements.txt
                         venv/bin/pip install -r requirements/all-sources.txt
 
@@ -62,7 +62,7 @@ pipeline {
                         }
                     }
                     steps {
-
+                        dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh """
                                 wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
@@ -80,6 +80,8 @@ pipeline {
                                 sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIM_/http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/identifiers.org\\/omim\\//http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/identifiers.org\\/hgnc\\//http:\\/\\/www.genenames.org\\/cgi-bin\\/gene_symbol_report?hgnc_id=/' ./monarch-merged.owl
+                                sed -i 's/http:\\/\\/www.informatics.jax.org\\/marker\\/MGI:/http:\\/\\/www.informatics.jax.org\\/accession\\/MGI:/' ./monarch-merged.owl
+                                sed -i 's/http:\\/\\/www.ncbi.nlm.nih.gov\\/gene\\//https:\\/\\/www.ncbi.nlm.nih.gov\\/gene\\//' ./monarch-merged.owl
 
                                 scp monarch-merged.owl monarch@$MONARCH_DATA_FS:/var/www/data/owl/
                             """
