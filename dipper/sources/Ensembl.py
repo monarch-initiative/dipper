@@ -157,7 +157,7 @@ class Ensembl(Source):
 
     def fetch_protein_gene_map(self, taxon_id):
         """
-        Fetch a mapping of ensembl_gene to proteins for a species in biomart
+        Fetch a mapping from proteins to ensembl_gene(S)? for a species in biomart
         :param taxid:
         :return: dict
         """
@@ -177,25 +177,31 @@ class Ensembl(Source):
         conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
-        line = next(response).decode('utf-8').rstrip()
-        row = line.split('\t')
-
-        line_num = 1
-        if not self.check_fileheader(col_exp, row):
-            pass  #
-
+        buf = ""
+        line_num = 0
         for line in response:
-            line = line.decode('utf-8').rstrip()
+            line = line.decode('utf-8')
+            buf = buf + line
+            line = line.rstrip()
             row = line.split('\t')
             line_num += 1
-            if len(row) != len(col):
+            if len(row) != len(col) or row[col.index('ensembl_peptide_id')] == '':
                 # LOG.warning('line %i is: %s', line_num, row)
+                # ... many rows have no protein id
                 pass
             else:
-                # string-test seems to expect the value as a list
-                # protein_dict[row[1]] = [row[0]]
                 protein_dict[row[col.index('ensembl_peptide_id')]] = row[
                     col.index('ensembl_gene_id')]
+
+        # hard to know what is there if we never get to check ...
+        with open(self.rawdir + '/' + 'gene_prot' + taxon_id + '.resp', 'w') as writer:
+            writer.write(str(buf))
+        # observed (for human):
+        #  - no protien appears more than once
+        #  - so no protein could be associated with more than one gene
+        #  - so there is no list of genes associated with a protein
+        # may have to revisit if other species behave differently
+        # (now writing out per species)
 
         conn.close()
         LOG.info(
