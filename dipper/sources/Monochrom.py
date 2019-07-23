@@ -196,7 +196,7 @@ class Monochrom(Source):
 
         if genome_id is None:
             genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node allways
-        geno.addGenome(taxon_id, genome_label)
+        geno.addGenome(taxon_id, genome_label, genome_id)
         model.addOWLPropertyClassRestriction(
             genome_id, self.globaltt['in taxon'], taxon_id)
 
@@ -252,12 +252,13 @@ class Monochrom(Source):
                 maplocclass_id = cclassid+band
                 maplocclass_label = makeChromLabel(chrom+band, genome_label)
                 if band is not None and band.strip() != '':
+
                     region_type_id = self.map_type_of_region(rtype)
                     model.addClassToGraph(
-                        maplocclass_id, maplocclass_label,
-                        region_type_id)
+                        maplocclass_id, maplocclass_label, region_type_id)
                 else:
                     region_type_id = self.globaltt['chromosome']
+
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
                     if region_type_id in [
@@ -274,7 +275,7 @@ class Monochrom(Source):
                         # they don't actually have banding info
                         LOG.info("feature type %s != chr band", region_type_id)
                 else:
-                    LOG.warning('staining type not found: %s', rtype)
+                    LOG.info('staining type not found for: %s', rtype)
 
                 # get the parent bands, and make them unique
                 parents = list(self.make_parent_bands(band, set()))
