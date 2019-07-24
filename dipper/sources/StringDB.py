@@ -7,8 +7,9 @@ from dipper.sources.Ensembl import Ensembl
 
 LOG = logging.getLogger(__name__)
 
-STRING_DWN = "http://string-db.org/download"
-STRING_MAP = 'https://string-db.org/mapping_files/entrez'
+STRING = 'https://string-db.org'
+STRING_DWN = STRING + "/download"
+STRING_MAP = STRING + '/mapping_files/entrez'
 DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239', '4932']
 # https://string-db.org/cgi/access.pl?footer_active_subpage=archive
 # TODO automate it with:
@@ -40,9 +41,9 @@ class StringDB(Source):
             are_bnodes_skolemized,
             'string',
             ingest_title='Known and predicted protein-protein interactions',
-            ingest_url='https://string-db.org/',
+            ingest_url=STRING,
             license_url=None,
-            data_rights='https://string-db.org/cgi/access.pl?footer_active_subpage=licensing'
+            data_rights=STRING+'/cgi/access.pl?footer_active_subpage=licensing'
             # file_handle=None
         )
 
@@ -113,8 +114,8 @@ class StringDB(Source):
         """
 
         file_paths = self._get_file_paths(self.tax_ids, 'protein_links')
-        self.get_files(is_dl_forced, file_paths)
-        self.get_files(is_dl_forced, self.id_map_files)
+        self.get_files(is_dl_forced, file_paths, delay=5)
+        self.get_files(is_dl_forced, self.id_map_files, delay=5)
 
     def parse(self, limit=None):
         """
@@ -156,9 +157,9 @@ class StringDB(Source):
                         p2gene_map[prot.replace(taxon + '.', '')] = [
                             "NCBIGene:" + entrez_id for entrez_id in genes]
             else:
-                LOG.info("Fetching ensembl proteins for taxon %s", taxon)
+                LOG.info("Fetching ensembl protein_gene dict for NCBITaxon:%s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
-                p2gene_map.update({k: ['ENSEMBL:'+p2gene_map[k]] for k in p2gene_map})
+                p2gene_map.update({k: ['ENSEMBL:' + p2gene_map[k]] for k in p2gene_map})
 
             LOG.info(
                 "Finished fetching ENSP ID mappings, fetched %i proteins",
