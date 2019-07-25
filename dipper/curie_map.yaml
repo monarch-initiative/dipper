@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201907/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201908/'   # Release RDF data
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
@@ -229,7 +229,6 @@
 # Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound
 'DrugBank': 'http://www.drugbank.ca/drugs/'                 # DrugBank database (drugs and drug targets)
-'SIO': 'http://semanticscience.org/resource/SIO_'           # Semanticscience Integrated Ontology
 'OAE': 'http://purl.obolibrary.org/obo/OAE_'                # Ontology of Adverse Events
 'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'     # Normalized names for clinical drugs (from Unified Medical Language System)
 'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'    # Medical Dictionary for Regulatory Activities

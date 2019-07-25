@@ -3,13 +3,13 @@
     OBO:SEPIO_0000015 BNODE:b13b11feeac6001ef4e1 ;
     OBAN:association_has_object <http://omim.org/entry/609016> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/194917> ;
     oboInOwl:hasdbxref ClinVar:RCV000175394 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> a foaf:organization ;
     rdfs:label "Counsyl" .
 
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> a OBO:SO_0001483 ;
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/194917> a OBO:SO_0001483 ;
     rdfs:label "NM_000182.4(HADHA):c.2146+1G>A" ;
     OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/150946> ;
     OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/3030> ;
