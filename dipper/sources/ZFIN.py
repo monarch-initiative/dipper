@@ -633,8 +633,7 @@ class ZFIN(Source):
                 # alleles in zfin are really sequence alterations in our system
                 geno.addSequenceAlteration(allele_id, allele_name, allele_type_id)
                 model.addSynonym(allele_id, allele_ab,
-                                 class_category=blv.SequenceVariant.value,
-                                 synonym_category=blv.SequenceVariant.value)
+                                 class_category=blv.SequenceVariant.value)
 
                 # here, we assemble the items into a genotype hash
                 # we need to do this because each row only holds one allele
