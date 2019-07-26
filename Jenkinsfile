@@ -99,7 +99,7 @@ pipeline {
                         sh '''
                             SOURCE=stringdb
                             $DIPPER --sources $SOURCE --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                            scp ./out/string.ttl ./out/string_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
                 }

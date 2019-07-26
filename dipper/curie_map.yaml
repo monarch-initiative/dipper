@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201907/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201908/'   # Release RDF data
 
 'biolink': 'http://w3id.org/biolink/vocab/'                         # Biolink model
 
@@ -102,8 +102,8 @@
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
 
 # phenotype
-'EOM': 'http://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
-
+'EOM': 'https://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
+'EOM_IMG': 'https://elementsofmorphology.nih.gov/images/terms/'
 # publication/reference sources
 'DOI': 'http://dx.doi.org/'                                         # Digital Object identifier
 'GeneReviews': 'http://www.ncbi.nlm.nih.gov/books/'                 # NCBI gene and diseases
@@ -177,6 +177,7 @@
 
 # pathways
 'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'              # Kyoto Encyclopedia of Genes and Genomes (pathways)
+'KEGG-img': 'http://www.genome.jp/kegg/pathway/map/map'                 # Pathway Visualization
 'REACT': 'http://www.reactome.org/PathwayBrowser/#/'                    # Manually curated pathway database
 'SMPDB': 'http://smpdb.ca/view/'                                        # Small Molecule Pathway Database
 
@@ -210,7 +211,7 @@
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
 # proteins
-'EC': 'http://www.enzyme-database.org/query.php?ec='                            # Enzyme Commission (nomenclature)
+'EC': 'https://www.enzyme-database.org/query.php?ec='                           # Enzyme Commission (nomenclature)
 'HPRD': 'http://www.hprd.org/protein/'                                          # Human Protein Reference Database
 'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
 'PDB': 'http://www.ebi.ac.uk/pdbsum/'                                           # Protein Data Bank
@@ -230,7 +231,6 @@
 # Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound
 'DrugBank': 'http://www.drugbank.ca/drugs/'                 # DrugBank database (drugs and drug targets)
-'SIO': 'http://semanticscience.org/resource/SIO_'           # Semanticscience Integrated Ontology
 'OAE': 'http://purl.obolibrary.org/obo/OAE_'                # Ontology of Adverse Events
 'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'     # Normalized names for clinical drugs (from Unified Medical Language System)
 'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'    # Medical Dictionary for Regulatory Activities

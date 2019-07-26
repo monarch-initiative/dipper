@@ -30,7 +30,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
     OBO:SEPIO_0000098 :MONARCH_b6b194b585b6811c6b2a ;
     OBAN:association_has_object <http://omim.org/entry/121050> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/375300> ;
     oboInOwl:hasdbxref ClinVar:RCV000416376 .
 
 :MONARCH_b6b194b585b6811c6b2a a OBAN:association ;
@@ -39,7 +39,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
     OBO:SEPIO_0000098 :MONARCH_b49bb52f6925e2bf5458 ;
     OBAN:association_has_object <http://omim.org/entry/154700> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/375300> ;
     oboInOwl:hasdbxref ClinVar:RCV000416376 .
 
 <http://omim.org/entry/121050> rdfs:label "Congenital contractural arachnodactyly" .
@@ -49,7 +49,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> a foaf:organization ;
     rdfs:label "Diagnostics Division,Centre for DNA Fingerprinting and Diagnostics" .
 
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> a OBO:SO_0001483 ;
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/375300> a OBO:SO_0001483 ;
     rdfs:label "NM_001999.3(FBN2):c.2945G>T (p.Cys982Phe)" ;
     OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/2201> ;
     OBO:GENO_0000841 <http://omim.org/entry/121050>,

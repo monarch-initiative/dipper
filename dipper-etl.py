@@ -119,7 +119,8 @@ def main():
         tax_ids = [t for t in args.taxon.split(',') if t.isdigit()]
 
     taxa_supported = [  # these are not taxa, janky approach
-        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee','StringDB']
+        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands',
+        'GeneOntology', 'Bgee', 'StringDB']
 
     formats_supported = [
         'turtle', 'ttl',
@@ -245,20 +246,18 @@ def main():
                 LOG.info("Found %d nodes", len(mysource.graph))
 
                 # Add property axioms
-
                 start_axiom_exp = time.perf_counter()
                 LOG.info("Adding property axioms")
 
                 properties = GraphUtils.get_properties_from_graph(mysource.graph)
                 GraphUtils.add_property_axioms(mysource.graph, properties)
-                end_axiom_exp = time.clock()
-                LOG.info("Property axioms added: %d sec", end_axiom_exp-start_axiom_exp)
+                LOG.info(
+                    "Property axioms added: %d sec",
+                    time.perf_counter() - start_axiom_exp)
 
                 start_write = time.perf_counter()
                 mysource.write(fmt=args.dest_fmt)
-
-                end_write = time.perf_counter()
-                LOG.info("Writing time: %d sec", end_write-start_write)
+                LOG.info("Writing time: %d sec", time.perf_counter()-start_write)
 
         # if args.no_verify is not True:
         #    status = mysource.verify()

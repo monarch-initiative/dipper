@@ -73,7 +73,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
         :MONARCH_b9abe7978a362ddcafa3 ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
     oboInOwl:hasdbxref ClinVar:RCV000112698 .
 
 :MONARCH_b688d9615bbfa9e0f7df a OBAN:association ;
@@ -83,7 +83,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
         :MONARCH_b9abe7978a362ddcafa3 ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
     oboInOwl:hasdbxref ClinVar:RCV000112698 .
 
 :MONARCH_b9abe7978a362ddcafa3 a OBAN:association ;
@@ -93,10 +93,10 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
         :MONARCH_b688d9615bbfa9e0f7df ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
-    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
     oboInOwl:hasdbxref ClinVar:RCV000112698 .
 
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> a OBO:SO_0001483 ;
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> a OBO:SO_0001483 ;
     rdfs:label "NM_007294.3(BRCA1):c.5535C>A (p.Tyr1845Ter)" ;
     OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/672> ;
     OBO:GENO_0000840 <http://omim.org/entry/604370> ;

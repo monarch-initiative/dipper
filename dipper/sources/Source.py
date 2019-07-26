@@ -338,7 +338,7 @@ class Source:
 
         return is_remote_newer
 
-    def get_files(self, is_dl_forced, files=None):
+    def get_files(self, is_dl_forced, files=None, delay=0):
         """
         Given a set of files for this source, it will go fetch them, and
         set a default version by date.  If you need to set the version number
@@ -363,7 +363,9 @@ class Source:
                 self.dataset.setFileAccessUrl(filesource['clean'])
             else:
                 self.dataset.setFileAccessUrl(filesource['url'])
-                LOG.info('Fetching %s', filesource['url'])
+                LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
+
+            time.sleep(delay)
 
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),

@@ -383,9 +383,11 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
                 ))
         variant.alleles.append(allele)
 
-    # Infer type and ID if a variant only has one allele
+    # If a variant only has one allele
+    # Infer variant type from allele type
+    # and allele ID from the variant ID
     if len(variant.alleles) == 1:
-        variant.id = variant.alleles[0].id
+        variant.alleles[0].id = variant.id
         variant.variant_type = variant.alleles[0].variant_type
 
     if variant.variant_type is None:

@@ -507,8 +507,8 @@ class Genotype():
 
         return
 
-    def addGenome(self, taxon_id, taxon_label=None):
-        ncbitaxon = 'NCBITaxon:' + taxon_id
+    def addGenome(self, taxon_num, taxon_label=None, genome_id=None):
+        ncbitaxon = 'NCBITaxon:' + taxon_num
         if taxon_label is None:
             if ncbitaxon in self.globaltcid:
                 taxon_label = self.globaltcid[ncbitaxon]
@@ -524,7 +524,9 @@ class Genotype():
                 ' may need to be added to a local translation table')
 
         genome_label = taxon_label + ' genome'
-        genome_id = self.makeGenomeID(taxon_id)
+
+        if genome_id is None:
+            genome_id = self.makeGenomeID(taxon_num)
         self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'],
                                    class_category=blv.Genome.value)
 
@@ -548,6 +550,8 @@ class Genotype():
     def makeGenomeID(taxon_id):
         # scrub off the taxon prefix.  put it in base space
         # TODO: revisit as yet another BNODE?
+        # should never be called if a real genome iri exists
+        # should create the opaque bode and label together
         # genome_id = re.sub(r'.*\:', '_:', taxon_id) + 'genome'
         genome_id = '_:' + taxon_id + 'genome'
         return genome_id

@@ -10,7 +10,18 @@
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505721> a foaf:organization ;
     rdfs:label "Medical Research Institute,Tokyo Medical and Dental University" .
 
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/165917> a OBO:SO_0001483 ;
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/157773> a OBO:SO_0001483 ;
+    rdfs:label "NM_018136.4(ASPM):c.10168C>T (p.Arg3390Ter)" ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000001.10:g.197056096G>A",
+        "NC_000001.11:g.197086966G>A",
+        "NG_015867.1:g.64729C>T",
+        "NM_018136.4:c.10168C>T",
+        "NP_060606.3:p.Arg3390Ter" ;
+    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/242641> a OBO:SO_0001483 ;
     rdfs:label "NM_018136.4(ASPM):c.8098C>T (p.Arg2700Ter)" ;
     OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 ;
@@ -22,21 +33,10 @@
         "NP_060606.3:p.Arg2700Ter" ;
     owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=730882076> .
 
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/165918> a OBO:SO_0001483 ;
-    rdfs:label "NM_018136.4(ASPM):c.10168C>T (p.Arg3390Ter)" ;
-    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
-    oboInOwl:hasExactSynonym "NC_000001.10:g.197056096G>A",
-        "NC_000001.11:g.197086966G>A",
-        "NG_015867.1:g.64729C>T",
-        "NM_018136.4:c.10168C>T",
-        "NP_060606.3:p.Arg3390Ter" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
-
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> a OBO:GENO_0000402 ;
     rdfs:label "NM_018136.4(ASPM):c.[10168C>T];[8098C>T]" ;
-    OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/165917>,
-        <http://www.ncbi.nlm.nih.gov/clinvar/variation/165918> ;
+    OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/157773>,
+        <http://www.ncbi.nlm.nih.gov/clinvar/variation/242641> ;
     OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
     OBO:GENO_0000608 OBO:GENO_0000402 ;
     OBO:GENO_0000840 <http://omim.org/entry/608716> ;

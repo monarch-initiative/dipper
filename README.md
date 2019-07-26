@@ -22,7 +22,7 @@ loading the data into a triple store or graph database that is optimized for use
 Smaller files can be loaded into an ontology editor like [Protege](http://protege.stanford.edu/).
 
 ## Installing Dipper:
-Dipper requires [Python 3.5](https://www.python.org/downloads/) or higher.
+Dipper requires [Python 3.6](https://www.python.org/downloads/) or higher.
 
 
 * To run the dipper pipeline, or use it as a python module, install the latest stable version with pip:

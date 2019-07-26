@@ -169,12 +169,14 @@ class Monochrom(Source):
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
 
-    def _get_chrbands(self, limit, taxon):
+    def _get_chrbands(self, limit, taxon, genome_id=None):
         """
         For the given taxon, it will fetch the chr band file.
         We will not deal with the coordinate information with this parser.
         Here, we only are concerned with building the partonomy.
         :param limit:
+        :param: taxon:
+        :param: genome
         :return:
 
         """
@@ -194,8 +196,9 @@ class Monochrom(Source):
         model.addSynonym(taxon_id, genome_label,
                          class_category=blv.OrganismTaxon.value)
 
-        genome_id = geno.makeGenomeID(taxon_id)
-        geno.addGenome(taxon_id, genome_label)
+        if genome_id is None:
+            genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node allways
+        geno.addGenome(taxon_id, genome_label, genome_id)
         model.addOWLPropertyClassRestriction(
             genome_id, self.globaltt['in taxon'], taxon_id,
             class_category=blv.Genome.value,
@@ -255,14 +258,15 @@ class Monochrom(Source):
                 maplocclass_id = cclassid+band
                 maplocclass_label = makeChromLabel(chrom+band, genome_label)
                 if band is not None and band.strip() != '':
+
                     region_type_id = self.map_type_of_region(rtype)
                     model.addClassToGraph(
-                        maplocclass_id, maplocclass_label,
-                        region_type_id,
-                        class_category=blv.GenomicSequenceLocalization.value,
-                        class_type_category=blv.GenomicSequenceLocalization.value)
+                        maplocclass_id, maplocclass_label, region_type_id,
+                          class_category=blv.GenomicSequenceLocalization.value,
+                          class_type_category=blv.GenomicSequenceLocalization.value)
                 else:
                     region_type_id = self.globaltt['chromosome']
+
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
                     if region_type_id in [
@@ -282,7 +286,7 @@ class Monochrom(Source):
                         # they don't actually have banding info
                         LOG.info("feature type %s != chr band", region_type_id)
                 else:
-                    LOG.warning('staining type not found: %s', rtype)
+                    LOG.info('staining type not found for: %s', rtype)
 
                 # get the parent bands, and make them unique
                 parents = list(self.make_parent_bands(band, set()))
