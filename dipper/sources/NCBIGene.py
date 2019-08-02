@@ -116,7 +116,7 @@ class NCBIGene(OMIMSource):
             ingest_url='http://ncbi.nih.nlm.gov/gene',
             # ingest_desc=None,
             license_url='https://creativecommons.org/publicdomain/mark/1.0/',
-            data_rights='http://www.ncbi.nlm.nih.gov/About/disclaimer.html'
+            data_rights='https://www.ncbi.nlm.nih.gov/home/about/policies/'
             # file_handle=None
         )
 
