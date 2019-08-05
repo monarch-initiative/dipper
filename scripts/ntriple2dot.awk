@@ -137,7 +137,7 @@ BEGIN{
 	# kegg
 	prefix["http://www.genome.jp/kegg/pathway/map/map"]="KEGG-img"
 	# in EOM
-	prefix['https://elementsofmorphology.nih.gov/images/terms/']="EOM_IMG"
+	prefix["https://elementsofmorphology.nih.gov/images/terms/"]="EOM_IMG"
 
 	# playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier
