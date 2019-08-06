@@ -113,7 +113,11 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=panther
-                            $DIPPER --sources $SOURCE --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615 --dest_fmt nt
+                            mkdir -p raw/panther && cd raw/panther
+                            wget ftp://ftp.pantherdb.org/ortholog/current_release/RefGenomeOrthologs.tar.gz
+                            wget ftp://ftp.pantherdb.org/ortholog/current_release/Orthologs_HCOP.tar.gz
+                            cd -
+                            $DIPPER --sources $SOURCE --parse_only --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615 --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
