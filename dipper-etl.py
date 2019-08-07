@@ -259,17 +259,7 @@ def main():
                 mysource.write(fmt=args.dest_fmt)
                 LOG.info("Writing time: %d sec", time.perf_counter()-start_write)
 
-        # if args.no_verify is not True:
-        #    status = mysource.verify()
-        #    if status is not True:
-        #        LOG.error(
-        #            'Source %s did not pass verification tests.', source)
-        #        exit(1)
-        # else:
-        #    LOG.info('skipping verification step')
         LOG.info('***** Finished with %s *****', source)
-    # load configuration parameters
-    # for example, keys
 
     LOG.info("All done.")
 
