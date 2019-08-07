@@ -4,6 +4,9 @@ import unittest
 import logging
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
+from dipper import curie_map as curiemap
+from rdflib.namespace import *
+from rdflib import URIRef
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -26,7 +29,16 @@ class DatasetTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.source = FakeIngestClass("rdf_graph", False)
+        self.curie_map = curiemap.get()
+        self.ingest_id = "fakeingest"
+
+        # load source and fetch files to make dataset graph containing metadata
+        self.source = FakeIngestClass("rdf_graph", False, self.ingest_id)
+        self.source.fetch()
+
+        # expected summary level IRI
+        self.summary_level_IRI = ":".join(URIRef(self.curie_map.get("MONARCH"),
+                                                 self.ingest_id))
 
     def tearDown(self):
         pass
@@ -36,34 +48,45 @@ class DatasetTestCase(unittest.TestCase):
                         "source object doesn't have dataset attribute")
 
     def test_dataset_has_graph(self):
-        self.assertIsInstance(self.source.graph, RDFGraph)
+        self.assertIsInstance(self.source.graph, RDFGraph,
+                              "dataset doesn't contain a graph")
+
+    def test_summary_level_type(self):
+        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
+        summary_level_type_triple = list(self.source.dataset.graph.triples(
+            (URIRef(self.summary_level_IRI), RDF.type,
+             URIRef("http://purl.org/dc/dcmitype/Dataset"))))
+
+        self.assertTrue(len(summary_level_type_triple) == 1,
+                        "missing summary level type triples")
+
 
 if __name__ == '__main__':
     unittest.main()
+
 
 class FakeIngestClass(Source):
     """
     Fake ingest to test metadata in Dataset graph
     """
-    BASE_URL = 'ftp://ftp.rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/'
+    BASE_URL = 'https://data.monarchinitiative.org/'
+    # using robots.txt b/c it's a trivially small file/empty file that we control
     files = {
-        'rat_gene2mammalian_phenotype': {
-            'file': 'rattus_genes_mp',
-            'url': BASE_URL + 'rattus_genes_mp'},
+        'test_file': {
+            'file': 'test_file.txt',
+            'url': BASE_URL + 'robots.txt'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, identifier):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
-            'rgd',
-            ingest_title='Fake ingest class',
-            ingest_url='http://rgd.mcw.edu/',
-            license_url=None,
-            data_rights='https://rgd.mcw.edu/wg/disclaimer/',
+            identifier
         )
-        self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
         return
+
+    def parse(self):
+        pass

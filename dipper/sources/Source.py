@@ -127,7 +127,7 @@ class Source:
 
         # this may eventually support Bagits
         self.dataset = Dataset(
-            self.archive_url,
+            self.curie_map.get("MONARCH") + ":" + self.name,
             self.ingest_title,
             self.ingest_url,
             None,           # description
