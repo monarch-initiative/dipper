@@ -14,6 +14,7 @@ from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
+from inspect import getdoc
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
@@ -45,6 +46,7 @@ class Source:
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
+            ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic
             file_handle=None
@@ -93,7 +95,7 @@ class Source:
             LOG.info("created output directory %s", pth)
 
         LOG.info("Creating Test graph %s", self.testname)
-        # note: tools such as protoge need slolemized blank nodes
+        # note: tools such as protoge need skolemized blank nodes
         self.testgraph = RDFGraph(True, self.testname)
 
         if graph_type == 'rdf_graph':
@@ -125,12 +127,14 @@ class Source:
         self.test_only = False
         self.test_mode = False
 
-        # this may eventually support Bagits
+        if ingest_description is None:
+            ingest_description = getdoc(self)
+
         self.dataset = Dataset(
             self.curie_map.get("MONARCH") + ":" + self.name,
             self.ingest_title,
             self.ingest_url,
-            None,           # description
+            ingest_description,           # description
             license_url,    # only _OUR_ lic
             data_rights,    # tries to point to others lics
             graph_type,

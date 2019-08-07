@@ -3,7 +3,6 @@ from datetime import datetime
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
-from inspect import getdoc
 
 __author__ = 'nlw'
 
@@ -31,7 +30,9 @@ class Dataset:
      Write out at least the following triples:
 
      [summary level resource] --- rdf:type ---> dctypes:Dataset
-
+     [summary level resource] --- dct:title ---> title (literal)
+     [summary level resource] --- dct:description ---> description (literal)
+                                                    (use docstring from Source class)
 
      [version level resource] --- rdf:type ---> dctypes:Dataset
      [version level resource] --- dct:isVersionOf ---> [summary level resource]
@@ -112,9 +113,7 @@ class Dataset:
             self.graph.addTriple(self.identifier, 'foaf:page', url)
         # maybe in the future add the logo here:
         # schemaorg:logo  <uri>
-        # TODO add the license info
-        # FIXME:Temporarily making this in IF statement,
-        #  can revert after all current resources are updated.
+
         if license_url is not None:
             self.graph.addTriple(
                 self.identifier, 'dcterms:license', license_url)

@@ -5,8 +5,8 @@ import logging
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
-from rdflib.namespace import *
-from rdflib import URIRef
+from rdflib import URIRef, Literal
+from inspect import getdoc
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -30,15 +30,21 @@ class DatasetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.curie_map = curiemap.get()
-        self.ingest_id = "fakeingest"
+        self.identifier = "fakeingest"
+        self.ingest_url = "http://fakeingest.com"
+        self.ingest_title = "this ingest title"
 
         # load source and fetch files to make dataset graph containing metadata
-        self.source = FakeIngestClass("rdf_graph", False, self.ingest_id)
+        self.source = FakeIngestClass("rdf_graph",
+                                      are_bnodes_skolemized=False,
+                                      identifier=self.identifier,
+                                      ingest_url=self.ingest_url,
+                                      ingest_title=self.ingest_title)
         self.source.fetch()
 
         # expected summary level IRI
-        self.summary_level_IRI = ":".join(URIRef(self.curie_map.get("MONARCH"),
-                                                 self.ingest_id))
+        self.summary_level_IRI = URIRef(self.curie_map.get("MONARCH") + ":" +
+                                        self.identifier)
 
     def tearDown(self):
         pass
@@ -49,16 +55,37 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_dataset_has_graph(self):
         self.assertIsInstance(self.source.graph, RDFGraph,
-                              "dataset doesn't contain a graph")
+                              "dataset doesn't contain an RDF graph")
 
     def test_summary_level_type(self):
-        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
-        summary_level_type_triple = list(self.source.dataset.graph.triples(
-            (URIRef(self.summary_level_IRI), RDF.type,
-             URIRef("http://purl.org/dc/dcmitype/Dataset"))))
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(self.summary_level_IRI),
+             URIRef(self.curie_map.get("rdf") + "type"),
+             URIRef(self.curie_map.get("dctypes") + "Dataset"))))
+        self.assertTrue(len(triples) == 1, "missing summary level type triple")
 
-        self.assertTrue(len(summary_level_type_triple) == 1,
-                        "missing summary level type triples")
+    def test_summary_level_title(self):
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(self.summary_level_IRI),
+             URIRef(self.curie_map.get("dcterms") + "title"),
+             Literal(self.ingest_title))))
+        self.assertTrue(len(triples) == 1, "missing summary level title triple")
+
+    def test_summary_level_description(self):
+        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(self.summary_level_IRI),
+             URIRef(self.curie_map.get("dc") + "description"),
+             Literal("Fake ingest to test metadata in Dataset graph"))))
+        self.assertTrue(len(triples) == 1, "missing summary level description")
+
+
+    def test_summary_level_web_page(self):
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(self.summary_level_IRI),
+             URIRef(self.curie_map.get("foaf") + "page"),
+             URIRef(self.ingest_url))))
+        self.assertTrue(len(triples) == 1, "missing summary level ingest URL triple")
 
 
 if __name__ == '__main__':
@@ -77,11 +104,20 @@ class FakeIngestClass(Source):
             'url': BASE_URL + 'robots.txt'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, identifier):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 identifier=None,
+                 ingest_url=None,
+                 ingest_title=None,
+                 ingest_desc=None
+                 ):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
-            identifier
+            name=identifier,
+            ingest_url=ingest_url,
+            ingest_title=ingest_title
         )
 
     def fetch(self, is_dl_forced=False):
