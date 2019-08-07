@@ -3,6 +3,7 @@ from datetime import datetime
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
+from inspect import getdoc
 
 __author__ = 'nlw'
 
@@ -13,9 +14,55 @@ class Dataset:
     """
      this will produce the metadata about a dataset
      following the example laid out here:
+     https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/
      http://htmlpreview.github.io/?
      https://github.com/joejimbo/HCLSDatasetDescriptions/blob/master/Overview.html#appendix_1
      (mind the wrap)
+
+     Summary level: The summary level provides a description of a dataset that is
+     independent of a specific version or format. (e.g. the Monarch ingest of CTD)
+
+     Version level: The version level captures version-specific characteristics of a
+     dataset. (e.g. the 01-02-2018 ingest of CTD)
+
+     Distribution level: The distribution level captures metadata about a specific form
+     and version of a dataset. (e.g. the turtle file for 01-02-2018 ingest of CTD)
+
+     Write out at least the following triples:
+
+     [summary level resource] --- rdf:type ---> dctypes:Dataset
+
+
+     [version level resource] --- rdf:type ---> dctypes:Dataset
+     [version level resource] --- dct:isVersionOf ---> [summary level resource]
+     [version level resource] --- pav:version --> [ingest timestamp]
+     [version level resource] --- dc:source ----> [source web page, e.g. omim.org]
+     [version level resource] --- schema:logo --> [source logo IRI]
+
+     [version level resource] --- dc:source ----> [source file 1 IRI]
+     [version level resource] --- dc:source ----> [source file 2 IRI]
+     ...
+     [version level resource] --- void:dataset -> [distribution level resource]
+
+
+     [distribution level resource] --- rdf:type ---> dctypes:Dataset
+     [distribution level resource] --- rdf:type ---> dcat:Distribution
+     [distribution level resource] --- dcat:accessURL --> [MI ttl URL]
+     [distribution level resource] --- dcat:accessURL --> [MI nt URL]
+     ...
+
+     [distribution level resource] --- void:triples --> [triples count (literal)]
+     [distribution level resource] --- void:distinctSubjects -> [subject count (literal)]
+     [distribution level resource] --- void:distinctObjects -> [object count (literal)]
+     ...
+
+
+     [source file 1 IRI] -- pav:version ---> [download date timestamp]
+     [source file 2 IRI] -- pav:version ---> [source version (if set, optional)]
+     [source file 2 IRI] -- pav:version ---> [download date timestamp]
+     [source file 2 IRI] -- pav:version ---> [source version (if set, optional)]
+     ...
+
 
     """
 
