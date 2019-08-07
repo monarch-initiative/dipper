@@ -2,8 +2,8 @@
 
 import unittest
 import logging
-from dipper.models.Dataset import Dataset
 from dipper.sources.Source import Source
+from dipper.graph.RDFGraph import RDFGraph
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -34,6 +34,9 @@ class DatasetTestCase(unittest.TestCase):
     def test_has_dataset_attribute(self):
         self.assertTrue(hasattr(self.source, "dataset"),
                         "source object doesn't have dataset attribute")
+
+    def test_dataset_has_graph(self):
+        self.assertIsInstance(self.source.graph, RDFGraph)
 
 if __name__ == '__main__':
     unittest.main()
