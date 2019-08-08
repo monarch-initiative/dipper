@@ -33,12 +33,17 @@ class Dataset:
      [summary level resource] --- dct:title ---> title (literal)
      [summary level resource] --- dct:description ---> description (literal)
                                                     (use docstring from Source class)
+     [summary level resource] --- dc:source ----> [source web page, e.g. omim.org]
+     [summary level resource] --- schema:logo --> [source logo IRI]
+     [summary level resource] --- foaf:page  ---> monarchinitiative.org
+     ^^^ this is not the download page for the transformed/ingested data, e.g. a TTL
+     file
+     [summary level resource] --- dct:publisher ---> monarchinitiative.org
 
      [version level resource] --- rdf:type ---> dctypes:Dataset
      [version level resource] --- dct:isVersionOf ---> [summary level resource]
      [version level resource] --- pav:version --> [ingest timestamp]
-     [version level resource] --- dc:source ----> [source web page, e.g. omim.org]
-     [version level resource] --- schema:logo --> [source logo IRI]
+
 
      [version level resource] --- dc:source ----> [source file 1 IRI]
      [version level resource] --- dc:source ----> [source file 2 IRI]

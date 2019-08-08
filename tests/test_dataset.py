@@ -59,32 +59,38 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
-            (URIRef(self.summary_level_IRI),
+            (self.summary_level_IRI,
              URIRef(self.curie_map.get("rdf") + "type"),
              URIRef(self.curie_map.get("dctypes") + "Dataset"))))
         self.assertTrue(len(triples) == 1, "missing summary level type triple")
 
     def test_summary_level_title(self):
         triples = list(self.source.dataset.graph.triples(
-            (URIRef(self.summary_level_IRI),
+            (self.summary_level_IRI,
              URIRef(self.curie_map.get("dcterms") + "title"),
              Literal(self.ingest_title))))
         self.assertTrue(len(triples) == 1, "missing summary level title triple")
 
     def test_summary_level_description(self):
-        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
         triples = list(self.source.dataset.graph.triples(
-            (URIRef(self.summary_level_IRI),
+            (self.summary_level_IRI,
              URIRef(self.curie_map.get("dc") + "description"),
              Literal("Fake ingest to test metadata in Dataset graph"))))
-        self.assertTrue(len(triples) == 1, "missing summary level description")
+        self.assertTrue(len(triples) == 1, "missing summary level description triple")
 
+    def test_summary_level_publisher(self):
+        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
+        triples = list(self.source.dataset.graph.triples(
+            (self.summary_level_IRI,
+             URIRef(self.curie_map.get("dcterms") + "publisher"),
+             URIRef(self.curie_map.get("")))))  # get("") evaluates to MI.org
+        self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
 
     def test_summary_level_web_page(self):
         triples = list(self.source.dataset.graph.triples(
-            (URIRef(self.summary_level_IRI),
+            (self.summary_level_IRI,
              URIRef(self.curie_map.get("foaf") + "page"),
-             URIRef(self.ingest_url))))
+             URIRef(self.curie_map.get("")))))
         self.assertTrue(len(triples) == 1, "missing summary level ingest URL triple")
 
 
