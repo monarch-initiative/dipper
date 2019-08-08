@@ -3,8 +3,8 @@
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
-'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201908/'   # Release RDF data
+'MonarchData': 'https://data.monarchinitiative.org/'            # Bleeding edge RDF data
+'Dipper': 'https://data.monarchinitiative.org/dipper/'          # IRI for files emitted by Dipper
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework

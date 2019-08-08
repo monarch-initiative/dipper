@@ -131,7 +131,7 @@ class Source:
             ingest_description = getdoc(self)
 
         self.dataset = Dataset(
-            self.curie_map.get("MONARCH") + ":" + self.name,
+            self.curie_map.get("Dipper") + ":" + self.name,
             self.ingest_title,
             self.ingest_url,
             ingest_description,           # description

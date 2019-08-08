@@ -17,17 +17,21 @@ class Dataset:
 
      Summary level: The summary level provides a description of a dataset that is
      independent of a specific version or format. (e.g. the Monarch ingest of CTD)
-     CURIE for this is DIPPER:[SOURCE IDENTIFIER]
+     CURIE for this is Dipper:[SOURCE IDENTIFIER]
 
      Version level: The version level captures version-specific characteristics of a
      dataset. (e.g. the 01-02-2018 ingest of CTD)
-     CURIE for this is DIPPER:[SOURCE IDENTIFIER_INGESTTIMESTAMP]
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP]
 
      Distribution level: The distribution level captures metadata about a specific form
      and version of a dataset (e.g. turtle file for 01-02-2018 ingest of CTD). There is
      a [distribution level resource] for each different downloadable file we emit,
      i.e. one for the TTL file, one for the ntriples file, etc.
-     CURIE for this is DIPPER:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].ttl
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].ttl
+     or
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].nt
+     or
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].[file format]
 
      We write out at least the following triples:
 
