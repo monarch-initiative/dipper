@@ -43,7 +43,7 @@ class DatasetTestCase(unittest.TestCase):
         self.source.fetch()
 
         # expected summary level IRI
-        self.summary_level_IRI = URIRef(self.curie_map.get("Dipper") + ":" +
+        self.summary_level_IRI = URIRef(self.curie_map.get("Dipper") +
                                         self.identifier)
 
     def tearDown(self):

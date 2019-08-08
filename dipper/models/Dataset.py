@@ -146,8 +146,6 @@ class Dataset:
             data_rights=None,
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
             file_handle=None
-            # Monarch logo:
-            # https://github.com/jmcmurry/closed-illustrations/blob/master/logos/monarch-logos/monarch-logo-black-stacked.png
     ):
 
         if graph_type is None:
@@ -179,6 +177,7 @@ class Dataset:
         self.license_url = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
         self.graph.addTriple(self.identifier, 'dcterms:title', title, True)
+        self.model.addTriple(self.identifier, 'dcterms:Publisher', self.curie_map.get(""))
         self.graph.addTriple(
             self.identifier, 'dcterms:identifier', identifier, True)
         if url is not None:
