@@ -36,13 +36,15 @@ class DatasetTestCase(unittest.TestCase):
         self.identifier = "fakeingest"
         self.ingest_url = "http://fakeingest.com"
         self.ingest_title = "this ingest title"
+        self.ingest_logo_url = "http://fakeingest.com/logo.png"
 
         # load source and fetch files to make dataset graph containing metadata
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
                                       identifier=self.identifier,
                                       ingest_url=self.ingest_url,
-                                      ingest_title=self.ingest_title)
+                                      ingest_title=self.ingest_title,
+                                      ingest_logo=self.ingest_logo_url)
         self.source.fetch()
 
         # expected summary level IRI
@@ -60,7 +62,6 @@ class DatasetTestCase(unittest.TestCase):
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
-
 
     def tearDown(self):
         pass
@@ -95,21 +96,15 @@ class DatasetTestCase(unittest.TestCase):
             (self.summary_level_IRI, self.iri_publisher, self.iri_mi_org)))
         self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
 
-    @unittest.skip("skipping")
     def test_summary_level_source_web_page(self):
-        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI, self.iri_source,
-             URIRef("http://someingestsource.org"))))
-        self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
+            (self.summary_level_IRI, self.iri_source, URIRef(self.ingest_url))))
+        self.assertTrue(len(triples) == 1, "missing summary level source page triple")
 
-    @unittest.skip("skipping")
     def test_summary_level_source_logo(self):
-        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI, self.iri_logo,
-             URIRef("http://someingestsource.org/logo.png"))))
-        self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
+            (self.summary_level_IRI, self.iri_logo, URIRef(self.ingest_logo_url))))
+        self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
 
 if __name__ == '__main__':
@@ -134,14 +129,16 @@ class FakeIngestClass(Source):
                  identifier=None,
                  ingest_url=None,
                  ingest_title=None,
-                 ingest_desc=None
+                 ingest_desc=None,
+                 ingest_logo=None
                  ):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
             name=identifier,
             ingest_url=ingest_url,
-            ingest_title=ingest_title
+            ingest_title=ingest_title,
+            ingest_logo=ingest_logo
         )
 
     def fetch(self, is_dl_forced=False):

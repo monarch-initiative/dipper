@@ -46,6 +46,7 @@ class Source:
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
+            ingest_logo=None,
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic
@@ -57,8 +58,12 @@ class Source:
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
-        self.ingest_url = ingest_url
         self.ingest_title = ingest_title
+        self.ingest_url = ingest_url
+        self.ingest_logo = ingest_logo
+        self.ingest_description = ingest_description
+        self.license_url = license_url
+        self.data_rights = data_rights
         self.localtt = self.load_local_translationtable(name)
 
         if name is not None:
@@ -127,18 +132,19 @@ class Source:
         self.test_only = False
         self.test_mode = False
 
-        if ingest_description is None:
-            ingest_description = getdoc(self)
+        if self.ingest_description is None:
+            self.ingest_description = getdoc(self)
 
         self.dataset = Dataset(
-            self.curie_map.get("Dipper") + self.name,
-            self.ingest_title,
-            self.ingest_url,
-            ingest_description,           # description
-            license_url,    # only _OUR_ lic
-            data_rights,    # tries to point to others lics
-            graph_type,
-            file_handle
+            identifier=self.curie_map.get("Dipper") + self.name,
+            ingest_title=self.ingest_title,
+            ingest_url=self.ingest_url,
+            ingest_logo=self.ingest_logo,
+            ingest_description=self.ingest_description,   # description
+            license_url=self.license_url,    # only _OUR_ lic
+            data_rights=self.data_rights,    # tries to point to others lics
+            graph_type=graph_type,
+            file_handle=file_handle
         )
 
         for graph in [self.graph, self.testgraph]:

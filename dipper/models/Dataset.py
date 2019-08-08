@@ -40,7 +40,7 @@ class Dataset:
      [summary level resource] - dct:title -> title (literal)
      [summary level resource] - dct:description -> description (literal)
                                                 (use docstring from Source class)
-     [summary level resource] - dc:source -> [source web page, e.g. omim.org]
+     [summary level resource] - dcterms:source -> [source web page, e.g. omim.org]
      [summary level resource] - schemaorg:logo -> [source logo IRI]
      [summary level resource] - dct:publisher -> monarchinitiative.org
         n.b: about summary level resource triples:
@@ -62,8 +62,8 @@ class Dataset:
      [version level resource] - dct:creator	-> monarchinitiative.org
      [version level resource] - dct:publisher -> monarchinitiative.org
      [version level resource] - dct:isVersionOf -> [summary level resource]
-     [version level resource] - dc:source -> [source file 1 IRI]
-     [version level resource] - dc:source -> [source file 2 IRI]
+     [version level resource] - dcterms:source -> [source file 1 IRI]
+     [version level resource] - dcterms:source -> [source file 2 IRI]
      ...
 
      [source file 1 IRI] - pav:version -> [download date timestamp]
@@ -137,9 +137,10 @@ class Dataset:
     def __init__(
             self,
             identifier,       # name? should be Archive url via Source
-            title,
-            url,
-            ingest_desc=None,
+            ingest_title,
+            ingest_url,
+            ingest_logo=None,
+            ingest_description=None,
             license_url=None,
             data_rights=None,
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
@@ -159,10 +160,10 @@ class Dataset:
         self.curie_map = self.graph.curie_map
         # TODO: move hard coded curies to translation table calls
         self.identifier = identifier
-        if title is None:
+        if ingest_title is None:
             self.title = identifier
         else:
-            self.title = title
+            self.title = ingest_title
         self.version = None
         self.date_issued = None
 
@@ -174,12 +175,13 @@ class Dataset:
         self.citation = set()
         self.license_url = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
-        self.graph.addTriple(self.identifier, 'dcterms:title', title, True)
+        self.graph.addTriple(self.identifier, 'dcterms:title', ingest_title, True)
         self.model.addTriple(self.identifier, 'dcterms:Publisher', self.curie_map.get(""))
+        self.model.addTriple(self.identifier, "schemaorg:logo", ingest_logo)
         self.graph.addTriple(
             self.identifier, 'dcterms:identifier', identifier, True)
-        if url is not None:
-            self.graph.addTriple(self.identifier, 'foaf:page', url)
+        if ingest_url is not None:
+            self.graph.addTriple(self.identifier, "dcterms:source", ingest_url)
         # maybe in the future add the logo here:
         # schemaorg:logo  <uri>
 
@@ -195,8 +197,8 @@ class Dataset:
         else:
             LOG.debug('No rights provided.')
 
-        if ingest_desc is not None:
-            self.model.addDescription(self.identifier, ingest_desc)
+        if ingest_description is not None:
+            self.model.addDescription(self.identifier, ingest_description)
         return
 
     def setVersion(self, date_issued, version_id=None):

@@ -24,7 +24,7 @@ digraph metadata_model {
     summary_level -> "dctypes:Dataset" [label="rdf:type"]
     summary_level -> summary_level_title [label="dct:title"]
     summary_level -> summary_level_description [label="dct:description"]
-    summary_level -> source_web_page [label="dc:source"]
+    summary_level -> source_web_page [label="dcterms:source"]
     summary_level -> source_logo_IRI [label="schemaorg:logo"]
     summary_level -> "monarchinitiative.org" [label="dct:publisher"]
 
@@ -37,8 +37,8 @@ digraph metadata_model {
     version_level -> "monarchinitiative.org" [label="dct:creator"]
     version_level -> "monarchinitiative.org" [label="dct:publisher"]
     version_level -> summary_level [label="dct:isVersionOf"]
-    version_level -> source_file_1_IRI [label="dc:source"]
-    version_level -> source_file_2_IRI [label="dc:source"]
+    version_level -> source_file_1_IRI [label="dcterms:source"]
+    version_level -> source_file_2_IRI [label="dcterms:source"]
 
     source_file_1_IRI -> source_file_1_download_timestamp [label="pav:version"]
     source_file_1_IRI -> source_version_1_optional [label="pav:version"]
