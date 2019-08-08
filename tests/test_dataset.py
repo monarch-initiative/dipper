@@ -6,8 +6,6 @@ from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
 from rdflib import URIRef, Literal
-from collections import defaultdict
-from inspect import getdoc
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
