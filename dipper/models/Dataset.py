@@ -11,65 +11,125 @@ LOG = logging.getLogger(__name__)
 
 class Dataset:
     """
-     this will produce the metadata about a dataset
-     following the example laid out here:
-     https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/
-     http://htmlpreview.github.io/?
-     https://github.com/joejimbo/HCLSDatasetDescriptions/blob/master/Overview.html#appendix_1
-     (mind the wrap)
+     this will produce the metadata about a dataset that is compliant with this
+     specification:
+     https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/#s4_4
 
      Summary level: The summary level provides a description of a dataset that is
      independent of a specific version or format. (e.g. the Monarch ingest of CTD)
+     CURIE for this is DIPPER:[SOURCE IDENTIFIER]
 
      Version level: The version level captures version-specific characteristics of a
      dataset. (e.g. the 01-02-2018 ingest of CTD)
+     CURIE for this is DIPPER:[SOURCE IDENTIFIER_INGESTTIMESTAMP]
 
      Distribution level: The distribution level captures metadata about a specific form
-     and version of a dataset. (e.g. the turtle file for 01-02-2018 ingest of CTD)
+     and version of a dataset (e.g. turtle file for 01-02-2018 ingest of CTD). There is
+     a [distribution level resource] for each different downloadable file we emit,
+     i.e. one for the TTL file, one for the ntriples file, etc.
+     CURIE for this is DIPPER:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].ttl
 
-     Write out at least the following triples:
+     We write out at least the following triples:
 
-     [summary level resource] --- rdf:type ---> dctypes:Dataset
-     [summary level resource] --- dct:title ---> title (literal)
-     [summary level resource] --- dct:description ---> description (literal)
-                                                    (use docstring from Source class)
-     [summary level resource] --- dc:source ----> [source web page, e.g. omim.org]
-     [summary level resource] --- schema:logo --> [source logo IRI]
-     [summary level resource] --- foaf:page  ---> monarchinitiative.org
-     ^^^ this is not the download page for the transformed/ingested data, e.g. a TTL
-     file
-     [summary level resource] --- dct:publisher ---> monarchinitiative.org
+     SUMMARY LEVEL TRIPLES:
+     [summary level resource] - rdf:type -> dctypes:Dataset
+     [summary level resource] - dct:title -> title (literal)
+     [summary level resource] - dct:description -> description (literal)
+                                                (use docstring from Source class)
+     [summary level resource] - dc:source -> [source web page, e.g. omim.org]
+     [summary level resource] - schema:logo -> [source logo IRI]
+     [summary level resource] - dct:publisher -> monarchinitiative.org
+        n.b: about summary level resource triples:
+        -- HCLS spec says we "should" link to our logo and web page, but I'm not,
+        because it would confuse the issue of whether we are pointing to our logo/page
+        or the logo/page of the data source for this ingest. Same below for
+        [version level resource] and [distibution level resource] - I'm not linking to
+        our page/logo down there either.
+        - spec says we "should" include summary level triples describing Update
+        frequency and SPARQL endpoint but I'm omitting this for now, because these are
+        not clearly defined at the moment
 
-     [version level resource] --- rdf:type ---> dctypes:Dataset
-     [version level resource] --- dct:isVersionOf ---> [summary level resource]
-     [version level resource] --- pav:version --> [ingest timestamp]
-
-
-     [version level resource] --- dc:source ----> [source file 1 IRI]
-     [version level resource] --- dc:source ----> [source file 2 IRI]
-     ...
-     [version level resource] --- void:dataset -> [distribution level resource]
-
-
-     [distribution level resource] --- rdf:type ---> dctypes:Dataset
-     [distribution level resource] --- rdf:type ---> dcat:Distribution
-     [distribution level resource] --- dcat:accessURL --> [MI ttl URL]
-     [distribution level resource] --- dcat:accessURL --> [MI nt URL]
-     ...
-
-     [distribution level resource] --- void:triples --> [triples count (literal)]
-     [distribution level resource] --- void:distinctSubjects -> [subject count (literal)]
-     [distribution level resource] --- void:distinctObjects -> [object count (literal)]
-     ...
-
-
-     [source file 1 IRI] -- pav:version ---> [download date timestamp]
-     [source file 2 IRI] -- pav:version ---> [source version (if set, optional)]
-     [source file 2 IRI] -- pav:version ---> [download date timestamp]
-     [source file 2 IRI] -- pav:version ---> [source version (if set, optional)]
+     VERSION LEVEL TRIPLES:
+     [version level resource] - rdf:type -> dctypes:Dataset
+     [version level resource] - dct:title -> version title (literal)
+     [version level resource] - dct:description -> version description (literal)
+     [version level resource] - dct:created -> time stamp [ISO 8601 compliant string]
+     [version level resource] - dct:creator	-> monarchinitiative.org
+     [version level resource] - dct:publisher -> monarchinitiative.org
+     [version level resource] - pav:version -> [ingest timestamp]
+     [version level resource] - dct:isVersionOf -> [summary level resource]
+     [version level resource] - pav:version -> [ingest timestamp]
+     [version level resource] - dc:source -> [source file 1 IRI]
+     [version level resource] - dc:source -> [source file 2 IRI]
      ...
 
+     [source file 1 IRI] - pav:version -> [download date timestamp]
+     [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+     [source file 2 IRI] - pav:version -> [download date timestamp]
+     [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+     ...
 
+     [version level resource] - pav:createdWith -> [Dipper github URI]
+     [version level resource] - void:dataset -> [distribution level resource]
+        n.b: about version level resource triples:
+        - spec says we "should" include Date of issue/dct:issued triple, but I'm not
+        because it is redundant with this triple above:
+        [version level resource] - dct:created -> time stamp
+        and would introduce ambiguity and confusion if the two disagree. Same below
+        for [distribution level resource] - dct:created -> time stamp below
+        Also omitting:
+          - triples linking to our logo and page, see above.
+          - License/dct:license triple, because we will make this triple via the
+            [distribution level resource] below
+          - Language/dct:language triple b/c it seems superfluous. Same below for
+            [distribution level resource] - no language triple.
+        - [version level resource] - pav:version triple is also a bit redundant
+        with the pav:version triple below, but the spec requires both these triples
+        - I'm omitting the [version level resource] -> pav:previousVersion because
+        Dipper doesn't know this info for certain at run time. Same below for
+        [distribution level resource] - pav:previousVersion.
+
+     DISTRIBUTION LEVEL TRIPLES:
+     [distribution level resource] - rdf:type -> dctypes:Dataset
+     [distribution level resource] - rdf:type -> dcat:Distribution
+     [distribution level resource] - dcat:accessURL -> [MI ttl|nt URL]
+     [distribution level resource] - dct:title -> distribution title (literal)
+     [distribution level resource] - dct:description -> distribution description (lit.)
+     [distribution level resource] - dct:created -> time stamp [ISO 8601 compl. string]
+     [distribution level resource] - dct:creator -> monarchinitiative.org
+     [distribution level resource] - dct:publisher -> monarchinitiative.org
+     [distribution level resource] - dct:license -> [license info, if available]
+     [distribution level resource] - pav:version -> [ingest timestamp]
+     [distribution level resource] - pav:createdWith -> [Dipper github URI]
+     [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
+     [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
+     [distribution level resource] - void:triples -> [triples count (literal)]
+     [distribution level resource] - void:entities -> [entities count (literal)]
+     [distribution level resource] - void:distinctSubjects -> [subject count (literal)]
+     [distribution level resource] - void:distinctObjects -> [object count (literal)]
+     [distribution level resource] - void:properties -> [properties count (literal)]
+     ...
+
+        n.b: about distribution level resource triples:
+        - omitting Vocabularies used/void:vocabulary and Standards
+        used/dct:conformTo triples, because they are described in the ttl file
+        - also omitting Example identifier/idot:exampleIdentifier and
+        Example resource/void:exampleResource, because we don't really have one
+        canonical example of either - they're all very different.
+        - [distribution level resource] - dct:created should have the exact same
+        time stamp as this triple above:
+        [version level resource] - dct:created -> time stamp
+        - this [distribution level resource] - pav:version triple should have the
+        same object as [version level resource] - pav:version triple above
+        - Data source provenance/dct:source triples are above in the
+        [version level resource]
+        - omitting Byte size/dct:byteSize, RDF File URL/void:dataDump, and
+        Linkset/void:subset triples because they probably aren't necessary for MI right
+        now
+        - these triples "should" be emitted, but we will do this in a later iteration:
+        # of classes	void:classPartition	IRI
+        # of literals	void:classPartition	IRI
+        # of RDF graphs	void:classPartition	IRI
     """
 
     def __init__(
@@ -81,7 +141,10 @@ class Dataset:
             license_url=None,
             data_rights=None,
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
-            file_handle=None):
+            file_handle=None
+            # Monarch logo:
+            # https://github.com/jmcmurry/closed-illustrations/blob/master/logos/monarch-logos/monarch-logo-black-stacked.png
+    ):
 
         if graph_type is None:
             self.graph = RDFGraph(None, identifier)
