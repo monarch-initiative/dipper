@@ -86,14 +86,6 @@ class DatasetTestCase(unittest.TestCase):
              URIRef(self.curie_map.get("")))))  # get("") evaluates to MI.org
         self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
 
-    @unittest.skip("skipping")
-    def test_summary_level_web_page(self):
-        triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI,
-             URIRef(self.curie_map.get("foaf") + "page"),
-             URIRef(self.curie_map.get("")))))
-        self.assertTrue(len(triples) == 1, "missing summary level ingest URL triple")
-
 
 if __name__ == '__main__':
     unittest.main()
