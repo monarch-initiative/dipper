@@ -6,6 +6,7 @@ from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
 from rdflib import URIRef, Literal
+from collections import defaultdict
 from inspect import getdoc
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,6 +31,8 @@ class DatasetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.curie_map = curiemap.get()
+
+        # parameters passed to code, to be returned in graph
         self.identifier = "fakeingest"
         self.ingest_url = "http://fakeingest.com"
         self.ingest_title = "this ingest title"
@@ -43,8 +46,21 @@ class DatasetTestCase(unittest.TestCase):
         self.source.fetch()
 
         # expected summary level IRI
-        self.summary_level_IRI = URIRef(self.curie_map.get("Dipper") +
-                                        self.identifier)
+        self.summary_level_IRI = URIRef(self.curie_map.get("Dipper") + self.identifier)
+
+        # dry out a bit
+        self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
+        self.iri_title = URIRef(self.curie_map.get("dcterms") + "title")
+        self.iri_dataset = URIRef(self.curie_map.get("dctypes") + "Dataset")
+        self.iri_description = URIRef(self.curie_map.get("dc") + "description")
+        self.iri_publisher = URIRef(self.curie_map.get("dcterms") + "Publisher")
+        self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
+        self.iri_logo = URIRef(self.curie_map.get("schemaorg") + "logo")
+        self.iri_mi_org = URIRef("https://monarchinitiative.org/")
+
+        # put all triples in a list for debugging below
+        self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
+
 
     def tearDown(self):
         pass
@@ -59,31 +75,40 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI,
-             URIRef(self.curie_map.get("rdf") + "type"),
+            (self.summary_level_IRI, self.iri_rdf_type,
              URIRef(self.curie_map.get("dctypes") + "Dataset"))))
         self.assertTrue(len(triples) == 1, "missing summary level type triple")
 
     def test_summary_level_title(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI,
-             URIRef(self.curie_map.get("dcterms") + "title"),
-             Literal(self.ingest_title))))
+            (self.summary_level_IRI, self.iri_title, Literal(self.ingest_title))))
         self.assertTrue(len(triples) == 1, "missing summary level title triple")
 
     def test_summary_level_description(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI,
-             URIRef(self.curie_map.get("dc") + "description"),
+            (self.summary_level_IRI, self.iri_description,
              Literal("Fake ingest to test metadata in Dataset graph"))))
         self.assertTrue(len(triples) == 1, "missing summary level description triple")
 
     def test_summary_level_publisher(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.summary_level_IRI, self.iri_publisher, self.iri_mi_org)))
+        self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
+
+    @unittest.skip("skipping")
+    def test_summary_level_source_web_page(self):
         all_triples = list(self.source.dataset.graph.triples((None, None, None)))
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI,
-             URIRef(self.curie_map.get("dcterms") + "Publisher"),
-             URIRef(self.curie_map.get("")))))  # get("") evaluates to MI.org
+            (self.summary_level_IRI, self.iri_source,
+             URIRef("http://someingestsource.org"))))
+        self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
+
+    @unittest.skip("skipping")
+    def test_summary_level_source_logo(self):
+        all_triples = list(self.source.dataset.graph.triples((None, None, None)))
+        triples = list(self.source.dataset.graph.triples(
+            (self.summary_level_IRI, self.iri_logo,
+             URIRef("http://someingestsource.org/logo.png"))))
         self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
 
 

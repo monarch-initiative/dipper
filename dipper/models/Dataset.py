@@ -27,11 +27,11 @@ class Dataset:
      and version of a dataset (e.g. turtle file for 01-02-2018 ingest of CTD). There is
      a [distribution level resource] for each different downloadable file we emit,
      i.e. one for the TTL file, one for the ntriples file, etc.
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].ttl
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].ttl
      or
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].nt
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].nt
      or
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP_].[file format]
+     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].[whatever file format]
 
      We write out at least the following triples:
 
@@ -41,7 +41,7 @@ class Dataset:
      [summary level resource] - dct:description -> description (literal)
                                                 (use docstring from Source class)
      [summary level resource] - dc:source -> [source web page, e.g. omim.org]
-     [summary level resource] - schema:logo -> [source logo IRI]
+     [summary level resource] - schemaorg:logo -> [source logo IRI]
      [summary level resource] - dct:publisher -> monarchinitiative.org
         n.b: about summary level resource triples:
         -- HCLS spec says we "should" link to our logo and web page, but I'm not,
@@ -57,12 +57,11 @@ class Dataset:
      [version level resource] - rdf:type -> dctypes:Dataset
      [version level resource] - dct:title -> version title (literal)
      [version level resource] - dct:description -> version description (literal)
-     [version level resource] - dct:created -> time stamp [ISO 8601 compliant string]
+     [version level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+     [version level resource] - pav:version -> ingest timestamp (same one above)
      [version level resource] - dct:creator	-> monarchinitiative.org
      [version level resource] - dct:publisher -> monarchinitiative.org
-     [version level resource] - pav:version -> [ingest timestamp]
      [version level resource] - dct:isVersionOf -> [summary level resource]
-     [version level resource] - pav:version -> [ingest timestamp]
      [version level resource] - dc:source -> [source file 1 IRI]
      [version level resource] - dc:source -> [source file 2 IRI]
      ...
@@ -80,7 +79,7 @@ class Dataset:
         because it is redundant with this triple above:
         [version level resource] - dct:created -> time stamp
         and would introduce ambiguity and confusion if the two disagree. Same below
-        for [distribution level resource] - dct:created -> time stamp below
+        for [distribution level resource] - dct:created -> tgiime stamp below
         Also omitting:
           - triples linking to our logo and page, see above.
           - License/dct:license triple, because we will make this triple via the
@@ -96,14 +95,13 @@ class Dataset:
      DISTRIBUTION LEVEL TRIPLES:
      [distribution level resource] - rdf:type -> dctypes:Dataset
      [distribution level resource] - rdf:type -> dcat:Distribution
-     [distribution level resource] - dcat:accessURL -> [MI ttl|nt URL]
      [distribution level resource] - dct:title -> distribution title (literal)
      [distribution level resource] - dct:description -> distribution description (lit.)
-     [distribution level resource] - dct:created -> time stamp [ISO 8601 compl. string]
+     [distribution level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+     [distribution level resource] - pav:version -> ingest timestamp (same as above)
      [distribution level resource] - dct:creator -> monarchinitiative.org
      [distribution level resource] - dct:publisher -> monarchinitiative.org
      [distribution level resource] - dct:license -> [license info, if available]
-     [distribution level resource] - pav:version -> [ingest timestamp]
      [distribution level resource] - pav:createdWith -> [Dipper github URI]
      [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
      [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
