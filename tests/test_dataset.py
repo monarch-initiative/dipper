@@ -78,7 +78,7 @@ class DatasetTestCase(unittest.TestCase):
              Literal("Fake ingest to test metadata in Dataset graph"))))
         self.assertTrue(len(triples) == 1, "missing summary level description triple")
 
-    @unittest.skip("demonstrating skipping")
+    @unittest.skip("skipping")
     def test_summary_level_publisher(self):
         all_triples = list(self.source.dataset.graph.triples((None, None, None)))
         triples = list(self.source.dataset.graph.triples(
@@ -87,7 +87,7 @@ class DatasetTestCase(unittest.TestCase):
              URIRef(self.curie_map.get("")))))  # get("") evaluates to MI.org
         self.assertTrue(len(triples) == 1, "missing summary level publisher triple")
 
-    @unittest.skip("demonstrating skipping")
+    @unittest.skip("skipping")
     def test_summary_level_web_page(self):
         triples = list(self.source.dataset.graph.triples(
             (self.summary_level_IRI,
