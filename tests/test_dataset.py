@@ -42,7 +42,7 @@ class DatasetTestCase(unittest.TestCase):
 
         # The following to be used in both DatasetTestCase and FakeIngestClass
         # using robots.txt b/c it's a trivially small file/empty file that we control
-        theseFiles = {
+        self.theseFiles = {
             'test_file': {
                 'file': 'test_file.txt',
                 'url': 'https://data.monarchinitiative.org/robots.txt'},
@@ -55,7 +55,7 @@ class DatasetTestCase(unittest.TestCase):
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
                                       ingest_logo=self.ingest_logo_url,
-                                      files=theseFiles)
+                                      files=self.theseFiles)
         self.source.fetch()
 
         # expected things:
@@ -74,7 +74,7 @@ class DatasetTestCase(unittest.TestCase):
         # expected timestamp for version level "version" triple
         # downloaded file should end up here:
         self.downloaded_file_path = \
-            '/'.join((self.source.rawdir, theseFiles.get("test_file").get("file")))
+            '/'.join((self.source.rawdir, self.theseFiles.get("test_file").get("file")))
         fstat = os.stat(self.downloaded_file_path)
         self.downloaded_file_timestamp = datetime.utcfromtimestamp(fstat[ST_CTIME])
 
@@ -202,10 +202,6 @@ class DatasetTestCase(unittest.TestCase):
             (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
         self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
 
-    # [source file 1 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # [source file 2 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
     def test_version_level_source_file_triple(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI,
@@ -216,7 +212,9 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_version_level_source_version_timestamp(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.version_level_IRI, self.iri_version, None)))
+            (URIRef(self.theseFiles.get("test_file").get("url")),
+             self.iri_version,
+             None)))
         self.assertTrue(len(triples) == 1,
                         "missing version level file source version " +
                         "(download timestamp)")
@@ -224,6 +222,14 @@ class DatasetTestCase(unittest.TestCase):
                          str(self.timestamp_date),
                          "version level source version timestamp isn't the same as" +
                          "the timestamp of the local file")
+
+    # confirm we have triples for source files
+    # ...
+    # [source file 1 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # [source file 2 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # ...
 
 
 if __name__ == '__main__':
