@@ -181,6 +181,8 @@ class Dataset:
         self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
         self.summary_level_curie = identifier
         self.version_level_curie = identifier + self.date_timestamp_iso_8601
+        self.distribution_level_turtle_curie = self.version_level_curie + ".ttl"
+
         #
         # summary level triples:
         #
@@ -218,6 +220,19 @@ class Dataset:
 
         self.graph.addTriple(self.version_level_curie, 'dcterms:isVersionOf',
                              self.summary_level_curie)
+        #
+        # distribution level triples:
+        #
+        self.model.addType(self.distribution_level_turtle_curie, 'dctypes:Dataset')
+        self.model.addType(self.distribution_level_turtle_curie, 'dcat:Distribution')
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:title',
+                           self.distribution_level_turtle_curie, True)
+        self.model.addDescription(self.distribution_level_turtle_curie,
+                                  self.distribution_level_turtle_curie)
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:version',
+                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:created',
+                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
 
         return
 

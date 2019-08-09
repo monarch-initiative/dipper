@@ -93,6 +93,7 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_version = URIRef(self.curie_map.get("pav") + "version")
         self.iri_creator = URIRef(self.curie_map.get("dcterms") + "creator")
         self.iri_is_version_of = URIRef(self.curie_map.get("dcterms") + "isVersionOf")
+        self.iri_distribution = URIRef(self.curie_map.get("dcat") + "Distribution")
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
@@ -231,6 +232,82 @@ class DatasetTestCase(unittest.TestCase):
                          "version level source version timestamp isn't " +
                          "the same as the timestamp of the local file")
 
+    # DISTRIBUTION LEVEL TRIPLES:
+    # [distribution level resource] - rdf:type -> dctypes:Dataset
+    # [distribution level resource] - rdf:type -> dcat:Distribution
+    # [distribution level resource] - dct:title -> distribution title (literal)
+    # [distribution level resource] - dct:description -> distribution description (lit.)
+    # [distribution level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+    # [distribution level resource] - pav:version -> ingest timestamp (same as above)
+    # [distribution level resource] - dct:creator -> monarchinitiative.org
+    # [distribution level resource] - dct:publisher -> monarchinitiative.org
+    # [distribution level resource] - dct:license -> [license info, if available]
+    # [distribution level resource] - pav:createdWith -> [Dipper github URI]
+    # [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
+    # [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
+    # [distribution level resource] - void:triples -> [triples count (literal)]
+    # [distribution level resource] - void:entities -> [entities count (literal)]
+    # [distribution level resource] - void:distinctSubjects -> [subject count (literal)]
+    # [distribution level resource] - void:distinctObjects -> [object count (literal)]
+    # [distribution level resource] - void:properties -> [properties count (literal)]
+    def test_distribution_level_dataset_type(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_rdf_type, self.iri_dataset)))
+        self.assertTrue(len(triples) == 1, "missing version level type dataset triple")
+
+    def test_distribution_level_distribution_type(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_rdf_type,
+             self.iri_distribution)))
+        self.assertTrue(len(triples) == 1,
+                        "missing version level type distribution triple")
+
+    def test_distribution_level_title(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_title,
+             Literal(self.distribution_level_IRI_ttl))))
+        self.assertTrue(len(triples) == 1, "missing version level type title triple")
+
+    def test_distribution_level_description(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_description,
+             Literal(self.distribution_level_IRI_ttl))))
+        self.assertTrue(len(triples) == 1,
+                        "missing version level type description triple")
+
+    def test_distribution_level_created(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_created, None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing version level type created triple")
+        self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
+
+    def test_distribution_level_version(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_version, None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing version level type version triple")
+        self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
+
+    @unittest.skip("skipping")
+    def test_distribution_level_creator(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_creator, self.iri_mi_org)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level creator triple")
+
+    @unittest.skip("skipping")
+    def test_distribution_level_publisher(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl, self.iri_publisher, self.iri_mi_org)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level publisher triple")
+
+    # [distribution level resource] - dct:license -> [license info, if available]
+    # [distribution level resource] - pav:createdWith -> [Dipper github URI]
+    # [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
+    # [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
 
 if __name__ == '__main__':
     unittest.main()
