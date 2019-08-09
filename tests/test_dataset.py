@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
+import datetime
 import unittest
 import logging
-import datetime
+from datetime import datetime
+from stat import ST_CTIME
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
@@ -37,18 +40,27 @@ class DatasetTestCase(unittest.TestCase):
         self.ingest_title = "this ingest title"
         self.ingest_logo_url = "http://fakeingest.com/logo.png"
 
+        # The following to be used in both DatasetTestCase and FakeIngestClass
+        # using robots.txt b/c it's a trivially small file/empty file that we control
+        theseFiles = {
+            'test_file': {
+                'file': 'test_file.txt',
+                'url': 'https://data.monarchinitiative.org/robots.txt'},
+        }
+
         # load source and fetch files to make dataset graph containing metadata
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
                                       identifier=self.identifier,
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
-                                      ingest_logo=self.ingest_logo_url)
+                                      ingest_logo=self.ingest_logo_url,
+                                      files=theseFiles)
         self.source.fetch()
 
         # expected things:
         self.expected_curie_prefix = "MonarchData"
-        self.timestamp_date = datetime.date.today().strftime("%Y%m%d")
+        self.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
         self.summary_level_IRI = URIRef(self.curie_map.get(self.expected_curie_prefix)
@@ -58,6 +70,13 @@ class DatasetTestCase(unittest.TestCase):
 
         # expected distribution level IRI (for ttl resource)
         self.distribution_level_IRI_ttl = URIRef(self.version_level_IRI + ".ttl")
+
+        # expected timestamp for version level "version" triple
+        # downloaded file should end up here:
+        self.downloaded_file_path = \
+            '/'.join((self.source.rawdir, theseFiles.get("test_file").get("file")))
+        fstat = os.stat(self.downloaded_file_path)
+        self.downloaded_file_timestamp = datetime.utcfromtimestamp(fstat[ST_CTIME])
 
         # dry out a bit
         self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
@@ -142,7 +161,6 @@ class DatasetTestCase(unittest.TestCase):
     # [source file 2 IRI] - pav:version -> [download date timestamp]
     # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
     # ...
-
     def test_version_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
@@ -184,6 +202,10 @@ class DatasetTestCase(unittest.TestCase):
             (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
         self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
 
+    # [source file 1 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # [source file 2 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
     def test_version_level_source_file_triple(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI,
@@ -192,14 +214,16 @@ class DatasetTestCase(unittest.TestCase):
         )))
         self.assertTrue(len(triples) == 1, "missing version level file source triple")
 
-    # [version level resource] - dcterms:source -> [source file 1 IRI]
-    # [version level resource] - dcterms:source -> [source file 2 IRI]
-    #  ...
-    #
-    # [source file 1 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # [source file 2 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    def test_version_level_source_version_timestamp(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_version, None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing version level file source version " +
+                        "(download timestamp)")
+        self.assertEqual(str(triples[0][2]),
+                         str(self.timestamp_date),
+                         "version level source version timestamp isn't the same as" +
+                         "the timestamp of the local file")
 
 
 if __name__ == '__main__':
@@ -210,13 +234,6 @@ class FakeIngestClass(Source):
     """
     Fake ingest to test metadata in Dataset graph
     """
-    BASE_URL = 'https://data.monarchinitiative.org/'
-    # using robots.txt b/c it's a trivially small file/empty file that we control
-    files = {
-        'test_file': {
-            'file': 'test_file.txt',
-            'url': BASE_URL + 'robots.txt'},
-    }
 
     def __init__(self,
                  graph_type,
@@ -225,7 +242,8 @@ class FakeIngestClass(Source):
                  ingest_url=None,
                  ingest_title=None,
                  ingest_desc=None,
-                 ingest_logo=None
+                 ingest_logo=None,
+                 files=None
                  ):
         super().__init__(
             graph_type,
@@ -235,6 +253,7 @@ class FakeIngestClass(Source):
             ingest_title=ingest_title,
             ingest_logo=ingest_logo
         )
+        self.files = files
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
