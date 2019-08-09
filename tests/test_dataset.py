@@ -184,6 +184,23 @@ class DatasetTestCase(unittest.TestCase):
             (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
         self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
 
+    def test_version_level_source_file_triple(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI,
+             self.iri_source,
+             URIRef(self.source.files.get("test_file").get("url"))
+        )))
+        self.assertTrue(len(triples) == 1, "missing version level file source triple")
+
+    # [version level resource] - dcterms:source -> [source file 1 IRI]
+    # [version level resource] - dcterms:source -> [source file 2 IRI]
+    #  ...
+    #
+    # [source file 1 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # [source file 2 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+
 
 if __name__ == '__main__':
     unittest.main()

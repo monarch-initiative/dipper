@@ -382,6 +382,12 @@ class Source:
                 is_dl_forced, headers)
 
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
+            self.dataset.graph.addTriple(self.dataset.version_level_curie,
+                                         "dcterms:source",
+                                         # self.resolve("source") eval's to "dc:source"
+                                         # which isn't what we want
+                                         filesource['url']
+                                         )
 
         # only keeping the date from the last file
         filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")

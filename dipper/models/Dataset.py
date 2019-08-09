@@ -162,11 +162,6 @@ class Dataset:
         self.identifier = identifier
         self.citation = set()
 
-        # set HCLS resource CURIEs
-        self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
-        self.summary_level_curie = identifier
-        self.version_level_curie = identifier + self.date_timestamp_iso_8601
-
         if ingest_title is None:
             self.title = identifier
         else:
@@ -181,6 +176,10 @@ class Dataset:
 
         self.license_url = license_url
 
+        # set HCLS resource CURIEs
+        self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
+        self.summary_level_curie = identifier
+        self.version_level_curie = identifier + self.date_timestamp_iso_8601
         #
         # summary level triples:
         #
@@ -194,7 +193,6 @@ class Dataset:
                              identifier, True)
         if ingest_url is not None:
             self.graph.addTriple(self.summary_level_curie, "dcterms:source", ingest_url)
-
         if ingest_description is not None:
             self.model.addDescription(self.identifier, ingest_description)
 
