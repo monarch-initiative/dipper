@@ -2,6 +2,7 @@
 
 import unittest
 import logging
+import datetime
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
@@ -45,8 +46,18 @@ class DatasetTestCase(unittest.TestCase):
                                       ingest_logo=self.ingest_logo_url)
         self.source.fetch()
 
+        # expected things:
+        self.expected_curie_prefix = "MonarchData"
+        self.timestamp_date = datetime.date.today().isoformat()
+
         # expected summary level IRI
-        self.summary_level_IRI = URIRef(self.curie_map.get("Dipper") + self.identifier)
+        self.summary_level_IRI = URIRef(self.curie_map.get(self.expected_curie_prefix)
+                                        + self.identifier)
+        # expected version level IRI
+        self.version_level_IRI = URIRef(self.summary_level_IRI + self.timestamp_date)
+
+        # expected distribution level IRI (for ttl resource)
+        self.distribution_level_IRI_ttl = URIRef(self.version_level_IRI + ".ttl")
 
         # dry out a bit
         self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
@@ -72,10 +83,16 @@ class DatasetTestCase(unittest.TestCase):
         self.assertIsInstance(self.source.graph, RDFGraph,
                               "dataset doesn't contain an RDF graph")
 
+    # Test for summary level triples:
+    # [summary level resource] - rdf: type -> dctypes: Dataset
+    # [summary level resource] - dct: title -> title(literal)
+    # [summary level resource] - dct: description -> description(literal)
+    # [summary level resource] - dcterms:source -> [source web page, e.g.omim.org]
+    # [summary level resource] - schemaorg: logo -> [source logo IRI]
+    # [summary level resource] - dct: publisher -> monarchinitiative.org
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.summary_level_IRI, self.iri_rdf_type,
-             URIRef(self.curie_map.get("dctypes") + "Dataset"))))
+            (self.summary_level_IRI, self.iri_rdf_type, self.iri_dataset)))
         self.assertTrue(len(triples) == 1, "missing summary level type triple")
 
     def test_summary_level_title(self):
@@ -104,6 +121,42 @@ class DatasetTestCase(unittest.TestCase):
             (self.summary_level_IRI, self.iri_logo, URIRef(self.ingest_logo_url))))
         self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
+    # Check for version level resource triples:
+    # [version level resource] - rdf:type -> dctypes:Dataset
+    # [version level resource] - dct:title -> version title (literal)
+    # [version level resource] - dct:description -> version description (literal)
+    # [version level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+    # [version level resource] - pav:version -> ingest timestamp (same one above)
+    # [version level resource] - dct:creator	-> monarchinitiative.org
+    # [version level resource] - dct:publisher -> monarchinitiative.org
+    # [version level resource] - dct:isVersionOf -> [summary level resource]
+    # [version level resource] - dcterms:source -> [source file 1 IRI]
+    # [version level resource] - dcterms:source -> [source file 2 IRI]
+    # ...
+    # [source file 1 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # [source file 2 IRI] - pav:version -> [download date timestamp]
+    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
+    # ...
+
+    @unittest.skip("not passing")
+    def test_summary_level_type(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
+        self.assertTrue(len(triples) == 1, "missing version level type triple")
+
+    @unittest.skip("not passing")
+    def test_summary_level_title(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_title, Literal(self.ingest_title))))
+        self.assertTrue(len(triples) == 1, "missing version level title triple")
+
+    @unittest.skip("not passing")
+    def test_summary_level_description(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_description,
+             Literal("Fake ingest to test metadata in Dataset graph"))))
+        self.assertTrue(len(triples) == 1, "missing version level description triple")
 
 if __name__ == '__main__':
     unittest.main()
