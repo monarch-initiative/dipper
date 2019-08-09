@@ -160,6 +160,12 @@ class Dataset:
         self.curie_map = self.graph.curie_map
         # TODO: move hard coded curies to translation table calls
         self.identifier = identifier
+
+        # set HCLS resource CURIEs
+        self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
+        self.summary_level_curie = identifier
+        self.version_level_curie = identifier + self.date_timestamp_iso_8601
+
         if ingest_title is None:
             self.title = identifier
         else:
@@ -174,31 +180,33 @@ class Dataset:
 
         self.citation = set()
         self.license_url = license_url
-        self.model.addType(self.identifier, 'dctypes:Dataset')
-        self.graph.addTriple(self.identifier, 'dcterms:title', ingest_title, True)
-        self.model.addTriple(self.identifier, 'dcterms:Publisher', self.curie_map.get(""))
-        self.model.addTriple(self.identifier, "schemaorg:logo", ingest_logo)
-        self.graph.addTriple(
-            self.identifier, 'dcterms:identifier', identifier, True)
-        if ingest_url is not None:
-            self.graph.addTriple(self.identifier, "dcterms:source", ingest_url)
-        # maybe in the future add the logo here:
-        # schemaorg:logo  <uri>
 
-        if license_url is not None:
-            self.graph.addTriple(
-                self.identifier, 'dcterms:license', license_url)
-        else:
-            LOG.debug('No license provided.')
-        if data_rights is not None:
-            self.graph.addTriple(
-                self.identifier, 'dcterms:rights',
-                data_rights, object_is_literal=True)
-        else:
-            LOG.debug('No rights provided.')
+        #
+        # summary level triples:
+        #
+        self.model.addType(self.summary_level_curie, 'dctypes:Dataset')
+        self.graph.addTriple(self.summary_level_curie, 'dcterms:title', ingest_title,
+                             True)
+        self.model.addTriple(self.summary_level_curie, 'dcterms:Publisher',
+                             self.curie_map.get(""))
+        self.model.addTriple(self.summary_level_curie, "schemaorg:logo", ingest_logo)
+        self.graph.addTriple(self.summary_level_curie, 'dcterms:identifier',
+                             identifier, True)
+        if ingest_url is not None:
+            self.graph.addTriple(self.summary_level_curie, "dcterms:source", ingest_url)
 
         if ingest_description is not None:
             self.model.addDescription(self.identifier, ingest_description)
+
+        #
+        # version level triples:
+        #
+        self.model.addType(self.version_level_curie, 'dctypes:Dataset')
+        # use version level curie itself for title and description
+        self.graph.addTriple(self.version_level_curie, 'dcterms:title',
+                             self.version_level_curie, True)
+        self.model.addDescription(self.version_level_curie, self.version_level_curie)
+
         return
 
     def setVersion(self, date_issued, version_id=None):

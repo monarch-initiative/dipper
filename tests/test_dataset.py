@@ -48,7 +48,7 @@ class DatasetTestCase(unittest.TestCase):
 
         # expected things:
         self.expected_curie_prefix = "MonarchData"
-        self.timestamp_date = datetime.date.today().isoformat()
+        self.timestamp_date = datetime.date.today().strftime("%Y%m%d")
 
         # expected summary level IRI
         self.summary_level_IRI = URIRef(self.curie_map.get(self.expected_curie_prefix)
@@ -139,24 +139,22 @@ class DatasetTestCase(unittest.TestCase):
     # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
     # ...
 
-    @unittest.skip("not passing")
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
         self.assertTrue(len(triples) == 1, "missing version level type triple")
 
-    @unittest.skip("not passing")
     def test_summary_level_title(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.version_level_IRI, self.iri_title, Literal(self.ingest_title))))
+            (self.version_level_IRI, self.iri_title, Literal(self.version_level_IRI))))
         self.assertTrue(len(triples) == 1, "missing version level title triple")
 
-    @unittest.skip("not passing")
     def test_summary_level_description(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_description,
-             Literal("Fake ingest to test metadata in Dataset graph"))))
+             Literal(self.version_level_IRI))))
         self.assertTrue(len(triples) == 1, "missing version level description triple")
+
 
 if __name__ == '__main__':
     unittest.main()
