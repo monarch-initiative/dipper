@@ -6,6 +6,7 @@ import unittest
 import logging
 from datetime import datetime
 from stat import ST_CTIME
+from rdflib import XSD
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
@@ -180,13 +181,19 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_version_level_created(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.version_level_IRI, self.iri_created, Literal(self.timestamp_date))))
+            (self.version_level_IRI, self.iri_created, None)))
         self.assertTrue(len(triples) == 1, "missing version level created triple")
+        self.assertEqual(triples[0][2],
+                         Literal(self.timestamp_date, datatype=XSD.date),
+                         "version level created triple has the wrong timestamp")
 
     def test_version_level_version(self):
         triples = list(self.source.dataset.graph.triples(
-            (self.version_level_IRI, self.iri_version, Literal(self.timestamp_date))))
+            (self.version_level_IRI, self.iri_version, None)))
         self.assertTrue(len(triples) == 1, "missing version level version triple")
+        self.assertEqual(triples[0][2],
+                         Literal(self.timestamp_date, datatype=XSD.date),
+                         "version level version triple has the wrong timestamp")
 
     def test_version_level_creator(self):
         triples = list(self.source.dataset.graph.triples(
@@ -219,8 +226,8 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "missing version level file source version " +
                         "(download timestamp)")
-        self.assertEqual(str(triples[0][2]),
-                         str(self.downloaded_file_timestamp),
+        self.assertEqual(Literal(triples[0][2], datatype=XSD.date),
+                         Literal(self.downloaded_file_timestamp, datatype=XSD.date),
                          "version level source version timestamp isn't " +
                          "the same as the timestamp of the local file")
 

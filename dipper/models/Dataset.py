@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from rdflib import Literal, XSD
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
@@ -206,9 +207,9 @@ class Dataset:
         self.model.addDescription(self.version_level_curie, self.version_level_curie)
 
         self.graph.addTriple(self.version_level_curie, 'dcterms:created',
-                             self.date_timestamp_iso_8601)
+                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, 'pav:version',
-                             self.date_timestamp_iso_8601)
+                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
 
         self.graph.addTriple(self.version_level_curie, 'dcterms:creator',
                              self.curie_map.get(""))  # eval's to MI.org

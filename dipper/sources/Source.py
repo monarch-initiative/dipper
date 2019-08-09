@@ -7,6 +7,7 @@ import urllib
 import csv
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
+from rdflib import XSD, Literal
 
 import yaml
 from dipper.graph.RDFGraph import RDFGraph
@@ -388,7 +389,9 @@ class Source:
                                          # which isn't what we want
                                          filesource['url']
                                          )
-            filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
+            filedate = Literal(
+                datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
+                datatype=XSD.date)
             self.dataset.graph.addTriple(filesource['url'],
                                          self.resolve("version"),
                                          filedate)
