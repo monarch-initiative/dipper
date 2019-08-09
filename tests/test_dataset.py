@@ -76,7 +76,8 @@ class DatasetTestCase(unittest.TestCase):
         self.downloaded_file_path = \
             '/'.join((self.source.rawdir, self.theseFiles.get("test_file").get("file")))
         fstat = os.stat(self.downloaded_file_path)
-        self.downloaded_file_timestamp = datetime.utcfromtimestamp(fstat[ST_CTIME])
+        self.downloaded_file_timestamp = \
+            datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
 
         # dry out a bit
         self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
@@ -219,17 +220,9 @@ class DatasetTestCase(unittest.TestCase):
                         "missing version level file source version " +
                         "(download timestamp)")
         self.assertEqual(str(triples[0][2]),
-                         str(self.timestamp_date),
-                         "version level source version timestamp isn't the same as" +
-                         "the timestamp of the local file")
-
-    # confirm we have triples for source files
-    # ...
-    # [source file 1 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # [source file 2 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # ...
+                         str(self.downloaded_file_timestamp),
+                         "version level source version timestamp isn't " +
+                         "the same as the timestamp of the local file")
 
 
 if __name__ == '__main__':

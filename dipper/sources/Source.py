@@ -388,13 +388,11 @@ class Source:
                                          # which isn't what we want
                                          filesource['url']
                                          )
+            filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
+            self.dataset.graph.addTriple(filesource['url'],
+                                         self.resolve("version"),
+                                         filedate)
 
-        # only keeping the date from the last file
-        filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
-
-        # FIXME
-        # change this so the date is attached only to each file, not the entire dataset
-        self.dataset.set_date_issued(filedate)
 
     def fetch_from_url(
             self, remotefile, localfile=None, is_dl_forced=False, headers=None):
