@@ -17,21 +17,21 @@ class Dataset:
 
      Summary level: The summary level provides a description of a dataset that is
      independent of a specific version or format. (e.g. the Monarch ingest of CTD)
-     CURIE for this is Dipper:[SOURCE IDENTIFIER]
+     CURIE for this is something like MonarchData:[SOURCE IDENTIFIER]
 
      Version level: The version level captures version-specific characteristics of a
      dataset. (e.g. the 01-02-2018 ingest of CTD)
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP]
+     CURIE for this is something like MonarchData:[SOURCE IDENTIFIER_INGESTTIMESTAMP]
 
      Distribution level: The distribution level captures metadata about a specific form
      and version of a dataset (e.g. turtle file for 01-02-2018 ingest of CTD). There is
      a [distribution level resource] for each different downloadable file we emit,
      i.e. one for the TTL file, one for the ntriples file, etc.
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].ttl
+     CURIE for this is like MonarchData:[SOURCE IDENTIFIER_INGESTTIMESTAMP].ttl
      or
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].nt
+     MonarchData:[SOURCE IDENTIFIER_INGESTTIMESTAMP].nt
      or
-     CURIE for this is Dipper:[SOURCE IDENTIFIER_INGESTTIMESTAMP].[whatever file format]
+     MonarchData:[SOURCE IDENTIFIER_INGESTTIMESTAMP].[whatever file format]
 
      We write out at least the following triples:
 
@@ -160,6 +160,7 @@ class Dataset:
         self.curie_map = self.graph.curie_map
         # TODO: move hard coded curies to translation table calls
         self.identifier = identifier
+        self.citation = set()
 
         # set HCLS resource CURIEs
         self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
@@ -178,7 +179,6 @@ class Dataset:
         # TODO ... we need to have a talk about typed literals and SPARQL
         self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
-        self.citation = set()
         self.license_url = license_url
 
         #
@@ -206,6 +206,19 @@ class Dataset:
         self.graph.addTriple(self.version_level_curie, 'dcterms:title',
                              self.version_level_curie, True)
         self.model.addDescription(self.version_level_curie, self.version_level_curie)
+
+        self.graph.addTriple(self.version_level_curie, 'dcterms:created',
+                             self.date_timestamp_iso_8601)
+        self.graph.addTriple(self.version_level_curie, 'pav:version',
+                             self.date_timestamp_iso_8601)
+
+        self.graph.addTriple(self.version_level_curie, 'dcterms:creator',
+                             self.curie_map.get(""))  # eval's to MI.org
+        self.graph.addTriple(self.version_level_curie, 'dcterms:Publisher',
+                             self.curie_map.get(""))  # eval's to MI.org
+
+        self.graph.addTriple(self.version_level_curie, 'dcterms:isVersionOf',
+                             self.summary_level_curie)
 
         return
 

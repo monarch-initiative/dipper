@@ -68,6 +68,10 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
         self.iri_logo = URIRef(self.curie_map.get("schemaorg") + "logo")
         self.iri_mi_org = URIRef("https://monarchinitiative.org/")
+        self.iri_created = URIRef(self.curie_map.get("dcterms") + "created")
+        self.iri_version = URIRef(self.curie_map.get("pav") + "version")
+        self.iri_creator = URIRef(self.curie_map.get("dcterms") + "creator")
+        self.iri_is_version_of = URIRef(self.curie_map.get("dcterms") + "isVersionOf")
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
@@ -154,6 +158,31 @@ class DatasetTestCase(unittest.TestCase):
             (self.version_level_IRI, self.iri_description,
              Literal(self.version_level_IRI))))
         self.assertTrue(len(triples) == 1, "missing version level description triple")
+
+    def test_summary_level_created(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_created, Literal(self.timestamp_date))))
+        self.assertTrue(len(triples) == 1, "missing version level created triple")
+
+    def test_summary_level_version(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_version, Literal(self.timestamp_date))))
+        self.assertTrue(len(triples) == 1, "missing version level version triple")
+
+    def test_summary_level_creator(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_creator, self.iri_mi_org)))
+        self.assertTrue(len(triples) == 1, "missing version level creator triple")
+
+    def test_summary_level_publisher(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_publisher, self.iri_mi_org)))
+        self.assertTrue(len(triples) == 1, "missing version level publisher triple")
+
+    def test_summary_level_isVersionOf(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
+        self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
 
 
 if __name__ == '__main__':
