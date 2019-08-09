@@ -212,7 +212,6 @@ class Dataset:
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, 'pav:version',
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-
         self.graph.addTriple(self.version_level_curie, 'dcterms:creator',
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.version_level_curie, 'dcterms:Publisher',
@@ -233,6 +232,10 @@ class Dataset:
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:created',
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:creator',
+                             self.curie_map.get(""))  # eval's to MI.org
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:Publisher',
+                             self.curie_map.get(""))  # eval's to MI.org
 
         return
 

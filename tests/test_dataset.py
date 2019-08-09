@@ -290,14 +290,12 @@ class DatasetTestCase(unittest.TestCase):
                         "missing version level type version triple")
         self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
 
-    @unittest.skip("skipping")
     def test_distribution_level_creator(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_creator, self.iri_mi_org)))
         self.assertTrue(len(triples) == 1,
                         "missing distribution level creator triple")
 
-    @unittest.skip("skipping")
     def test_distribution_level_publisher(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_publisher, self.iri_mi_org)))
