@@ -243,7 +243,7 @@ class DatasetTestCase(unittest.TestCase):
     # [distribution level resource] - rdf:type -> dcat:Distribution
     # [distribution level resource] - dct:title -> distribution title (literal)
     # [distribution level resource] - dct:description -> distribution description (lit.)
-    # [distribution level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+    # [distribution level resource] - dct:created -> ingest timestamp[ISO8601 compliant]
     # [distribution level resource] - pav:version -> ingest timestamp (same as above)
     # [distribution level resource] - dct:creator -> monarchinitiative.org
     # [distribution level resource] - dct:publisher -> monarchinitiative.org
