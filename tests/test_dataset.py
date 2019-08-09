@@ -143,43 +143,43 @@ class DatasetTestCase(unittest.TestCase):
     # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
     # ...
 
-    def test_summary_level_type(self):
+    def test_version_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
         self.assertTrue(len(triples) == 1, "missing version level type triple")
 
-    def test_summary_level_title(self):
+    def test_version_level_title(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_title, Literal(self.version_level_IRI))))
         self.assertTrue(len(triples) == 1, "missing version level title triple")
 
-    def test_summary_level_description(self):
+    def test_version_level_description(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_description,
              Literal(self.version_level_IRI))))
         self.assertTrue(len(triples) == 1, "missing version level description triple")
 
-    def test_summary_level_created(self):
+    def test_version_level_created(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_created, Literal(self.timestamp_date))))
         self.assertTrue(len(triples) == 1, "missing version level created triple")
 
-    def test_summary_level_version(self):
+    def test_version_level_version(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_version, Literal(self.timestamp_date))))
         self.assertTrue(len(triples) == 1, "missing version level version triple")
 
-    def test_summary_level_creator(self):
+    def test_version_level_creator(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_creator, self.iri_mi_org)))
         self.assertTrue(len(triples) == 1, "missing version level creator triple")
 
-    def test_summary_level_publisher(self):
+    def test_version_level_publisher(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_publisher, self.iri_mi_org)))
         self.assertTrue(len(triples) == 1, "missing version level publisher triple")
 
-    def test_summary_level_isVersionOf(self):
+    def test_version_level_isVersionOf(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
         self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
