@@ -94,6 +94,12 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_creator = URIRef(self.curie_map.get("dcterms") + "creator")
         self.iri_is_version_of = URIRef(self.curie_map.get("dcterms") + "isVersionOf")
         self.iri_distribution = URIRef(self.curie_map.get("dcat") + "Distribution")
+        self.iri_created_with = URIRef(self.curie_map.get("pav") + "createdWith")
+        self.iri_format = URIRef(self.curie_map.get("dcterms") + "format")
+        self.iri_download_url = URIRef(self.curie_map.get("dcterms") + "downloadURL")
+
+        self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
+        self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
@@ -302,10 +308,31 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "missing distribution level publisher triple")
 
+    def test_distribution_level_created_with(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_created_with,
+             self.iri_dipper)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level createdWith triple")
+
+    def test_distribution_level_format(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_format,
+             self.iri_ttl_spec)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level format triple")
+
+    def test_distribution_level_download_url(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_download_url,
+             self.distribution_level_IRI_ttl)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level downloadUrl triple")
+
     # [distribution level resource] - dct:license -> [license info, if available]
-    # [distribution level resource] - pav:createdWith -> [Dipper github URI]
-    # [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
-    # [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
 
 if __name__ == '__main__':
     unittest.main()

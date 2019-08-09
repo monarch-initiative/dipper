@@ -236,6 +236,13 @@ class Dataset:
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:Publisher',
                              self.curie_map.get(""))  # eval's to MI.org
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:createdWith',
+                             "https://github.com/monarch-initiative/dipper")
+        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:format',
+                             "https://www.w3.org/TR/turtle/")
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'dcterms:downloadURL',
+                             self.distribution_level_turtle_curie)
 
         return
 
