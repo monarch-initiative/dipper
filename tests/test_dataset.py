@@ -40,6 +40,9 @@ class DatasetTestCase(unittest.TestCase):
         self.ingest_url = "http://fakeingest.com"
         self.ingest_title = "this ingest title"
         self.ingest_logo_url = "http://fakeingest.com/logo.png"
+        self.license_url = "https://choosealicense.com/licenses/mit/"
+        self.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
+        self.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
 
         # The following to be used in both DatasetTestCase and FakeIngestClass
         # using robots.txt b/c it's a trivially small file/empty file that we control
@@ -56,6 +59,8 @@ class DatasetTestCase(unittest.TestCase):
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
                                       ingest_logo=self.ingest_logo_url,
+                                      license_url=self.license_url,
+                                      data_rights=self.data_rights,
                                       files=self.theseFiles)
         self.source.fetch()
 
@@ -97,6 +102,7 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_created_with = URIRef(self.curie_map.get("pav") + "createdWith")
         self.iri_format = URIRef(self.curie_map.get("dcterms") + "format")
         self.iri_download_url = URIRef(self.curie_map.get("dcterms") + "downloadURL")
+        self.iri_license = URIRef(self.curie_map.get("dcterms") + "license")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -332,7 +338,40 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "missing distribution level downloadUrl triple")
 
-    # [distribution level resource] - dct:license -> [license info, if available]
+    def test_distribution_level_license_url(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_license,
+             URIRef(self.license_url))))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level license triple")
+
+    def test_distribution_level_data_rights(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_license,
+             URIRef(self.data_rights))))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level data rights triple")
+
+    def test_distribution_level_no_license_url_or_data_rights_default_value(self):
+        self.source = FakeIngestClass("rdf_graph",
+                                      are_bnodes_skolemized=False,
+                                      identifier=self.identifier,
+                                      ingest_url=self.ingest_url,
+                                      ingest_title=self.ingest_title,
+                                      ingest_logo=self.ingest_logo_url,
+                                      license_url=None, # not set
+                                      data_rights=None, # not set
+                                      files=self.theseFiles)
+        self.source.fetch()
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_license,
+             URIRef(self.license_url_default))))
+        self.assertTrue(len(triples) == 1,
+                        "distribution level default license triple not set")
+
 
 if __name__ == '__main__':
     unittest.main()
@@ -351,6 +390,8 @@ class FakeIngestClass(Source):
                  ingest_title=None,
                  ingest_desc=None,
                  ingest_logo=None,
+                 license_url=None,
+                 data_rights=None,
                  files=None
                  ):
         super().__init__(
@@ -359,7 +400,9 @@ class FakeIngestClass(Source):
             name=identifier,
             ingest_url=ingest_url,
             ingest_title=ingest_title,
-            ingest_logo=ingest_logo
+            ingest_logo=ingest_logo,
+            license_url=license_url,
+            data_rights=data_rights
         )
         self.files = files
 

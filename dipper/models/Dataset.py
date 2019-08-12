@@ -98,11 +98,12 @@ class Dataset:
      [distribution level resource] - rdf:type -> dcat:Distribution
      [distribution level resource] - dct:title -> distribution title (literal)
      [distribution level resource] - dct:description -> distribution description (lit.)
-     [distribution level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+     [distribution level resource] - dct:created -> ingest timestamp[ISO 8601 compliant]
      [distribution level resource] - pav:version -> ingest timestamp (same as above)
      [distribution level resource] - dct:creator -> monarchinitiative.org
      [distribution level resource] - dct:publisher -> monarchinitiative.org
-     [distribution level resource] - dct:license -> [license info, if available]
+     [distribution level resource] - dct:license -> [license info, if available
+                    otherwise indicate unknown]
      [distribution level resource] - pav:createdWith -> [Dipper github URI]
      [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
      [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
@@ -144,6 +145,8 @@ class Dataset:
             ingest_description=None,
             license_url=None,
             data_rights=None,
+            # n.b.: both license_url and data_rights args are emitted as dcterms:license
+            # triples in dataset graph
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
             file_handle=None
     ):
@@ -176,6 +179,7 @@ class Dataset:
         self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
         self.license_url = license_url
+        self.data_rights = data_rights
 
         # set HCLS resource CURIEs
         self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
@@ -243,6 +247,23 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'dcterms:downloadURL',
                              self.distribution_level_turtle_curie)
+
+        # emit license_url and data rights url. if neither are set, emit
+        # unknown license to comply with HCLS spec
+        if self.license_url is not None:
+            self.graph.addTriple(self.distribution_level_turtle_curie,
+                                 'dcterms:license',
+                                 self.license_url)
+
+        if self.data_rights is not None:
+            self.graph.addTriple(self.distribution_level_turtle_curie,
+                                 'dcterms:license',
+                                 self.data_rights)
+
+        if self.license_url is None and self.data_rights is None:
+            self.graph.addTriple(self.distribution_level_turtle_curie,
+                                 'dcterms:license',
+                                 "https://project-open-data.cio.gov/unknown-license/")
 
         return
 

@@ -51,6 +51,8 @@ class Source:
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic
+            # n.b.: both license_url and data_rights args are emitted as dcterms:license
+            # triples in dataset graph
             file_handle=None
     ):
 
