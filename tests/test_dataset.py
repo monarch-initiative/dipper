@@ -140,6 +140,7 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1, "missing summary level title triple")
 
     def test_summary_level_description(self):
+        # by default, description is the class's docstring
         triples = list(self.source.dataset.graph.triples(
             (self.summary_level_IRI, self.iri_description,
              Literal("Fake ingest to test metadata in Dataset graph"))))
