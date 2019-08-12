@@ -373,9 +373,9 @@ class Source:
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
-                self.dataset.set_source_file(filesource['clean'])
+                self.dataset.set_ingest_source(filesource['clean'])
             else:
-                self.dataset.set_source_file(filesource['url'])
+                self.dataset.set_ingest_source(filesource['url'])
                 LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
 
             time.sleep(delay)
