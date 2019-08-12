@@ -318,27 +318,6 @@ class Dataset:
 
         return
 
-    def set_version_by_date(self, date_issued=None):
-        """
-        This will set the version by the date supplied,
-        the date already stored in the dataset description,
-        or by the download date (today)
-        :param date_issued:
-        :return:
-        """
-
-        if date_issued is not None:
-            dat = date_issued
-        elif self.date_issued is not None:
-            dat = self.date_issued
-        else:
-            dat = self.date_accessed
-            LOG.info(
-                "No date supplied, using download timestamp for date_issued")
-        LOG.info("setting version by date to: %s", dat)
-        self.set_version_by_num(dat)
-
-        return
 
     def set_version_by_num(self, version_num):
 
