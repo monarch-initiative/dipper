@@ -273,7 +273,7 @@ class Source:
         """
         return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
 
-    def checkIfRemoteIsNewer(self, remote, local, headers):
+    def check_if_remote_is_newer(self, remote, local, headers):
         """
         Given a remote file location, and the corresponding local file
         this will check the datetime stamp on the files to see if the remote
@@ -414,7 +414,7 @@ class Source:
 
         response = None
         if ((is_dl_forced is True) or localfile is None or
-                (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
+                (self.check_if_remote_is_newer(remotefile, localfile, headers))):
             # TODO url verification, etc
             if headers is None:
                 headers = self._get_default_request_headers()

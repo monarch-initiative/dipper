@@ -49,7 +49,7 @@ class MyDrug(Source):
         """
         dir_path = Path(self.rawdir)
         aeolus_file = dir_path / self.files['aeolus']['file']
-        if self.checkIfRemoteIsNewer(aeolus_file):
+        if self.check_if_remote_is_newer(aeolus_file):
             aeolis_fh = aeolus_file.open('w')
             aeolis_fh.write("[\n")
             params = {
@@ -210,7 +210,7 @@ class MyDrug(Source):
         return
 
     # Override
-    def checkIfRemoteIsNewer(self, localfile):
+    def check_if_remote_is_newer(self, localfile):
         """
         Need to figure out how biothings records releases,
         for now if the file exists we will assume it is

@@ -140,7 +140,7 @@ class Bgee(Source):
                 self._convert_ftp_time_to_iso(info['modify']))
 
             if not os.path.exists(localfile) or is_dl_forced or \
-                    self.checkIfRemoteIsNewer(
+                    self.check_if_remote_is_newer(
                             localfile, int(info['size']), info['modify']):
 
                 LOG.info("Fetching %s", dlname)
@@ -225,9 +225,9 @@ class Bgee(Source):
             self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
 
     # Override
-    def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
+    def check_if_remote_is_newer(self, localfile, remote_size, remote_modify):
         """
-        Overrides checkIfRemoteIsNewer in Source class
+        Overrides check_if_remote_is_newer in Source class
 
         :param localfile: str file path
         :param remote_size: str bytes
