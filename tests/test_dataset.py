@@ -103,6 +103,7 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_format = URIRef(self.curie_map.get("dcterms") + "format")
         self.iri_download_url = URIRef(self.curie_map.get("dcterms") + "downloadURL")
         self.iri_license = URIRef(self.curie_map.get("dcterms") + "license")
+        self.iri_data_rights = URIRef(self.curie_map.get("dcterms") + "rights")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -349,20 +350,20 @@ class DatasetTestCase(unittest.TestCase):
     def test_distribution_level_data_rights(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
-             self.iri_license,
+             self.iri_data_rights,
              URIRef(self.data_rights))))
         self.assertTrue(len(triples) == 1,
                         "missing distribution level data rights triple")
 
-    def test_distribution_level_no_license_url_or_data_rights_default_value(self):
+    def test_distribution_level_no_license_url_default_value(self):
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
                                       identifier=self.identifier,
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
                                       ingest_logo=self.ingest_logo_url,
-                                      license_url=None, # not set
-                                      data_rights=None, # not set
+                                      license_url=None,  # not set
+                                      data_rights=self.data_rights,
                                       files=self.theseFiles)
         self.source.fetch()
         triples = list(self.source.dataset.graph.triples(

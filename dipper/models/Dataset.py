@@ -250,20 +250,19 @@ class Dataset:
 
         # emit license_url and data rights url. if neither are set, emit
         # unknown license to comply with HCLS spec
-        if self.license_url is not None:
+        if self.license_url is None:
+            self.graph.addTriple(self.distribution_level_turtle_curie,
+                                     'dcterms:license',
+                                     "https://project-open-data.cio.gov/unknown-license/")
+        else:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                  'dcterms:license',
                                  self.license_url)
 
         if self.data_rights is not None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'dcterms:license',
+                                 'dcterms:rights',
                                  self.data_rights)
-
-        if self.license_url is None and self.data_rights is None:
-            self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'dcterms:license',
-                                 "https://project-open-data.cio.gov/unknown-license/")
 
         return
 
