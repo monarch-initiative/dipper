@@ -200,7 +200,7 @@ class MGI(PostgreSQLSource):
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
 
-        self.dataset.setFileAccessUrl(''.join((
+        self.dataset.set_ingest_source(''.join((
             'jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
             cxn['database'])), is_object_literal=True)
 

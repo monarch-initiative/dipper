@@ -365,9 +365,9 @@ class Dataset:
                 object_is_literal=True, literal_type="xsd:dateTime")
         return
 
-    def setFileAccessUrl(self, url, is_object_literal=False):
+    def set_ingest_source(self, url, is_object_literal=False):
         self.graph.addTriple(
-            self.identifier, 'dcat:accessURL', url, is_object_literal)
+            self.version_level_curie, 'dcterms:source', url, is_object_literal)
 
     def getGraph(self):
         return self.graph

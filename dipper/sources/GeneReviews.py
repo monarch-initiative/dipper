@@ -372,7 +372,7 @@ class GeneReviews(OMIMSource):
             # for example: NBK1191 PMID:20301370
 
             # add the book to the dataset
-            self.dataset.setFileAccessUrl(book_item['url'])
+            self.dataset.set_ingest_source(book_item['url'])
 
             if limit is not None and cnt > limit:
                 break

@@ -104,7 +104,7 @@ class EOM(PostgreSQLSource):
         cxn['user'] = config.get_config()['user']['disco']
         cxn['password'] = config.get_config()['keys'][cxn['user']]
 
-        self.dataset.setFileAccessUrl(
+        self.dataset.set_ingest_source(
             'jdbc:postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database'],
             is_object_literal=True)
 

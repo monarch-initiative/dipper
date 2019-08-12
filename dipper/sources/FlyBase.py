@@ -154,7 +154,7 @@ class FlyBase(PostgreSQLSource):
             'host': 'chado.flybase.org', 'database': 'flybase', 'port': 5432,
             'user': 'flybase', 'password': 'no password'}
 
-        self.dataset.setFileAccessUrl(
+        self.dataset.set_ingest_source(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                      '/', cxn['database'])), is_object_literal=True)
 

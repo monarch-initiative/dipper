@@ -361,7 +361,7 @@ class HPOAnnotations(Source):
         print(repo_hash)
         repo_hash = str(repo_hash)
         # (note this makes little sense as it is a private repo)
-        self.dataset.setFileAccessUrl(
+        self.dataset.set_ingest_source(
             '/'.join((
                 'https://github.com/monarch-initiative/hpo-annotation-data/tree',
                 repo_hash)))
