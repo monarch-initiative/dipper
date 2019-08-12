@@ -86,7 +86,7 @@ class DatasetTestCase(unittest.TestCase):
         self.downloaded_file_timestamp = \
             datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
 
-        # dry out a bit
+        # set expected IRIs for predicates and other things
         self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
         self.iri_title = URIRef(self.curie_map.get("dcterms") + "title")
         self.iri_dataset = URIRef(self.curie_map.get("dctypes") + "Dataset")
