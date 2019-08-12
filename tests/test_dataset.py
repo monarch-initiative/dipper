@@ -32,7 +32,8 @@ class DatasetTestCase(unittest.TestCase):
     ingest object
     """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.curie_map = curiemap.get()
 
         # parameters passed to code, to be returned in graph
@@ -111,7 +112,8 @@ class DatasetTestCase(unittest.TestCase):
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         pass
 
     def test_has_dataset_attribute(self):
