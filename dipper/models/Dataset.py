@@ -366,6 +366,8 @@ class Dataset:
         return
 
     def set_ingest_source(self, url, is_object_literal=False):
+        # this triple is likely to be redundant, since this triple should also emitted
+        # in Source.get_files().
         self.graph.addTriple(
             self.version_level_curie, 'dcterms:source', url, is_object_literal)
 
