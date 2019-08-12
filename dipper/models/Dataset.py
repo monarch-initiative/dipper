@@ -166,10 +166,14 @@ class Dataset:
         self.identifier = identifier
         self.citation = set()
 
-        if ingest_title is None:
-            self.title = identifier
-        else:
-            self.title = ingest_title
+        self.ingest_title = ingest_title
+        if self.ingest_title is None:
+            self.ingest_title = identifier
+
+        self.ingest_url = ingest_url
+        self.ingest_logo = ingest_logo
+        self.ingest_description = ingest_description
+
         self.version = None
         self.date_issued = None
 
@@ -187,31 +191,39 @@ class Dataset:
         self.version_level_curie = identifier + self.date_timestamp_iso_8601
         self.distribution_level_turtle_curie = self.version_level_curie + ".ttl"
 
-        #
-        # summary level triples:
-        #
+        self.set_summary_level_triples()
+        self.set_version_level_triples()
+        self.set_distribution_level_triples()
+
+        return
+
+    def set_summary_level_triples(self):
         self.model.addType(self.summary_level_curie, 'dctypes:Dataset')
-        self.graph.addTriple(self.summary_level_curie, 'dcterms:title', ingest_title,
+        self.graph.addTriple(self.summary_level_curie,
+                             'dcterms:title',
+                             self.ingest_title,
                              True)
         self.model.addTriple(self.summary_level_curie, 'dcterms:Publisher',
                              self.curie_map.get(""))
-        self.model.addTriple(self.summary_level_curie, "schemaorg:logo", ingest_logo)
+        self.model.addTriple(self.summary_level_curie,
+                             "schemaorg:logo",
+                             self.ingest_logo)
         self.graph.addTriple(self.summary_level_curie, 'dcterms:identifier',
-                             identifier, True)
-        if ingest_url is not None:
-            self.graph.addTriple(self.summary_level_curie, "dcterms:source", ingest_url)
-        if ingest_description is not None:
-            self.model.addDescription(self.identifier, ingest_description)
+                             self.identifier, True)
+        if self.ingest_url is not None:
+            self.graph.addTriple(self.summary_level_curie,
+                                 "dcterms:source",
+                                 self.ingest_url)
+        if self.ingest_description is not None:
+            self.model.addDescription(self.identifier, self.ingest_description)
+        return
 
-        #
-        # version level triples:
-        #
+    def set_version_level_triples(self):
         self.model.addType(self.version_level_curie, 'dctypes:Dataset')
         # use version level curie itself for title and description
         self.graph.addTriple(self.version_level_curie, 'dcterms:title',
                              self.version_level_curie, True)
         self.model.addDescription(self.version_level_curie, self.version_level_curie)
-
         self.graph.addTriple(self.version_level_curie, 'dcterms:created',
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, 'pav:version',
@@ -220,12 +232,10 @@ class Dataset:
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.version_level_curie, 'dcterms:Publisher',
                              self.curie_map.get(""))  # eval's to MI.org
-
         self.graph.addTriple(self.version_level_curie, 'dcterms:isVersionOf',
                              self.summary_level_curie)
-        #
-        # distribution level triples:
-        #
+
+    def set_distribution_level_triples(self):
         self.model.addType(self.distribution_level_turtle_curie, 'dctypes:Dataset')
         self.model.addType(self.distribution_level_turtle_curie, 'dcat:Distribution')
         self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:title',
@@ -247,9 +257,6 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'dcterms:downloadURL',
                              self.distribution_level_turtle_curie)
-
-        # emit license_url and data rights url. if neither are set, emit
-        # unknown license to comply with HCLS spec
         if self.license_url is None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                      'dcterms:license',
@@ -263,8 +270,6 @@ class Dataset:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                  'dcterms:rights',
                                  self.data_rights)
-
-        return
 
     def set_ingest_source_file_version_num(self, file_iri, version, literal_type=None):
         self.graph.addTriple(file_iri, 'pav:version', version, object_is_literal=True)
