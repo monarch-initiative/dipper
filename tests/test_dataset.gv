@@ -40,9 +40,9 @@ digraph metadata_model {
     version_level -> source_file_1_IRI [label="dcterms:source"]
     version_level -> source_file_2_IRI [label="dcterms:source"]
 
-    source_file_1_IRI -> source_file_1_download_timestamp [label="pav:version"]
+    source_file_1_IRI -> source_file_1_download_timestamp [label="pav:retrievedOn"]
     source_file_1_IRI -> source_version_1_optional [label="pav:version"]
-    source_file_2_IRI -> source_file_2_download_timestamp  [label="pav:version"]
+    source_file_2_IRI -> source_file_2_download_timestamp  [label="pav:retrievedOn"]
     source_file_2_IRI -> source_version_2_optional  [label="pav:version"]
 
     version_level -> dipper_github_URI [label="pav:createdWith"]

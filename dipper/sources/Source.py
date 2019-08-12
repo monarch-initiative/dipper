@@ -395,7 +395,7 @@ class Source:
                 datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
                 datatype=XSD.date)
             self.dataset.graph.addTriple(filesource['url'],
-                                         self.resolve("version"),
+                                         "pav:retrievedOn",
                                          filedate)
 
 

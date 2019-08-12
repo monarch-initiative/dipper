@@ -97,6 +97,7 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_mi_org = URIRef("https://monarchinitiative.org/")
         self.iri_created = URIRef(self.curie_map.get("dcterms") + "created")
         self.iri_version = URIRef(self.curie_map.get("pav") + "version")
+        self.iri_retrieved_on = URIRef(self.curie_map.get("pav") + "retrievedOn")
         self.iri_creator = URIRef(self.curie_map.get("dcterms") + "creator")
         self.iri_is_version_of = URIRef(self.curie_map.get("dcterms") + "isVersionOf")
         self.iri_distribution = URIRef(self.curie_map.get("dcat") + "Distribution")
@@ -213,18 +214,18 @@ class DatasetTestCase(unittest.TestCase):
         )))
         self.assertTrue(len(triples) == 1, "missing version level file source triple")
 
-    def test_version_level_source_version_timestamp(self):
+    def test_version_level_source_version_download_timestamp(self):
         triples = list(self.source.dataset.graph.triples(
             (URIRef(self.theseFiles.get("test_file").get("url")),
-             self.iri_version,
+             self.iri_retrieved_on,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing version level file source version " +
+                        "missing triple for ingest file retrieved on " +
                         "(download timestamp)")
         self.assertEqual(Literal(triples[0][2], datatype=XSD.date),
                          Literal(self.downloaded_file_timestamp, datatype=XSD.date),
                          "version level source version timestamp isn't " +
-                         "the same as the timestamp of the local file")
+                         "the same as the download timestamp of the local file")
 
     # DISTRIBUTION LEVEL TRIPLES:
     def test_distribution_level_dataset_type(self):
