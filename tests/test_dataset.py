@@ -123,12 +123,6 @@ class DatasetTestCase(unittest.TestCase):
                               "dataset doesn't contain an RDF graph")
 
     # Test for summary level triples:
-    # [summary level resource] - rdf: type -> dctypes: Dataset
-    # [summary level resource] - dct: title -> title(literal)
-    # [summary level resource] - dct: description -> description(literal)
-    # [summary level resource] - dcterms:source -> [source web page, e.g.omim.org]
-    # [summary level resource] - schemaorg: logo -> [source logo IRI]
-    # [summary level resource] - dct: publisher -> monarchinitiative.org
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.summary_level_IRI, self.iri_rdf_type, self.iri_dataset)))
@@ -162,22 +156,6 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
     # Check for version level resource triples:
-    # [version level resource] - rdf:type -> dctypes:Dataset
-    # [version level resource] - dct:title -> version title (literal)
-    # [version level resource] - dct:description -> version description (literal)
-    # [version level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
-    # [version level resource] - pav:version -> ingest timestamp (same one above)
-    # [version level resource] - dct:creator	-> monarchinitiative.org
-    # [version level resource] - dct:publisher -> monarchinitiative.org
-    # [version level resource] - dct:isVersionOf -> [summary level resource]
-    # [version level resource] - dcterms:source -> [source file 1 IRI]
-    # [version level resource] - dcterms:source -> [source file 2 IRI]
-    # ...
-    # [source file 1 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # [source file 2 IRI] - pav:version -> [download date timestamp]
-    # [source file 2 IRI] - pav:version -> [source version (if set, optional)]
-    # ...
     def test_version_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
@@ -247,23 +225,6 @@ class DatasetTestCase(unittest.TestCase):
                          "the same as the timestamp of the local file")
 
     # DISTRIBUTION LEVEL TRIPLES:
-    # [distribution level resource] - rdf:type -> dctypes:Dataset
-    # [distribution level resource] - rdf:type -> dcat:Distribution
-    # [distribution level resource] - dct:title -> distribution title (literal)
-    # [distribution level resource] - dct:description -> distribution description (lit.)
-    # [distribution level resource] - dct:created -> ingest timestamp[ISO8601 compliant]
-    # [distribution level resource] - pav:version -> ingest timestamp (same as above)
-    # [distribution level resource] - dct:creator -> monarchinitiative.org
-    # [distribution level resource] - dct:publisher -> monarchinitiative.org
-    # [distribution level resource] - dct:license -> [license info, if available]
-    # [distribution level resource] - pav:createdWith -> [Dipper github URI]
-    # [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
-    # [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
-    # [distribution level resource] - void:triples -> [triples count (literal)]
-    # [distribution level resource] - void:entities -> [entities count (literal)]
-    # [distribution level resource] - void:distinctSubjects -> [subject count (literal)]
-    # [distribution level resource] - void:distinctObjects -> [object count (literal)]
-    # [distribution level resource] - void:properties -> [properties count (literal)]
     def test_distribution_level_dataset_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_rdf_type, self.iri_dataset)))
