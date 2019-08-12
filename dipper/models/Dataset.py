@@ -266,6 +266,14 @@ class Dataset:
 
         return
 
+    def set_ingest_source_file_version_num(self, file_iri, version, literal_type=None):
+        self.graph.addTriple(file_iri, 'pav:version', version, object_is_literal=True)
+
+    def set_ingest_source_file_version_date(self, file_iri, date):
+        self.graph.addTriple(file_iri, 'pav:version', date,
+                             object_is_literal=True, literal_type=XSD.date)
+
+
     def setVersion(self, date_issued, version_id=None):
         """
         Legacy function...

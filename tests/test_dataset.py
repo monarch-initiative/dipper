@@ -125,6 +125,28 @@ class DatasetTestCase(unittest.TestCase):
         self.assertIsInstance(self.source.graph, RDFGraph,
                               "dataset doesn't contain an RDF graph")
 
+    def test_set_ingest_source_file_version_num(self):
+        this_version = "version1234"
+        file_iri = self.source.files.get("test_file").get("url")
+        self.source.dataset.set_ingest_source_file_version_num(file_iri,
+                                                           this_version,
+                                                           literal_type=None)
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(file_iri), self.iri_version, Literal(this_version))))
+        self.assertTrue(len(triples) == 1, "ingest source file version not set")
+
+    def test_set_ingest_source_file_version_date(self):
+        this_version = "1970-01-01"
+        file_iri = self.source.files.get("test_file").get("url")
+        self.source.dataset.set_ingest_source_file_version_date(file_iri, this_version)
+
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(file_iri),
+             self.iri_version,
+             Literal(this_version,datatype=XSD.date))))
+        self.assertTrue(len(triples) == 1,
+                        "ingest source file version not set with literal type of date")
+
     # Test for summary level triples:
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
