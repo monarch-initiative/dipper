@@ -145,8 +145,6 @@ class Dataset:
             ingest_description=None,
             license_url=None,
             data_rights=None,
-            # n.b.: both license_url and data_rights args are emitted as dcterms:license
-            # triples in dataset graph
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
             file_handle=None
     ):
