@@ -269,7 +269,7 @@ class Dataset:
                                  'dcterms:rights',
                                  self.data_rights)
 
-    def set_ingest_source_file_version_num(self, file_iri, version, literal_type=None):
+    def set_ingest_source_file_version_num(self, file_iri, version):
         self.graph.addTriple(file_iri, 'pav:version', version, object_is_literal=True)
 
     def set_ingest_source_file_version_date(self, file_iri, date):
