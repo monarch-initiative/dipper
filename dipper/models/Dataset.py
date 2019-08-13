@@ -75,6 +75,11 @@ class Dataset:
 
      [version level resource] - pav:createdWith -> [Dipper github URI]
      [version level resource] - void:dataset -> [distribution level resource]
+
+     [version level resource] - cito:citesAsAuthoriy -> [citation id 1]
+     [version level resource] - cito:citesAsAuthoriy -> [citation id 2]
+     [version level resource] - cito:citesAsAuthoriy -> [citation id 3]
+
         n.b: about version level resource triples:
         - spec says we "should" include Date of issue/dct:issued triple, but I'm not
         because it is redundant with this triple above:
@@ -92,6 +97,7 @@ class Dataset:
         - I'm omitting the [version level resource] -> pav:previousVersion because
         Dipper doesn't know this info for certain at run time. Same below for
         [distribution level resource] - pav:previousVersion.
+
 
      DISTRIBUTION LEVEL TRIPLES:
      [distribution level resource] - rdf:type -> dctypes:Dataset
@@ -275,7 +281,6 @@ class Dataset:
     def set_ingest_source_file_version_date(self, file_iri, date):
         self.graph.addTriple(file_iri, 'pav:version', date,
                              object_is_literal=True, literal_type=XSD.date)
-
 
     def setVersion(self, date_issued, version_id=None):
         """
