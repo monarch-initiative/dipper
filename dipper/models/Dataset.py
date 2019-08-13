@@ -375,7 +375,9 @@ class Dataset:
                 object_is_literal=True, literal_type="xsd:dateTime")
         return
 
-    def set_ingest_source(self, url, is_object_literal=False):
+    def set_ingest_source(self, url,
+                          predictate='dcterms:source',
+                          is_object_literal=False):
         """
         This method writes a triple to the dataset graph indicating that the ingest
         used a file or resource at [url] during the ingest.
@@ -388,10 +390,17 @@ class Dataset:
         of files.
 
         :param url: a remote resource used as a source during ingest
+        :param predicate: the predicate to use for the triple ["dcterms:source"]
+                from spec (https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/)
+                "Use dct:source when the source dataset was used in whole or in part.
+                Use pav:retrievedFrom when the source dataset was used in whole and was
+                not modified from its original distribution. Use prov:wasDerivedFrom
+                when the source dataset was in whole or in part and was modified from
+                its original distribution."
         :return: None
         """
         self.graph.addTriple(
-            self.version_level_curie, 'dcterms:source', url,
+            self.version_level_curie, predictate, url,
             object_is_literal=is_object_literal)
 
     def get_graph(self):
