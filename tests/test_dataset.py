@@ -130,13 +130,12 @@ class DatasetTestCase(unittest.TestCase):
     def test_set_ingest_source_file_version_num(self):
         this_version = "version1234"
         file_iri = self.source.files.get("test_file").get("url")
-        self.source.dataset.set_ingest_source_file_version_num(file_iri,
-                                                           this_version)
+        self.source.dataset.set_ingest_source_file_version_num(file_iri, this_version)
         triples = list(self.source.dataset.graph.triples(
             (URIRef(file_iri), self.iri_version, Literal(this_version))))
         self.assertTrue(len(triples) == 1, "ingest source file version not set")
 
-    def test_set_ingest_source_file_version_date(self):
+    def test_set_ingest_source_file_version_date(self, datatype=XSD.date):
         this_version = "1970-01-01"
         file_iri = self.source.files.get("test_file").get("url")
         self.source.dataset.set_ingest_source_file_version_date(file_iri, this_version)
@@ -144,7 +143,7 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.source.dataset.graph.triples(
             (URIRef(file_iri),
              self.iri_version,
-             Literal(this_version,datatype=XSD.date))))
+             Literal(this_version,datatype=datatype))))
         self.assertTrue(len(triples) == 1,
                         "ingest source file version not set with literal type of date")
 

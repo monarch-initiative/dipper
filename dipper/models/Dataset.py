@@ -276,11 +276,48 @@ class Dataset:
                                  self.data_rights)
 
     def set_ingest_source_file_version_num(self, file_iri, version):
+        """
+        This method sets the version of a remote file or resource that is used in the
+        ingest. It writes this triple:
+
+        file_iri - 'pav:version' -> version
+
+        Version is an untyped literal
+
+        Note: if your version is a date or timestamp, use
+        set_ingest_source_file_version_date()
+        instead
+
+        :param file_iri: a remote file or resource used in ingest
+        :param version: a number or string (e.g. v1.2.3) that the source (OMIM, CTD)
+        uses to refer to this version of the file/resource used during the ingest
+        :return: None
+        """
         self.graph.addTriple(file_iri, 'pav:version', version, object_is_literal=True)
 
-    def set_ingest_source_file_version_date(self, file_iri, date):
+    def set_ingest_source_file_version_date(self, file_iri, date, datatype=XSD.date):
+        """
+        This method sets the version that the source (OMIM, CTD, whatever) uses to
+        refer to this version of the remote file/resource that was used in the ingest
+
+        It writes this triple:
+
+        file_iri - 'pav:version' -> date or timestamp
+
+        Version is added as a literal of datatype XSD date
+
+        Note: if file_iri was retrieved using get_files(), then the following triple
+        was created:
+
+        file_iri - 'pav:retrievedOn' -> download date
+
+        :param file_iri: a remote file or resource used in ingest
+        :param version: a date in YYYYMMDD format that the source (OMIM, CTD)
+        uses to refer to this version of the file/resource used during the ingest
+        :return: None
+        """
         self.graph.addTriple(file_iri, 'pav:version', date,
-                             object_is_literal=True, literal_type=XSD.date)
+                             object_is_literal=True, literal_type=datatype)
 
     def setVersion(self, date_issued, version_id=None):
         """
