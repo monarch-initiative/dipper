@@ -220,7 +220,8 @@ class Coriell(Source):
                         fstat[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
                 self.dataset.set_ingest_source(remotef.filename, True)
-                self.dataset.setVersion(filedate)
+                self.dataset.set_ingest_source_file_version_date(remotef, filedate)
+
         return
 
     def parse(self, limit=None):
