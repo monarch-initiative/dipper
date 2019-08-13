@@ -307,7 +307,7 @@ class Dataset:
         Version is added as a literal of datatype XSD date
 
         Note: if file_iri was retrieved using get_files(), then the following triple
-        was created:
+        was created and you might not need this method:
 
         file_iri - 'pav:retrievedOn' -> download date
 
