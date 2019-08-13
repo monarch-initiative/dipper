@@ -104,7 +104,7 @@ class EOM(PostgreSQLSource):
         cxn['user'] = config.get_config()['user']['disco']
         cxn['password'] = config.get_config()['keys'][cxn['user']]
 
-        pg_iri = 'jdbc:postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database']
+        pg_iri = 'postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database']
         self.dataset.set_ingest_source(pg_iri)
 
         # process the tables
