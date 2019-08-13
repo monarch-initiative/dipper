@@ -233,6 +233,7 @@ class Source:
         else:
             LOG.error("I don't understand our stream.")
             return
+        self.graph = self.graph + self.dataset.get_graph()
         gu.write(self.graph, fmt, filename=outfile)
 
     def whoami(self):
