@@ -375,7 +375,7 @@ class Dataset:
                 object_is_literal=True, literal_type="xsd:dateTime")
         return
 
-    def set_ingest_source(self, url, is_object_literal=False):
+    def set_ingest_source(self, url):
         """
         This method writes a triple to the dataset graph indicating the ingest
         used a source at url during the ingest.
