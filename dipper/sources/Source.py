@@ -218,7 +218,7 @@ class Source:
         gu = GraphUtils(None)
 
         # the  _dataset description is always turtle
-        gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
+        gu.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
 
         if self.test_mode:
             # unless we stop hardcoding, the test dataset is always turtle

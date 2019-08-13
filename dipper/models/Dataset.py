@@ -393,7 +393,7 @@ class Dataset:
         self.graph.addTriple(
             self.version_level_curie, 'dcterms:source', url, is_object_literal=False)
 
-    def getGraph(self):
+    def get_graph(self):
         return self.graph
 
     def set_license(self, license_url):
