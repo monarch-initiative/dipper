@@ -189,13 +189,13 @@ class Dataset:
         self.version_level_curie = identifier + self.date_timestamp_iso_8601
         self.distribution_level_turtle_curie = self.version_level_curie + ".ttl"
 
-        self.set_summary_level_triples()
-        self.set_version_level_triples()
-        self.set_distribution_level_triples()
+        self._set_summary_level_triples()
+        self._set_version_level_triples()
+        self._set_distribution_level_triples()
 
         return
 
-    def set_summary_level_triples(self):
+    def _set_summary_level_triples(self):
         self.model.addType(self.summary_level_curie, 'dctypes:Dataset')
         self.graph.addTriple(self.summary_level_curie,
                              'dcterms:title',
@@ -216,7 +216,7 @@ class Dataset:
             self.model.addDescription(self.identifier, self.ingest_description)
         return
 
-    def set_version_level_triples(self):
+    def _set_version_level_triples(self):
         self.model.addType(self.version_level_curie, 'dctypes:Dataset')
         # use version level curie itself for title and description
         self.graph.addTriple(self.version_level_curie, 'dcterms:title',
@@ -233,7 +233,7 @@ class Dataset:
         self.graph.addTriple(self.version_level_curie, 'dcterms:isVersionOf',
                              self.summary_level_curie)
 
-    def set_distribution_level_triples(self):
+    def _set_distribution_level_triples(self):
         self.model.addType(self.distribution_level_turtle_curie, 'dctypes:Dataset')
         self.model.addType(self.distribution_level_turtle_curie, 'dcat:Distribution')
         self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:title',
