@@ -150,9 +150,8 @@ class DatasetTestCase(unittest.TestCase):
     def test_set_ingest_source_file_retrieved_on_date(self):
         this_date = "1970-01-01"
         file_iri = self.source.files.get("test_file").get("url")
-        self.source.dataset.set_ingest_source_file_version_retrieved_on(file_iri,
-                                                                        this_date,
-                                                                        datatype=XSD.date)
+        self.source.dataset.set_ingest_source_file_version_retrieved_on(
+            file_iri, this_date, datatype=XSD.date)
         triples = list(self.source.dataset.graph.triples(
             (URIRef(file_iri),
              self.iri_retrieved_on,
