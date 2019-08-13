@@ -148,9 +148,9 @@ class CTD(Source):
         self.pathway = Pathway(self.graph)
 
         self._parse_ctd_file(
-            limit, self.files['chemical_disease_interactions']['file'])
-        self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
-        self._parse_ctd_file(limit, self.files['gene_disease']['file'])
+            limit, self.files['chemical_disease_interactions'])
+        self._parse_ctd_file(limit, self.files['gene_pathway'])
+        self._parse_ctd_file(limit, self.files['gene_disease'])
         self._parse_curated_chem_disease(limit)
 
         LOG.info("Done parsing files.")
@@ -162,14 +162,15 @@ class CTD(Source):
         Parses files in CTD.files dictionary
         Args:
             :param limit (int): limit the number of rows processed
-            :param file (str): file name (must be defined in CTD.file)
+            :param file (str): dictionary containing file name ('file') and ('url')
+            (must be defined in CTD.file)
         Returns:
             :return None
         """
         row_count = 0
         version_pattern = re.compile(r'^# Report created: (.+)$')
         is_versioned = False
-        file_path = '/'.join((self.rawdir, file))
+        file_path = '/'.join((self.rawdir, file['file']))
         with gzip.open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -179,9 +180,10 @@ class CTD(Source):
                 if is_versioned is False:
                     match = re.match(version_pattern, ' '.join(row))
                     if match:
-                        version = re.sub(r'\s|:', '-', match.group(1))
-                        # TODO convert this timestamp to a proper timestamp
-                        self.dataset.setVersion(version)
+                        version_date = re.sub(r'\s|:', '-', match.group(1))
+                        self.dataset.set_ingest_source_file_version_date(
+                            file['url'],
+                            version_date)
                         is_versioned = True
                 elif re.match(r'^#', ' '.join(row)):
                     pass
