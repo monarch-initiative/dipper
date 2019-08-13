@@ -377,8 +377,8 @@ class Dataset:
 
     def set_ingest_source(self, url, is_object_literal=False):
         """
-        This method writes a triple to the dataset graph indicating the ingest
-        used a source at url during the ingest.
+        This method writes a triple to the dataset graph indicating that the ingest
+        used a file or resource at [url] during the ingest.
 
         Triple emitted is version_level_curie dcterms:source [url]
 
@@ -387,7 +387,7 @@ class Dataset:
         provided as a convenience method for sources that do their own downloading
         of files.
 
-        :param url
+        :param url: a remote resource used as a source during ingest
         :return: None
         """
         self.graph.addTriple(
