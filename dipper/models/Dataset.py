@@ -320,13 +320,42 @@ class Dataset:
         file_iri - 'pav:retrievedOn' -> download date
 
         :param file_iri: a remote file or resource used in ingest
-        :param version: a date in YYYYMMDD format that the source (OMIM, CTD). You can
+        :param date: a date in YYYYMMDD format that the source (OMIM, CTD). You can
         add timestamp as a version by using a different datatype (below)
         :param datatype: an XSD literal datatype, default is XSD.date
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
         self.graph.addTriple(file_iri, 'pav:version', date,
+                             object_is_literal=True, literal_type=datatype)
+
+    def set_ingest_source_file_version_retrieved_on(self,
+                                                    file_iri,
+                                                    date,
+                                                    datatype=XSD.date):
+        """
+        This method sets the date on which a remote file/resource (from OMIM, CTD, whatever)
+        was retrieved.
+
+        It writes this triple:
+
+        file_iri - 'pav:retrievedOn' -> date or timestamp
+
+        Version is added as a literal of datatype XSD date by default
+
+        Note: if file_iri was retrieved using get_files(), then the following triple
+        was created and you might not need this method:
+
+        file_iri - 'pav:retrievedOn' -> download date
+
+        :param file_iri: a remote file or resource used in ingest
+        :param date: a date in YYYYMMDD format that the source (OMIM, CTD). You can
+        add timestamp as a version by using a different datatype (below)
+        :param datatype: an XSD literal datatype, default is XSD.date
+        uses to refer to this version of the file/resource used during the ingest
+        :return: None
+        """
+        self.graph.addTriple(file_iri, 'pav:retrievedOn', date,
                              object_is_literal=True, literal_type=datatype)
 
     def setVersion(self, date_issued, version_id=None):
