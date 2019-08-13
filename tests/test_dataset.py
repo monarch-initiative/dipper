@@ -106,6 +106,8 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_download_url = URIRef(self.curie_map.get("dcterms") + "downloadURL")
         self.iri_license = URIRef(self.curie_map.get("dcterms") + "license")
         self.iri_data_rights = URIRef(self.curie_map.get("dcterms") + "rights")
+        self.iri_cites_as_authority = URIRef(self.curie_map.get("cito") +
+                                             "citesAsAuthority")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -146,6 +148,34 @@ class DatasetTestCase(unittest.TestCase):
              Literal(this_version,datatype=XSD.date))))
         self.assertTrue(len(triples) == 1,
                         "ingest source file version not set with literal type of date")
+
+    def test_get_graph(self):
+        self.assertIsInstance(
+            self.source.dataset.get_graph(), RDFGraph,
+            "get_graph() didn't return an RDF graph")
+
+    def test_set_license(self):
+        gpl2_iri = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
+        self.source.dataset.set_license(license_url=gpl2_iri)
+        self.assertEqual(self.source.dataset.license_url,
+                         gpl2_iri, "set_license didn't set license_url correctly")
+
+    def test_get_license(self):
+        gpl2_iri = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
+        self.source.dataset.license_url=gpl2_iri
+        self.assertEqual(self.source.dataset.get_license(),
+                         gpl2_iri, "set_license didn't set license_url correctly")
+
+    def test_set_citation(self):
+        citation_iri =\
+            "http://purl.obolibrary.org/obo/uberon/releases/2016-01-26/uberon.owl"
+        self.source.dataset.set_citation(citation_iri)
+        self.assertTrue(self.source.dataset.citation.issuperset([citation_iri]))
+        triples = list(self.source.dataset.graph.triples(
+            (self.version_level_IRI,
+             URIRef(self.iri_cites_as_authority),
+             URIRef(citation_iri))))
+        self.assertTrue(len(triples) == 1, "missing citation triple")
 
     #
     # Test summary level triples:

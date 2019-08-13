@@ -23,6 +23,7 @@
 'dctypes': 'http://purl.org/dc/dcmitype/'                           # Dublin Core Metadata Initiative (types)
 'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (addtional terms)
 'pav': 'http://purl.org/pav/'                                       # Provenance, Authoring and Versioning
+'cito': 'http://purl.org/spar/cito/'                                # Citation Typing Ontology
 
 # ontologies
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'               # Animal Quantitative Trait Loci Database

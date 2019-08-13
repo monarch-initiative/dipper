@@ -404,9 +404,19 @@ class Dataset:
             object_is_literal=is_object_literal)
 
     def get_graph(self):
+        """
+        This method returns the dataset graph
+        :param
+        :return: dataset graph
+        """
         return self.graph
 
     def set_license(self, license_url):
+        """
+        This method sets license to license_url
+        :param: license_url:
+        :return:
+        """
         self.license_url = license_url
         return
 
@@ -414,9 +424,7 @@ class Dataset:
         return self.license_url
 
     def set_citation(self, citation_id):
-
         self.citation.add(citation_id)
-        # TODO
-        # model.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
+        self.graph.addTriple(
+            self.version_level_curie, 'cito:citesAsAuthority', citation_id)
 
-        return
