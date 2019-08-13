@@ -147,7 +147,9 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "ingest source file version not set with literal type of date")
 
-    # Test for summary level triples:
+    #
+    # Test summary level triples:
+    #
     def test_summary_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.summary_level_IRI, self.iri_rdf_type, self.iri_dataset)))
@@ -180,7 +182,9 @@ class DatasetTestCase(unittest.TestCase):
             (self.summary_level_IRI, self.iri_logo, URIRef(self.ingest_logo_url))))
         self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
-    # Check for version level resource triples:
+    #
+    # Test version level resource triples:
+    #
     def test_version_level_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_rdf_type, self.iri_dataset)))
@@ -249,7 +253,9 @@ class DatasetTestCase(unittest.TestCase):
                          "version level source version timestamp isn't " +
                          "the same as the download timestamp of the local file")
 
-    # DISTRIBUTION LEVEL TRIPLES:
+    #
+    # test distribution level triples
+    #
     def test_distribution_level_dataset_type(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_rdf_type, self.iri_dataset)))
