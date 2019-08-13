@@ -140,6 +140,14 @@ class Dataset:
         # of classes	void:classPartition	IRI
         # of literals	void:classPartition	IRI
         # of RDF graphs	void:classPartition	IRI
+
+     Note: Do not use blank nodes in the dataset graph. This dataset graph is added to
+     the main Dipper graph in Source.write() like so
+
+        $ mainGraph = mainGraph + datasetGraph
+
+     which apparently in theory could lead to blank node ID collisions between the two
+     graphs.
     """
 
     def __init__(
@@ -312,7 +320,9 @@ class Dataset:
         file_iri - 'pav:retrievedOn' -> download date
 
         :param file_iri: a remote file or resource used in ingest
-        :param version: a date in YYYYMMDD format that the source (OMIM, CTD)
+        :param version: a date in YYYYMMDD format that the source (OMIM, CTD). You can
+        add timestamp as a version by using a different datatype (below)
+        :param datatype: an XSD literal datatype, default is XSD.date
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
@@ -426,10 +436,10 @@ class Dataset:
 
         Triple emitted is version_level_curie dcterms:source [url]
 
-        This triple is likely to be redundant, since this triple should also be emitted
-        in Source.get_files() as remote files are being retrieved. This method is
-        provided as a convenience method for sources that do their own downloading
-        of files.
+        This triple is likely to be redundant if Source.get_files() is used to retrieve
+        the remote files/resources, since this triple should also be emitted
+        as files/resources are being retrieved. This method is provided as a convenience
+        method for sources that do their own downloading of files.
 
         :param url: a remote resource used as a source during ingest
         :param predicate: the predicate to use for the triple ["dcterms:source"]
