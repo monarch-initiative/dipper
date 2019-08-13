@@ -131,8 +131,7 @@ class DatasetTestCase(unittest.TestCase):
         this_version = "version1234"
         file_iri = self.source.files.get("test_file").get("url")
         self.source.dataset.set_ingest_source_file_version_num(file_iri,
-                                                           this_version,
-                                                           literal_type=None)
+                                                           this_version)
         triples = list(self.source.dataset.graph.triples(
             (URIRef(file_iri), self.iri_version, Literal(this_version))))
         self.assertTrue(len(triples) == 1, "ingest source file version not set")
