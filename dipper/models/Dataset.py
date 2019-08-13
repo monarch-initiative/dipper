@@ -412,9 +412,20 @@ class Dataset:
         return self.graph
 
     def get_license(self):
+        """
+        This method returns the license info
+        :param
+        :return: license info
+        """
         return self.license_url
 
     def set_citation(self, citation_id):
+        """
+        This method adds [citaton_id] argument to the set of citations, and also
+        adds a triple indicating that version level cito:citesAsAuthority [citation_id]
+        :param: citation_id
+        :return: none
+        """
         self.citation.add(citation_id)
         self.graph.addTriple(
             self.version_level_curie, 'cito:citesAsAuthority', citation_id)
