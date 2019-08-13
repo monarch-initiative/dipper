@@ -375,11 +375,23 @@ class Dataset:
                 object_is_literal=True, literal_type="xsd:dateTime")
         return
 
-    def set_ingest_source(self, url, is_object_literal=False):
-        # this triple is likely to be redundant, since this triple should also emitted
-        # in Source.get_files().
+    def set_ingest_source(self, url):
+        """
+        This method writes a triple to the dataset graph indicating the ingest
+        used a source at url during the ingest.
+
+        Triple emitted is version_level_curie dcterms:source [url]
+
+        This triple is likely to be redundant, since this triple should also be emitted
+        in Source.get_files() as remote files are being retrieved. This method is
+        provided as a convenience method for sources that do their own downloading
+        of files.
+
+        :param url
+        :return: None
+        """
         self.graph.addTriple(
-            self.version_level_curie, 'dcterms:source', url, is_object_literal)
+            self.version_level_curie, 'dcterms:source', url, is_object_literal=False)
 
     def getGraph(self):
         return self.graph
