@@ -334,7 +334,7 @@ class Dataset:
                                                     date,
                                                     datatype=XSD.date):
         """
-        This method sets the date on which a remote file/resource (from OMIM, CTD, whatever)
+        This method sets the date on which a remote file/resource (from OMIM, CTD, etc)
         was retrieved.
 
         It writes this triple:
