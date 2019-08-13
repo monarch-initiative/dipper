@@ -154,12 +154,6 @@ class DatasetTestCase(unittest.TestCase):
             self.source.dataset.get_graph(), RDFGraph,
             "get_graph() didn't return an RDF graph")
 
-    def test_set_license(self):
-        gpl2_iri = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
-        self.source.dataset.set_license(license_url=gpl2_iri)
-        self.assertEqual(self.source.dataset.license_url,
-                         gpl2_iri, "set_license didn't set license_url correctly")
-
     def test_get_license(self):
         gpl2_iri = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
         self.source.dataset.license_url=gpl2_iri

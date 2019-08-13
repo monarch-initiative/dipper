@@ -411,15 +411,6 @@ class Dataset:
         """
         return self.graph
 
-    def set_license(self, license_url):
-        """
-        This method sets license to license_url
-        :param: license_url:
-        :return:
-        """
-        self.license_url = license_url
-        return
-
     def get_license(self):
         return self.license_url
 
