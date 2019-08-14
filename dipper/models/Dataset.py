@@ -189,11 +189,6 @@ class Dataset:
         self.version = None
         self.date_issued = None
 
-        # The data_accesed value is later used as an literal of properties
-        # such as dcterms:issued, which needs to conform xsd:dateTime format.
-        # TODO ... we need to have a talk about typed literals and SPARQL
-        self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-
         self.license_url = license_url
         self.data_rights = data_rights
 
@@ -282,6 +277,16 @@ class Dataset:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                  'dcterms:rights',
                                  self.data_rights)
+
+    def compute_triples_statistics(self, target_graph):
+        """
+        This method computes counts of triples in a given targetGraph and writes these
+        counts into the dataset graph (i.e. self.graph)
+
+        :param target_graph: an RDF type graph containing triples to be counted
+        :return: None
+        """
+        pass
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
