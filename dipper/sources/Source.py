@@ -169,7 +169,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, fmt='turtle', stream=None):
+    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=True):
         """
         This convenience method will write out all of the graphs
         associated with the source.
@@ -219,6 +219,9 @@ class Source:
             # unless we stop hardcoding, the test dataset is always turtle
             LOG.info("Setting testfile to %s", self.testfile)
             gu.write(self.testgraph, 'turtle', filename=self.testfile)
+
+        if write_metadata_in_main_graph:
+            self.graph = self.graph + self.dataset.get_graph()
 
         # print graph out
         if stream is None:

@@ -115,7 +115,9 @@ class DatasetTestCase(unittest.TestCase):
                                       data_rights=self.data_rights,
                                       files=self.theseFiles)
         self.source.fetch()
-        self.source.write()
+        # don't write metadata out with main graph, because this screws up
+        # triples counts during testing
+        self.source.write(write_metadata_in_main_graph=False)
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
@@ -414,7 +416,6 @@ class DatasetTestCase(unittest.TestCase):
                         "distribution level default license triple not set")
 
     def test_distribution_level_triples_count(self):
-        # this is possibly a little confusing, but we
         exp_triples_count = len(list(self.source.graph.triples((None, None, None))))
 
         triples = list(self.source.dataset.graph.triples(
