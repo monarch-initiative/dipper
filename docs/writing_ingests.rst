@@ -66,7 +66,7 @@ This method is intended to fetch data from the remote locations (if it is newer 
 Extend the parent `fetch <dipper.sources.Source.html#dipper.sources.Source.Source.fetch>`_ function.
 If a the remote file has already been downloaded.  The fetch method checks the remote headers to see if it has been updated.
 For sources not served over HTTP, this method may need to be overriden,
-for example in `Bgee <dipper.sources.Bgee.html#dipper.sources.Bgee.Bgee.docs/writing_ingests.rst>`_.
+for example in `Bgee <dipper.sources.Bgee.html#dipper.sources.Bgee.Bgee.checkIfRemoteIsNewer>`_.
 
 For example:
 
