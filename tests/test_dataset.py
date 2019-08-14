@@ -230,7 +230,8 @@ class DatasetTestCase(unittest.TestCase):
     def test_version_level_created(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_created, None)))
-        self.assertTrue(len(triples) == 1, "missing version level created triple")
+        self.assertTrue(len(triples) == 1, "didn't get exactly 1 version level " +
+                                           "created triple")
         self.assertEqual(triples[0][2],
                          Literal(self.timestamp_date, datatype=XSD.date),
                          "version level created triple has the wrong timestamp")
@@ -238,7 +239,8 @@ class DatasetTestCase(unittest.TestCase):
     def test_version_level_version(self):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI, self.iri_version, None)))
-        self.assertTrue(len(triples) == 1, "missing version level version triple")
+        self.assertTrue(len(triples) == 1, "didn't get exactly one version level " +
+                                           "version triple")
         self.assertEqual(triples[0][2],
                          Literal(self.timestamp_date, datatype=XSD.date),
                          "version level version triple has the wrong timestamp")
@@ -331,14 +333,14 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_created, None)))
         self.assertTrue(len(triples) == 1,
-                        "missing version level type created triple")
+                        "didn't get exactly 1 version level type created triple")
         self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
 
     def test_distribution_level_version(self):
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_version, None)))
         self.assertTrue(len(triples) == 1,
-                        "missing version level type version triple")
+                        "didn't get exactly 1 version level type version triple")
         self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
 
     def test_distribution_level_creator(self):
@@ -413,12 +415,16 @@ class DatasetTestCase(unittest.TestCase):
 
     @unittest.skip("not implemented yet")
     def test_distribution_level_triples_count(self):
+        exp_triples_count = len(list(self.source.graph.triples((None, None, None))))
+
         triples = list(self.source.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_triples_count,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level triples count")
+                        "didn't get exactly 1 distribution level triples count")
+        self.assertEqual(triples[0][2], Literal(exp_triples_count),
+                         "didn't get correct triples count")
 
     @unittest.skip("not implemented yet")
     def test_distribution_level_entities_count(self):
