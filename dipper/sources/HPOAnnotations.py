@@ -140,8 +140,7 @@ class HPOAnnotations(Source):
         if self.test_only:
             self.test_mode = True
 
-        self._process_phenotype_hpoa(
-            '/'.join((self.rawdir, self.files['hpoa']['file'])), limit)
+        self._process_phenotype_hpoa(self.files['hpoa'], limit=limit)
 
         # TODO add negative phenotype statements #113
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
@@ -153,7 +152,7 @@ class HPOAnnotations(Source):
 
         return
 
-    def _process_phenotype_hpoa(self, raw, limit):
+    def _process_phenotype_hpoa(self, file_info, limit=None):
         """
         see info on format here:
         http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
@@ -171,6 +170,8 @@ class HPOAnnotations(Source):
             graph = self.graph
         model = Model(graph)
 
+        raw = '/'.join((self.rawdir, file_info['file']))
+
         filedate = datetime.utcfromtimestamp(
             os.stat(raw)[ST_CTIME]).strftime("%Y-%m-%d")
 
@@ -187,7 +188,10 @@ class HPOAnnotations(Source):
             LOG.info("Ingest from %s", row)
             date = datetime.strptime(
                 row.strip(), '%Y-%m-%d').strftime("%Y-%m-%d-%H-%M")
-            self.dataset.setVersion(filedate, date)
+
+            if file_info.get("url") is not None:
+                self.dataset.set_ingest_source_file_version_date(
+                    file_info.get("url"), date)
 
             row = next(reader)  # drop tracker url
             row = next(reader)  # drop release url
