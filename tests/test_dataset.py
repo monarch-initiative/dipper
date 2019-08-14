@@ -9,12 +9,13 @@ from stat import ST_CTIME
 from rdflib import XSD
 from shutil import copyfile
 
+from rdflib import Graph
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
 from rdflib import URIRef, Literal
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -89,6 +90,13 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_data_rights = URIRef(self.curie_map.get("dcterms") + "rights")
         self.iri_cites_as_authority = URIRef(self.curie_map.get("cito") +
                                              "citesAsAuthority")
+        self.iri_triples_count = URIRef(self.curie_map.get("void") + "triples")
+        self.iri_entities_count = URIRef(self.curie_map.get("void") + "entities")
+        self.iri_distinct_subjects = URIRef(self.curie_map.get("void") +
+                                            "distinctSubjects")
+        self.iri_distinct_objects = URIRef(self.curie_map.get("void") +
+                                           "distinctObjects")
+        self.iri_properties_count = URIRef(self.curie_map.get("void") + "properties")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -109,6 +117,7 @@ class DatasetTestCase(unittest.TestCase):
                                       data_rights=self.data_rights,
                                       files=self.theseFiles)
         self.source.fetch()
+        self.source.write()
 
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
@@ -121,7 +130,7 @@ class DatasetTestCase(unittest.TestCase):
                         "source object doesn't have dataset attribute")
 
     def test_dataset_has_graph(self):
-        self.assertIsInstance(self.source.graph, RDFGraph,
+        self.assertIsInstance(self.source.graph, Graph,
                               "dataset doesn't contain an RDF graph")
 
     def test_set_ingest_source_file_version_num(self):
@@ -403,6 +412,51 @@ class DatasetTestCase(unittest.TestCase):
              URIRef(self.license_url_default))))
         self.assertTrue(len(triples) == 1,
                         "distribution level default license triple not set")
+
+    @unittest.skip("not implemented yet")
+    def test_distribution_level_triples_count(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_triples_count,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level triples count")
+
+    @unittest.skip("not implemented yet")
+    def test_distribution_level_entities_count(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_entities_count,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level entities count")
+
+    @unittest.skip("not implemented yet")
+    def test_distribution_level_distinct_subject_count(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_distinct_subjects,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level distinct subject count")
+
+    @unittest.skip("not implemented yet")
+    def test_distribution_level_distinct_object_count(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_distinct_objects,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level distinct object count")
+
+    @unittest.skip("not implemented yet")
+    def test_distribution_level_properties_count(self):
+        triples = list(self.source.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_properties_count,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level properties count")
 
 
 if __name__ == '__main__':

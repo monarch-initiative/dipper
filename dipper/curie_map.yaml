@@ -24,6 +24,7 @@
 'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (addtional terms)
 'pav': 'http://purl.org/pav/'                                       # Provenance, Authoring and Versioning
 'cito': 'http://purl.org/spar/cito/'                                # Citation Typing Ontology
+'void': 'http://rdfs.org/ns/void#'                                  # Vocabulary of Interlinked Datasets (VOID)
 
 # ontologies
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'               # Animal Quantitative Trait Loci Database
