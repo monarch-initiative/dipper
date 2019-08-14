@@ -86,15 +86,9 @@ class MMRRC(Source):
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        fname = '/'.join((self.rawdir, self.files['catalog']['file']))
-        st = os.stat(fname)
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
         # TODO note: can set the data version to what is in the header
         # first line like:
         # This MMRRC catalog data file was generated on 2015-04-22
-
-        self.dataset.setVersion(filedate)
 
         return
 
