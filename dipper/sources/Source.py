@@ -207,10 +207,6 @@ class Source:
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
             LOG.info("Setting dataset file to %s", self.datasetfile)
-
-            if self.dataset is not None and self.dataset.version is None:
-                self.dataset.set_version_by_date()
-                LOG.info("No version for %s setting to date issued.", self.name)
         else:
             LOG.warning("No output file set. Using stdout")
             stream = 'stdout'
