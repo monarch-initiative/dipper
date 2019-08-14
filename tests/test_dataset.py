@@ -414,6 +414,7 @@ class DatasetTestCase(unittest.TestCase):
                         "distribution level default license triple not set")
 
     def test_distribution_level_triples_count(self):
+        # this is possibly a little confusing, but we
         exp_triples_count = len(list(self.source.graph.triples((None, None, None))))
 
         triples = list(self.source.dataset.graph.triples(

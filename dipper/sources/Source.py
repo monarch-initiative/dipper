@@ -212,6 +212,7 @@ class Source:
         gu = GraphUtils(None)
 
         # the  _dataset description is always turtle
+        self.dataset.compute_triples_statistics(self.graph)
         gu.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
 
         if self.test_mode:
@@ -227,11 +228,6 @@ class Source:
         else:
             LOG.error("I don't understand our stream.")
             return
-
-        # add dataset graph to main graph
-        self.graph = self.graph + self.dataset.get_graph()
-
-        self.dataset.compute_triples_statistics(self.graph)
 
         gu.write(self.graph, fmt, filename=outfile)
 
