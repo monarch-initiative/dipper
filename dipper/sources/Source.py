@@ -229,7 +229,13 @@ class Source:
         else:
             LOG.error("I don't understand our stream.")
             return
+
+        # add metadata about triples
+        self.dataset.compute_triples_statistics(self.graph)
+
+        # add dataset graph to main graph
         self.graph = self.graph + self.dataset.get_graph()
+
         gu.write(self.graph, fmt, filename=outfile)
 
     def whoami(self):
