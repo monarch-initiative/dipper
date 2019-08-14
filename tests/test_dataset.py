@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import datetime
 import unittest
@@ -52,7 +50,7 @@ class DatasetTestCase(unittest.TestCase):
             'test_file': {
                 'file': 'test_file.txt',
                 'url': 'http://fakeingest.com/remote_file.txt',
-                'path_to_mock_download_file': 'resources/fakeingest/test_file.txt'}
+                'path_to_mock_download_file': 'tests/resources/fakeingest/test_file.txt'}
         }
 
         # expected things:
