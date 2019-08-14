@@ -147,18 +147,6 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "ingest source file version not set with literal type of date")
 
-    def test_set_ingest_source_file_retrieved_on_date(self):
-        this_date = "1970-01-01"
-        file_iri = self.source.files.get("test_file").get("url")
-        self.source.dataset.set_ingest_source_file_version_retrieved_on(
-            file_iri, this_date, datatype=XSD.date)
-        triples = list(self.source.dataset.graph.triples(
-            (URIRef(file_iri),
-             self.iri_retrieved_on,
-             Literal(this_date, datatype=XSD.date))))
-        self.assertTrue(len(triples) == 1,
-                        "ingest source file retrievedOn date not set correctly")
-
     def test_get_graph(self):
         self.assertIsInstance(
             self.source.dataset.get_graph(), RDFGraph,
@@ -286,6 +274,17 @@ class DatasetTestCase(unittest.TestCase):
                          Literal(self.downloaded_file_timestamp, datatype=XSD.date),
                          "version level source version timestamp isn't " +
                          "the same as the download timestamp of the local file")
+        # test setter too
+        this_date = "1970-01-01"
+        file_iri = self.source.files.get("test_file").get("url")
+        self.source.dataset.set_ingest_source_file_version_retrieved_on(
+            file_iri, this_date, datatype=XSD.date)
+        triples = list(self.source.dataset.graph.triples(
+            (URIRef(file_iri),
+             self.iri_retrieved_on,
+             Literal(this_date, datatype=XSD.date))))
+        self.assertTrue(len(triples) == 1,
+                        "ingest source file retrievedOn date not set correctly")
 
     #
     # test distribution level triples
