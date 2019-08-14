@@ -510,7 +510,6 @@ class FakeIngestClass(Source):
                        localfile=None,
                        is_dl_forced=False,
                        headers=None):
-        # copyfile(self.)
         copyfile(
             self.files.get('test_file').get('path_to_mock_download_file'), localfile)
         return
