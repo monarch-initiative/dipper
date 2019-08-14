@@ -12,8 +12,8 @@ LOG = logging.getLogger(__name__)
 
 class Dataset:
     """
-     this will produce the metadata about a dataset that is compliant with this
-     specification:
+     This class produces metadata about a dataset that is compliant with the
+     HCLS dataset specification:
      https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/#s4_4
 
      Summary level: The summary level provides a description of a dataset that is

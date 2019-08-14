@@ -7,6 +7,8 @@ import logging
 from datetime import datetime
 from stat import ST_CTIME
 from rdflib import XSD
+from shutil import copyfile
+
 from dipper.sources.Source import Source
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map as curiemap
@@ -45,25 +47,12 @@ class DatasetTestCase(unittest.TestCase):
         self.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
         self.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
 
-        # The following to be used in both DatasetTestCase and FakeIngestClass
-        # using robots.txt b/c it's a trivially small file/empty file that we control
         self.theseFiles = {
             'test_file': {
                 'file': 'test_file.txt',
-                'url': 'https://data.monarchinitiative.org/robots.txt'},
+                'url': 'http://fakeingest.com/remote_file.txt',
+                'path_to_mock_download_file': 'resources/fakeingest/test_file.txt'}
         }
-
-        # load source and fetch files to make dataset graph containing metadata
-        self.source = FakeIngestClass("rdf_graph",
-                                      are_bnodes_skolemized=False,
-                                      identifier=self.identifier,
-                                      ingest_url=self.ingest_url,
-                                      ingest_title=self.ingest_title,
-                                      ingest_logo=self.ingest_logo_url,
-                                      license_url=self.license_url,
-                                      data_rights=self.data_rights,
-                                      files=self.theseFiles)
-        self.source.fetch()
 
         # expected things:
         self.expected_curie_prefix = "MonarchData"
@@ -77,14 +66,6 @@ class DatasetTestCase(unittest.TestCase):
 
         # expected distribution level IRI (for ttl resource)
         self.distribution_level_IRI_ttl = URIRef(self.version_level_IRI + ".ttl")
-
-        # expected timestamp for version level "version" triple
-        # downloaded file should end up here:
-        self.downloaded_file_path = \
-            '/'.join((self.source.rawdir, self.theseFiles.get("test_file").get("file")))
-        fstat = os.stat(self.downloaded_file_path)
-        self.downloaded_file_timestamp = \
-            datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
 
         # set expected IRIs for predicates and other things
         self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
@@ -112,11 +93,27 @@ class DatasetTestCase(unittest.TestCase):
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
 
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def setUp(self):
+        # load source and fetch files to make dataset graph containing metadata
+        self.source = FakeIngestClass("rdf_graph",
+                                      are_bnodes_skolemized=False,
+                                      identifier=self.identifier,
+                                      ingest_url=self.ingest_url,
+                                      ingest_title=self.ingest_title,
+                                      ingest_logo=self.ingest_logo_url,
+                                      license_url=self.license_url,
+                                      data_rights=self.data_rights,
+                                      files=self.theseFiles)
+        self.source.fetch()
+
         # put all triples in a list for debugging below
         self.all_triples = list(self.source.dataset.graph.triples((None, None, None)))
 
-    @classmethod
-    def tearDownClass(self):
+    def tearDown(self):
         pass
 
     def test_has_dataset_attribute(self):
@@ -263,6 +260,13 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1, "missing version level file source triple")
 
     def test_version_level_source_version_download_timestamp(self):
+        path_to_dl_file = '/'.join(
+            (self.source.rawdir, self.source.files.get('test_file').get('file')))
+        fstat = os.stat(path_to_dl_file)
+
+        self.downloaded_file_timestamp = \
+            datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
+
         triples = list(self.source.dataset.graph.triples(
             (URIRef(self.theseFiles.get("test_file").get("url")),
              self.iri_retrieved_on,
@@ -274,7 +278,8 @@ class DatasetTestCase(unittest.TestCase):
                          Literal(self.downloaded_file_timestamp, datatype=XSD.date),
                          "version level source version timestamp isn't " +
                          "the same as the download timestamp of the local file")
-        # test setter too
+
+    def test_version_level_source_version_download_timestamp_setter(self):
         this_date = "1970-01-01"
         file_iri = self.source.files.get("test_file").get("url")
         self.source.dataset.set_ingest_source_file_version_retrieved_on(
@@ -439,3 +444,14 @@ class FakeIngestClass(Source):
 
     def parse(self):
         pass
+
+    # override fetch_from_url here so we don't need the network to "download" file
+    def fetch_from_url(self,
+                       remotefile,
+                       localfile=None,
+                       is_dl_forced=False,
+                       headers=None):
+        # copyfile(self.)
+        copyfile(
+            self.files.get('test_file').get('path_to_mock_download_file'), localfile)
+        return
