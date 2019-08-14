@@ -200,9 +200,9 @@ class MGI(PostgreSQLSource):
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
 
-        self.dataset.set_ingest_source(''.join((
-            'jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
-            cxn['database'])), is_object_literal=True)
+        pg_iri = ''.join(('postgresql://', cxn['host'], ':', str(cxn['port']), '/',
+                          cxn['database']))
+        self.dataset.set_ingest_source(pg_iri)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
@@ -240,7 +240,8 @@ class MGI(PostgreSQLSource):
                 datestamp = datetime.strptime(
                     dat, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-        self.dataset.setVersion(datestamp, ver)
+        self.dataset.set_ingest_source_file_version_num(pg_iri, ver)
+        self.dataset.set_ingest_source_file_version_date(pg_iri, datestamp)
 
         return
 
