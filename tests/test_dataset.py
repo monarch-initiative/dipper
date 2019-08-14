@@ -413,7 +413,6 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "distribution level default license triple not set")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_triples_count(self):
         exp_triples_count = len(list(self.source.graph.triples((None, None, None))))
 

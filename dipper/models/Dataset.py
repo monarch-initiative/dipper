@@ -288,9 +288,10 @@ class Dataset:
         """
 
         # triples count
-        triples = len(list(target_graph.triples((None, None, None))))
+        triples = list(target_graph.triples((None, None, None)))
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:triples', Literal(triples, datatype=XSD.integer))
+                             'void:triples',
+                             Literal(len(triples), datatype=XSD.integer))
         return
 
     def set_ingest_source_file_version_num(self, file_iri, version):
