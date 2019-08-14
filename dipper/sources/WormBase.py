@@ -135,10 +135,14 @@ class WormBase(Source):
                 "Couldn't figure out version number from FTP site.  Exiting.")
             exit(1)
         else:
-
             self.update_wsnum_in_files(wsver.group(1))
 
-        self.dataset.set_version_by_num(self.version_num)
+        # set version for all files to self.version_num
+        for key in self.files:
+            if self.files[key].get("url") is not None:
+                self.dataset.set_ingest_source_file_version_num(
+                    self.files[key].get("url"), self.version_num)
+
         # fetch all the files
         self.get_files(is_dl_forced)
         return
