@@ -286,7 +286,12 @@ class Dataset:
         :param target_graph: an RDF type graph containing triples to be counted
         :return: None
         """
-        pass
+
+        # triples count
+        triples = len(list(target_graph.triples((None, None, None))))
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:triples', Literal(triples, datatype=XSD.integer))
+        return
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
