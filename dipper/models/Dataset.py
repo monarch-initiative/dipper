@@ -358,30 +358,6 @@ class Dataset:
         self.graph.addTriple(file_iri, 'pav:retrievedOn', date,
                              object_is_literal=True, literal_type=datatype)
 
-    def set_version_by_num(self, version_num):
-
-        self.version = self.identifier+version_num
-        self.graph.addTriple(self.version, 'dcterms:isVersionOf', self.identifier)
-        self.graph.addTriple(
-            self.version, 'pav:version', version_num, object_is_literal=True)
-
-        LOG.info("setting version to %s", self.version)
-
-        # set the monarch-generated-version of the resource-version
-        # TODO sync this up with the ontology version
-        if version_num != self.date_accessed:
-            dipperized_version = ':' + str(self.date_accessed)
-            self.graph.addTriple(
-                dipperized_version, 'dcterms:isVersionOf',
-                "MonarchData:" + self.identifier + ".ttl")  # fix suffix
-            self.graph.addTriple(
-                dipperized_version, 'pav:version',
-                self.date_accessed, object_is_literal=True)
-            self.graph.addTriple(
-                dipperized_version, 'dcterms:issued', self.date_accessed,
-                object_is_literal=True, literal_type="xsd:dateTime")
-        return
-
     def set_ingest_source(self, url,
                           predictate='dcterms:source',
                           is_object_literal=False):
