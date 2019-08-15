@@ -202,8 +202,6 @@ class Dataset:
         self._set_version_level_triples()
         self._set_distribution_level_triples()
 
-        return
-
     def _set_summary_level_triples(self):
         self.model.addType(self.summary_level_curie, 'dctypes:Dataset')
         self.graph.addTriple(self.summary_level_curie,
@@ -223,7 +221,6 @@ class Dataset:
                                  self.ingest_url)
         if self.ingest_description is not None:
             self.model.addDescription(self.identifier, self.ingest_description)
-        return
 
     def _set_version_level_triples(self):
         self.model.addType(self.version_level_curie, 'dctypes:Dataset')
@@ -246,7 +243,7 @@ class Dataset:
         self.model.addType(self.distribution_level_turtle_curie, 'dctypes:Dataset')
         self.model.addType(self.distribution_level_turtle_curie, 'dcat:Distribution')
         self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:title',
-                           self.distribution_level_turtle_curie, True)
+                             self.distribution_level_turtle_curie, True)
         self.model.addDescription(self.distribution_level_turtle_curie,
                                   self.distribution_level_turtle_curie)
         self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:version',
@@ -266,8 +263,8 @@ class Dataset:
                              self.distribution_level_turtle_curie)
         if self.license_url is None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
-                                     'dcterms:license',
-                                     "https://project-open-data.cio.gov/unknown-license/")
+                                 'dcterms:license',
+                                 'https://project-open-data.cio.gov/unknown-license/')
         else:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                  'dcterms:license',
@@ -292,7 +289,6 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:triples',
                              Literal(len(triples), datatype=XSD.integer))
-        return
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
@@ -423,4 +419,3 @@ class Dataset:
         self.citation.add(citation_id)
         self.graph.addTriple(
             self.version_level_curie, 'cito:citesAsAuthority', citation_id)
-
