@@ -18,6 +18,9 @@ test: ClinVar-test FlyBase-test WormBase-test trans-test IMPC-test reactome-test
 Dataset:
 	$(TEST) tests/test_dataset.py
 
+SourceMetadata:
+	$(TEST) tests/test_source_metadata.py
+
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
 
