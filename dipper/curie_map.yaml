@@ -172,6 +172,7 @@
 'HGMD': 'http://www.hgmd.cf.ac.uk/ac/gene.php?gene='                    # Human Gene Mutation Database
 'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='     # Small Variation
 'dbVar': 'http://www.ncbi.nlm.nih.gov/dbvar/'                           # Large Variation
+'GWAS': 'https://www.ebi.ac.uk/gwas/variants/'                          # GWAS Catalog
 
 # pathways
 'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'              # Kyoto Encyclopedia of Genes and Genomes (pathways)

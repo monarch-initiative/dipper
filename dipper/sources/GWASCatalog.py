@@ -227,13 +227,10 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                # 2019-May three snp-id have  ' e' or ' a'  appended. note space.
-                # examples: 'rs2440154 e-A'  and 'rs2440154 e'
-                # including the suffix in the url is a web noop but breaks rdflib
-                strongest_snp_risk_allele = strongest_snp_risk_allele.split(' ')[0]
+                strongest_snp_risk_allele = strongest_snp_risk_allele
                 snp_id_current = snp_id_current.split(' ')[0]
 
-                # note: that these will no longer pattenn match other instances
+                # note: that these will no longer pattern match other instances
 
                 variant_curie, variant_type = self._get_curie_and_type_from_id(
                     strongest_snp_risk_allele)
@@ -370,7 +367,6 @@ class GWASCatalog(Source):
 
                         if gene_id is not None:
                             geno.addAffectedLocus(snp_curie, gene_id)
-                            geno.addAffectedLocus(hap_id, gene_id)
                             variant_in_gene_count += 1
 
                     gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
@@ -570,6 +566,11 @@ class GWASCatalog(Source):
         """
         Given a variant id, our best guess at its curie and type (snp, haplotype, etc)
         'None' will be used for both curie and type  for IDs that we can't process
+
+        # 2019-May three snp-id have  ' e' or ' a'  appended. note space.
+        # examples: 'rs2440154 e-A'  and 'rs2440154 e'
+        # including the suffix in the url is a web noop but breaks rdflib
+
         :param variant_id:
         :return:
         """
@@ -591,7 +592,7 @@ class GWASCatalog(Source):
             # remove the alteration
         elif variant_id[:3] == 'kgp':
             # http://www.1000genomes.org/faq/what-are-kgp-identifiers
-            curie = ':kgp-' + variant_id   # deliberate 404
+            curie = 'GWAS:' + variant_id.split('-')[0]
             variant_type = "snp"
         elif variant_id[:3] == 'chr':
             # like: chr10:106180121-G
