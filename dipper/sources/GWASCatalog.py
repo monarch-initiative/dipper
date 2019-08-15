@@ -349,7 +349,12 @@ class GWASCatalog(Source):
                     snp_curie, snp_labels[index], chrom_nums[index],
                     chrom_positions[index], context_list[index])
 
-                if mapped_genes and len(mapped_genes) == len(snp_labels):
+                if mapped_genes and len(mapped_genes) != len(snp_labels):
+                    LOG.warning(
+                        "More mapped genes than snps,"
+                        " cannot disambiguate for\n%s\n%s",
+                        mapped_genes, snp_labels)  # hap_label)
+                else:
                     so_class = self.resolve(context_list[index])
                     so_query = """
         SELECT ?variant_label
@@ -361,25 +366,17 @@ class GWASCatalog(Source):
 
                     query_result = so_ontology.query(so_query)
 
-                    if len(list(query_result)) == 1:
-                        gene_id = DipperUtil.get_hgnc_id_from_symbol(
-                            mapped_genes[index])
+                    gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
 
-                        if gene_id is not None:
+                    if gene_id is not None:
+                        if len(list(query_result)) == 1:
                             geno.addAffectedLocus(snp_curie, gene_id)
                             variant_in_gene_count += 1
 
-                    gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
-                    if gene_id is not None \
-                            and context_list[index] in ['upstream_gene_variant',
-                                                        'downstream_gene_variant']:
+                        elif context_list[index] in ['upstream_gene_variant',
+                                                     'downstream_gene_variant']:
                             graph.addTriple(
                                 snp_curie, self.resolve(context_list[index]), gene_id)
-                    else:
-                        LOG.warning(
-                            "More mapped genes than snps,"
-                            " cannot disambiguate for\n%s\n%s",
-                            mapped_genes, snp_labels)  # hap_label)
 
             # Seperate in case we want to apply a different relation
             # If not this is redundant with triples added above
