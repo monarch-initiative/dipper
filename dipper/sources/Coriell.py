@@ -117,11 +117,12 @@ class Coriell(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'coriell',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='coriell',
             ingest_title='Coriell Institute for Medical Research',
-            ingest_url='https://ccr.coriell.org/'
+            ingest_url='https://ccr.coriell.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-coriell.png',
             # website disclaimer 'https://www.coriell.org/1/About-Us/Legal-Notice'
             # wet material https://www.coriell.org/1/NINDS/About/Shared-Usage-Guidelines
             # license_url=None,

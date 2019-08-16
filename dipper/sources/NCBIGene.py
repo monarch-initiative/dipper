@@ -109,11 +109,12 @@ class NCBIGene(OMIMSource):
             gene_ids=None
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ncbigene',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='ncbigene',
             ingest_title='National Center for Biotechnology Information',
             ingest_url='http://ncbi.nih.nlm.gov/gene',
+            ingest_logo='https://monarchinitiative.org/image/source-ncbi.png',
             # ingest_desc=None,
             license_url='https://creativecommons.org/publicdomain/mark/1.0/',
             data_rights='http://www.ncbi.nlm.nih.gov/About/disclaimer.html'

@@ -29,11 +29,12 @@ class Reactome(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'reactome',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='reactome',
             ingest_title='Reactome',
             ingest_url='http://reactome.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-reactome.png',
             license_url=None,
             data_rights='https://reactome.org/license/'
             # file_handle=None

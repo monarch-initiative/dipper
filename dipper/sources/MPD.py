@@ -77,13 +77,13 @@ class MPD(Source):
     mgd_agent_type = "foaf:organization"
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        Source.__init__(
-            self,
-            graph_type,
-            are_bnodes_skolemized,
-            'mpd',
+        super().__init__(
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='mpd',
             ingest_title='Mouse Phenome Database',
             ingest_url='https://phenome.jax.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-mpd.jpg',
             # license_url=None,
             data_rights='https://phenome.jax.org/about/termsofuse'
             # file_handle=None

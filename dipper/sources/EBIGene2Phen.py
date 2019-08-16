@@ -73,11 +73,12 @@ class EBIGene2Phen(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ebi_g2p',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='ebi_g2p',
             ingest_title='EBI',
             ingest_url='https://www.ebi.ac.uk/gene2phenotype',
+            ingest_logo='https://www.ebi.ac.uk/gene2phenotype/images/G2P-ALL.png',
             license_url=None,
             data_rights='https://www.ebi.ac.uk/about/terms-of-use',
             file_handle=None

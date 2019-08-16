@@ -37,11 +37,12 @@ class StringDB(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'string',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='string',
             ingest_title='Known and predicted protein-protein interactions',
             ingest_url=STRING,
+            ingest_logo='https://monarchinitiative.org/image/source-string.png',
             license_url=None,
             data_rights=STRING+'/cgi/access.pl?footer_active_subpage=licensing'
             # file_handle=None

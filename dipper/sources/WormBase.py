@@ -100,11 +100,12 @@ class WormBase(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'wormbase',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='wormbase',
             ingest_title='WormBase',
             ingest_url='http://www.wormbase.org',
+            ingest_logo='https://monarchinitiative.org/image/source-wormbase.png',
             # license_url=None,
             data_rights='https://wormbase.org/about/citing_wormbase#012--10'
             # file_handle=None

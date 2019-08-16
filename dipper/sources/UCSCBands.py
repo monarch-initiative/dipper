@@ -140,11 +140,12 @@ class UCSCBands(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ucscbands',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='ucscbands',
             ingest_title='UCSC Cytogenic Bands',
             ingest_url='http://hgdownload.cse.ucsc.edu',
+            ingest_logo='https://hgdownload.soe.ucsc.edu/images/ucscHelixLogo.png',
             license_url='http://genome.ucsc.edu/license/'
             # data_rights=None,
             # file_handle=None

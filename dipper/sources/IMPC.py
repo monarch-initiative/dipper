@@ -116,11 +116,12 @@ class IMPC(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'impc',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='impc',
             ingest_title='International Mouse Phenotyping Consortium',
             ingest_url='http://www.mousephenotype.org',
+            ingest_logo='https://monarchinitiative.org/image/source-impc.png',
             license_url=None,
             data_rights=GITHUBRAW + 'mpi2/PhenotypeArchive/master/LICENSE',
             file_handle=None

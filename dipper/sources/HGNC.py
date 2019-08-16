@@ -84,11 +84,12 @@ class HGNC(OMIMSource):
     def __init__(self, graph_type, are_bnodes_skolemized,
                  tax_ids=None, gene_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'hgnc',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-hgnc.ico',
             license_url=None,
             data_rights='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt',
             # file_handle=None

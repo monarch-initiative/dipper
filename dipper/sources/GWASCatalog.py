@@ -96,12 +96,13 @@ class GWASCatalog(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'gwascatalog',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='gwascatalog',
             ingest_title='NHGRI-EBI Catalog of ' +
             'published genome-wide association studies',
             ingest_url='http://www.ebi.ac.uk/gwas/',
+            ingest_logo='https://monarchinitiative.org/image/source-gwascatalog.png',
             license_url=None,
             data_rights='http://www.ebi.ac.uk/gwas/docs/about'
             # file_handle=None

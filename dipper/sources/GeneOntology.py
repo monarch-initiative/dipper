@@ -187,11 +187,12 @@ class GeneOntology(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'go',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',
+            ingest_logo='https://monarchinitiative.org/image/partner-go.png',
             license_url=None,
             data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None

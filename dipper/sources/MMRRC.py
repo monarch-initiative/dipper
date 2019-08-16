@@ -70,11 +70,12 @@ class MMRRC(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mmrrc',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='mmrrc',
             ingest_title='Mutant Mouse Regional Resource Centers',
             ingest_url='https://www.mmrrc.org',
+            ingest_logo='https://monarchinitiative.org/image/source-mmrrc.png',
             # license_url=None,
             data_rights='https://www.mmrrc.org/about/data_download.php'
             # file_handle=None

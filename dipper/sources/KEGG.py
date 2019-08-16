@@ -105,11 +105,12 @@ class KEGG(OMIMSource):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'kegg',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='kegg',
             ingest_title='Kyoto Encyclopedia of Genes and Genomes',
             ingest_url='http://www.genome.jp/kegg/',
+            ingest_logo='https://monarchinitiative.org/image/source-kegg.png',
             license_url=None,
             data_rights='http://www.kegg.jp/kegg/legal.html'
             # file_handle=None

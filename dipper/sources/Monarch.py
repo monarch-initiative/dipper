@@ -51,11 +51,12 @@ class Monarch(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'monarch',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='monarch',
             ingest_title='The Monarch Initiative',
             ingest_url='https://monarchinitiative.org',
+            ingest_logo='https://monarchinitiative.org/image/logo.png',
             license_url='https://creativecommons.org/licenses/by/4.0/'
             # data_rights=None,
             # file_handle=None

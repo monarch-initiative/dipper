@@ -40,11 +40,12 @@ class BioGrid(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'biogrid',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='biogrid',
             ingest_title='Biological General Repository for Interaction Datasets',
             ingest_url='http://thebiogrid.org',
+            ingest_logo='https://monarchinitiative.org/image/source-biogrid.ico',
             license_url='https://downloads.thebiogrid.org/Download/LICENSE.txt',
             data_rights='https://wiki.thebiogrid.org/doku.php/terms_and_conditions',
             # file_handle=None

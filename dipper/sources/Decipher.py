@@ -42,11 +42,12 @@ class Decipher(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'decipher',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='decipher',
             ingest_title='Development Disorder Genotype Phenotype Database',
             ingest_url='https://decipher.sanger.ac.uk/',
+            ingest_logo='https://decipher.sanger.ac.uk/img/decipher-logo.png',
             license_url='https://decipher.sanger.ac.uk/legal',
             data_rights='https://decipher.sanger.ac.uk/datasharing',
             # file_handle=None

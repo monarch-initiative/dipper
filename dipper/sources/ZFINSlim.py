@@ -32,11 +32,12 @@ class ZFINSlim(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'zfinslim',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='zfinslim',
             ingest_title='Simplified ZFIN',
             ingest_url='https://zfin.org/',
+            ingest_logo="https://monarchinitiative.org/image/source-zfin.png",
             license_url=None,
             data_rights='http://zfin.org/warranty.html',
             # file_handle=None

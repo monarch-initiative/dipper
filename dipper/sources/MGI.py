@@ -142,11 +142,12 @@ class MGI(PostgreSQLSource):
             are_bnodes_skolemized
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
             name='mgi',
             ingest_title='Mouse Genome Informatics',
             ingest_url='http://www.informatics.jax.org/',
+            ingest_logo="https://monarchinitiative.org/image/source-mgi.png",
             license_url='http://www.informatics.jax.org/mgihome/other/copyright.shtml',
             data_rights=None,
             file_handle=None)

@@ -27,11 +27,12 @@ class SGD(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'sgd',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='sgd',
             ingest_title='Saccharomyces Genome Database',
             ingest_url='https://www.yeastgenome.org/',
+            ingest_logo='https://d1x6jdqbvd5dr.cloudfront.net/4f154acde40807fdc222/img/sgd-logo.png',
             license_url='https://sites.google.com/view/yeastgenome-help/about',
             data_rights=None,
             file_handle=None

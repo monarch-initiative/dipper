@@ -79,11 +79,12 @@ class OMIM(OMIMSource):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'omim',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='omim',
             ingest_title='Online Mendelian Inheritance in Man',
             ingest_url='http://www.omim.org',
+            ingest_logo='https://monarchinitiative.org/image/source-omim.png',
             # ingest_desc=None,
             license_url=None,
             data_rights='http://omim.org/help/agreement',

@@ -109,11 +109,12 @@ class HPOAnnotations(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'hpoa',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='hpoa',
             ingest_title='Human Phenotype Ontology',
             ingest_url='https://hpo.jax.org/app/',
+            ingest_logo='https://monarchinitiative.org/image/source-hpo.png',
             license_url=None,
             data_rights='https://hpo.jax.org/app/license',
             # file_handle=None

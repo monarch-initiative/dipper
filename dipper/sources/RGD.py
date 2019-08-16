@@ -25,11 +25,12 @@ class RGD(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'rgd',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
+            ingest_logo='https://monarchinitiative.org/image/source-rgd.gif',
             license_url=None,
             data_rights='https://rgd.mcw.edu/wg/disclaimer/',
             # file_handle=None

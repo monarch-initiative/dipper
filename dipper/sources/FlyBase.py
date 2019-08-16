@@ -131,11 +131,12 @@ class FlyBase(PostgreSQLSource):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'flybase',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='flybase',
             ingest_title='FlyBase',
             ingest_url='http://www.flybase.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-flybase.png',
             license_url=None,
             data_rights='https://wiki.flybase.org/wiki/FlyBase_Wiki:General_disclaimer',
             file_handle=None

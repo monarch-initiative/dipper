@@ -78,11 +78,12 @@ class UDP(Source):
             are_bnodes_skolemized
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'udp',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='udp',
             ingest_title='Undiagnosed Diseases Program',
-            ingest_url='https://rarediseases.info.nih.gov/'
+            ingest_url='https://rarediseases.info.nih.gov/',
+            ingest_logo='https://monarchinitiative.org/image/partner-udp.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

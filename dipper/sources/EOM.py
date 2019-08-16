@@ -85,11 +85,12 @@ class EOM(PostgreSQLSource):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'eom',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='eom',
             ingest_title='Elements of Morphology',
             ingest_url='http://elementsofmorphology.nih.gov',
+            ingest_logo='https://www.genome.gov/themes/custom/nhgri/assets/global/NHGRI-logo.svg',
             data_rights='http://www.genome.gov/copyright.cfm',
             license_url='https://creativecommons.org/publicdomain/mark/1.0/'
             # file_handle=None

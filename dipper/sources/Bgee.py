@@ -83,11 +83,12 @@ class Bgee(Source):
         :return:
         """
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'bgee',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='bgee',
             ingest_title='Bgee Gene expression data in animals',
             ingest_url='http://bgee.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-bgee.png',
             # license_url=None,
             data_rights='https://bgee.org/?page=about'
             # file_handle=None

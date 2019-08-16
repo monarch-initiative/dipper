@@ -25,11 +25,12 @@ class MyDrug(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mydrug',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='mydrug',
             ingest_title='Drugs and Compounds in BioThings',
-            ingest_url='http://c.biothings.io/'
+            ingest_url='http://c.biothings.io/',
+            ingest_logo='https://biothings.io/static/img/biothings-text.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

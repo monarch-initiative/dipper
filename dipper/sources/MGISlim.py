@@ -19,11 +19,13 @@ class MGISlim(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mgi_slim',
-            'Simplified Mouse Genome Informatics',
-            'http://www.mousemine.org/mousemine/service'
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='mgi_slim',
+            ingest_description='Simplified Mouse Genome Informatics',
+            ingest_url='http://www.mousemine.org/mousemine/service',
+            ingest_logo = "https://monarchinitiative.org/image/source-mgi.png",
+            license_url = 'http://www.informatics.jax.org/mgihome/other/copyright.shtml',
             # data_rights=None,
             # file_handle=None
         )

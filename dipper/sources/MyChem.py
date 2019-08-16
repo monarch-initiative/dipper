@@ -12,11 +12,12 @@ LOG = logging.getLogger(__name__)
 class MyChem(Source):
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mychem',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='mychem',
             ingest_title='BioThings chemical and drug annotation data',
             ingest_url='http://mychem.info/',
+            ingest_logo='https://mychem.info/static/img/mychem-text.png',
             license_url=None,
             data_rights='http://mychem.info/terms'
             # file_handle=None

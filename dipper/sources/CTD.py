@@ -76,11 +76,12 @@ class CTD(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ctd',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            name='ctd',
             ingest_title='Comparative Toxicogenomics Database',
             ingest_url='http://ctdbase.org',
+            ingest_logo='https://monarchinitiative.org/image/source-ctd.png',
             license_url=None,
             data_rights='http://ctdbase.org/about/legal.jsp'
             # file_handle=None

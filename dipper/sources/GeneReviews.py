@@ -60,11 +60,12 @@ class GeneReviews(OMIMSource):
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'genereviews',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            name='genereviews',
             ingest_title='Gene Reviews',
             ingest_url='http://genereviews.org/',
+            ingest_logo='https://monarchinitiative.org/image/source-genereviews.png',
             license_url=None,
             data_rights='http://www.ncbi.nlm.nih.gov/books/NBK138602/',
             # file_handle=None
