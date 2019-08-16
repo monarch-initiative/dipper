@@ -369,7 +369,7 @@ class GeneReviews(OMIMSource):
                             pmid = 'PMID:'+str(pmnum)
                             self.graph.addTriple(
                                 pmid, self.globaltt['is_about'], nbk_id,
-                                subject_id=blv.Publication.value,
+                                subject_category=blv.Publication.value,
                                 object_is_literal=blv.InformationContentEntity.value)
                             pmid_set.add(pmnum)
                             reference = Reference(
