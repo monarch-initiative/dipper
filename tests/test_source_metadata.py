@@ -45,6 +45,14 @@ class SourceMetadataTestCase(unittest.TestCase):
                     'tests/resources/fakeingest/test_file.txt'}
         }
 
+        self.thesePgFiles = {
+            'test_file': {
+                'file': 'test_file_pg.txt',
+                'url': 'http://fakeingest.com/remote_file.txt',
+                'path_to_mock_download_file':
+                    'tests/resources/fakeingest/test_file_pg.txt'}
+        }
+
         # expected things:
         self.expected_curie_prefix = "MonarchData"
         self.timestamp_date = datetime.today().strftime("%Y%m%d")
@@ -63,7 +71,6 @@ class SourceMetadataTestCase(unittest.TestCase):
         self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
         self.iri_retrieved_on = URIRef(self.curie_map.get("pav") + "retrievedOn")
 
-    def setUp(self):
         # load source and fetch files to make dataset graph containing metadata
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
@@ -78,6 +85,25 @@ class SourceMetadataTestCase(unittest.TestCase):
         # don't write metadata out with main graph, because this screws up
         # triples counts during testing
         self.source.write(write_metadata_in_main_graph=False)
+
+        # same as above, but using postgres class
+        # load source and fetch files to make dataset graph containing metadata
+        self.pg_source = FakeIngestUsingPostgres("rdf_graph",
+                                                 are_bnodes_skolemized=False,
+                                                 identifier=self.identifier,
+                                                 ingest_url=self.ingest_url,
+                                                 ingest_title=self.ingest_title,
+                                                 ingest_logo=self.ingest_logo_url,
+                                                 license_url=self.license_url,
+                                                 data_rights=self.data_rights,
+                                                 files=self.thesePgFiles)
+        self.pg_source.fetch()
+        # don't write metadata out with main graph, because this screws up
+        # triples counts during testing
+        self.pg_source.write(write_metadata_in_main_graph=False)
+
+    def setUp(self):
+        pass
 
     def test_version_level_source_file_triple(self):
         triples = list(self.source.dataset.graph.triples(
@@ -113,6 +139,46 @@ class SourceMetadataTestCase(unittest.TestCase):
         self.source.dataset.set_ingest_source_file_version_retrieved_on(
             file_iri, this_date, datatype=XSD.date)
         triples = list(self.source.dataset.graph.triples(
+            (URIRef(file_iri),
+             self.iri_retrieved_on,
+             Literal(this_date, datatype=XSD.date))))
+        self.assertTrue(len(triples) == 1,
+                        "ingest source file retrievedOn date not set correctly")
+
+    def test_postgres_version_level_source_file_triple(self):
+        triples = list(self.pg_source.dataset.graph.triples(
+            (self.version_level_IRI,
+             self.iri_source,
+             URIRef(self.pg_source.files.get("test_file").get("url"))
+        )))
+        self.assertTrue(len(triples) == 1, "missing version level file source triple")
+
+    def test_postgres_version_level_source_version_download_timestamp(self):
+        path_to_dl_file = '/'.join(
+            (self.pg_source.rawdir, self.pg_source.files.get('test_file').get('file')))
+        fstat = os.stat(path_to_dl_file)
+
+        self.downloaded_file_timestamp = \
+            datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d")
+
+        triples = list(self.pg_source.dataset.graph.triples(
+            (URIRef(self.theseFiles.get("test_file").get("url")),
+             self.iri_retrieved_on,
+             None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing triple for ingest file retrieved on " +
+                        "(download timestamp)")
+        self.assertEqual(Literal(triples[0][2], datatype=XSD.date),
+                         Literal(self.downloaded_file_timestamp, datatype=XSD.date),
+                         "version level source version timestamp isn't " +
+                         "the same as the download timestamp of the local file")
+
+    def test_postgres_version_level_source_version_download_timestamp_setter(self):
+        this_date = "1970-01-01"
+        file_iri = self.pg_source.files.get("test_file").get("url")
+        self.pg_source.dataset.set_ingest_source_file_version_retrieved_on(
+            file_iri, this_date, datatype=XSD.date)
+        triples = list(self.pg_source.dataset.graph.triples(
             (URIRef(file_iri),
              self.iri_retrieved_on,
              Literal(this_date, datatype=XSD.date))))
@@ -206,3 +272,12 @@ class FakeIngestUsingPostgres(PostgreSQLSource):
 
     def parse(self):
         pass
+
+    def fetch_from_url(self,
+                       remotefile,
+                       localfile=None,
+                       is_dl_forced=False,
+                       headers=None):
+        copyfile(
+            self.files.get('test_file').get('path_to_mock_download_file'), localfile)
+        return
