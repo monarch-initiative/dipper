@@ -582,7 +582,8 @@ class GWASCatalog(Source):
             curie = ':haplotype_' + Source.hash_id(variant_id)   # deliberate 404
             variant_type = "haplotype"
         elif variant_id[:2] == 'rs':
-            curie = 'dbSNP:' + variant_id.split('-')[0]
+            # remove whitespace from errant id, rs6194 5053-?
+            curie = 'dbSNP:' + variant_id.split('-')[0].replace(' ', '')
             # curie = re.sub(r'-.*$', '', curie).strip()
             variant_type = "snp"
             # remove the alteration
