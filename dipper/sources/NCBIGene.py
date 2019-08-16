@@ -521,7 +521,7 @@ class NCBIGene(OMIMSource):
                         discontinued_gene_id, discontinued_symbol,
                         ind_category=blv.Gene.value)
                     model.addDeprecatedIndividual(discontinued_gene_id, [gene_id],
-                                                  old_id=blv.Gene.value,
+                                                  old_ids_category=blv.Gene.value,
                                                   new_ids_category=blv.Gene.value)
 
                 # also add the old symbol as a synonym of the new gene
