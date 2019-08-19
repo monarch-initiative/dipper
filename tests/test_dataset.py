@@ -1,6 +1,7 @@
 import datetime
 import unittest
 import logging
+import os.path
 from datetime import datetime
 from rdflib import XSD
 
@@ -349,10 +350,14 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "distribution level default license triple not set")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_triples_count(self):
-        exp_triples_count = 3
-        # feed graph with 3 triples to self.dataset.compute_triples_statistics()
+        # feed test graph with 2 triples to self.dataset.compute_triples_statistics()
+        exp_triples_count = 2
+        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
+        test_graph = RDFGraph()
+        test_graph.parse(test_ttl,  format="turtle")
+
+        self.dataset.compute_triples_statistics(test_graph)
 
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
