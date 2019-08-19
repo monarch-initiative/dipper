@@ -289,6 +289,17 @@ class Dataset:
                              'void:triples',
                              Literal(triples_count, datatype=XSD.integer))
 
+        distinct_subjects_q = target_graph.query(
+            """SELECT(COUNT(DISTINCT ?s) as ?DistinctSubjects)
+               WHERE {?s ?p ?o}
+            """)
+        distinct_subjects = distinct_subjects_q.bindings[0].get("DistinctSubjects")
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:distinctSubjects',
+                             Literal(distinct_subjects, datatype=XSD.integer))
+
+        pass
+
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
         This method sets the version of a remote file or resource that is used in the

@@ -376,14 +376,22 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "missing distribution level entities count")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_distinct_subject_count(self):
+        expected_ds_count = 2
+        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
+        test_graph = RDFGraph()
+        test_graph.parse(test_ttl, format="turtle")
+
+        self.dataset.compute_triples_statistics(test_graph)
+
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_distinct_subjects,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level distinct subject count")
+                        "didn't get exactly 1 distribution level triples count")
+        self.assertEqual(triples[0][2], Literal(expected_ds_count),
+                         "didn't get correct triples count")
 
     @unittest.skip("not implemented yet")
     def test_distribution_level_distinct_object_count(self):
