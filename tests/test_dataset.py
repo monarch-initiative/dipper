@@ -1,7 +1,6 @@
 import datetime
 import unittest
 import logging
-import os.path
 from datetime import datetime
 from rdflib import XSD
 
