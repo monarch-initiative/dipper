@@ -512,7 +512,7 @@ class NCBIGene(OMIMSource):
 
                     # add the new gene id to replace the old gene id
                     model.addDeprecatedClass(discontinued_gene_id, [gene_id],
-                                             old_id=blv.Gene.value,
+                                             old_id_category=blv.Gene.value,
                                              new_ids_category=blv.Gene.value)
                 else:
                     model.addIndividualToGraph(gene_id, None,
