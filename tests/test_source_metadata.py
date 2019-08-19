@@ -70,7 +70,9 @@ class SourceMetadataTestCase(unittest.TestCase):
         self.iri_version = URIRef(self.curie_map.get("pav") + "version")
         self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
         self.iri_retrieved_on = URIRef(self.curie_map.get("pav") + "retrievedOn")
+        self.iri_triples_count = URIRef(self.curie_map.get("void") + "triples")
 
+    def setUp(self):
         # load source and fetch files to make dataset graph containing metadata
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
@@ -82,7 +84,7 @@ class SourceMetadataTestCase(unittest.TestCase):
                                       data_rights=self.data_rights,
                                       files=self.theseFiles)
         self.source.fetch()
-        # don't write metadata out with main graph, because this screws up
+        # don't write metadata out with main graph in tests, because this screws up
         # triples counts during testing
         self.source.write(write_metadata_in_main_graph=False)
 
@@ -98,12 +100,9 @@ class SourceMetadataTestCase(unittest.TestCase):
                                                  data_rights=self.data_rights,
                                                  files=self.thesePgFiles)
         self.pg_source.fetch()
-        # don't write metadata out with main graph, because this screws up
+        # don't write metadata out with main graph in tests, because this screws up
         # triples counts during testing
         self.pg_source.write(write_metadata_in_main_graph=False)
-
-    def setUp(self):
-        pass
 
     def test_version_level_source_file_triple(self):
         triples = list(self.source.dataset.graph.triples(
@@ -184,6 +183,27 @@ class SourceMetadataTestCase(unittest.TestCase):
              Literal(this_date, datatype=XSD.date))))
         self.assertTrue(len(triples) == 1,
                         "ingest source file retrievedOn date not set correctly")
+
+    def test_write_call_makes_triples_counts(self):
+        # load source and run fetch() and write(write_metadata_in_main_graph=True)
+        # and make sure main graph has triples count. (Not checking that the count
+        # is correct here, because we do that in test_dataset.py)
+        self.source = FakeIngestClass("rdf_graph",
+                                      are_bnodes_skolemized=False,
+                                      identifier=self.identifier,
+                                      ingest_url=self.ingest_url,
+                                      ingest_title=self.ingest_title,
+                                      ingest_logo=self.ingest_logo_url,
+                                      license_url=self.license_url,
+                                      data_rights=self.data_rights,
+                                      files=self.theseFiles)
+        self.source.fetch()
+        self.source.write(write_metadata_in_main_graph=True)
+        triples = list(self.source.graph.triples(
+            (URIRef(self.distribution_level_IRI_ttl), self.iri_triples_count, None)))
+        self.assertTrue(len(triples) == 1,
+                        "distribution level doesn't have triples "
+                        "count after call to write")
 
 
 if __name__ == '__main__':
