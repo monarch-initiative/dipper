@@ -47,7 +47,6 @@ pipeline {
 
                         # Clean up previous runs
                         sudo rm -rf ./out/
-                        sudo rm -rf ./raw/
                     '''
                 }
             }
