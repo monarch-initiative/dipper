@@ -150,13 +150,13 @@ class KEGG(OMIMSource):
         self._process_pathway_pubmed(limit)
         self._process_pathway_disease(limit)
 
-        #self._process_diseases(limit)
-        #self._process_genes(limit)
-        #self._process_omim2gene(limit)
-        #self._process_omim2disease(limit)
+        self._process_diseases(limit)
+        self._process_genes(limit)
+        self._process_omim2gene(limit)
+        self._process_omim2disease(limit)
         #self._process_kegg_disease2gene(limit)
-        #self._process_pathway_ko(limit)
-        #self._process_ortholog_classes(limit)
+        self._process_pathway_ko(limit)
+        self._process_ortholog_classes(limit)
 
         # TODO add in when refactoring for #141
         # for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs',
