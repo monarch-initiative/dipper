@@ -47,13 +47,116 @@ pipeline {
 
                         # Clean up previous runs
                         sudo rm -rf ./out/
-                        sudo rm -rf ./raw/
                     '''
                 }
             }
         }
         stage('Generate monarch owl and rdf') {
             parallel {
+                stage("Process sources that call OMIM") {
+                    stages {
+                        stage("ETL OMIM") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.OMIM != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=omim
+                                    $DIPPER --sources $SOURCE -q
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("ETL NCBI Gene") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.NCBIGENE != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=ncbigene
+                                    $DIPPER --sources $SOURCE --taxon \
+                                    28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("ETL OMIA") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.OMIA != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=omia
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("ETL HGNC") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.HGNC != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=hgnc
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("ETL KEGG") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.KEGG != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=kegg
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("ETL Gene Reviews") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.GENE_REVIEWS != null }
+                                }
+                            }
+                            steps {
+                                dir('./data-boutique') {
+                                    git(
+                                        url: 'https://github.com/monarch-initiative/data-boutique.git',
+                                        credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
+                                        branch: 'master'
+                                    )
+                                    sh '''
+                                        SOURCE=genereviews
+                                        cd .. && mkdir -p raw/genereviews/books
+                                        cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
+                                        $DIPPER --sources genereviews
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
                 stage("Generate monarch merged owl file") {
                     when {
                         anyOf {
@@ -76,7 +179,7 @@ pipeline {
 
                                 # Hack to normalize omim and hgnc IRIs
                                 # https://github.com/monarch-initiative/dipper/issues/700
-                                sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIMPS_/http:\\/\\/www.omim.org\\/phenotypicSeries\\//' ./monarch-merged.owl
+                                sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIMPS_/http:\\/\\/www.omim.org\\/phenotypicSeries\\/PS/' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIM_/http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/identifiers.org\\/omim\\//http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/identifiers.org\\/hgnc\\//http:\\/\\/www.genenames.org\\/cgi-bin\\/gene_symbol_report?hgnc_id=/' ./monarch-merged.owl
@@ -267,30 +370,6 @@ pipeline {
                         '''
                     }
                 }
-                stage("ETL Gene Reviews") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.GENE_REVIEWS != null }
-                        }
-                    }
-                    steps {
-                        dir('./data-boutique') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/data-boutique.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                SOURCE=genereviews
-                                cd .. && mkdir -p raw/genereviews/books
-                                cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
-                                $DIPPER --sources genereviews
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                            '''
-                        }
-                    }
-                }
                 stage("ETL Gene Ontology Associations") {
                     when {
                         anyOf {
@@ -322,21 +401,6 @@ pipeline {
                         '''
                     }
                 }
-                stage("ETL HGNC") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.HGNC != null }
-                        }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=hgnc
-                            $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                        '''
-                    }
-                }
                 stage("ETL HPO Annotations") {
                     when {
                         anyOf {
@@ -362,21 +426,6 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=impc
-                            $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                        '''
-                    }
-                }
-                stage("ETL KEGG") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.KEGG != null }
-                        }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=kegg
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
@@ -477,37 +526,6 @@ pipeline {
                         sh '''
                             SOURCE=mpd
                             $DIPPER --sources $SOURCE --skip_tests
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                        '''
-                    }
-                }
-                stage("ETL NCBI Gene") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.NCBIGENE != null }
-                        }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=ncbigene
-                            $DIPPER --sources $SOURCE --taxon \
-                            28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                        '''
-                    }
-                }
-                stage("ETL OMIM") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.OMIM != null }
-                        }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=omim
-                            $DIPPER --sources $SOURCE -q
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -627,21 +645,6 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mychem
-                            $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-                        '''
-                    }
-                }
-                stage("ETL OMIA") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.OMIA != null }
-                        }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=omia
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
