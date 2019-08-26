@@ -616,7 +616,7 @@ def parse():
 
     # Seed releasetriple to avoid union with the empty set
     # <MonarchData: + args.output> <a> <owl:Ontology>
-    releasetriple.add(make_spo('MonarchData:' + 'clinvar.nt', 'a', 'owl:Ontology'))
+    releasetriple.add(make_spo('MonarchData:' + args.output, 'a', 'owl:Ontology'))
 
     rjct_cnt = tot_cnt = 0
     #######################################################
