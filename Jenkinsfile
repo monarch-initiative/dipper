@@ -306,7 +306,7 @@ pipeline {
 
                             export PYTHONPATH=.:$PYTHONPATH
                             venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
-                            scp ./out/clinvarxml_alpha.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
+                            scp ./out/clinvar.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}
                         '''
                     }
                 }

@@ -2,10 +2,10 @@
     OBO:SEPIO_0000007 BNODE:be870b3d47783bbdcf05 ;
     OBO:SEPIO_0000015 BNODE:bd8e0f2fc4633580d875 ;
     dc:source <http://www.ncbi.nlm.nih.gov/pubmed/27486776> ;
-    OBAN:association_has_object OMIM:PS209900 ;
+    OBAN:association_has_object OMIMPS:PS209900 ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/431733> ;
-    oboInOwl:hasdbxref ClinVar:RCV000498447 .
+    oboInOwl:hasDbXref ClinVar:RCV000498447 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505664> a foaf:organization ;
     rdfs:label "Center for Human Disease Modeling,Duke University Medical Center" .
@@ -26,7 +26,7 @@
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/431733> a OBO:SO_0001024 ;
     OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/425238>,
         <http://www.ncbi.nlm.nih.gov/clinvar/variation/425239> ;
-    OBO:GENO_0000841 OMIM:PS209900 ;
+    OBO:GENO_0000841 OMIMPS:PS209900 ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
 BNODE:b664828053687f26b867 a OBO:SEPIO_0000066 ;
@@ -40,7 +40,7 @@ BNODE:bd8e0f2fc4633580d875 a OBO:SEPIO_0000001 ;
     OBO:SEPIO_0000111 BNODE:be870b3d47783bbdcf05 ;
     dc:identifier "SCV000296057.1" .
 
-OMIM:PS209900 rdfs:label "Bardet-Biedl syndrome" .
+OMIMPS:PS209900 rdfs:label "Bardet-Biedl syndrome" .
 
 <http://www.ncbi.nlm.nih.gov/pubmed/27486776> a OBO:IAO_0000013 .
 

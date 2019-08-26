@@ -63,7 +63,7 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/146110> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/31166> ;
-    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+    oboInOwl:hasDbXref ClinVar:RCV000763295 .
 
 :MONARCH_b3135a4d36760903bbc8 a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:bd4ef2b55470e2ff6b1c ;
@@ -73,7 +73,7 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/614381> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/31166> ;
-    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+    oboInOwl:hasDbXref ClinVar:RCV000763295 .
 
 :MONARCH_bb8218e5dd5e028601ba a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:b1e75870cf421cc5377c ;
@@ -83,7 +83,7 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/607694> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/31166> ;
-    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+    oboInOwl:hasDbXref ClinVar:RCV000763295 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> a foaf:organization ;
     rdfs:label "Fulgent Genetics" .
@@ -101,7 +101,7 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
         "NM_018082.5:c.1568T>A",
         "NP_060552.4:p.Val523Glu",
         "Q9NW08:p.Val523Glu" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161> .
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161> .
 
 BNODE:b23790c2cc493199c951 a OBO:SEPIO_0000037 ;
     rdfs:label "ACMG Guidelines, 2015",

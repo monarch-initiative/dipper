@@ -361,12 +361,16 @@ def allele_to_triples(allele, triples) -> None:
     if allele.label is not None:
         write_spo(allele.id, 'rdfs:label', allele.label, triples)
 
-    # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
+    # <ClinVarVariant:rcv_variant_id><OWL:hasDbXref><dbSNP:rs>
+    #
+    # Note that making clinvar variants and dbSNPs equivalent
+    # causes clique merge bugs, so best to leave them as xrefs
+    # Example: https://www.ncbi.nlm.nih.gov/clinvar/variation/31915/
+    # https://www.ncbi.nlm.nih.gov/clinvar/variation/21303/
     for dbsnp_id in allele.dbsnps:
-        # sameAs or hasdbxref?
         write_spo(
             allele.id,
-            'owl:sameAs',
+            'oboInOwl:hasDbXref',
             dbsnp_id,
             triples)
 
@@ -524,8 +528,8 @@ def parse():
         help='directory to write into. default: "' + RPATH + '/out"')
 
     argparser.add_argument(
-        '-o', "--output", default=INAME + '.nt',
-        help='file name to write to. default: ' + INAME + '.nt')
+        '-o', "--output", default='clinvar.nt',
+        help='file name to write to. default: ' + 'clinvar.nt')
 
     argparser.add_argument(
         '-s', '--skolemize', default=True,
@@ -612,7 +616,7 @@ def parse():
 
     # Seed releasetriple to avoid union with the empty set
     # <MonarchData: + args.output> <a> <owl:Ontology>
-    releasetriple.add(make_spo('MonarchData:' + args.output, 'a', 'owl:Ontology'))
+    releasetriple.add(make_spo('MonarchData:' + 'clinvar.nt', 'a', 'owl:Ontology'))
 
     rjct_cnt = tot_cnt = 0
     #######################################################
@@ -746,6 +750,8 @@ def parse():
                     for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="OMIM"]'):
                         rcv_disease_db = RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
+                        if rcv_disease_id.startswith('PS'):
+                            rcv_disease_db = 'OMIMPS'
                         break
 
                     # Accept Orphanet if no OMIM
@@ -1082,7 +1088,7 @@ def parse():
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
                             write_spo(
                                 monarch_assoc,
-                                'oboInOwl:hasdbxref',
+                                'oboInOwl:hasDbXref',
                                 'ClinVar:' + rcv_acc,
                                 rcvtriples)
 

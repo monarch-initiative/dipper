@@ -31,7 +31,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
     OBAN:association_has_object <http://omim.org/entry/121050> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/375300> ;
-    oboInOwl:hasdbxref ClinVar:RCV000416376 .
+    oboInOwl:hasDbXref ClinVar:RCV000416376 .
 
 :MONARCH_b6b194b585b6811c6b2a a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:b4d40a7eefacbfe43164 ;
@@ -40,7 +40,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
     OBAN:association_has_object <http://omim.org/entry/154700> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/375300> ;
-    oboInOwl:hasdbxref ClinVar:RCV000416376 .
+    oboInOwl:hasDbXref ClinVar:RCV000416376 .
 
 <http://omim.org/entry/121050> rdfs:label "Congenital contractural arachnodactyly" .
 
@@ -60,7 +60,7 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
         "NG_008750.1:g.193653G>T",
         "NM_001999.3:c.2945G>T",
         "NP_001990.2:p.Cys982Phe" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=1057519321> .
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=1057519321> .
 
 BNODE:b1aa769f10db16b258de a OBO:ECO_0000000 ;
     rdfs:label "b49bb52f6925e2bf5458_evidence" ;

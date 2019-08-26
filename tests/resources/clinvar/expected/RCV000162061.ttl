@@ -5,7 +5,7 @@
     OBAN:association_has_object <http://omim.org/entry/608716> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> ;
-    oboInOwl:hasdbxref ClinVar:RCV000162061 .
+    oboInOwl:hasDbXref ClinVar:RCV000162061 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505721> a foaf:organization ;
     rdfs:label "Medical Research Institute,Tokyo Medical and Dental University" .
@@ -19,7 +19,7 @@
         "NG_015867.1:g.64729C>T",
         "NM_018136.4:c.10168C>T",
         "NP_060606.3:p.Arg3390Ter" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/242641> a OBO:SO_0001483 ;
     rdfs:label "NM_018136.4(ASPM):c.8098C>T (p.Arg2700Ter)" ;
@@ -31,7 +31,7 @@
         "NM_001206846.1:c.4066-4989C>T",
         "NM_018136.4:c.8098C>T",
         "NP_060606.3:p.Arg2700Ter" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=730882076> .
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=730882076> .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> a OBO:GENO_0000402 ;
     rdfs:label "NM_018136.4(ASPM):c.[10168C>T];[8098C>T]" ;
