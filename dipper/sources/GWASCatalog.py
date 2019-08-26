@@ -227,7 +227,6 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                strongest_snp_risk_allele = strongest_snp_risk_allele
                 snp_id_current = snp_id_current.split(' ')[0]
 
                 # note: that these will no longer pattern match other instances

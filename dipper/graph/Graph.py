@@ -16,7 +16,7 @@ class Graph(metaclass=ABCMeta):
     #   because that is reality on the street (i.e Reactome)
 
     curie_regexp = re.compile(
-        r'^[a-zA-Z_]*[a-zA-Z_0-9-]*:[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]*$')
+        r'^[a-zA-Z_]?[a-zA-Z_0-9-]*:[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]*$')
 
     @abstractmethod
     def addTriple(
