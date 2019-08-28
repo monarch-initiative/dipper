@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from rdflib import Literal, XSD
+from rdflib import Literal, XSD, URIRef
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
@@ -289,6 +289,7 @@ class Dataset:
         self._compute_distinct_objects_count(target_graph)
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
+        self._compute_distinct_classes_count(target_graph)
 
         # if we need to add propertyPartitions to metadata, see rdflib source code here
         # as an example
@@ -345,6 +346,33 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:properties',
                              Literal(distinct_entities, datatype=XSD.integer))
+
+    def _compute_distinct_classes_count(self,
+                                        target_graph,
+                                        partition_label="class_count"):
+        # Doing an import here to get access to Source.make_id()
+        # I need to do this here to get around circular import problem, since Source
+        # imports Datasets. Alternatively, I could make another make_id() method
+        # here in Dataset, but that seems worse than doing an import here
+        from dipper.sources.Source import Source
+
+        distinct_classes_count_q = target_graph.query(
+            """
+            SELECT(COUNT(DISTINCT ?o) AS ?distinctClasses)
+            { ?s
+            a ?o}
+            """
+        )
+
+        distinct_classes_count = \
+            distinct_classes_count_q.bindings[0].get("distinctClasses")
+        partition = Source.make_id(partition_label)
+
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:classPartition', partition)
+        self.graph.addTriple(partition, 'void:class', 'rdfs:Class')
+        self.graph.addTriple(partition, 'void:distinctSubjects',
+                            Literal(distinct_classes_count))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """

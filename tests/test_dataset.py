@@ -8,6 +8,7 @@ from rdflib import URIRef, Literal, Graph
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.models.Dataset import Dataset
 from dipper import curie_map as curiemap
+from dipper.sources.Source import Source
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -85,9 +86,16 @@ class DatasetTestCase(unittest.TestCase):
                                            "distinctObjects")
         self.iri_distinct_properties = URIRef(self.curie_map.get("void") +
                                               "properties")
+        self.iri_void_class = URIRef(self.curie_map.get("void") + "class")
+        self.iri_rdfs_class = URIRef(self.curie_map.get("rdfs") + "Class")
+        self.iri_void_class_partition = URIRef(self.curie_map.get("void") +
+                                               "classPartition")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
+
+        self.iri_class_count_blank_node = URIRef(
+            RDFGraph.curie_util.get_uri(Source.make_id("class_count")))
 
     @classmethod
     def tearDownClass(self):
@@ -420,6 +428,34 @@ class DatasetTestCase(unittest.TestCase):
                         "didn't get exactly 1 distribution level properties count")
         self.assertEqual(triples[0][2], Literal(expected_properties_count),
                          "didn't get correct properties count")
+
+    def test_distribution_level_class_count(self):
+        expected_class_count = 1
+        self.dataset.compute_triples_statistics(self.test_graph)
+
+        void_classpartition_triple = list(self.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_void_class_partition,
+             self.iri_class_count_blank_node)))
+        self.assertTrue(len(void_classpartition_triple) == 1,
+                        "didn't get exactly 1 distribution - class partition - " +
+                        "blank node triple")
+
+        void_class_triple = list(self.dataset.graph.triples(
+            (self.iri_class_count_blank_node,
+             self.iri_void_class,
+             self.iri_rdfs_class)))
+        self.assertTrue(len(void_class_triple) == 1,
+                        "didn't get exactly 1 partition blank node - " +
+                        "void_class - rdfs_class triple")
+
+        distinct_subject_triple = list(self.dataset.graph.triples(
+            (self.iri_class_count_blank_node, self.iri_distinct_subjects, None)))
+        self.assertTrue(len(distinct_subject_triple) == 1,
+                        "didn't get exactly 1 partition blank node distinctSubject " +
+                        "triple")
+        self.assertEqual(distinct_subject_triple[0][2], Literal(expected_class_count),
+                         "didn't get correct class count")
 
 
 if __name__ == '__main__':
