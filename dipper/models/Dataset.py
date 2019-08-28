@@ -290,6 +290,10 @@ class Dataset:
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
 
+        # if we need to add propertyPartitions to metadata, see rdflib source code here
+        # as an example
+        # https://rdflib.readthedocs.io/en/stable/_modules/rdflib/void.html
+
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
         self.graph.addTriple(self.distribution_level_turtle_curie,
