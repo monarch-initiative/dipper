@@ -61,14 +61,14 @@ class CTD(Source):
             'file': 'CTD_chemicals_diseases.tsv.gz',
             'url': 'http://ctdbase.org/reports/CTD_chemicals_diseases.tsv.gz'
         },
-        'gene_pathway': {
-            'file': 'CTD_genes_pathways.tsv.gz',
-            'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
-        },
-        'gene_disease': {
-            'file': 'CTD_genes_diseases.tsv.gz',
-            'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
-        }
+        #'gene_pathway': {
+        #    'file': 'CTD_genes_pathways.tsv.gz',
+        #    'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
+        #},
+        #'gene_disease': {
+        #    'file': 'CTD_genes_diseases.tsv.gz',
+        #    'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
+        #}
     }
     static_files = {
         'publications': {'file': 'CTD_curated_references.tsv'}
@@ -150,8 +150,9 @@ class CTD(Source):
 
         self._parse_ctd_file(
             limit, self.files['chemical_disease_interactions'])
-        self._parse_ctd_file(limit, self.files['gene_pathway'])
-        self._parse_ctd_file(limit, self.files['gene_disease'])
+        #self._parse_ctd_file(limit, self.files['gene_pathway'])
+        #self._parse_ctd_file(limit, self.files['gene_disease'])
+
         self._parse_curated_chem_disease(limit)
 
         LOG.info("Done parsing files.")
