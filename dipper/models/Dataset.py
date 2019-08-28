@@ -286,6 +286,7 @@ class Dataset:
         # add statistics
         self._compute_triples_count(target_graph)
         self._compute_distinct_subjects_count(target_graph)
+        self._compute_distinct_objects_count(target_graph)
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
 
@@ -304,6 +305,18 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:distinctSubjects',
                              Literal(distinct_subjects, datatype=XSD.integer))
+
+    def _compute_distinct_objects_count(self, target_graph):
+        # NOT COUNTING LITERALS
+        distinct_objects_q = target_graph.query(
+            """
+            SELECT (COUNT(DISTINCT ?o ) AS ?distinctObjects)
+            {  ?s ?p ?o  FILTER(!isLiteral(?o)) }
+            """)
+        distinct_objects = distinct_objects_q.bindings[0].get("distinctObjects")
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:distinctObjects',
+                             Literal(distinct_objects, datatype=XSD.integer))
 
     def _compute_distinct_entities_count(self, target_graph):
         distinct_entities_q = target_graph.query(

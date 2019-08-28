@@ -395,14 +395,18 @@ class DatasetTestCase(unittest.TestCase):
         self.assertEqual(triples[0][2], Literal(expected_ds_count),
                          "didn't get correct triples count")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_distinct_object_count(self):
+        expected_do_count = 1 # NOT COUNTING LITERALS
+        self.dataset.compute_triples_statistics(self.test_graph)
+
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_distinct_objects,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level distinct object count")
+                        "didn't get exactly 1 distribution level distinct object count")
+        self.assertEqual(triples[0][2], Literal(expected_do_count),
+                         "didn't get correct distinct object count")
 
     def test_distribution_level_properties_count(self):
         expected_properties_count = 3
