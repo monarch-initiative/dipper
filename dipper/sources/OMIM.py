@@ -1006,8 +1006,6 @@ class OMIM(OMIMSource):
         ref_to_pmid = {}
         entry_num = entry['mimNumber']
 
-        self.populate_omim_type()  # in order to check type of OMIM record below
-
         if 'referenceList' in entry:
             reflist = entry['referenceList']
             for rlst in reflist:
