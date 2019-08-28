@@ -120,6 +120,7 @@ class ClinVarRecord:
     created: Created date
     updated: Updated date
     genovar: the variant or genotype associated with the condition(s)
+    significance: clinical significance (eg benign, pathogenic)
     condition: The condition(s) for which this allele set was interpreted, with
                links to databases with defining information about that condition.
     """
@@ -129,10 +130,13 @@ class ClinVarRecord:
                  created: str,
                  updated: str,
                  genovar: Genovar,
+                 significance: str,
                  conditions: Optional[List[Condition]] = None):
         self.id = id
         self.accession = accession
         self.created = created
         self.updated = updated
         self.genovar = genovar
+        self.significance = significance
         self.conditions = conditions if conditions is not None else []
+

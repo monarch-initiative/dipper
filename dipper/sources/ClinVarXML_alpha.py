@@ -415,11 +415,17 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 if LOCALTT[val[1]] == 'has_affected_feature']) == len(gene_allele):
             for gene, allele_rel in gene_allele:
                 is_affected = True
-                for condition in rcv.conditions:
-                    if condition.medgen_id is None \
-                            or gene not in g2p_map \
-                            or condition.medgen_id not in g2p_map[gene]:
-                        is_affected = False
+                if not rcv.significance == GLOBALTT['pathogenic_for_condition'] \
+                        and not rcv.significance == \
+                               GLOBALTT['likely_pathogenic_for_condition']:
+                    is_affected = False
+                else:
+                    for condition in rcv.conditions:
+                        if condition.medgen_id is None \
+                                or gene not in g2p_map \
+                                or condition.medgen_id not in g2p_map[gene]:
+                            is_affected = False
+                            break
                 if is_affected:
                     write_spo(
                         rcv.genovar.id,
@@ -646,6 +652,10 @@ def parse():
                 LOG.warning(
                     "%s <is not current on>", rcv_acc)  # + rs_dated)
 
+            ClinicalSignificance = RCVAssertion.find(
+                './ClinicalSignificance/Description').text
+            significance = resolve(ClinicalSignificance)
+
             # # # Child elements
             #
             # /RCV/Assertion
@@ -712,7 +722,8 @@ def parse():
                 accession=rcv_acc,
                 created=RCVAssertion.get('DateCreated'),
                 updated=RCVAssertion.get('DateLastUpdated'),
-                genovar=genovar
+                genovar=genovar,
+                significance=significance
             )
 
             #######################################################################
