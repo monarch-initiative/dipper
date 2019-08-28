@@ -37,6 +37,11 @@ class DatasetTestCase(unittest.TestCase):
         self.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
         self.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
 
+        # parse test graph once, to test triples counts/statistics below
+        self.test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
+        self.test_graph = RDFGraph()
+        self.test_graph.parse(self.test_ttl,  format="turtle")
+
         # expected things:
         self.expected_curie_prefix = "MonarchData"
         self.timestamp_date = datetime.today().strftime("%Y%m%d")
@@ -78,7 +83,8 @@ class DatasetTestCase(unittest.TestCase):
                                             "distinctSubjects")
         self.iri_distinct_objects = URIRef(self.curie_map.get("void") +
                                            "distinctObjects")
-        self.iri_properties_count = URIRef(self.curie_map.get("void") + "properties")
+        self.iri_distinct_properties = URIRef(self.curie_map.get("void") +
+                                              "properties")
 
         self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -352,11 +358,7 @@ class DatasetTestCase(unittest.TestCase):
     def test_distribution_level_triples_count(self):
         # feed test graph with 2 triples to self.dataset.compute_triples_statistics()
         exp_triples_count = 3
-        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
-        test_graph = RDFGraph()
-        test_graph.parse(test_ttl,  format="turtle")
-
-        self.dataset.compute_triples_statistics(test_graph)
+        self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
@@ -369,11 +371,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_entities_count(self):
         expected_entities_count = 1
-        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
-        test_graph = RDFGraph()
-        test_graph.parse(test_ttl, format="turtle")
-
-        self.dataset.compute_triples_statistics(test_graph)
+        self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
@@ -386,11 +384,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_distinct_subject_count(self):
         expected_ds_count = 2
-        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
-        test_graph = RDFGraph()
-        test_graph.parse(test_ttl, format="turtle")
-
-        self.dataset.compute_triples_statistics(test_graph)
+        self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
@@ -410,14 +404,18 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "missing distribution level distinct object count")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_properties_count(self):
+        expected_properties_count = 3
+        self.dataset.compute_triples_statistics(self.test_graph)
+
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
-             self.iri_properties_count,
+             self.iri_distinct_properties,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level properties count")
+                        "didn't get exactly 1 distribution level properties count")
+        self.assertEqual(triples[0][2], Literal(expected_properties_count),
+                         "didn't get correct properties count")
 
 
 if __name__ == '__main__':

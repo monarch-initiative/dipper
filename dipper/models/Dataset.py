@@ -287,6 +287,7 @@ class Dataset:
         self._compute_triples_count(target_graph)
         self._compute_distinct_subjects_count(target_graph)
         self._compute_distinct_entities_count(target_graph)
+        self._compute_distinct_properties_count(target_graph)
 
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
@@ -314,6 +315,18 @@ class Dataset:
         distinct_entities = distinct_entities_q.bindings[0].get("entities")
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:entities',
+                             Literal(distinct_entities, datatype=XSD.integer))
+
+    def _compute_distinct_properties_count(self, target_graph):
+        distinct_entities_q = target_graph.query(
+            """
+            SELECT (COUNT(DISTINCT ?p) AS ?distinctProperties)
+            { ?s ?p ?o }
+            """
+        )
+        distinct_entities = distinct_entities_q.bindings[0].get("distinctProperties")
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:properties',
                              Literal(distinct_entities, datatype=XSD.integer))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
