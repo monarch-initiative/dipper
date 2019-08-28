@@ -283,12 +283,18 @@ class Dataset:
         :return: None
         """
 
-        # triples count
+        # add statistics
+        self._compute_triples_count(target_graph)
+        self._compute_distinct_subjects_count(target_graph)
+        self._compute_distinct_entities_count(target_graph)
+
+    def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:triples',
                              Literal(triples_count, datatype=XSD.integer))
 
+    def _compute_distinct_subjects_count(self, target_graph):
         distinct_subjects_q = target_graph.query(
             """SELECT(COUNT(DISTINCT ?s) as ?DistinctSubjects)
                WHERE {?s ?p ?o}
@@ -298,7 +304,17 @@ class Dataset:
                              'void:distinctSubjects',
                              Literal(distinct_subjects, datatype=XSD.integer))
 
-        pass
+    def _compute_distinct_entities_count(self, target_graph):
+        distinct_entities_q = target_graph.query(
+            """
+            SELECT (COUNT(DISTINCT ?s) AS ?entities)
+            { ?s a [] }
+            """
+        )
+        distinct_entities = distinct_entities_q.bindings[0].get("entities")
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             'void:entities',
+                             Literal(distinct_entities, datatype=XSD.integer))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """

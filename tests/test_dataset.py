@@ -351,7 +351,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_triples_count(self):
         # feed test graph with 2 triples to self.dataset.compute_triples_statistics()
-        exp_triples_count = 2
+        exp_triples_count = 3
         test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
         test_graph = RDFGraph()
         test_graph.parse(test_ttl,  format="turtle")
@@ -367,14 +367,22 @@ class DatasetTestCase(unittest.TestCase):
         self.assertEqual(triples[0][2], Literal(exp_triples_count),
                          "didn't get correct triples count")
 
-    @unittest.skip("not implemented yet")
     def test_distribution_level_entities_count(self):
+        expected_entities_count = 1
+        test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
+        test_graph = RDFGraph()
+        test_graph.parse(test_ttl, format="turtle")
+
+        self.dataset.compute_triples_statistics(test_graph)
+
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_entities_count,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level entities count")
+                        "didn't get exactly 1 distribution level entities count")
+        self.assertEqual(triples[0][2], Literal(expected_entities_count),
+                         "didn't get correct entities count")
 
     def test_distribution_level_distinct_subject_count(self):
         expected_ds_count = 2
