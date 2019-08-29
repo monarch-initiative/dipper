@@ -893,7 +893,7 @@ class OMIM(OMIMSource):
                     self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                 model.addTriple(
                     omim_curie,
-                    self.globaltt['contributes_to_condition'],
+                    self.globaltt['contributes to condition'],
                     series_curie)
             elif omimtype == 'disease':
                 model.addSubClass(omim_curie, series_curie)
