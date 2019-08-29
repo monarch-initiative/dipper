@@ -3,15 +3,15 @@ import unittest
 import logging
 from datetime import datetime
 from rdflib import XSD
-
 from rdflib import URIRef, Literal, Graph
+
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.models.Dataset import Dataset
 from dipper import curie_map as curiemap
 from dipper.sources.Source import Source
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class DatasetTestCase(unittest.TestCase):
@@ -24,81 +24,81 @@ class DatasetTestCase(unittest.TestCase):
     """
 
     @classmethod
-    def setUpClass(self):
-        self.curie_map = curiemap.get()
+    def setUpClass(cls):
+        cls.curie_map = curiemap.get()
 
         # parameters passed to code, to be returned in graph
-        self.monarch_data_curie_prefix = "MonarchData"
-        self.identifier = "fakeingest"
-        self.ingest_description = "some ingest description"
-        self.ingest_url = "http://fakeingest.com"
-        self.ingest_title = "this ingest title"
-        self.ingest_logo_url = "http://fakeingest.com/logo.png"
-        self.license_url = "https://choosealicense.com/licenses/mit/"
-        self.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
-        self.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
+        cls.monarch_data_curie_prefix = "MonarchData"
+        cls.identifier = "fakeingest"
+        cls.ingest_description = "some ingest description"
+        cls.ingest_url = "http://fakeingest.com"
+        cls.ingest_title = "this ingest title"
+        cls.ingest_logo_url = "http://fakeingest.com/logo.png"
+        cls.license_url = "https://choosealicense.com/licenses/mit/"
+        cls.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
+        cls.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
 
         # parse test graph once, to test triples counts/statistics below
-        self.test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
-        self.test_graph = RDFGraph()
-        self.test_graph.parse(self.test_ttl,  format="turtle")
+        cls.test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
+        cls.test_graph = RDFGraph()
+        cls.test_graph.parse(cls.test_ttl, format="turtle")
 
         # expected things:
-        self.expected_curie_prefix = "MonarchData"
-        self.timestamp_date = datetime.today().strftime("%Y%m%d")
+        cls.expected_curie_prefix = "MonarchData"
+        cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
-        self.summary_level_IRI = URIRef(self.curie_map.get(self.expected_curie_prefix)
-                                        + self.identifier)
+        cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
+                                       + cls.identifier)
         # expected version level IRI
-        self.version_level_IRI = URIRef(self.summary_level_IRI + self.timestamp_date)
+        cls.version_level_IRI = URIRef(cls.summary_level_IRI + cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
-        self.distribution_level_IRI_ttl = URIRef(self.version_level_IRI + ".ttl")
+        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
 
         # set expected IRIs for predicates and other things
-        self.iri_rdf_type = URIRef(self.curie_map.get("rdf") + "type")
-        self.iri_title = URIRef(self.curie_map.get("dcterms") + "title")
-        self.iri_dataset = URIRef(self.curie_map.get("dctypes") + "Dataset")
-        self.iri_description = URIRef(self.curie_map.get("dc") + "description")
-        self.iri_publisher = URIRef(self.curie_map.get("dcterms") + "Publisher")
-        self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
-        self.iri_logo = URIRef(self.curie_map.get("schemaorg") + "logo")
-        self.iri_mi_org = URIRef("https://monarchinitiative.org/")
-        self.iri_created = URIRef(self.curie_map.get("dcterms") + "created")
-        self.iri_version = URIRef(self.curie_map.get("pav") + "version")
-        self.iri_retrieved_on = URIRef(self.curie_map.get("pav") + "retrievedOn")
-        self.iri_creator = URIRef(self.curie_map.get("dcterms") + "creator")
-        self.iri_is_version_of = URIRef(self.curie_map.get("dcterms") + "isVersionOf")
-        self.iri_distribution = URIRef(self.curie_map.get("dcat") + "Distribution")
-        self.iri_created_with = URIRef(self.curie_map.get("pav") + "createdWith")
-        self.iri_format = URIRef(self.curie_map.get("dcterms") + "format")
-        self.iri_download_url = URIRef(self.curie_map.get("dcterms") + "downloadURL")
-        self.iri_license = URIRef(self.curie_map.get("dcterms") + "license")
-        self.iri_data_rights = URIRef(self.curie_map.get("dcterms") + "rights")
-        self.iri_cites_as_authority = URIRef(self.curie_map.get("cito") +
-                                             "citesAsAuthority")
-        self.iri_triples_count = URIRef(self.curie_map.get("void") + "triples")
-        self.iri_entities_count = URIRef(self.curie_map.get("void") + "entities")
-        self.iri_distinct_subjects = URIRef(self.curie_map.get("void") +
-                                            "distinctSubjects")
-        self.iri_distinct_objects = URIRef(self.curie_map.get("void") +
-                                           "distinctObjects")
-        self.iri_distinct_properties = URIRef(self.curie_map.get("void") +
-                                              "properties")
-        self.iri_void_class = URIRef(self.curie_map.get("void") + "class")
-        self.iri_rdfs_class = URIRef(self.curie_map.get("rdfs") + "Class")
-        self.iri_void_class_partition = URIRef(self.curie_map.get("void") +
-                                               "classPartition")
+        cls.iri_rdf_type = URIRef(cls.curie_map.get("rdf") + "type")
+        cls.iri_title = URIRef(cls.curie_map.get("dcterms") + "title")
+        cls.iri_dataset = URIRef(cls.curie_map.get("dctypes") + "Dataset")
+        cls.iri_description = URIRef(cls.curie_map.get("dc") + "description")
+        cls.iri_publisher = URIRef(cls.curie_map.get("dcterms") + "Publisher")
+        cls.iri_source = URIRef(cls.curie_map.get("dcterms") + "source")
+        cls.iri_logo = URIRef(cls.curie_map.get("schemaorg") + "logo")
+        cls.iri_mi_org = URIRef("https://monarchinitiative.org/")
+        cls.iri_created = URIRef(cls.curie_map.get("dcterms") + "created")
+        cls.iri_version = URIRef(cls.curie_map.get("pav") + "version")
+        cls.iri_retrieved_on = URIRef(cls.curie_map.get("pav") + "retrievedOn")
+        cls.iri_creator = URIRef(cls.curie_map.get("dcterms") + "creator")
+        cls.iri_is_version_of = URIRef(cls.curie_map.get("dcterms") + "isVersionOf")
+        cls.iri_distribution = URIRef(cls.curie_map.get("dcat") + "Distribution")
+        cls.iri_created_with = URIRef(cls.curie_map.get("pav") + "createdWith")
+        cls.iri_format = URIRef(cls.curie_map.get("dcterms") + "format")
+        cls.iri_download_url = URIRef(cls.curie_map.get("dcterms") + "downloadURL")
+        cls.iri_license = URIRef(cls.curie_map.get("dcterms") + "license")
+        cls.iri_data_rights = URIRef(cls.curie_map.get("dcterms") + "rights")
+        cls.iri_cites_as_authority = URIRef(cls.curie_map.get("cito") +
+                                            "citesAsAuthority")
+        cls.iri_triples_count = URIRef(cls.curie_map.get("void") + "triples")
+        cls.iri_entities_count = URIRef(cls.curie_map.get("void") + "entities")
+        cls.iri_distinct_subjects = URIRef(cls.curie_map.get("void") +
+                                           "distinctSubjects")
+        cls.iri_distinct_objects = URIRef(cls.curie_map.get("void") +
+                                          "distinctObjects")
+        cls.iri_distinct_properties = URIRef(cls.curie_map.get("void") +
+                                             "properties")
+        cls.iri_void_class = URIRef(cls.curie_map.get("void") + "class")
+        cls.iri_rdfs_class = URIRef(cls.curie_map.get("rdfs") + "Class")
+        cls.iri_void_class_partition = URIRef(cls.curie_map.get("void") +
+                                              "classPartition")
 
-        self.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
-        self.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
+        cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
+        cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
 
-        self.iri_class_count_blank_node = URIRef(
+        cls.iri_class_count_blank_node = URIRef(
             RDFGraph.curie_util.get_uri(Source.make_id("class_count")))
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         pass
 
     def setUp(self):
@@ -129,7 +129,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_get_license(self):
         gpl2_iri = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
-        self.dataset.license_url=gpl2_iri
+        self.dataset.license_url = gpl2_iri
         self.assertEqual(self.dataset.get_license(),
                          gpl2_iri, "set_license didn't set license_url correctly")
 
@@ -160,7 +160,7 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.dataset.graph.triples(
             (URIRef(file_iri),
              self.iri_version,
-             Literal(this_version,datatype=XSD.date))))
+             Literal(this_version, datatype=XSD.date))))
         self.assertTrue(len(triples) == 1,
                         "ingest source file version not set with literal type of date")
 
@@ -221,8 +221,8 @@ class DatasetTestCase(unittest.TestCase):
     def test_version_level_created(self):
         triples = list(self.dataset.graph.triples(
             (self.version_level_IRI, self.iri_created, None)))
-        self.assertTrue(len(triples) == 1, "didn't get exactly 1 version level " +
-                                           "created triple")
+        self.assertTrue(len(triples) == 1,
+                        "didn't get exactly 1 version level created triple")
         self.assertEqual(triples[0][2],
                          Literal(self.timestamp_date, datatype=XSD.date),
                          "version level created triple has the wrong timestamp")
@@ -230,8 +230,8 @@ class DatasetTestCase(unittest.TestCase):
     def test_version_level_version(self):
         triples = list(self.dataset.graph.triples(
             (self.version_level_IRI, self.iri_version, None)))
-        self.assertTrue(len(triples) == 1, "didn't get exactly one version level " +
-                                           "version triple")
+        self.assertTrue(len(triples) == 1,
+                        "didn't get exactly one version level version triple")
         self.assertEqual(triples[0][2],
                          Literal(self.timestamp_date, datatype=XSD.date),
                          "version level version triple has the wrong timestamp")
