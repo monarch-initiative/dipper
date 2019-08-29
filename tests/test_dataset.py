@@ -94,8 +94,10 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
 
-        cls.iri_class_count_blank_node = URIRef(
-            RDFGraph.curie_util.get_uri(Source.make_id("class_count")))
+        cls.iri_distinct_class_count_blank_node = URIRef(
+            RDFGraph.curie_util.get_uri(Dataset.make_id("distinct_class_count")))
+        cls.iri_individual_class_counts_blank_node = URIRef(
+            RDFGraph.curie_util.get_uri(Dataset.make_id("individual_class_counts")))
 
     @classmethod
     def tearDownClass(cls):
@@ -365,7 +367,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_triples_count(self):
         # feed test graph with 2 triples to self.dataset.compute_triples_statistics()
-        exp_triples_count = 3
+        exp_triples_count = 4
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -378,7 +380,7 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct triples count")
 
     def test_distribution_level_entities_count(self):
-        expected_entities_count = 1
+        expected_entities_count = 2
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -399,12 +401,12 @@ class DatasetTestCase(unittest.TestCase):
              self.iri_distinct_subjects,
              None)))
         self.assertTrue(len(triples) == 1,
-                        "didn't get exactly 1 distribution level triples count")
+                        "didn't get exactly 1 distribution level distinct subj count")
         self.assertEqual(triples[0][2], Literal(expected_ds_count),
-                         "didn't get correct triples count")
+                         "didn't get correct distinct subject count")
 
     def test_distribution_level_distinct_object_count(self):
-        expected_do_count = 1 # NOT COUNTING LITERALS
+        expected_do_count = 2  # NOT COUNTING LITERALS
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -430,19 +432,19 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct properties count")
 
     def test_distribution_level_class_count(self):
-        expected_class_count = 1
+        expected_class_count = 2
         self.dataset.compute_triples_statistics(self.test_graph)
 
         void_classpartition_triple = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_void_class_partition,
-             self.iri_class_count_blank_node)))
+             self.iri_distinct_class_count_blank_node)))
         self.assertTrue(len(void_classpartition_triple) == 1,
                         "didn't get exactly 1 distribution - class partition - " +
                         "blank node triple")
 
         void_class_triple = list(self.dataset.graph.triples(
-            (self.iri_class_count_blank_node,
+            (self.iri_distinct_class_count_blank_node,
              self.iri_void_class,
              self.iri_rdfs_class)))
         self.assertTrue(len(void_class_triple) == 1,
@@ -450,7 +452,9 @@ class DatasetTestCase(unittest.TestCase):
                         "void_class - rdfs_class triple")
 
         distinct_subject_triple = list(self.dataset.graph.triples(
-            (self.iri_class_count_blank_node, self.iri_distinct_subjects, None)))
+            (self.iri_distinct_class_count_blank_node,
+             self.iri_distinct_subjects,
+             None)))
         self.assertTrue(len(distinct_subject_triple) == 1,
                         "didn't get exactly 1 partition blank node distinctSubject " +
                         "triple")
