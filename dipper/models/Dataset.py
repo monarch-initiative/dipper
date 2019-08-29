@@ -1,4 +1,5 @@
 import logging
+import hashlib
 from datetime import datetime
 from rdflib import Literal, XSD, URIRef
 from dipper.graph.RDFGraph import RDFGraph
@@ -350,12 +351,6 @@ class Dataset:
     def _compute_distinct_classes_count(self,
                                         target_graph,
                                         partition_label="class_count"):
-        # Doing an import here to get access to Source.make_id()
-        # I need to do this here to get around circular import problem, since Source
-        # imports Datasets. Alternatively, I could make another make_id() method
-        # here in Dataset, but that seems worse than doing an import here
-        from dipper.sources.Source import Source
-
         distinct_classes_count_q = target_graph.query(
             """
             SELECT(COUNT(DISTINCT ?o) AS ?distinctClasses)
@@ -366,7 +361,7 @@ class Dataset:
 
         distinct_classes_count = \
             distinct_classes_count_q.bindings[0].get("distinctClasses")
-        partition = Source.make_id(partition_label)
+        partition = Dataset.make_id(partition_label)
 
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              'void:classPartition', partition)
@@ -503,3 +498,26 @@ class Dataset:
         self.citation.add(citation_id)
         self.graph.addTriple(
             self.version_level_curie, 'cito:citesAsAuthority', citation_id)
+
+    @staticmethod
+    def make_id(long_string, prefix='MONARCH'):
+        """
+        A method to create DETERMINISTIC identifiers
+        based on a string's digest. currently implemented with sha1
+        Duplicated from Source.py to avoid circular imports.
+        :param long_string: string to use to generate identifier
+        :param prefix: prefix to prepend to identifier [Monarch]
+        :return: a Monarch identifier
+        """
+        return ':'.join((prefix, Dataset.hash_id(long_string)))
+
+    @staticmethod
+    def hash_id(word):  # same as graph/GraphUtils.digest_id(wordage)
+        """
+        Given a string, make a hash
+        Duplicated from Source.py.
+
+        :param word: str string to be hashed
+        :return: hash of id
+        """
+        return 'b' + hashlib.sha1(word.encode('utf-8')).hexdigest()[1:20]
