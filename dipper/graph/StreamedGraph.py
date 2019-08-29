@@ -105,7 +105,7 @@ class StreamedGraph(DipperGraph):
                                           subject_category_iri)
         if object_category_iri is not None:
             if object_is_literal or literal_type is not None:
-                LOG.error("can't write biolink category triple for literal!")
+                LOG.warning("can't write biolink category triple for literal!")
             else:
                 biolink_category_triples += \
                     "<{}> <{}> <{}> .".format(obj, predicate_category_iri,
