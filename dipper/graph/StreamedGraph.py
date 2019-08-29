@@ -117,9 +117,6 @@ class StreamedGraph(DipperGraph):
         else:
             self.file_handle.write("{}\n".format(all_triples))
 
-    def _make_biolink_category_triples(self):
-        return biolink_category_triples
-
     def _getnode(self, curie):
         """
         Returns IRI, or blank node curie/iri depending on
