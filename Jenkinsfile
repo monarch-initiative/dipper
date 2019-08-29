@@ -65,7 +65,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=omim
-                                    $DIPPER --sources $SOURCE -q
+                                    $DIPPER --sources $SOURCE -q --parse_only --skip_tests
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
