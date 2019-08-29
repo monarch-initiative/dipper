@@ -372,7 +372,7 @@ class Dataset:
                              'void:classPartition', partition)
         self.graph.addTriple(partition, 'void:class', 'rdfs:Class')
         self.graph.addTriple(partition, 'void:distinctSubjects',
-                            Literal(distinct_classes_count))
+                            Literal(distinct_classes_count, datatype=XSD.integer))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
