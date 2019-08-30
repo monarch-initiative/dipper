@@ -379,7 +379,7 @@ class Dataset:
                                     predicate_iri):
         """
         Creates partition with counts of each type of class present in the
-        graph.
+        graph, given a predicate
         :param target_graph: graph in which to do counting
         :param partition_label_base: label to use in making bnodes ids for partitions
         :param predicate_iri: which predicate to use in select (use IRI and not CURIE
