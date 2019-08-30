@@ -291,7 +291,15 @@ class Dataset:
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
         self._compute_distinct_classes_count(target_graph)
-        self._compute_biolink_category_counts(target_graph)
+        # calculate counts of each biolink category:
+        self._compute_indiv_class_counts(target_graph,
+                                         partition_label_base="biolink_category_counts",
+                                         predicate_iri=
+                                         "http://w3id.org/biolink/vocab/category")
+        self._compute_indiv_class_counts(target_graph,
+                                         partition_label_base="biolink_category_counts",
+                                         predicate_iri=
+                                         "http://w3id.org/biolink/vocab/category")
 
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
@@ -366,18 +374,15 @@ class Dataset:
         self.graph.addTriple(partition, 'void:distinctSubjects',
                              Literal(distinct_classes_count, datatype=XSD.integer))
 
-    def _compute_biolink_category_counts(self, target_graph,
-                                         partition_label_base="biolink_category_counts",
-                                         predicate_iri=
-                                         "http://w3id.org/biolink/vocab/category"):
+    def _compute_indiv_class_counts(self, target_graph, partition_label_base,
+                                    predicate_iri):
         """
-        Creates partition with counts of each type of biolink category present in the
+        Creates partition with counts of each type of class present in the
         graph.
         :param target_graph: graph in which to do counting
-        :param partition_label_base: label to use in making bnodes for partition
-        :param predicate_iri: which predicate to select [biolink:category] (I'm using
-        the full IRI here because otherwise parse errors result when graph doesn't know
-        about the biolink prefix)
+        :param partition_label_base: label to use in making bnodes ids for partitions
+        :param predicate_iri: which predicate to use in select (use IRI and not CURIE
+        to prevent parse errors if/when a CURIE prefix isn't declared in graph)
         :return: None
         """
         query = "SELECT ?o (COUNT(DISTINCT ?s) AS ?distinctInstances)" + \
