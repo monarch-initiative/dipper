@@ -87,6 +87,7 @@ class DatasetTestCase(unittest.TestCase):
                                              "properties")
         cls.iri_void_class = URIRef(cls.curie_map.get("void") + "class")
         cls.iri_rdfs_class = URIRef(cls.curie_map.get("rdfs") + "Class")
+        cls.iri_rdfs_label = URIRef(cls.curie_map.get("rdfs") + "label")
         cls.iri_void_class_partition = URIRef(cls.curie_map.get("void") +
                                               "classPartition")
 
@@ -465,7 +466,7 @@ class DatasetTestCase(unittest.TestCase):
     def test_distribution_level_biolink_categories_count(self):
         expected_class_count = 2
         biolink_case_counts = 2
-        biolink_info_content_counts = 1
+        expected_rdfs_label = "predicate: http://w3id.org/biolink/vocab/category"
         self.dataset.compute_triples_statistics(self.test_graph)
 
         # check for presence of two blank nodes that contain bl cat counts:
@@ -500,24 +501,13 @@ class DatasetTestCase(unittest.TestCase):
         self.assertEqual(case_count_triple[0][2], Literal(biolink_case_counts),
                          "didn't get correct biolink:case count")
 
-        # check contents of biolink:information content triple
-        info_content_void_class_triple = list(self.dataset.graph.triples(
-            (None,
-             self.iri_void_class,
-             URIRef(self.iri_biolink_info_content))))
-        self.assertTrue(len(info_content_void_class_triple) == 1,
-                        "didn't get exactly 1 void:class " +
-                        "biolink:InformationContentEntity triple")
-        info_content_count_triple = list(self.dataset.graph.triples(
-            (info_content_void_class_triple[0][0],
-             URIRef(self.iri_distinct_subjects),
-             None)))
-        self.assertTrue(len(info_content_count_triple) == 1,
-                        "didn't get exactly 1 biolink:InformationContentEntity " +
-                        "distinctSubjects triple")
-        self.assertEqual(info_content_count_triple[0][2],
-                         Literal(biolink_info_content_counts),
-                         "didn't get correct biolink:InformationContentEntity count")
+        label_triple = list(self.dataset.graph.triples(
+            (case_void_class_triple[0][0],
+             URIRef(self.iri_rdfs_label),
+             Literal(expected_rdfs_label))))
+        self.assertTrue(len(case_count_triple) == 1,
+                        "didn't get exactly 1 biolink:case rdfs:label triple")
+
 
 if __name__ == '__main__':
     unittest.main()

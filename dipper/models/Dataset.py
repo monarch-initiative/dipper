@@ -401,6 +401,8 @@ class Dataset:
                 LOG.debug(f"label: {label}\npartition id: {partition}")
                 self.graph.addTriple(self.distribution_level_turtle_curie,
                                      'void:classPartition', partition)
+                self.graph.addTriple(partition, 'rdfs:label',
+                                     "predicate: " + predicate_iri)
                 self.graph.addTriple(partition, 'void:class', this_binding.get("o"))
                 self.graph.addTriple(partition, 'void:distinctSubjects',
                                      Literal(this_binding.get("distinctInstances")))
