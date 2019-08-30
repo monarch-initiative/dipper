@@ -7,8 +7,8 @@ owltools*
 conf.json
 
 # dot files
-*dot/
-dot/*.dot
+dot/
+*.dot
 !tests/resources/*/dot/README
 
 # Clinvar testing artifacts
