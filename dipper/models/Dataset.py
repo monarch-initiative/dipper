@@ -291,15 +291,16 @@ class Dataset:
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
         self._compute_distinct_classes_count(target_graph)
-        # calculate counts of each biolink category:
+        # calculate counts of each biolink:category:
         self._compute_indiv_class_counts(target_graph,
                                          partition_label_base="biolink_category_counts",
                                          predicate_iri=
                                          "http://w3id.org/biolink/vocab/category")
+        # calculate counts of each rdf:type:
         self._compute_indiv_class_counts(target_graph,
-                                         partition_label_base="biolink_category_counts",
+                                         partition_label_base="rdf_type_counts",
                                          predicate_iri=
-                                         "http://w3id.org/biolink/vocab/category")
+                                         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
