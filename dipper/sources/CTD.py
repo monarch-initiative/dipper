@@ -194,10 +194,10 @@ class CTD(Source):
                     if file == self.files[
                             'chemical_disease_interactions']['file']:
                         self._process_interactions(row)
-                    elif file == self.files['gene_pathway']['file']:
-                        self._process_pathway(row)
-                    elif file == self.files['gene_disease']['file']:
-                        self._process_disease2gene(row)
+                    # elif file == self.files['gene_pathway']['file']:
+                    #     self._process_pathway(row)
+                    # elif file == self.files['gene_disease']['file']:
+                    #     self._process_disease2gene(row)
 
                 if not self.test_mode and limit is not None and row_count >= limit:
                     break
