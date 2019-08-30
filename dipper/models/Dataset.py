@@ -291,10 +291,7 @@ class Dataset:
         self._compute_distinct_entities_count(target_graph)
         self._compute_distinct_properties_count(target_graph)
         self._compute_distinct_classes_count(target_graph)
-
-        # if we need to add propertyPartitions to metadata, see rdflib source code here
-        # as an example
-        # https://rdflib.readthedocs.io/en/stable/_modules/rdflib/void.html
+        self._compute_biolink_category_counts(target_graph)
 
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
@@ -350,7 +347,7 @@ class Dataset:
 
     def _compute_distinct_classes_count(self,
                                         target_graph,
-                                        partition_label="class_count"):
+                                        partition_label="distinct_class_count"):
         distinct_classes_count_q = target_graph.query(
             """
             SELECT(COUNT(DISTINCT ?o) AS ?distinctClasses)
@@ -368,6 +365,36 @@ class Dataset:
         self.graph.addTriple(partition, 'void:class', 'rdfs:Class')
         self.graph.addTriple(partition, 'void:distinctSubjects',
                              Literal(distinct_classes_count, datatype=XSD.integer))
+
+    def _compute_biolink_category_counts(self, target_graph,
+                                         partition_label="biolink_category_counts",
+                                         predicate=
+                                         "<http://w3id.org/biolink/vocab/category>"):
+        """
+        Creates partition with counts of each type of biolink category present in the
+        graph.
+        :param target_graph: graph in which to do counting
+        :param partition_label: label to use in making bnode for partition
+        :param predicate: which predicate to select [biolink:category] (I'm using the
+        full IRI here because otherwise parse errors result when graph doesn't know
+        about the biolink prefix)
+        :return: None
+        """
+        query = "SELECT ?o (COUNT(DISTINCT ?s) AS ?distinctInstances)" + \
+                "{ ?s " + f"{predicate}" + " ?o }" + \
+                "GROUP BY ?o"
+
+        individ_classes_count_q = target_graph.query(query)
+
+        for index, inst in enumerate(individ_classes_count_q.bindings, start=1):
+            label = "_".join([partition_label, str(index)])
+            partition = Dataset.make_id(label)
+            LOG.debug(f"label: {label}\npartition id: {partition}")
+            self.graph.addTriple(self.distribution_level_turtle_curie,
+                                 'void:classPartition', partition)
+            self.graph.addTriple(partition, 'void:class', predicate)
+            self.graph.addTriple(partition, 'void:distinctSubjects',
+                                 Literal(len(inst), datatype=XSD.integer))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """

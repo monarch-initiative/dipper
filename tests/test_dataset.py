@@ -96,8 +96,6 @@ class DatasetTestCase(unittest.TestCase):
 
         cls.iri_distinct_class_count_blank_node = URIRef(
             RDFGraph.curie_util.get_uri(Dataset.make_id("distinct_class_count")))
-        cls.iri_individual_class_counts_blank_node = URIRef(
-            RDFGraph.curie_util.get_uri(Dataset.make_id("individual_class_counts")))
 
     @classmethod
     def tearDownClass(cls):
@@ -366,8 +364,7 @@ class DatasetTestCase(unittest.TestCase):
                         "distribution level default license triple not set")
 
     def test_distribution_level_triples_count(self):
-        # feed test graph with 2 triples to self.dataset.compute_triples_statistics()
-        exp_triples_count = 4
+        exp_triples_count = 8
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -380,7 +377,7 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct triples count")
 
     def test_distribution_level_entities_count(self):
-        expected_entities_count = 2
+        expected_entities_count = 3
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -393,7 +390,7 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct entities count")
 
     def test_distribution_level_distinct_subject_count(self):
-        expected_ds_count = 2
+        expected_ds_count = 3
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -406,7 +403,7 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct distinct subject count")
 
     def test_distribution_level_distinct_object_count(self):
-        expected_do_count = 2  # NOT COUNTING LITERALS
+        expected_do_count = 4  # NOT COUNTING LITERALS
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -419,7 +416,7 @@ class DatasetTestCase(unittest.TestCase):
                          "didn't get correct distinct object count")
 
     def test_distribution_level_properties_count(self):
-        expected_properties_count = 3
+        expected_properties_count = 4
         self.dataset.compute_triples_statistics(self.test_graph)
 
         triples = list(self.dataset.graph.triples(
@@ -460,6 +457,43 @@ class DatasetTestCase(unittest.TestCase):
                         "triple")
         self.assertEqual(distinct_subject_triple[0][2], Literal(expected_class_count),
                          "didn't get correct class count")
+
+    def test_distribution_level_biolink_categories_count(self):
+        expected_class_count = 2
+        expected_bl_counts = [2, 2]
+        self.dataset.compute_triples_statistics(self.test_graph)
+
+        # check for blank nodes that contain bl cat counts:
+        for i in range(1, expected_class_count):
+            # should have a blank node by this name:
+            label = "_".join(["biolink_category_counts", str(i)])
+            blank_node_iri = URIRef(RDFGraph.curie_util.get_uri(Dataset.make_id(label)))
+            LOGGER.warning(f"(test)\nlabel: {label}\npartition id: {blank_node_iri}")
+            void_classpartition_triple = list(self.dataset.graph.triples(
+                (self.distribution_level_IRI_ttl,
+                 self.iri_void_class_partition,
+                 blank_node_iri)))
+            self.assertTrue(len(void_classpartition_triple) == 1,
+                            "didn't get blank node for {i}th bl category counts")
+
+            void_class_triple = list(self.dataset.graph.triples(
+                (blank_node_iri,
+                 self.iri_void_class,
+                 None)))
+            self.assertTrue(len(void_class_triple) == 1,
+                            "didn't get exactly 1 partition blank node - " +
+                            "void_class triple")
+
+            distinct_subject_triple = list(self.dataset.graph.triples(
+                (blank_node_iri,
+                 self.iri_distinct_subjects,
+                 None)))
+            self.assertTrue(len(distinct_subject_triple) == 1,
+                            "didn't get exactly 1 partition blank node " +
+                            "distinctSubject triple")
+            # self.assertEqual(distinct_subject_triple[0][2],
+            #                  Literal(expected_bl_counts[i]),
+            #                  "didn't get correct class count")
 
 
 if __name__ == '__main__':
