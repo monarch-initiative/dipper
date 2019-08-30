@@ -367,34 +367,39 @@ class Dataset:
                              Literal(distinct_classes_count, datatype=XSD.integer))
 
     def _compute_biolink_category_counts(self, target_graph,
-                                         partition_label="biolink_category_counts",
-                                         predicate=
-                                         "<http://w3id.org/biolink/vocab/category>"):
+                                         partition_label_base="biolink_category_counts",
+                                         predicate_iri=
+                                         "http://w3id.org/biolink/vocab/category"):
         """
         Creates partition with counts of each type of biolink category present in the
         graph.
         :param target_graph: graph in which to do counting
-        :param partition_label: label to use in making bnode for partition
-        :param predicate: which predicate to select [biolink:category] (I'm using the
-        full IRI here because otherwise parse errors result when graph doesn't know
+        :param partition_label_base: label to use in making bnodes for partition
+        :param predicate_iri: which predicate to select [biolink:category] (I'm using
+        the full IRI here because otherwise parse errors result when graph doesn't know
         about the biolink prefix)
         :return: None
         """
         query = "SELECT ?o (COUNT(DISTINCT ?s) AS ?distinctInstances)" + \
-                "{ ?s " + f"{predicate}" + " ?o }" + \
+                "{ ?s " + f"<{predicate_iri}>" + " ?o }" + \
                 "GROUP BY ?o"
 
         individ_classes_count_q = target_graph.query(query)
 
-        for index, inst in enumerate(individ_classes_count_q.bindings, start=1):
-            label = "_".join([partition_label, str(index)])
-            partition = Dataset.make_id(label)
-            LOG.debug(f"label: {label}\npartition id: {partition}")
-            self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'void:classPartition', partition)
-            self.graph.addTriple(partition, 'void:class', predicate)
-            self.graph.addTriple(partition, 'void:distinctSubjects',
-                                 Literal(len(inst), datatype=XSD.integer))
+        for index, this_binding in enumerate(individ_classes_count_q.bindings, start=1):
+            if len(this_binding) == 0:  # avoid warning messages if there are no results
+                continue
+            try:
+                label = "_".join([partition_label_base, str(index)])
+                partition = Dataset.make_id(label)
+                LOG.debug(f"label: {label}\npartition id: {partition}")
+                self.graph.addTriple(self.distribution_level_turtle_curie,
+                                     'void:classPartition', partition)
+                self.graph.addTriple(partition, 'void:class', this_binding.get("o"))
+                self.graph.addTriple(partition, 'void:distinctSubjects',
+                                     Literal(this_binding.get("distinctInstances")))
+            except Exception as e:
+                LOG.warning("problem computing biolink category counts: " + str(e))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
