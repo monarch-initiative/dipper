@@ -83,7 +83,7 @@ class MPD(Source):
             name='mpd',
             ingest_title='Mouse Phenome Database',
             ingest_url='https://phenome.jax.org/',
-            ingest_logo='https://monarchinitiative.org/image/source-mpd.jpg',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-mpd.png',
             # license_url=None,
             data_rights='https://phenome.jax.org/about/termsofuse'
             # file_handle=None

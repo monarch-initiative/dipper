@@ -145,7 +145,7 @@ class UCSCBands(Source):
             name='ucscbands',
             ingest_title='UCSC Cytogenic Bands',
             ingest_url='http://hgdownload.cse.ucsc.edu',
-            ingest_logo='https://hgdownload.soe.ucsc.edu/images/ucscHelixLogo.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-ucscbands.png',
             license_url='http://genome.ucsc.edu/license/'
             # data_rights=None,
             # file_handle=None

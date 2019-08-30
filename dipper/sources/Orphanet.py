@@ -33,7 +33,7 @@ class Orphanet(Source):
             name='orphanet',
             ingest_title='Orphanet',
             ingest_url='http://www.orpha.net',
-            ingest_logo='https://monarchinitiative.org/image/source-orphanet.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-orphanet.png',
             license_url=None,
             data_rights='http://www.orphadata.org/cgi-bin/index.php'
             # file_handle=None

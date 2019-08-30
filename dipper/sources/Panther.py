@@ -72,7 +72,7 @@ class Panther(Source):
             name='panther',
             ingest_title='Protein ANalysis THrough Evolutionary Relationships',
             ingest_url='http://pantherdb.org',
-            ingest_logo='https://monarchinitiative.org/image/source-panther.jpg',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-panther.jpg',
             license_url=None,
             data_rights='http://www.pantherdb.org/terms/disclaimer.jsp'
             # file_handle=None

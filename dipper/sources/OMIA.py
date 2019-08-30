@@ -78,7 +78,7 @@ class OMIA(OMIMSource):
             name='omia',
             ingest_title='Online Mendelian Inheritance in Animals',
             ingest_url='https://omia.org',
-            ingest_logo='https://monarchinitiative.org/image/source-omia.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-omia.png',
             # ingest_desc=None,
             license_url=None,
             data_rights='http://sydney.edu.au/disclaimer.shtml',

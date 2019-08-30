@@ -114,7 +114,7 @@ class NCBIGene(OMIMSource):
             name='ncbigene',
             ingest_title='National Center for Biotechnology Information',
             ingest_url='http://ncbi.nih.nlm.gov/gene',
-            ingest_logo='https://monarchinitiative.org/image/source-ncbi.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-ncbi.png',
             # ingest_desc=None,
             license_url='https://creativecommons.org/publicdomain/mark/1.0/',
             data_rights='https://www.ncbi.nlm.nih.gov/home/about/policies/'

@@ -34,7 +34,7 @@ class Reactome(Source):
             name='reactome',
             ingest_title='Reactome',
             ingest_url='http://reactome.org/',
-            ingest_logo='https://monarchinitiative.org/image/source-reactome.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-reactome.png',
             license_url=None,
             data_rights='https://reactome.org/license/'
             # file_handle=None

@@ -134,7 +134,7 @@ class Monochrom(Source):
             name='monochrom',
             ingest_title='Monarch Chromosome Ontology',
             ingest_url='https://monarchinitiative.org',   # TODO can we be more specific
-            ingest_logo='https://monarchinitiative.org/image/logo.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-monochrom.png',
             license_url='http://creativecommons.org/licenses/by/4.0/'  # make our lic
             # data_rights=None,
             # file_handle=None

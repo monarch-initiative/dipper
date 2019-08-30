@@ -147,7 +147,7 @@ class MGI(PostgreSQLSource):
             name='mgi',
             ingest_title='Mouse Genome Informatics',
             ingest_url='http://www.informatics.jax.org/',
-            ingest_logo="https://monarchinitiative.org/image/source-mgi.png",
+            ingest_logo="https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-mgi.png",
             license_url='http://www.informatics.jax.org/mgihome/other/copyright.shtml',
             data_rights=None,
             file_handle=None)

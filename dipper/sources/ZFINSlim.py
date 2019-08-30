@@ -37,7 +37,7 @@ class ZFINSlim(Source):
             name='zfinslim',
             ingest_title='Simplified ZFIN',
             ingest_url='https://zfin.org/',
-            ingest_logo="https://monarchinitiative.org/image/source-zfin.png",
+            ingest_logo="https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-zfin.png",
             license_url=None,
             data_rights='http://zfin.org/warranty.html',
             # file_handle=None

@@ -42,7 +42,7 @@ class StringDB(Source):
             name='string',
             ingest_title='Known and predicted protein-protein interactions',
             ingest_url=STRING,
-            ingest_logo='https://monarchinitiative.org/image/source-string.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-string.png',
             license_url=None,
             data_rights=STRING+'/cgi/access.pl?footer_active_subpage=licensing'
             # file_handle=None

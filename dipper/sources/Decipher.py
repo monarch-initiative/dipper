@@ -47,7 +47,7 @@ class Decipher(Source):
             name='decipher',
             ingest_title='Development Disorder Genotype Phenotype Database',
             ingest_url='https://decipher.sanger.ac.uk/',
-            ingest_logo='https://decipher.sanger.ac.uk/img/decipher-logo.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-decipher.png',
             license_url='https://decipher.sanger.ac.uk/legal',
             data_rights='https://decipher.sanger.ac.uk/datasharing',
             # file_handle=None

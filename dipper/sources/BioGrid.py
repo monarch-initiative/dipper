@@ -45,7 +45,7 @@ class BioGrid(Source):
             name='biogrid',
             ingest_title='Biological General Repository for Interaction Datasets',
             ingest_url='http://thebiogrid.org',
-            ingest_logo='https://monarchinitiative.org/image/source-biogrid.ico',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-biogrid.png',
             license_url='https://downloads.thebiogrid.org/Download/LICENSE.txt',
             data_rights='https://wiki.thebiogrid.org/doku.php/terms_and_conditions',
             # file_handle=None

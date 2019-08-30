@@ -114,7 +114,7 @@ class HPOAnnotations(Source):
             name='hpoa',
             ingest_title='Human Phenotype Ontology',
             ingest_url='https://hpo.jax.org/app/',
-            ingest_logo='https://monarchinitiative.org/image/source-hpo.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-hpo.png',
             license_url=None,
             data_rights='https://hpo.jax.org/app/license',
             # file_handle=None

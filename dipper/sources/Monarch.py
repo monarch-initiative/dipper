@@ -56,7 +56,7 @@ class Monarch(Source):
             name='monarch',
             ingest_title='The Monarch Initiative',
             ingest_url='https://monarchinitiative.org',
-            ingest_logo='https://monarchinitiative.org/image/logo.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-monarch.png',
             license_url='https://creativecommons.org/licenses/by/4.0/'
             # data_rights=None,
             # file_handle=None

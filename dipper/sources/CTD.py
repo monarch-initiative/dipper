@@ -81,7 +81,7 @@ class CTD(Source):
             name='ctd',
             ingest_title='Comparative Toxicogenomics Database',
             ingest_url='http://ctdbase.org',
-            ingest_logo='https://monarchinitiative.org/image/source-ctd.png',
+            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-ctd.png',
             license_url=None,
             data_rights='http://ctdbase.org/about/legal.jsp'
             # file_handle=None
