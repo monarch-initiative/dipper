@@ -152,7 +152,7 @@ class KEGG(OMIMSource):
 
         self._process_diseases(limit)
         self._process_genes(limit)
-        self._process_omim2gene(limit)
+        #self._process_omim2gene(limit)
         self._process_omim2disease(limit)
         #self._process_kegg_disease2gene(limit)
         self._process_pathway_ko(limit)
