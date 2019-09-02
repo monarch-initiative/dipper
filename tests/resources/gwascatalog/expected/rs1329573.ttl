@@ -1,0 +1,91 @@
+:MONARCH_b464cf2c118cac01ef22 a OBAN:association ;
+    OBO:RO_0002558 OBO:ECO_0000213 ;
+    dc:description "A study of Intelligence in 656 European ancestry individuals from ADHD families with NA on platform Illumina [795637] (p=4E-8)" ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/22449649> ;
+    OBAN:association_has_object <http://www.ebi.ac.uk/efo/EFO_0004337> ;
+    OBAN:association_has_predicate OBO:RO_0003304 ;
+    OBAN:association_has_subject :haplotype_bb627b1f64039b0f751a .
+
+dbSNP:rs1329573 a OBO:SO_0000694,
+        OBO:SO_0001627 ;
+    rdfs:label "rs1329573-?" ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> ;
+    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+dbSNP:rs3758171 a OBO:SO_0000694,
+        OBO:SO_0001627 ;
+    rdfs:label "rs3758171-?" ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> ;
+    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+dbSNP:rs3824344 a OBO:SO_0000694,
+        OBO:SO_0001627 ;
+    rdfs:label "rs3824344-?" ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> ;
+    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+dbSNP:rs7020413 a OBO:SO_0000694,
+        OBO:SO_0001627 ;
+    rdfs:label "rs7020413-?" ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> ;
+    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+<http://www.ncbi.nlm.nih.gov/pubmed/22449649> a OBO:IAO_0000013 .
+
+<https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> a faldo:Region ;
+    rdfs:label "GRCh38chr9-37000690-37000690-Region" ;
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> .
+
+<https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> a faldo:Region ;
+    rdfs:label "GRCh38chr9-36997420-36997420-Region" ;
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> .
+
+<https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> a faldo:Region ;
+    rdfs:label "GRCh38chr9-36998996-36998996-Region" ;
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> .
+
+<https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> a faldo:Region ;
+    rdfs:label "GRCh38chr9-37002118-37002118-Region" ;
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> .
+
+:haplotype_bb627b1f64039b0f751a a OBO:SO_0001024 ;
+    rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
+    OBO:GENO_0000382 dbSNP:rs1329573,
+        dbSNP:rs3758171,
+        dbSNP:rs3824344,
+        dbSNP:rs7020413 ;
+    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    OBO:RO_0003304 <http://www.ebi.ac.uk/efo/EFO_0004337> .
+
+<http://www.ebi.ac.uk/efo/EFO_0004337> a owl:Class ;
+    rdfs:label "intelligence" ;
+    rdfs:subClassOf OBO:UPHENO_0001001 .
+
+<https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> a faldo:Position ;
+    rdfs:label "GRCh38chr9-36997420" ;
+    faldo:position 36997420 ;
+    faldo:reference OBO:CHR_GRCh38chr9 .
+
+<https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> a faldo:Position ;
+    rdfs:label "GRCh38chr9-36998996" ;
+    faldo:position 36998996 ;
+    faldo:reference OBO:CHR_GRCh38chr9 .
+
+<https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> a faldo:Position ;
+    rdfs:label "GRCh38chr9-37000690" ;
+    faldo:position 37000690 ;
+    faldo:reference OBO:CHR_GRCh38chr9 .
+
+<https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> a faldo:Position ;
+    rdfs:label "GRCh38chr9-37002118" ;
+    faldo:position 37002118 ;
+    faldo:reference OBO:CHR_GRCh38chr9 .
