@@ -1,7 +1,11 @@
+"""
+Produces metadata about ingested data
+"""
+
 import logging
 import hashlib
 from datetime import datetime
-from rdflib import Literal, XSD, URIRef
+from rdflib import Literal, XSD
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
@@ -393,12 +397,12 @@ class Dataset:
         individ_classes_count_q = target_graph.query(query)
 
         for index, this_binding in enumerate(individ_classes_count_q.bindings, start=1):
-            if len(this_binding) == 0:  # avoid warning messages if there are no results
+            if not this_binding:  # avoid warning messages if there are no results
                 continue
             try:
                 label = "_".join([partition_label_base, str(index)])
                 partition = Dataset.make_id(label)
-                LOG.debug(f"label: {label}\npartition id: {partition}")
+                LOG.debug("label: {label}\npartition id: %s", partition)
                 self.graph.addTriple(self.distribution_level_turtle_curie,
                                      'void:classPartition', partition)
                 self.graph.addTriple(partition, 'rdfs:label',
@@ -406,8 +410,9 @@ class Dataset:
                 self.graph.addTriple(partition, 'void:class', this_binding.get("o"))
                 self.graph.addTriple(partition, 'void:distinctSubjects',
                                      Literal(this_binding.get("distinctInstances")))
-            except Exception as e:
-                LOG.warning("problem computing biolink category counts: " + str(e))
+            except Exception as this_e:
+                LOG.warning("problem computing biolink category counts: %s",
+                            str(this_e))
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
