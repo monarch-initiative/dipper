@@ -8,6 +8,7 @@ import csv
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import XSD, Literal
+from inspect import getdoc
 
 import yaml
 from dipper.graph.RDFGraph import RDFGraph
@@ -15,7 +16,6 @@ from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
-from inspect import getdoc
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
@@ -209,16 +209,16 @@ class Source:
             LOG.warning("No output file set. Using stdout")
             stream = 'stdout'
 
-        gu = GraphUtils(None)
+        graph_util = GraphUtils(None)
 
         # the  _dataset description is always turtle
         self.dataset.compute_triples_statistics(self.graph)
-        gu.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
+        graph_util.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
 
         if self.test_mode:
             # unless we stop hardcoding, the test dataset is always turtle
             LOG.info("Setting testfile to %s", self.testfile)
-            gu.write(self.testgraph, 'turtle', filename=self.testfile)
+            graph_util.write(self.testgraph, 'turtle', filename=self.testfile)
 
         if write_metadata_in_main_graph:
             self.graph = self.graph + self.dataset.get_graph()
@@ -232,7 +232,7 @@ class Source:
             LOG.error("I don't understand our stream.")
             return
 
-        gu.write(self.graph, fmt, filename=outfile)
+        graph_util.write(self.graph, fmt, filename=outfile)
 
     def whoami(self):
         '''

@@ -1,11 +1,11 @@
 import unittest
 import logging
 import os
-from rdflib import URIRef, Literal, Graph
 from datetime import datetime
 from shutil import copyfile
-from rdflib import XSD
 from stat import ST_CTIME
+from rdflib import XSD
+from rdflib import URIRef, Literal
 
 from dipper.sources.Source import Source
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
@@ -26,18 +26,18 @@ class SourceMetadataTestCase(unittest.TestCase):
     """
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
 
         # feed these to FakeIngestClass, then check in tests
-        self.curie_map = curiemap.get()
-        self.identifier = "someid"
-        self.ingest_url = "http://sourceofdata.com"
-        self.ingest_title = "our transform of some source"
-        self.ingest_logo_url = self.ingest_url + "/logo.png"
-        self.license_url = "https://choosealicense.com/licenses/apache-2.0/"
-        self.data_rights = "https://www.gnu.org/licenses/gpl-2.0.html"
+        cls.curie_map = curiemap.get()
+        cls.identifier = "someid"
+        cls.ingest_url = "http://sourceofdata.com"
+        cls.ingest_title = "our transform of some source"
+        cls.ingest_logo_url = cls.ingest_url + "/logo.png"
+        cls.license_url = "https://choosealicense.com/licenses/apache-2.0/"
+        cls.data_rights = "https://www.gnu.org/licenses/gpl-2.0.html"
 
-        self.theseFiles = {
+        cls.theseFiles = {
             'test_file': {
                 'file': 'test_file.txt',
                 'url': 'http://fakeingest.com/remote_file.txt',
@@ -45,7 +45,7 @@ class SourceMetadataTestCase(unittest.TestCase):
                     'tests/resources/fakeingest/test_file.txt'}
         }
 
-        self.thesePgFiles = {
+        cls.thesePgFiles = {
             'test_file': {
                 'file': 'test_file_pg.txt',
                 'url': 'http://fakeingest.com/remote_file.txt',
@@ -54,23 +54,23 @@ class SourceMetadataTestCase(unittest.TestCase):
         }
 
         # expected things:
-        self.expected_curie_prefix = "MonarchData"
-        self.timestamp_date = datetime.today().strftime("%Y%m%d")
+        cls.expected_curie_prefix = "MonarchData"
+        cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
-        self.summary_level_IRI = URIRef(self.curie_map.get(self.expected_curie_prefix)
-                                        + self.identifier)
+        cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
+                                       + cls.identifier)
         # expected version level IRI
-        self.version_level_IRI = URIRef(self.summary_level_IRI + self.timestamp_date)
+        cls.version_level_IRI = URIRef(cls.summary_level_IRI + cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
-        self.distribution_level_IRI_ttl = URIRef(self.version_level_IRI + ".ttl")
+        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
 
         # expected IRIs
-        self.iri_version = URIRef(self.curie_map.get("pav") + "version")
-        self.iri_source = URIRef(self.curie_map.get("dcterms") + "source")
-        self.iri_retrieved_on = URIRef(self.curie_map.get("pav") + "retrievedOn")
-        self.iri_triples_count = URIRef(self.curie_map.get("void") + "triples")
+        cls.iri_version = URIRef(cls.curie_map.get("pav") + "version")
+        cls.iri_source = URIRef(cls.curie_map.get("dcterms") + "source")
+        cls.iri_retrieved_on = URIRef(cls.curie_map.get("pav") + "retrievedOn")
+        cls.iri_triples_count = URIRef(cls.curie_map.get("void") + "triples")
 
     def setUp(self):
         # load source and fetch files to make dataset graph containing metadata
@@ -108,8 +108,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         triples = list(self.source.dataset.graph.triples(
             (self.version_level_IRI,
              self.iri_source,
-             URIRef(self.source.files.get("test_file").get("url"))
-        )))
+             URIRef(self.source.files.get("test_file").get("url")))))
         self.assertTrue(len(triples) == 1, "missing version level file source triple")
 
     def test_version_level_source_version_download_timestamp(self):
@@ -148,8 +147,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         triples = list(self.pg_source.dataset.graph.triples(
             (self.version_level_IRI,
              self.iri_source,
-             URIRef(self.pg_source.files.get("test_file").get("url"))
-        )))
+             URIRef(self.pg_source.files.get("test_file").get("url")))))
         self.assertTrue(len(triples) == 1, "missing version level file source triple")
 
     def test_postgres_version_level_source_version_download_timestamp(self):
@@ -241,9 +239,8 @@ class FakeIngestClass(Source):
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-        return
 
-    def parse(self):
+    def parse(self, limit):
         pass
 
     # override fetch_from_url here so we don't need the network to "download" file
@@ -288,9 +285,8 @@ class FakeIngestUsingPostgres(PostgreSQLSource):
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-        return
 
-    def parse(self):
+    def parse(self, limit):
         pass
 
     def fetch_from_url(self,
