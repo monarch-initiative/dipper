@@ -68,4 +68,3 @@ class Environment():
             subject_category=component_category,
             object_category=entity_category)
         # TODO add value and units
-
