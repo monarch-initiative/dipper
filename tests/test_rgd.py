@@ -67,8 +67,3 @@ class RGDTestCase(unittest.TestCase):
         )
         self.assertTrue(self.test_util.test_graph_equality(
             triples, rgd.graph))
-
-
-
-
-

@@ -15,11 +15,11 @@ class Orphanet(Source):
     For Orphanet, we are currently only parsing the disease-gene associations.
     """
 
-    """ 
+    """
     Some useful code:
     xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
     """
-    
+
     files = {
         'disease-gene': {
             'file': 'en_product6.xml',
@@ -159,7 +159,7 @@ class Orphanet(Source):
                         assoc.find('DisorderGeneAssociationStatus/Name').text)
 
                     rel_id = self.resolve(dg_label)
-                    
+
                     g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
@@ -174,4 +174,3 @@ class Orphanet(Source):
                 return
 
         return
-

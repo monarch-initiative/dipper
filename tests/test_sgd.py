@@ -67,4 +67,3 @@ class SGDTestCase(unittest.TestCase):
         """.format(description)
         # test exact contents of graph
         self.assertTrue(self.test_util.test_graph_equality(triples, sgd.graph))
-

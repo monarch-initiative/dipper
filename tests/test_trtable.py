@@ -66,6 +66,3 @@ class TranslationTestCase(unittest.TestCase):
             print("Duplicate values in yaml: {}".format(failed_list))
 
         self.assertTrue(passed)
-
-
-
