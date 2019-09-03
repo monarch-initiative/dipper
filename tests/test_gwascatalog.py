@@ -23,6 +23,7 @@ VARIANTS = [
     'rs1491921',  # rs1491921-C
 ]
 
+
 class GWASCatalogTestCase(unittest.TestCase):
     """
     Test gwas catalog methods
@@ -59,6 +60,7 @@ class GWASCatalogTestCase(unittest.TestCase):
         scripts/dot-to-svg.sh
         """
         for variant in VARIANTS:
+            LOG.debug(f"testing variant {variant}")
             with self.subTest(variant_id=variant):
                 self.tearDownAndSetUp()
                 self.gwascatalog.rawdir = RAW_PATH + '/' + variant

@@ -45,3 +45,18 @@ dbSNP:rs1491921 a OBO:SO_0000694,
     rdfs:label "GRCh38chr5-21259029" ;
     faldo:position 21259029 ;
     faldo:reference OBO:CHR_GRCh38chr5 .
+
+<http://ensembl.org/id/ENSG00000248286> biolink:category biolink:Gene .
+<http://ensembl.org/id/ENSG00000249359> biolink:category biolink:Gene .
+OBO:ECO_0000213 biolink:category biolink:EvidenceType .
+OBO:NCBITaxon_9606 biolink:category biolink:OrganismTaxon .
+<http://www.ebi.ac.uk/efo/EFO_0000270> biolink:category biolink:PhenotypicFeature .
+<http://www.ebi.ac.uk/efo/EFO_0006995> biolink:category biolink:PhenotypicFeature .
+dbSNP:rs1491921 biolink:category biolink:Genotype .
+dbSNP:rs1491921 biolink:category biolink:SequenceVariant .
+<http://www.ncbi.nlm.nih.gov/pubmed/25918132> biolink:category biolink:EvidenceType .
+<http://www.ncbi.nlm.nih.gov/pubmed/25918132> biolink:category biolink:Publication .
+<https://monarchinitiative.org/.well-known/genid/bed3341497b6bee94927> biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/bee62aebc378782c23ad> biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/MONARCH_b506ad69fc4a85427fdb> biolink:category biolink:Association .
+<https://monarchinitiative.org/MONARCH_bff9b97458d67ed7f517> biolink:category biolink:Association .
