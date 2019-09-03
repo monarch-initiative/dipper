@@ -3,7 +3,9 @@ import re
 
 
 class Graph(metaclass=ABCMeta):
-
+    """
+    Graph class, used by RDFGraph and StreamedGraph
+    """
     # regular expression pattern to recognize strings which could be well formed curies
     # I am still not subscribing to the whole unicode realm
     # while 100% of the identifiers I actually get are 7-bit ascii
@@ -20,13 +22,13 @@ class Graph(metaclass=ABCMeta):
 
     @abstractmethod
     def addTriple(
-            self, 
-            subject_id, 
-            predicate_id, 
-            object_id, 
+            self,
+            subject_id,
+            predicate_id,
+            object_id,
             object_is_literal=False,
             literal_type=None,
-            subject_category=None, 
+            subject_category=None,
             object_category=None):
         pass
 
