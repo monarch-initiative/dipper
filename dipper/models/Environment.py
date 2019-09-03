@@ -17,7 +17,6 @@ class Environment():
     This is a stub.
     """
 
-
     def __init__(self, graph):
         if isinstance(graph, Graph):
             self.graph = graph
