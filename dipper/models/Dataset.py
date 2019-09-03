@@ -204,5 +204,4 @@ class Dataset:
         # TODO
         # model.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
 
-        return
 

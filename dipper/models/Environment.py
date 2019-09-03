@@ -50,8 +50,6 @@ class Environment():
             cond_id, cond_label, cond_type, cond_description,
             ind_category=condition_category)
 
-        return
-
     def addComponentToEnvironment(self, env_id, component_id,
                                   environment_category=blv.Environment.value,
                                   component_category=None):
@@ -72,4 +70,3 @@ class Environment():
             object_category=entity_category)
         # TODO add value and units
 
-        return
