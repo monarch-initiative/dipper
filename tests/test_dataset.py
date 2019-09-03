@@ -505,7 +505,7 @@ class DatasetTestCase(unittest.TestCase):
             (case_void_class_triple[0][0],
              URIRef(self.iri_rdfs_label),
              Literal(expected_rdfs_label))))
-        self.assertTrue(len(case_count_triple) == 1,
+        self.assertTrue(len(label_triple) == 1,
                         "didn't get exactly 1 biolink:case rdfs:label triple")
 
 
