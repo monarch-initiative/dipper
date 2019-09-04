@@ -1,0 +1,57 @@
+# This is a YAML file consumed by BiolinkVocabulary class in order to categorize
+# everything we ingest using biolink model categories.
+#
+# Each item below (except "category") should be a biolink model class, in camel case.
+# No spaces or metacharacters. These items will be prepended with "biolink:" in Dipper
+# to make a curie for the predicate and object of the triple that categorizes the
+# item in question. For example:
+#
+# OMIM:135800 biolink:category biolink:Disease
+#
+# If you need to add an item for something that isn't already here
+# consult this YAML file:
+# https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
+
+---
+- category # this one alone is a node property and not a class
+- Publication
+- Disease
+- Gene
+- Genotype
+- NamedThing
+- PopulationOfIndividualOrganisms
+- SequenceVariant # synonym for allele
+- InformationContentEntity
+- Zygosity
+- PhenotypicFeature
+- Publications
+- BiologicalSex
+- OrganismTaxon
+- MolecularEntity
+- GenomicEntity # we are using this for chromosome
+- Case
+- OntologyClass
+- GeneFamily
+- Transcript
+- Protein
+- ChemicalSubstance
+- GenomicSequenceLocalization
+- IndividualOrganism
+- GeneGrouping
+- Genome
+- GenomeBuild
+- BiologicalProcess
+- LifeStage
+- Environment
+- EvidenceType
+# AnatomicalEntity is a subcellular location cell type or gross anatomical part
+- AnatomicalEntity
+- Provider
+- Procedure
+- Association
+- GeneProduct
+- Pathway
+- FrequencyValue
+- CellLine
+- NoncodingRnaProduct
+
