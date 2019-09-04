@@ -531,7 +531,8 @@ class ZFIN(Source):
                                     r = self.globaltt['has_variant_part']
                                 geno.addParts(p, allele_id, r,
                                               part_category=blv.terms.Gene.value,
-                                              parent_category=blv.terms.SequenceVariant.value)
+                                              parent_category=
+                                              blv.terms.SequenceVariant.value)
 
         return
 
@@ -654,7 +655,8 @@ class ZFIN(Source):
                         geno.addSequenceDerivesFrom(allele_id, construct_id,
                                                     child_category=
                                                     blv.terms.SequenceVariant.value,
-                                                    parent_category=blv.terms.Gene.value)
+                                                    parent_category=
+                                                    blv.terms.Gene.value)
                         self.id_label_map[construct_id] = construct_name
 
                     # allele to gene
@@ -933,7 +935,8 @@ class ZFIN(Source):
                 geno.addGenomicBackgroundToGenotype(background_id, gt)
 
             geno.addTaxon(taxon_id, background_id,
-                          genopart_category=blv.terms.PopulationOfIndividualOrganisms.value)
+                          genopart_category=
+                          blv.terms.PopulationOfIndividualOrganisms.value)
 
             # add genotype_name + background as label for this gt
             genotype_name_background = genotype_name + ' (' + background_label + ')'
@@ -1250,7 +1253,8 @@ class ZFIN(Source):
                     if pub_id != '':
                         graph.addTriple(pub_id, self.globaltt['mentions'], fish_id,
                                         subject_category=blv.terms.Publication.value,
-                                        object_category=blv.terms.IndividualOrganism.value)
+                                        object_category=
+                                        blv.terms.IndividualOrganism.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1621,8 +1625,10 @@ class ZFIN(Source):
                             self.globaltt['regulatory_transgene_feature'],
                             ind_category=blv.terms.Gene.value)
                         geno.addSequenceDerivesFrom(transgene_part_id, gene_id,
-                                                    child_category=blv.terms.Gene.value,
-                                                    parent_category=blv.terms.Gene.value)
+                                                    child_category=
+                                                    blv.terms.Gene.value,
+                                                    parent_category=
+                                                    blv.terms.Gene.value)
 
                         # save the transgenic parts in a hashmap for later
                         if marker_id not in self.transgenic_parts:
@@ -1730,9 +1736,12 @@ class ZFIN(Source):
                     rpm.addRefToGraph()
 
                     model.addSameIndividual(pub_id, pubmed_id,
-                                            subject_category=blv.terms.Publication.value,
-                                            object_category=blv.terms.Publication.value)
-                    model.makeLeader(pubmed_id, node_category=blv.terms.Publication.value)
+                                            subject_category=
+                                            blv.terms.Publication.value,
+                                            object_category=
+                                            blv.terms.Publication.value)
+                    model.makeLeader(pubmed_id,
+                                     node_category=blv.terms.Publication.value)
 
                 ref.addRefToGraph()
 
@@ -1784,8 +1793,10 @@ class ZFIN(Source):
                     rpm = Reference(graph, pubmed_id, rtype)
                     rpm.addRefToGraph()
                     model.addSameIndividual(pub_id, pubmed_id,
-                                            subject_category=blv.terms.Publication.value,
-                                            object_category=blv.terms.Publication.value)
+                                            subject_category=
+                                            blv.terms.Publication.value,
+                                            object_category=
+                                            blv.terms.Publication.value)
                 ref = Reference(graph, pub_id, rtype)
                 ref.addRefToGraph()
                 if not self.test_mode and limit is not None and line_counter > limit:
@@ -1889,7 +1900,8 @@ class ZFIN(Source):
                         ref.addRefToGraph()
                         graph.addTriple(pub_id, self.globaltt['mentions'], reagent_id,
                                         subject_category=blv.terms.Publication.value,
-                                        object_category=blv.terms.ChemicalSubstance.value)
+                                        object_category=
+                                        blv.terms.ChemicalSubstance.value)
 
                 # Add comment?
                 if note != '':
@@ -1962,7 +1974,8 @@ class ZFIN(Source):
                  ncbi_taxon_name, ncbi_taxon_id) = row
 
                 environment_id = 'ZFIN:' + environment_id.strip()
-                if self.test_mode and environment_id not in self.test_ids['environment']:
+                if self.test_mode and environment_id not in\
+                        self.test_ids['environment']:
                     continue
 
                 # We can start to build the extrinsic genotype using this file.
