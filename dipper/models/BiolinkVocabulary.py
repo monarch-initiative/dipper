@@ -1,53 +1,29 @@
+import logging
+import os
 from enum import Enum
+from pathlib import Path
+
+import yaml
 
 """
 This is a class to support categorizing everything we ingest using biolink 
-categories.
+categories. It reads dipper/biolink_vocabulary.yaml and populates an Enum that
+is used to assign biolink categories to entities we ingest.
 
-If you need to add an Enum for something that isn't already here,
-consult this YAML file:
-https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
+If you need to add a biolink category, do so in dipper/biolink_vocabulary.yaml
 """
 
-class BioLinkVocabulary(Enum):
-    category = "biolink:category"  # this is a node property, not a class
-    Publication = "biolink:Publication"
-    Disease = "biolink:Disease"
-    Gene = "biolink:Gene"
-    Genotype = "biolink:Genotype"
-    NamedThing = "biolink:NamedThing"
-    PopulationOfIndividualOrganisms = "biolink:PopulationOfIndividualOrganisms"
-    SequenceVariant = "biolink:SequenceVariant"  # synonym for allele
-    InformationContentEntity = "biolink:InformationContentEntity"
-    Zygosity = "biolink:Zygosity"
-    PhenotypicFeature = "biolink:PhenotypicFeature"
-    Publications = "biolink:Publications"
-    BiologicalSex = "biolink:BiologicalSex"
-    OrganismTaxon = "biolink:OrganismTaxon"
-    MolecularEntity = "biolink:MolecularEntity"
-    GenomicEntity = "biolink:GenomicEntity"  # we are using this for chromosome
-    Case = "biolink:Case"
-    OntologyClass = "biolink:OntologyClass"
-    GeneFamily = "biolink:GeneFamily"
-    Transcript = "biolink:Transcript"
-    Protein = "biolink:Protein"
-    ChemicalSubstance = "biolink:ChemicalSubstance"
-    GenomicSequenceLocalization = "biolink:GenomicSequenceLocalization"
-    IndividualOrganism = "biolink:IndividualOrganism"
-    GeneGrouping = "biolink:GeneGrouping"
-    Genome = "biolink:Genome"
-    GenomeBuild = "biolink:GenomeBuild"
-    BiologicalProcess = "biolink:BiologicalProcess"
-    LifeStage = "biolink:LifeStage"
-    Environment = "biolink:Environment"
-    EvidenceType = "biolink:EvidenceType"
-    # AnatomicalEntity is a subcellular location, cell type or gross anatomical part
-    AnatomicalEntity = "biolink:AnatomicalEntity"
-    Provider = "biolink:Provider"
-    Procedure = "biolink:Procedure"
-    Association = "biolink:Association"
-    GeneProduct = "biolink:GeneProduct"
-    Pathway = "biolink:Pathway"
-    FrequencyValue = "biolink:FrequencyValue"
-    CellLine = "biolink:CellLine"
-    NoncodingRnaProduct = "biolink:NoncodingRnaProduct"
+LOG = logging.getLogger(__name__)
+
+
+class BioLinkVocabulary:
+    bl_file_with_path = os.path.join(Path(__file__).parents[1],
+                                     'biolink_vocabulary.yaml')
+    if os.path.exists(bl_file_with_path):
+        with open(os.path.join(bl_file_with_path)) as yaml_file:
+            bl_vocab = yaml.safe_load(yaml_file)
+            LOG.debug("Loaded biolink vocabulary: %s", bl_vocab)
+    else:
+        LOG.debug("Cannot find biolink vocab yaml file: %s", bl_file_with_path)
+    terms = Enum('DynamicEnum', bl_vocab)
+
