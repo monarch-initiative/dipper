@@ -1,15 +1,16 @@
 # This is a YAML file consumed by BiolinkVocabulary class in order to categorize
 # everything we ingest using biolink model categories.
 #
-# Each item below (except "category") should be a biolink model class, in camel case.
-# No spaces or metacharacters. These items will be prepended with `curie_prefix`
-# to make a curie for the predicate and object of the triple that categorizes the
-# item in question. For example:
+# This file is used to populate an Enum with such that each term is a name, and the
+# value for each term is a curie for the term, formed by prepended the term with
+# `curie_prefix`. The CURIEs are used to assign biolink categories to entities we
+# ingest, for example:
 #
-# OMIM:135800 biolink:category biolink:Disease
+# OMIM:135800 biolink:category biolink:Disease .
 #
-# If you need to add an item for something that isn't already here
-# consult this YAML file:
+# Each member of 'terms' below (except "category") should be a biolink model class, in
+# camel case. No spaces or metacharacters. If you need to add an item for something
+# that isn't already here consult this YAML file:
 # https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
 
 curie_prefix: "biolink"
