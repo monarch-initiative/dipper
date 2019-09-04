@@ -24,8 +24,8 @@ class G2PAssoc(Assoc):
     """
 
     def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None,
-                 entity_category=blv.terms.Genotype,
-                 phenotype_category=blv.terms.PhenotypicFeature):
+                 entity_category=blv.terms.Genotype.value,
+                 phenotype_category=blv.terms.PhenotypicFeature.value):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -101,27 +101,27 @@ class G2PAssoc(Assoc):
             stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
                 stage_process_id, None, self.globaltt['developmental_process'],
-                ind_category=blv.terms.BiologicalProcess)
+                ind_category=blv.terms.BiologicalProcess.value)
 
             self.graph.addTriple(
                 stage_process_id, self.globaltt['starts during'], self.start_stage_id,
-                subject_category=blv.terms.BiologicalProcess,
-                object_category=blv.terms.LifeStage)
+                subject_category=blv.terms.BiologicalProcess.value,
+                object_category=blv.terms.LifeStage.value)
 
             self.graph.addTriple(
                 stage_process_id, self.globaltt['ends during'], self.end_stage_id,
-                subject_category=blv.terms.BiologicalProcess,
-                object_category=blv.terms.LifeStage)
+                subject_category=blv.terms.BiologicalProcess.value,
+                object_category=blv.terms.LifeStage.value)
 
             self.stage_process_id = stage_process_id
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id,
-                object_category=blv.terms.BiologicalProcess)
+                object_category=blv.terms.BiologicalProcess.value)
 
         if self.environment_id is not None:
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['has_qualifier'], self.environment_id,
-                object_category=blv.terms.Environment)
+                object_category=blv.terms.Environment.value)
         return
 
     def make_g2p_id(self):

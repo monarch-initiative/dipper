@@ -63,7 +63,7 @@ class ModelTestCase(unittest.TestCase):
     def test_addIndividualToGraph_assign_category(self):
         self.model.addIndividualToGraph(self.test_cat_subj_curie,
                                         "some label",
-                                        ind_category=blv.Genotype.value)
+                                        ind_category=blv.terms.Genotype.value)
 
         triples = list(self.model.graph.triples(
             (URIRef(self.test_cat_subj),
@@ -84,7 +84,7 @@ class ModelTestCase(unittest.TestCase):
 
     def test_add_comment_assign_subject_category(self):
         self.model.addComment(self.test_cat_subj, self.test_comment,
-                              subject_category=blv.Genotype.value)
+                              subject_category=blv.terms.Genotype.value)
 
         triples = list(self.model.graph.triples(
             (URIRef(self.test_cat_subj),

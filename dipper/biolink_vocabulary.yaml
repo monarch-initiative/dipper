@@ -2,7 +2,7 @@
 # everything we ingest using biolink model categories.
 #
 # Each item below (except "category") should be a biolink model class, in camel case.
-# No spaces or metacharacters. These items will be prepended with "biolink:" in Dipper
+# No spaces or metacharacters. These items will be prepended with `curie_prefix`
 # to make a curie for the predicate and object of the triple that categorizes the
 # item in question. For example:
 #
@@ -12,7 +12,9 @@
 # consult this YAML file:
 # https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
 
----
+curie_prefix: "biolink"
+
+terms:
 - category # this one alone is a node property and not a class
 - Publication
 - Disease

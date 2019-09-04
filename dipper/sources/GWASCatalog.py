@@ -247,7 +247,7 @@ class GWASCatalog(Source):
                     self.graph.addTriple(
                         variant_curie, self.globaltt['label'],
                         strongest_snp_risk_allele, object_is_literal=True,
-                        subject_category=blv.terms.SequenceVariant)
+                        subject_category=blv.terms.SequenceVariant.value)
 
                 if variant_type == 'snp':
                     self._add_snp_to_graph(
@@ -422,7 +422,7 @@ class GWASCatalog(Source):
 
         feat = Feature(
             graph, snp_id, snp_label.strip(), self.globaltt['SNP'], snp_description,
-            feature_category=blv.terms.SequenceVariant)
+            feature_category=blv.terms.SequenceVariant.value)
         if chrom_num != '' and chrom_pos != '':
             feat.addFeatureStartLocation(chrom_pos, chrom_id)
             feat.addFeatureEndLocation(chrom_pos, chrom_id)
@@ -439,7 +439,7 @@ class GWASCatalog(Source):
                 cid = self.resolve(ctx, False)
                 if cid != ctx:
                     model.addType(snp_id, cid,
-                                  subject_category=blv.terms.SequenceVariant)
+                                  subject_category=blv.terms.SequenceVariant.value)
 
     def _add_deprecated_snp(
             self, snp_id, snp_id_current, merged, chrom_num, chrom_pos):
@@ -458,16 +458,16 @@ class GWASCatalog(Source):
                 else:
                     self.id_location_map[location].add(current_rs_id)
             model.addDeprecatedIndividual(snp_id, current_rs_id,
-                                          blv.terms.SequenceVariant,
-                                          blv.terms.SequenceVariant)
+                                          blv.terms.SequenceVariant.value,
+                                          blv.terms.SequenceVariant.value)
             # TODO check on this
             # should we add the annotations to the current
             # or orig?
             model.makeLeader(current_rs_id,
-                             node_category=blv.terms.SequenceVariant)
+                             node_category=blv.terms.SequenceVariant.value)
         else:
             model.makeLeader(snp_id,
-                             node_category=blv.terms.SequenceVariant)
+                             node_category=blv.terms.SequenceVariant.value)
 
     def _add_snp_gene_relation(
             self, snp_id, snp_gene_nums, upstream_gene_num, downstream_gene_num):
@@ -493,14 +493,14 @@ class GWASCatalog(Source):
             downstream_gene_id = 'ENSEMBL:' + downstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is upstream of sequence of'], downstream_gene_id,
-                subject_category=blv.terms.SequenceVariant,
-                object_category=blv.terms.Gene)
+                subject_category=blv.terms.SequenceVariant.value,
+                object_category=blv.terms.Gene.value)
         if downstream_gene_num != '':
             upstream_gene_id = 'ENSEMBL:' + upstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is downstream of sequence of'], upstream_gene_id,
-                subject_category=blv.terms.SequenceVariant,
-                object_category=blv.terms.Gene)
+                subject_category=blv.terms.SequenceVariant.value,
+                object_category=blv.terms.Gene.value)
 
     def _add_variant_trait_association(
             self, variant_id, mapped_trait_uri, mapped_trait, mondo_data, pubmed_id,
@@ -524,7 +524,7 @@ class GWASCatalog(Source):
                         model.addClassToGraph(
                             trait_curie, mapped_traits[index],
                             self.globaltt['phenotype'],
-                            class_category=blv.terms.PhenotypicFeature)
+                            class_category=blv.terms.PhenotypicFeature.value)
                     LOG.debug("{} not in mondo".format(trait_curie))
                 else:
                     LOG.debug("{} in mondo".format(trait_curie))

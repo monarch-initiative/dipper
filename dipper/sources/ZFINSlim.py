@@ -99,7 +99,7 @@ class ZFINSlim(Source):
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
                 model.makeLeader(gene_curie,
-                                 node_category=blv.terms.Gene)
+                                 node_category=blv.terms.Gene.value)
                 pub_curie = "ZFIN:{0}".format(pub_id)
                 if zp_id:
                     assoc = G2PAssoc(self.graph, self.name, gene_curie, zp_id)

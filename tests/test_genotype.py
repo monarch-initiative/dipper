@@ -21,10 +21,10 @@ class GenotypeTestCase(unittest.TestCase):
         self.curie_map = curie_map.get()
         self.genotype = Genotype(self.graph)
         self.cutil = CurieUtil(self.curie_map)
-        self.test_cat_pred = self.cutil.get_uri(blv.category.value)
-        self.test_cat_genotype_category = self.cutil.get_uri(blv.Genotype.value)
+        self.test_cat_pred = self.cutil.get_uri(blv.terms.category.value)
+        self.test_cat_genotype_category = self.cutil.get_uri(blv.terms.Genotype.value)
         self.test_cat_background_category = self.cutil.get_uri(
-            blv.PopulationOfIndividualOrganisms.value)
+            blv.terms.PopulationOfIndividualOrganisms.value)
 
     def tearDown(self):
         self.genotype = None

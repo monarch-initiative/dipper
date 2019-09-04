@@ -65,7 +65,7 @@ class MGISlim(Source):
                 mp_curie = row["ontologyTerm.identifier"]
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
                 assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie,
-                                 entity_category=blv.terms.Gene)
+                                 entity_category=blv.terms.Gene.value)
                 if row["evidence.publications.pubMedId"]:
                     reference = Reference(
                         self.graph, pub_curie, self.globaltt['journal article'])

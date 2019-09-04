@@ -264,7 +264,7 @@ class UDP(Source):
 
             self.graph.addTriple(
                 patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode,
-                subject_category=blv.terms.Case, object_category=blv.Genotype.value)
+                subject_category=blv.terms.Case.value, object_category=blv.terms.Genotype.value)
             for variant_id, variant in patient_var_map[patient].items():
                 build = variant['build']
                 chromosome = variant['chromosome']
@@ -309,13 +309,13 @@ class UDP(Source):
 
                 if len(label_list) == 0:
                     model.addLabel(variant_bnode, variant_label,
-                                   subject_category=blv.terms.SequenceVariant)
+                                   subject_category=blv.terms.SequenceVariant.value)
 
                 self.graph.addTriple(
                     variant_bnode, self.globaltt['in taxon'],
                     self.globaltt['Homo sapiens'],
-                    subject_category=blv.terms.SequenceVariant,
-                    object_category=blv.terms.OrganismTaxon)
+                    subject_category=blv.terms.SequenceVariant.value,
+                    object_category=blv.terms.OrganismTaxon.value)
                 self.graph.addTriple(
                     intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)

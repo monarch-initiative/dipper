@@ -186,7 +186,7 @@ class Dataset:
     def setFileAccessUrl(self, url, is_object_literal=False):
         self.graph.addTriple(
             self.identifier, 'dcat:accessURL', url, is_object_literal,
-            subject_category=blv.terms.InformationContentEntity)
+            subject_category=blv.terms.InformationContentEntity.value)
 
     def getGraph(self):
         return self.graph

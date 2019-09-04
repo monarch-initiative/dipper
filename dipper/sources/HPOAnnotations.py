@@ -237,14 +237,14 @@ class HPOAnnotations(Source):
                 #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
 
                 model.addClassToGraph(disease_id,
-                                      class_category=blv.terms.Disease)
+                                      class_category=blv.terms.Disease.value)
                 model.addClassToGraph(pheno_id,
-                                      class_category=blv.terms.PhenotypicFeature)
+                                      class_category=blv.terms.PhenotypicFeature.value)
                 model.addClassToGraph(eco_id,
-                                      class_category=blv.terms.EvidenceType)
+                                      class_category=blv.terms.EvidenceType.value)
                 if onset is not None and onset != '':
                     model.addClassToGraph(onset,
-                                          class_category=blv.terms.LifeStage)
+                                          class_category=blv.terms.LifeStage.value)
 
                 if asp in ('P', 'M'):  # phenotype? abnormality or mortality
                     assoc = D2PAssoc(  # default rel=self.globaltt['has phenotype']
@@ -263,8 +263,8 @@ class HPOAnnotations(Source):
                         assoc.get_association_id(),
                         self.globaltt['has_sex_specificty'],
                         self.globaltt[sex],
-                        subject_category=blv.terms.Association,
-                        object_category=blv.terms.BiologicalSex)
+                        subject_category=blv.terms.Association.value,
+                        object_category=blv.terms.BiologicalSex.value)
 
                 # Publication
                 # cut -f 5 phenotype.hpoa | grep ";" | tr ';' '\n' | cut -f1 -d ':' |\

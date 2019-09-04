@@ -143,7 +143,7 @@ class Model():
     def addPerson(self, person_id, person_label=None):
         self.graph.addTriple(
             person_id, self.globaltt['type'], self.globaltt['person'],
-            subject_category=blv.terms.Case)
+            subject_category=blv.terms.Case.value)
         if person_label is not None:
             self.graph.addTriple(
                 person_id, self.globaltt['label'], person_label, object_is_literal=True)
@@ -251,7 +251,7 @@ class Model():
             object_is_literal=xref_as_literal)
 
     def addDepiction(self, subject_id, image_url, subject_category=None,
-                     object_category=blv.terms.InformationContentEntity):
+                     object_category=blv.terms.InformationContentEntity.value):
         self.graph.addTriple(
             subject_id, self.globaltt['depiction'], image_url, object_is_literal=False,
             subject_category=subject_category, object_category=object_category)
@@ -270,11 +270,11 @@ class Model():
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
             ontology_id, self.globaltt['type'], self.globaltt['ontology'],
-            subject_category=blv.terms.OntologyClass)
+            subject_category=blv.terms.OntologyClass.value)
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
         self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri,
-                             subject_category=blv.terms.OntologyClass)
+                             subject_category=blv.terms.OntologyClass.value)
 
     def addOWLVersionInfo(self, ontology_id, version_info):
         self.graph.addTriple(
@@ -327,4 +327,4 @@ class Model():
         """
         self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex,
                              subject_category=subject_category,
-                             object_category=blv.terms.BiologicalSex)
+                             object_category=blv.terms.BiologicalSex.value)
