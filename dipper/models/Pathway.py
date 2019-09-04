@@ -44,9 +44,9 @@ class Pathway():
             pathway_type = self.globaltt['cellular_process']
         self.model.addClassToGraph(
             pathway_id, pathway_label, pathway_type, pathway_description,
-            class_category=blv.Pathway.value)
+            class_category=blv.terms.Pathway)
         self.model.addSubClass(pathway_id, self.globaltt['pathway'],
-                               child_category=blv.Pathway.value)
+                               child_category=blv.terms.Pathway)
 
         return
 
@@ -67,17 +67,17 @@ class Pathway():
         gene_product = '_:'+re.sub(r':', '', gene_id) + 'product'
         self.model.addIndividualToGraph(
             gene_product, None, self.globaltt['gene_product'],
-            ind_category=blv.GeneProduct.value)
+            ind_category=blv.terms.GeneProduct)
         self.graph.addTriple(
             gene_id, self.globaltt['has gene product'], gene_product,
-            subject_category=blv.Gene.value,object_category=blv.GeneProduct.value)
+            subject_category=blv.terms.Gene.value,object_category=blv.GeneProduct)
         self.addComponentToPathway(gene_product, pathway_id)
 
         return
 
     def addComponentToPathway(self, component_id, pathway_id,
                               component_category=None,
-                              pathway_category=blv.Pathway.value):
+                              pathway_category=blv.terms.Pathway):
         """
         This can be used directly when the component is directly involved in
         the pathway.  If a transforming event is performed on the component

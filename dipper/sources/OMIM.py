@@ -341,7 +341,7 @@ class OMIM(OMIMSource):
             # omim is subclass_of gene (provide type term)
             model.addClassToGraph(
                 omim_curie, nodelabel, self.globaltt['gene'], newlabel,
-                class_category=blv.Gene.value)
+                class_category=blv.terms.Gene)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -647,8 +647,8 @@ class OMIM(OMIMSource):
         # Note: this is actually a G2D association;
         # see https://github.com/monarch-initiative/dipper/issues/748
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id,
-                         entity_category=blv.Gene.value,
-                         phenotype_category=blv.Disease.value)
+                         entity_category=blv.terms.Gene,
+                         phenotype_category=blv.terms.Disease)
 
         if phene_key is not None:
             evidence = self.resolve(phene_key, False)
@@ -720,8 +720,8 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id,
-                                            subject_category=blv.Publication.value,
-                                            object_category=blv.SequenceVariant.value)
+                                            subject_category=blv.terms.Publication,
+                                            object_category=blv.terms.SequenceVariant)
                                             
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
@@ -730,12 +730,12 @@ class OMIM(OMIMSource):
                                 did = 'dbSNP:'+dnum.strip()
                                 model.addIndividualToGraph(did, None,
                                                            ind_category=
-                                                           blv.SequenceVariant.value)
+                                                           blv.terms.SequenceVariant)
                                 model.addSameIndividual(al_id, did,
                                                         subject_category=
-                                                        blv.SequenceVariant.value,
+                                                        blv.terms.SequenceVariant,
                                                         object_category=
-                                                        blv.SequenceVariant.value)
+                                                        blv.terms.SequenceVariant)
 
                         # Note that RCVs are variant to disease associations
                         # in ClinVar, rather than variant entries
@@ -762,9 +762,9 @@ class OMIM(OMIMSource):
                             moved_ids = [moved_id]
                         model.addDeprecatedIndividual(al_id, moved_ids,
                                                       old_id_category=
-                                                      blv.SequenceVariant.value,
+                                                      blv.terms.SequenceVariant,
                                                       new_ids_category=
-                                                      blv.SequenceVariant.value)
+                                                      blv.terms.SequenceVariant)
                     else:
                         LOG.error(
                             'Uncaught alleleic variant status %s',
@@ -867,7 +867,7 @@ class OMIM(OMIMSource):
                 ps_num = row[col.index('Phenotypic Series number')].strip()
                 omimps_curie = 'OMIMPS:' + ps_num
                 model.addClassToGraph(omimps_curie, ps_label,
-                                      class_category=blv.Disease.value)
+                                      class_category=blv.terms.Disease)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -909,10 +909,10 @@ class OMIM(OMIMSource):
         for phser in set(serieslist):
             series_curie = 'OMIMPS:' + phser
             model.addClassToGraph(series_curie, None,
-                                  class_category=blv.Disease.value)
+                                  class_category=blv.terms.Disease)
             model.addSubClass(omim_curie, series_curie,
-                              child_category=blv.Disease.value,
-                              parent_category=blv.Disease.value)
+                              child_category=blv.terms.Disease,
+                              parent_category=blv.terms.Disease)
 
     @staticmethod
     def _get_mappedids(entry, graph):
@@ -939,10 +939,10 @@ class OMIM(OMIMSource):
                     orpha_curie = 'ORPHA:' + orpha_num
                     orpha_mappings.append(orpha_curie)
                     model.addClassToGraph(orpha_curie, orpha_label,
-                                          class_category=blv.Disease.value)
+                                          class_category=blv.terms.Disease)
                     model.addXref(omim_curie, orpha_curie,
-                                  class_category=blv.Disease.value,
-                                  xref_category=blv.Disease.value)
+                                  class_category=blv.terms.Disease,
+                                  xref_category=blv.terms.Disease)
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
@@ -950,7 +950,7 @@ class OMIM(OMIMSource):
                     umls_curie = 'UMLS:' + umls
                     model.addClassToGraph(umls_curie, None)
                     model.addXref(omim_curie, umls_curie,
-                                  class_category=blv.Disease.value)
+                                  class_category=blv.terms.Disease)
 
     def _get_mapped_gene_ids(self, entry, graph):
         gene_ids = []
@@ -968,8 +968,8 @@ class OMIM(OMIMSource):
                         self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                     for ncbi in gene_ids:
                         model.addEquivalentClass(omim_curie, 'NCBIGene:' + str(ncbi),
-                                                 subject_category=blv.Gene.value,
-                                                 object_category=blv.Gene.value)
+                                                 subject_category=blv.terms.Gene,
+                                                 object_category=blv.terms.Gene)
         return gene_ids
 
     def _get_alt_labels(self, titles):
@@ -1041,7 +1041,7 @@ class OMIM(OMIMSource):
                 omim_id = 'OMIM:' + str(entry_num)
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id,
                                 subject_category=omim_id_category,
-                                object_category=blv.Publication.value)
+                                object_category=blv.terms.Publication)
 
         return ref_to_pmid
 
@@ -1051,12 +1051,12 @@ class OMIM(OMIMSource):
                 self.globaltt['gene'],
                 self.globaltt['has_affected_feature']
             ]:
-                omim_id_category = blv.Gene.value
+                omim_id_category = blv.terms.Gene
             elif self.omim_type[entry_num] in [
                 self.globaltt['phenotype'],
                 self.globaltt['heritable_phenotypic_marker']
             ]:
-                omim_id_category = blv.PhenotypicFeature.value
+                omim_id_category = blv.terms.PhenotypicFeature
             else:
                 omim_id_category = None
         else:

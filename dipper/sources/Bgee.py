@@ -216,13 +216,13 @@ class Bgee(Source):
         gene_curie = "ENSEMBL:{}".format(gene_id)
 
         rank = re.sub(r',', '', str(rank))  # ? can't do RE on a float ...
-        model.addIndividualToGraph(gene_curie, None, ind_category=blv.Gene.value)
+        model.addIndividualToGraph(gene_curie, None, ind_category=blv.terms.Gene)
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
         g2a_association.rel = self.globaltt['expressed in']
-        g2a_association.add_association_to_graph(subject_category=blv.Gene.value,
+        g2a_association.add_association_to_graph(subject_category=blv.terms.Gene,
                                                  object_category=
-                                                 blv.AnatomicalEntity.value)
+                                                 blv.terms.AnatomicalEntity)
         g2a_association.add_predicate_object(
             self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
 

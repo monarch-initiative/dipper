@@ -143,15 +143,15 @@ class SGD(Source):
             )
             g2p_assoc = Assoc(
                 self.graph, self.name, sub=gene, obj=pheno_id, pred=relation,
-                subject_category=blv.Gene.value,
-                object_category=blv.PhenotypicFeature.value)
+                subject_category=blv.terms.Gene,
+                object_category=blv.terms.PhenotypicFeature)
         else:
             pheno_label = record['pheno_obj']['entity']['term']
             pheno_id = record['pheno_obj']['entity']['apo_id']
             g2p_assoc = Assoc(
                 self.graph, self.name, sub=gene, obj=pheno_id, pred=relation,
-                subject_category=blv.Gene.value,
-                object_category=blv.PhenotypicFeature.value)
+                subject_category=blv.terms.Gene,
+                object_category=blv.terms.PhenotypicFeature)
             assoc_id = g2p_assoc.make_association_id(
                 'yeastgenome.org', gene, relation, pheno_id)
             g2p_assoc.set_association_id(assoc_id=assoc_id)
@@ -160,24 +160,24 @@ class SGD(Source):
         g2p_assoc.add_association_to_graph()
 
         model.addLabel(subject_id=gene, label=record['Gene Name'],
-                       subject_category=blv.Gene.value)
+                       subject_category=blv.terms.Gene)
 
         # add the association triple
         model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id,
-                        subject_category=blv.Gene.value,
-                        object_category=blv.PhenotypicFeature.value)
+                        subject_category=blv.terms.Gene,
+                        object_category=blv.terms.PhenotypicFeature)
 
         model.addTriple(
             subject_id=pheno_id,
             predicate_id=self.globaltt['subclass_of'],
             obj=self.globaltt['phenotype'],
-            subject_category=blv.PhenotypicFeature.value)
+            subject_category=blv.terms.PhenotypicFeature)
 
         # label nodes
         # pheno label
 
         model.addLabel(subject_id=pheno_id, label=pheno_label,
-                       subject_category=blv.PhenotypicFeature.value)
+                       subject_category=blv.terms.PhenotypicFeature)
 
         g2p_assoc.description = self._make_description(record)
 
@@ -200,13 +200,13 @@ class SGD(Source):
             # create equivalent source for any other refs in list
             for ref in references[1:]:
                 model.addSameIndividual(sub=references[0], obj=ref,
-                                        subject_category=blv.Publication.value)
+                                        subject_category=blv.terms.Publication)
 
         # add experiment type as evidence
         for exp_type in record['experiment_type']:
             g2p_assoc.add_evidence(exp_type['id'])
             model.addLabel(subject_id=exp_type['id'], label=exp_type['term'],
-                           subject_category=blv.EvidenceType.value)
+                           subject_category=blv.terms.EvidenceType)
 
         try:
             g2p_assoc.add_association_to_graph()

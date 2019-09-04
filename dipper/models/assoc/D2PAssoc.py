@@ -20,8 +20,8 @@ class D2PAssoc(Assoc):
             onset=None,
             frequency=None,
             rel=None,
-            disease_category=blv.Disease.value,
-            phenotype_category=blv.PhenotypicFeature.value
+            disease_category=blv.terms.Disease,
+            phenotype_category=blv.terms.PhenotypicFeature
     ):
         super().__init__(graph, definedby)
 

@@ -196,14 +196,14 @@ class Feature():
 
             self.graph.addTriple(self.fid, self.globaltt['location'], region_id,
                                  subject_category=feature_category,
-                                 object_category=blv.GenomicSequenceLocalization.value)
+                                 object_category=blv.terms.GenomicSequenceLocalization)
             self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'],
                                             ind_category=
-                                            blv.GenomicSequenceLocalization.value)
+                                            blv.terms.GenomicSequenceLocalization)
         else:
             region_id = self.fid
             self.model.addType(region_id, self.globaltt['region'],
-                               subject_category=blv.GenomicSequenceLocalization.value)
+                               subject_category=blv.terms.GenomicSequenceLocalization)
 
         # add the start/end positions to the region
         beginp = endp = None
@@ -312,14 +312,14 @@ class Feature():
             self.graph.addTriple(
                 pos_id, self.globaltt['position'], position, object_is_literal=True,
                 literal_type="xsd:integer",
-                subject_category=blv.GenomicSequenceLocalization.value)
+                subject_category=blv.terms.GenomicSequenceLocalization)
         self.graph.addTriple(pos_id, self.globaltt['reference'], reference_id,
-                             subject_category=blv.GenomicSequenceLocalization.value)
+                             subject_category=blv.terms.GenomicSequenceLocalization)
         if position_types is not None:
             for pos_type in position_types:
                 self.model.addType(pos_id, pos_type,
                                    subject_category=
-                                   blv.GenomicSequenceLocalization.value)
+                                   blv.terms.GenomicSequenceLocalization)
         strnd = None
         if strand is not None:
             strnd = strand
@@ -333,7 +333,7 @@ class Feature():
 
         if strnd is not None:
             self.model.addType(pos_id, strnd,
-                               subject_category=blv.GenomicSequenceLocalization.value)
+                               subject_category=blv.terms.GenomicSequenceLocalization)
 
         return pos_id
 
@@ -349,12 +349,12 @@ class Feature():
 
         """
         self.graph.addTriple(self.fid, self.globaltt['is subsequence of'], parentid,
-                             subject_category=blv.GenomicSequenceLocalization.value,
-                             object_category=blv.GenomicSequenceLocalization.value)
+                             subject_category=blv.terms.GenomicSequenceLocalization,
+                             object_category=blv.terms.GenomicSequenceLocalization)
         # this should be expected to be done in reasoning not ETL
         self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid,
-                             subject_category=blv.GenomicSequenceLocalization.value,
-                             object_category=blv.GenomicSequenceLocalization.value)
+                             subject_category=blv.terms.GenomicSequenceLocalization,
+                             object_category=blv.terms.GenomicSequenceLocalization)
 
     def addTaxonToFeature(self, taxonid):
         """
@@ -367,7 +367,7 @@ class Feature():
         self.taxon = taxonid
         self.graph.addTriple(self.fid, self.globaltt['in taxon'], self.taxon,
                              subject_category=self.feature_category,
-                             object_category=blv.OrganismTaxon.value)
+                             object_category=blv.terms.OrganismTaxon)
 
     def addFeatureProperty(self, property_type, feature_property):
         self.graph.addTriple(self.fid, property_type, feature_property,

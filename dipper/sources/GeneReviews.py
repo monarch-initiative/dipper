@@ -168,7 +168,7 @@ class GeneReviews(OMIMSource):
 
                 # add the class along with the shortname
                 model.addClassToGraph(gr_id, None,
-                                      class_category=blv.InformationContentEntity.value)
+                                      class_category=blv.terms.InformationContentEntity)
                 model.addSynonym(gr_id, shortname)
 
                 allomimids.add(omim_num)
@@ -224,11 +224,11 @@ class GeneReviews(OMIMSource):
                     if omim_id in entries_that_are_phenotypes:
                         model.addClassToGraph(omim_id, None,
                                               class_category=
-                                              blv.PhenotypicFeature.value)
+                                              blv.terms.PhenotypicFeature)
                         model.addSubClass(omim_id, gr_id,
-                                          child_category=blv.PhenotypicFeature.value,
+                                          child_category=blv.terms.PhenotypicFeature,
                                           parent_category=
-                                          blv.InformationContentEntity.value)
+                                          blv.terms.InformationContentEntity)
             # add this as a generic subclass  -- TEC: this is the job of inference
             model.addSubClass(gr_id, self.globaltt['disease'])
 
@@ -273,9 +273,9 @@ class GeneReviews(OMIMSource):
                 if limit is None or reader.line_num < limit:
                     model.addClassToGraph(gr_id, row[col.index('GR_Title')],
                                           class_category=
-                                          blv.InformationContentEntity.value)
+                                          blv.terms.InformationContentEntity)
                     model.addSynonym(gr_id, row[col.index('GR_shortname')],
-                                     class_category=blv.InformationContentEntity.value)
+                                     class_category=blv.terms.InformationContentEntity)
                 # TODO include the new PMID?
 
     def create_books(self):
@@ -369,8 +369,8 @@ class GeneReviews(OMIMSource):
                             pmid = 'PMID:'+str(pmnum)
                             self.graph.addTriple(
                                 pmid, self.globaltt['is_about'], nbk_id,
-                                subject_category=blv.Publication.value,
-                                object_is_literal=blv.InformationContentEntity.value)
+                                subject_category=blv.terms.Publication,
+                                object_is_literal=blv.terms.InformationContentEntity)
                             pmid_set.add(pmnum)
                             reference = Reference(
                                 self.graph, pmid, self.globaltt['journal article'])

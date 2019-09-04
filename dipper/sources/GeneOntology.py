@@ -326,36 +326,36 @@ class GeneOntology(Source):
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol,
-                                      class_category=blv.Gene.value)
+                                      class_category=blv.terms.Gene)
                 if gene_name != '':
                     model.addDescription(gene_id, gene_name,
-                                         subject_category=blv.Gene.value)
+                                         subject_category=blv.terms.Gene)
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
                         syn = syn.strip()
                         if syn[:10] == 'UniProtKB:':
                             model.addTriple(
                                 gene_id, self.globaltt['has gene product'], syn,
-                                subject_category=blv.Gene.value,
-                                object_category=blv.Gene.value)
+                                subject_category=blv.terms.Gene,
+                                object_category=blv.terms.Gene)
                         elif re.fullmatch(graph.curie_regexp, syn) is not None:
                             LOG.warning(
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
                             model.addSynonym(gene_id, syn,
-                                             class_category=blv.Gene.value,
-                                             synonym_type_category=blv.Gene.value)
+                                             class_category=blv.terms.Gene,
+                                             synonym_type_category=blv.terms.Gene)
                         else:
                             model.addSynonym(gene_id, syn,
-                                             class_category=blv.Gene.value)
+                                             class_category=blv.terms.Gene)
 
                 for txid in taxon.split('|'):
                     tax_curie = re.sub(r'taxon:', 'NCBITaxon:', txid)
-                    geno.addTaxon(tax_curie, gene_id, genopart_category=blv.Gene.value)
+                    geno.addTaxon(tax_curie, gene_id, genopart_category=blv.terms.Gene)
 
                 assoc = Assoc(graph, self.name,
-                              subject_category=blv.Gene.value,
-                              object_category=blv.OntologyClass.value)
+                              subject_category=blv.terms.Gene,
+                              object_category=blv.terms.OntologyClass)
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
 

@@ -35,11 +35,11 @@ class Provenance:
         self.graph.addTriple(
             object_is_literal=True, subject_id=prov_type,
             predicate_id=self.globaltt['created_on'], obj=date,
-            subject_category=blv.EvidenceType.value)
+            subject_category=blv.terms.EvidenceType)
         return
 
     def add_study_parts(self, study, study_parts,
-                        study_category=blv.EvidenceType.value,
+                        study_category=blv.terms.EvidenceType,
                         study_parts_category=None):
         for part in study_parts:
             self.graph.addTriple(
@@ -52,15 +52,15 @@ class Provenance:
         for measurement in measurements:
             self.graph.addTriple(
                 measurement, self.globaltt['output_of'], study,
-                subject_category=blv.EvidenceType.value,
-                object_category=blv.EvidenceType.value)
+                subject_category=blv.terms.EvidenceType,
+                object_category=blv.terms.EvidenceType)
         return
 
     def add_study_measure(self, study, measure):
         self.graph.addTriple(
             study, self.globaltt['measures_parameter'], measure,
-            subject_category=blv.EvidenceType.value,
-            object_category=blv.EvidenceType.value)
+            subject_category=blv.terms.EvidenceType,
+            object_category=blv.terms.EvidenceType)
         return
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
@@ -73,10 +73,10 @@ class Provenance:
         :return: None
         """
         self.model.addIndividualToGraph(assertion, None, self.globaltt['assertion'],
-                                        ind_category=blv.InformationContentEntity.value)
+                                        ind_category=blv.terms.InformationContentEntity)
 
         self.add_agent_to_graph(agent, agent_label, self.globaltt['organization'],
-                                agent_category=blv.Provider.value)
+                                agent_category=blv.terms.Provider)
 
         self.graph.addTriple(
             assertion, self.globaltt['created_by'], agent)
@@ -105,6 +105,6 @@ class Provenance:
             assay_type = self.globaltt['assay']
         self.model.addIndividualToGraph(
             assay_id, assay_label, assay_type, assay_description,
-            ind_category=blv.EvidenceType.value)
+            ind_category=blv.terms.EvidenceType)
 
         return

@@ -294,7 +294,7 @@ class FlyBase(PostgreSQLSource):
                         phenotype_curie = prefix + ':' + reference + 'PHENOTYPE'
                         phenotype_label = term_labels[0] + ' phenotype'
                         model.addClassToGraph(phenotype_curie, phenotype_label,
-                                              blv.PhenotypicFeature.value)
+                                              blv.terms.PhenotypicFeature)
                     else:
                         phenotype_curie = 'OBO:' + prefix + reference + 'PHENOTYPE'
                 else:
@@ -345,8 +345,8 @@ class FlyBase(PostgreSQLSource):
 
                     self.graph.addTriple(
                         assoc_id, self.globaltt['has_qualifier'], term_curie,
-                        subject_category=blv.InformationContentEntity.value,
-                        object_category=blv.InformationContentEntity.value)
+                        subject_category=blv.terms.InformationContentEntity,
+                        object_category=blv.terms.InformationContentEntity)
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -524,8 +524,8 @@ class FlyBase(PostgreSQLSource):
                 xref_curie = xref_prefix + ':' + xref_id
 
                 model.addEquivalentClass(gene_curie, xref_curie,
-                                         subject_category=blv.Gene.value,
-                                         object_category=blv.Gene.value)
+                                         subject_category=blv.terms.Gene,
+                                         object_category=blv.terms.Gene)
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -577,7 +577,7 @@ class FlyBase(PostgreSQLSource):
                         if species_map[allele_prefix[0]][0] == 'drosophilid':
                             geno.addAllele(allele_curie, allele_label)
                             geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie,
-                                          genopart_category=blv.SequenceVariant.value)
+                                          genopart_category=blv.terms.SequenceVariant)
                         else:
                             # If it's a foreign transgenic allele, skip
                             continue
@@ -589,7 +589,7 @@ class FlyBase(PostgreSQLSource):
                     geno.addAllele(allele_curie, allele_label)
                     geno.addTaxon(self.globaltt['Drosophila melanogaster'],
                                   allele_curie,
-                                  genopart_category=blv.SequenceVariant.value)
+                                  genopart_category=blv.terms.SequenceVariant)
                 else:
                     raise ValueError("Did not correctly parse allele label {}"
                                      .format(allele_label))
@@ -599,7 +599,7 @@ class FlyBase(PostgreSQLSource):
                 if len(gene_prefix) == 1:
                     try:
                         geno.addTaxon(species_map[gene_prefix[0]][1], gene_curie,
-                                      genopart_category=blv.Gene.value)
+                                      genopart_category=blv.terms.Gene)
 
                         if species_map[gene_prefix[0]][0] == 'drosophilid':
                             geno.addGene(gene_curie, gene_label)
@@ -615,7 +615,7 @@ class FlyBase(PostgreSQLSource):
                     geno.addGene(gene_curie, gene_label)
                     geno.addTaxon(self.globaltt['Drosophila melanogaster'],
                                   allele_curie,
-                                  genopart_category=blv.SequenceVariant.value)
+                                  genopart_category=blv.terms.SequenceVariant)
                 else:
                     raise ValueError("Did not correct parse gene label {}"
                                      .format(gene_label))
@@ -710,7 +710,7 @@ class FlyBase(PostgreSQLSource):
                     continue
 
                 assoc = G2PAssoc(graph, self.name, allele_curie, doid_id, relation,
-                                 phenotype_category=blv.Disease.value)
+                                 phenotype_category=blv.terms.Disease)
                 if flybase_ref != '':
                     ref_curie = None
                     try:

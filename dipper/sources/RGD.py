@@ -89,8 +89,8 @@ class RGD(Source):
 
         # instantiate the association
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation,
-                          subject_category=blv.Gene.value,
-                          object_category=blv.PhenotypicFeature.value)
+                          subject_category=blv.terms.Gene,
+                          object_category=blv.terms.PhenotypicFeature)
 
         # add the references
         references = record['evidence']['has_supporting_reference']
@@ -113,8 +113,8 @@ class RGD(Source):
             # there could be non-equivalent references in this list
             for ref in references[1:]:
                 model.addSameIndividual(sub=references[0], obj=ref,
-                                        subject_category=blv.Publication.value,
-                                        object_category=blv.Publication.value)
+                                        subject_category=blv.terms.Publication,
+                                        object_category=blv.terms.Publication)
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])

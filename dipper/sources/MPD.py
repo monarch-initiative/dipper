@@ -192,12 +192,12 @@ class MPD(Source):
                 strain_id = 'MPD-strain:' + str(mpd_strainid)
                 model.addIndividualToGraph(strain_id, strain_name, tax_id,
                                            ind_category=
-                                           blv.PopulationOfIndividualOrganisms.value,
-                                           ind_type_category=blv.OrganismTaxon.value)
+                                           blv.terms.PopulationOfIndividualOrganisms,
+                                           ind_type_category=blv.terms.OrganismTaxon)
                 if mpdshortname.strip() != '':
                     model.addSynonym(strain_id, mpdshortname.strip(),
                                      class_category=
-                                     blv.PopulationOfIndividualOrganisms.value)
+                                     blv.terms.PopulationOfIndividualOrganisms)
                 self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
                 if stocknum != '':
@@ -224,13 +224,13 @@ class MPD(Source):
                         if url != '':
                             model.addXref(strain_id, url, True,
                                           class_category=
-                                          blv.PopulationOfIndividualOrganisms.value)
+                                          blv.terms.PopulationOfIndividualOrganisms)
                         if vendor != '':
                             model.addXref(
                                 strain_id, ':'.join((vendor, stocknum)),
                                 True,
                                 class_category=
-                                blv.PopulationOfIndividualOrganisms.value)
+                                blv.terms.PopulationOfIndividualOrganisms)
 
                 # add the panel information
                 if panel != '':
@@ -342,7 +342,7 @@ class MPD(Source):
         model = Model(graph)
         taxon_id = self.globaltt['Mus musculus']
         model.addClassToGraph(taxon_id, None,
-                              class_category=blv.OrganismTaxon.value)
+                              class_category=blv.terms.OrganismTaxon)
 
         scores_passing_threshold_count = 0
         scores_passing_threshold_with_ontologies_count = 0
@@ -462,7 +462,7 @@ class MPD(Source):
             sex_specific_genotype_id,
             self.globaltt['has_sex_agnostic_part'],
             genotype_id,
-            subject_category=blv.Genotype.value, object_category=blv.Genotype.value)
+            subject_category=blv.terms.Genotype, object_category=blv.Genotype.value)
 
         # #############    BUILD THE G2P ASSOC    #############
         # TODO add more provenance info when that model is completed

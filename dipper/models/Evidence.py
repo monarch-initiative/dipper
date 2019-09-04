@@ -43,11 +43,11 @@ class Evidence:
         self.graph.addTriple(
             self.association, self.globaltt['has_supporting_evidence_line'],
             evidence_line,
-            subject_category=blv.Association.value,
-            object_category=blv.EvidenceType.value)
+            subject_category=blv.terms.Association,
+            object_category=blv.terms.EvidenceType)
         if evidence_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, evidence_type,
-                                            ind_category=blv.EvidenceType.value)
+                                            ind_category=blv.terms.EvidenceType)
         return
 
     def add_evidence(self, evidence_line, evidence_type=None, label=None):
@@ -60,11 +60,11 @@ class Evidence:
         """
         self.graph.addTriple(
             self.association, self.globaltt['has_evidence_line'], evidence_line,
-            subject_category=blv.Association.value,
-            object_category=blv.EvidenceType.value)
+            subject_category=blv.terms.Association,
+            object_category=blv.terms.EvidenceType)
         if evidence_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, evidence_type,
-                                            ind_category=blv.EvidenceType.value)
+                                            ind_category=blv.terms.EvidenceType)
         return
 
     def add_data_individual(self, data_curie, label=None, ind_type=None,
@@ -106,13 +106,13 @@ class Evidence:
         for measurement in measurement_dict:
             self.graph.addTriple(
                 evidence_line, self.globaltt['has_evidence_item'], measurement,
-                subject_category=blv.EvidenceType.value,
-                object_category=blv.EvidenceType.value)
+                subject_category=blv.terms.EvidenceType,
+                object_category=blv.terms.EvidenceType)
 
             self.graph.addTriple(
                 measurement, self.globaltt['has_value'],  # 'has measurement value' ??
                 measurement_dict[measurement], True,
-                subject_category=blv.EvidenceType.value)
+                subject_category=blv.terms.EvidenceType)
         return
 
     def add_supporting_publication(
@@ -130,14 +130,14 @@ class Evidence:
         self.graph.addTriple(
             evidence_line, self.globaltt['evidence_has_supporting_reference'],
             publication,
-            subject_category=blv.EvidenceType.value,
-            object_category=blv.Publication.value)
+            subject_category=blv.terms.EvidenceType,
+            object_category=blv.terms.Publication)
         self.model.addIndividualToGraph(publication, label, pub_type,
-                                        ind_category=blv.Publication.value)
+                                        ind_category=blv.terms.Publication)
         return
 
     def add_source(self, evidence_line, source, label=None, src_type=None,
-                   source_category=blv.Provider.value):
+                   source_category=blv.terms.Provider):
         """
         Applies the triples:
         <evidence> <dc:source> <source>
@@ -152,7 +152,7 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(evidence_line, self.globaltt['source'], source,
-                             subject_category=blv.EvidenceType.value,
+                             subject_category=blv.terms.EvidenceType,
                              object_category=source_category)
         self.model.addIndividualToGraph(source, label, src_type,
                                         ind_category=source_category)

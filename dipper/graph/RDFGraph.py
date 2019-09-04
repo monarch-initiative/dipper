@@ -45,25 +45,26 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
-    def _make_category_triple(self, this_id,
-                              category=blv.NamedThing.value,
-                              predicate=blv.category.value):
+    def _make_category_triple(self, this_subject,
+                              category=blv.terms.NamedThing,
+                              predicate=blv.terms.category,
+                              bl_curie_prefix="biolink"):
         """
         add a triple to capture subject or object category (in CURIE form) that was
         passed to addTriple()
         """
         if category is None:
-            category = blv.NamedThing.value
+            category = blv.terms.NamedThing
         try:
             self.add((
-                self._getnode(this_id),
-                self._getnode(predicate),
-                self._getnode(category)))
+                self._getnode(this_subject),
+                self._getnode(":".join([bl_curie_prefix, predicate.name])),
+                self._getnode(":".join([bl_curie_prefix, category.name]))))
         except:
             LOG.warning(
                 "Problem adding triple in _makeCategoryTriple for " + \
                 "subj: %s pred: %s obj(category): %s",
-                this_id, predicate, category)
+                this_subject, predicate, category)
                 
     def _is_literal(self, thing):
         """

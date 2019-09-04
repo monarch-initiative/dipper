@@ -190,8 +190,8 @@ class BioGrid(Source):
                 assoc.add_evidence(evidence)
                 assoc.add_source(pub_id)
                 assoc.add_association_to_graph(
-                    subject_category=blv.Gene.value,
-                    object_category=blv.Gene.value)
+                    subject_category=blv.terms.Gene,
+                    object_category=blv.terms.Gene)
 
                 if not self.test_mode and (
                         limit is not None and line_counter > limit):
@@ -269,12 +269,12 @@ class BioGrid(Source):
                             and (prefix in geneidtypefilters):
                         mapped_id = ':'.join((prefix, id_num))
                         model.addEquivalentClass(biogrid_id, mapped_id,
-                                                 subject_category=blv.Gene.value,
-                                                 object_category=blv.Gene.value)
+                                                 subject_category=blv.terms.Gene,
+                                                 object_category=blv.terms.Gene)
                     # this symbol will only get attached to the biogrid class
                     elif id_type == 'OFFICIAL_SYMBOL':
                         model.addClassToGraph(biogrid_id, id_num,
-                                              class_category=blv.Gene.value)
+                                              class_category=blv.terms.Gene)
                     # elif (id_type == 'SYNONYM'):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)

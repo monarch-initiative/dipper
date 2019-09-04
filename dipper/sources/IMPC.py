@@ -181,7 +181,7 @@ class IMPC(Source):
         # Add the taxon as a class
         taxon_id = self.globaltt['Mus musculus']
         model.addClassToGraph(taxon_id, None,
-                              class_category=blv.OrganismTaxon.value)
+                              class_category=blv.terms.OrganismTaxon)
 
         # with open(raw, 'r', encoding="utf8") as csvfile:
         col = self.files['all']['columns']
@@ -323,7 +323,7 @@ class IMPC(Source):
                     print(colony_raw, stem_cell_class, "\nline:\t", reader.line_num)
                 model.addIndividualToGraph(colony_id, colony_raw, stem_cell_class,
                                            ind_category=
-                                           blv.PopulationOfIndividualOrganisms.value)
+                                           blv.terms.PopulationOfIndividualOrganisms)
 
                 # vslc of the colony has unknown zygosity
                 # note that we will define the allele
@@ -341,16 +341,16 @@ class IMPC(Source):
                 geno.addParts(
                     allele_accession_id, colony_genotype_id,
                     self.globaltt['has_variant_part'],
-                    part_category=blv.SequenceVariant.value,
-                    parent_category=blv.Genotype.value)
+                    part_category=blv.terms.SequenceVariant,
+                    parent_category=blv.terms.Genotype)
 
                 geno.addPartsToVSLC(
                     vslc_colony, allele_accession_id, None,
                     self.globaltt['indeterminate'], self.globaltt['has_variant_part'])
                 graph.addTriple(
                     colony_id, self.globaltt['has_genotype'], colony_genotype_id,
-                    subject_category=blv.PopulationOfIndividualOrganisms.value,
-                    object_category=blv.Genotype.value)
+                    subject_category=blv.terms.PopulationOfIndividualOrganisms,
+                    object_category=blv.terms.Genotype)
 
                 # ##########    BUILD THE ANNOTATED GENOTYPE    ##########
                 # now, we'll build the genotype of the individual that derives
@@ -362,9 +362,9 @@ class IMPC(Source):
                 genotype_id = self.make_id(
                     (colony_id + phenotyping_center + zygosity + strain_accession_id))
                 geno.addSequenceDerivesFrom(genotype_id, colony_id,
-                                            child_category=blv.Genotype.value,
+                                            child_category=blv.terms.Genotype,
                                             parent_category=
-                                            blv.PopulationOfIndividualOrganisms.value)
+                                            blv.terms.PopulationOfIndividualOrganisms)
 
                 # build the VSLC of the sex-agnostic genotype
                 # based on the zygosity
@@ -400,18 +400,18 @@ class IMPC(Source):
                 model.addIndividualToGraph(
                     vslc_id, vslc_name,
                     self.globaltt['variant single locus complement'],
-                    ind_category=blv.SequenceVariant.value)
+                    ind_category=blv.terms.SequenceVariant)
                 geno.addPartsToVSLC(
                     vslc_id, allele1_id, allele2_id, zygosity_id,
                     self.globaltt['has_variant_part'], allele2_rel)
 
                 # add vslc to genotype
                 geno.addVSLCtoParent(vslc_id, genotype_id,
-                                     parent_category=blv.Genotype.value)
+                                     parent_category=blv.terms.Genotype)
 
                 # note that the vslc is also the gvc
                 model.addType(vslc_id, self.globaltt['genomic_variation_complement'],
-                              subject_category=blv.SequenceVariant.value)
+                              subject_category=blv.terms.SequenceVariant)
 
                 # Add the genomic background
                 # create the genomic background id and name
@@ -443,7 +443,7 @@ class IMPC(Source):
                         self.globaltt['genomic_background'])
                     geno.addSequenceDerivesFrom(
                         pheno_center_strain_id, genomic_background_id,
-                        parent_category=blv.PopulationOfIndividualOrganisms.value)
+                        parent_category=blv.terms.PopulationOfIndividualOrganisms)
 
                     # Making genotype labels from the various parts,
                     # can change later if desired.
@@ -457,7 +457,7 @@ class IMPC(Source):
                 # this is redundant, but i'll keep in in for now
                 geno.addSequenceDerivesFrom(genotype_id, colony_id,
                                             parent_category=
-                                            blv.PopulationOfIndividualOrganisms.value)
+                                            blv.terms.PopulationOfIndividualOrganisms)
                 geno.addGenotype(genotype_id, genotype_name)
 
                 # Make the sex-qualified genotype,
@@ -481,8 +481,8 @@ class IMPC(Source):
                 geno.addParts(
                     genotype_id, sex_qualified_genotype_id,
                     self.globaltt['has_variant_part'],
-                    part_category=blv.Genotype.value,
-                    parent_category=blv.Genotype.value)
+                    part_category=blv.terms.Genotype,
+                    parent_category=blv.terms.Genotype)
 
                 if genomic_background_id is not None and genomic_background_id != '':
                     # Add the taxon to the genomic_background_id
@@ -525,7 +525,7 @@ class IMPC(Source):
                 assoc_id = assoc.get_association_id()
 
                 model._addSexSpecificity(assoc_id, self.resolve(sex),
-                                         subject_category=blv.Association.value)
+                                         subject_category=blv.terms.Association)
 
                 # add a free-text description
                 try:
@@ -555,7 +555,7 @@ class IMPC(Source):
                 self._add_assertion_provenance(assoc_id, evidence_line_bnode)
 
                 model.addDescription(evidence_line_bnode, description,
-                                     subject_category=blv.EvidenceType.value)
+                                     subject_category=blv.terms.EvidenceType)
 
                 # resource_id = resource_name
                 # assoc.addSource(graph, assoc_id, resource_id)
@@ -580,7 +580,7 @@ class IMPC(Source):
             "assertion{0}{1}".format(assoc_id, self.localtt['IMPC']), '_')
 
         model.addIndividualToGraph(assertion_bnode, None, self.globaltt['assertion'],
-                                   ind_type_category=blv.InformationContentEntity.value)
+                                   ind_type_category=blv.terms.InformationContentEntity)
 
         provenance_model.add_assertion(
             assertion_bnode, self.localtt['IMPC'],
@@ -588,15 +588,15 @@ class IMPC(Source):
 
         self.graph.addTriple(
             assoc_id, self.globaltt['proposition_asserted_in'], assertion_bnode,
-            subject_category=blv.Association.value,
-            object_category=blv.InformationContentEntity.value)
+            subject_category=blv.terms.Association,
+            object_category=blv.terms.InformationContentEntity)
 
         self.graph.addTriple(
             assertion_bnode,
             self.resolve('is_assertion_supported_by_evidence'),  # "SEPIO:0000111"
             evidence_line_bnode,
-            subject_category=blv.InformationContentEntity.value,
-            object_category=blv.EvidenceType.value)
+            subject_category=blv.terms.InformationContentEntity,
+            object_category=blv.terms.EvidenceType)
 
     def _add_study_provenance(
             self,
@@ -639,19 +639,19 @@ class IMPC(Source):
 
         model.addIndividualToGraph(
             study_bnode, None, self.globaltt['study'],
-            ind_category=blv.InformationContentEntity.value)
+            ind_category=blv.terms.InformationContentEntity)
 
         # List of nodes linked to study with has_part property
         study_parts = []
 
         # Add study parts
         model.addIndividualToGraph(self.resolve(procedure_stable_id), procedure_name,
-                                   ind_category=blv.EvidenceType.value)
+                                   ind_category=blv.terms.EvidenceType)
         study_parts.append(self.resolve(procedure_stable_id))
 
         study_parts.append(self.resolve(statistical_method))
         provenance_model.add_study_parts(study_bnode, study_parts,
-                                         study_parts_category=blv.EvidenceType.value)
+                                         study_parts_category=blv.terms.EvidenceType)
 
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
@@ -659,7 +659,7 @@ class IMPC(Source):
         logging.info("Adding Provenance")
         model.addIndividualToGraph(
             self.resolve(parameter_stable_id), parameter_label,
-            ind_category=blv.InformationContentEntity.value)
+            ind_category=blv.terms.InformationContentEntity)
         provenance_model.add_study_measure(
             study_bnode, self.resolve(parameter_stable_id))
 
@@ -667,38 +667,38 @@ class IMPC(Source):
         colony_bnode = self.make_id("{0}".format(colony), '_')
         model.addIndividualToGraph(colony_bnode, colony,
                                    ind_category=
-                                   blv.PopulationOfIndividualOrganisms.value)
+                                   blv.terms.PopulationOfIndividualOrganisms)
 
         # Add study agent
         model.addIndividualToGraph(
             self.resolve(phenotyping_center), phenotyping_center,
             self.globaltt['organization'],
-            ind_category=blv.Provider.value)
+            ind_category=blv.terms.Provider)
 
         # self.graph
         model.addTriple(
             study_bnode, self.globaltt['has_agent'], self.resolve(phenotyping_center),
-            object_category=blv.Provider.value)
+            object_category=blv.terms.Provider)
 
         # add pipeline and project
         model.addIndividualToGraph(
             self.resolve(pipeline_stable_id), pipeline_name,
-            ind_category=blv.EvidenceType.value)
+            ind_category=blv.terms.EvidenceType)
 
         # self.graph
         model.addTriple(
             study_bnode, self.globaltt['part_of'], self.resolve(pipeline_stable_id),
-            subject_category=blv.InformationContentEntity.value)
+            subject_category=blv.terms.InformationContentEntity)
 
         model.addIndividualToGraph(
             self.resolve(project_fullname), project_fullname, self.globaltt['project'],
-            ind_category=blv.Provider.value)
+            ind_category=blv.terms.Provider)
 
         # self.graph
         model.addTriple(
             study_bnode, self.globaltt['part_of'], self.resolve(project_fullname),
-            subject_category=blv.InformationContentEntity.value,
-            object_category=blv.Provider.value)
+            subject_category=blv.terms.InformationContentEntity,
+            object_category=blv.terms.Provider)
 
         return study_bnode
 
@@ -732,7 +732,7 @@ class IMPC(Source):
             "{0}{1}".format(assoc_id, study_bnode), '_')
         evidence_model.add_supporting_evidence(evidence_line_bnode)
         model.addIndividualToGraph(evidence_line_bnode, None, eco_id,
-                                   ind_type_category=blv.EvidenceType.value)
+                                   ind_type_category=blv.terms.EvidenceType)
 
         # Add supporting measurements to line of evidence
         measurements = {}
@@ -740,7 +740,7 @@ class IMPC(Source):
             p_value_bnode = self.make_id(
                 "{0}{1}{2}".format(evidence_line_bnode, 'p_value', p_value), '_')
             model.addIndividualToGraph(p_value_bnode, None, self.globaltt['p-value'],
-                                       ind_type_category=blv.EvidenceType.value)
+                                       ind_type_category=blv.terms.EvidenceType)
             try:
                 measurements[p_value_bnode] = float(p_value)
             except ValueError:
@@ -752,7 +752,7 @@ class IMPC(Source):
                     evidence_line_bnode, 'percentage_change', percentage_change), '_')
             model.addIndividualToGraph(
                 fold_change_bnode, None, self.resolve('percentage_change'),
-                ind_category=blv.EvidenceType.value)
+                ind_category=blv.terms.EvidenceType)
             measurements[fold_change_bnode] = percentage_change
         if effect_size is not None or effect_size != "":
             fold_change_bnode = self.make_id(
@@ -760,7 +760,7 @@ class IMPC(Source):
                     evidence_line_bnode, 'effect_size', effect_size), '_')
             model.addIndividualToGraph(
                 fold_change_bnode, None, self.globaltt['effect size estimate'],
-                ind_category=blv.EvidenceType.value)
+                ind_category=blv.terms.EvidenceType)
             measurements[fold_change_bnode] = effect_size
 
         evidence_model.add_supporting_data(evidence_line_bnode, measurements)
@@ -770,8 +770,8 @@ class IMPC(Source):
         self.graph.addTriple(
             evidence_line_bnode, self.globaltt['has_evidence_item_output_from'],
             study_bnode,
-            subject_category=blv.EvidenceType.value,
-            object_category=blv.InformationContentEntity.value)
+            subject_category=blv.terms.EvidenceType,
+            object_category=blv.terms.InformationContentEntity)
 
         return evidence_line_bnode
 

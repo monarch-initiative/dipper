@@ -35,13 +35,13 @@ class Environment():
 
         self.model.addIndividualToGraph(
             env_id, env_label, env_type, env_description,
-            ind_category=blv.Environment.value)
+            ind_category=blv.terms.Environment)
 
         return
 
     def addEnvironmentalCondition(
             self, cond_id, cond_label, cond_type=None, cond_description=None,
-            condition_category=blv.Environment.value):
+            condition_category=blv.terms.Environment):
         if cond_type is None:
             cond_type = self.globaltt['environmental_condition']
 
@@ -50,7 +50,7 @@ class Environment():
             ind_category=condition_category)
 
     def addComponentToEnvironment(self, env_id, component_id,
-                                  environment_category=blv.Environment.value,
+                                  environment_category=blv.terms.Environment,
                                   component_category=None):
 
         self.graph.addTriple(env_id, self.globaltt['has_part'], component_id,

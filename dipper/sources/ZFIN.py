@@ -459,8 +459,8 @@ class ZFIN(Source):
                     extrinsic_id, extrinsic_label, self.globaltt['extrinsic_genotype'])
                 geno.addParts(
                     extrinsic_id, fish_id, self.globaltt['has_variant_part'],
-                    part_category=blv.SequenceVariant.value,
-                    parent_category=blv.IndividualOrganism.value)
+                    part_category=blv.terms.SequenceVariant,
+                    parent_category=blv.terms.IndividualOrganism)
 
             # check if the intrinsic is in the wildtype genotypes,
             # then it's a genomic background
@@ -475,8 +475,8 @@ class ZFIN(Source):
 
             # add the intrinsic to the fish
             geno.addParts(intrinsic_genotype_id, fish_id, intrinsic_rel,
-                          part_category=blv.Genotype.value,
-                          parent_category=blv.IndividualOrganism.value)
+                          part_category=blv.terms.Genotype,
+                          parent_category=blv.terms.IndividualOrganism)
 
             # build the fish label
             if extrinsic_id is None:
@@ -489,12 +489,12 @@ class ZFIN(Source):
 
             geno.addGenotype(fish_id, intrinsic_genotype_label, fish_type)
             geno.addTaxon(taxon_id, fish_id,
-                          genopart_category=blv.IndividualOrganism.value)
+                          genopart_category=blv.terms.IndividualOrganism)
 
             # since we re-create a label,
             # add the zfin fish label as the synonym
             model.addSynonym(fish_id, fish['fish_label'],
-                             class_category=blv.IndividualOrganism.value)
+                             class_category=blv.terms.IndividualOrganism)
             self.id_label_map[fish_id] = fish_label
 
             if not self.test_mode and limit is not None and line_counter > limit:
@@ -514,7 +514,7 @@ class ZFIN(Source):
                     cid = 'ZFIN:' + c
                     geno.addSequenceDerivesFrom(allele_id, cid,
                                                 child_category=
-                                                blv.SequenceVariant.value)
+                                                blv.terms.SequenceVariant)
                     # LOG.info("constructs for %s: %s", allele_id,
                     #             str(constructs))
                     # migrate the transgenic features to be alternate parts
@@ -530,8 +530,8 @@ class ZFIN(Source):
                                 else:
                                     r = self.globaltt['has_variant_part']
                                 geno.addParts(p, allele_id, r,
-                                              part_category=blv.Gene.value,
-                                              parent_category=blv.SequenceVariant.value)
+                                              part_category=blv.terms.Gene,
+                                              parent_category=blv.terms.SequenceVariant)
 
         return
 
@@ -604,9 +604,9 @@ class ZFIN(Source):
 
                 # add the given name from ZFIN and uniquename as synonyms
                 model.addSynonym(genotype_id, genotype_name,
-                                 class_category=blv.Genotype.value)
+                                 class_category=blv.terms.Genotype)
                 model.addSynonym(genotype_id, genotype_unique_name,
-                                 class_category=blv.Genotype.value)
+                                 class_category=blv.terms.Genotype)
 
                 # store the alleles of the genotype,
                 # in order to use when processing fish
@@ -633,7 +633,7 @@ class ZFIN(Source):
                 # alleles in zfin are really sequence alterations in our system
                 geno.addSequenceAlteration(allele_id, allele_name, allele_type_id)
                 model.addSynonym(allele_id, allele_ab,
-                                 class_category=blv.SequenceVariant.value)
+                                 class_category=blv.terms.SequenceVariant)
 
                 # here, we assemble the items into a genotype hash
                 # we need to do this because each row only holds one allele
@@ -653,8 +653,8 @@ class ZFIN(Source):
                         construct_id = 'ZFIN:' + construct_num.strip()
                         geno.addSequenceDerivesFrom(allele_id, construct_id,
                                                     child_category=
-                                                    blv.SequenceVariant.value,
-                                                    parent_category=blv.Gene.value)
+                                                    blv.terms.SequenceVariant,
+                                                    parent_category=blv.terms.Gene)
                         self.id_label_map[construct_id] = construct_name
 
                     # allele to gene
@@ -802,7 +802,7 @@ class ZFIN(Source):
                     geno.addAlleleOfGene(vloci1, gene_id)
                     model.addIndividualToGraph(
                         vloci1, vloci1_label, self.globaltt['variant_locus'],
-                        ind_category=blv.GenomicSequenceLocalization.value)
+                        ind_category=blv.terms.GenomicSequenceLocalization)
                     if allele2_id is not None and allele2_id not in ['WT', '0', 'UN']:
                         vloci2 = self._make_variant_locus_id(
                             gene_id, allele2_id)
@@ -812,7 +812,7 @@ class ZFIN(Source):
                             allele2_id, vloci2)
                         model.addIndividualToGraph(
                             vloci2, vloci2_label, self.globaltt['variant_locus'],
-                            ind_category=blv.GenomicSequenceLocalization.value)
+                            ind_category=blv.terms.GenomicSequenceLocalization)
                         geno.addAlleleOfGene(vloci2, gene_id)
                 else:
                     vloci1 = allele1_id
@@ -843,7 +843,7 @@ class ZFIN(Source):
                 model.addIndividualToGraph(
                     vslc_id, vslc_label,
                     self.globaltt['variant single locus complement'],
-                    ind_category=blv.SequenceVariant.value)
+                    ind_category=blv.terms.SequenceVariant)
                 geno.addPartsToVSLC(
                     vslc_id, vloci1, vloci2, zygosity_id,
                     self.globaltt['has_variant_part'],
@@ -879,7 +879,7 @@ class ZFIN(Source):
                     # add the vslc to the gvc
                     geno.addVSLCtoParent(vslc_id, gvc_id,
                                          parent_category=
-                                         blv.InformationContentEntity.value)
+                                         blv.terms.InformationContentEntity)
 
                     # build the gvc label
                     vslc_label = self.id_label_map[vslc_id]
@@ -897,7 +897,7 @@ class ZFIN(Source):
                 # add the gvc
                 model.addIndividualToGraph(
                     gvc_id, gvc_label, self.globaltt['genomic_variation_complement'],
-                    ind_category=blv.InformationContentEntity.value)
+                    ind_category=blv.terms.InformationContentEntity)
             elif len(gvc_parts) == 1:
                 # assign the vslc to be also a gvc
                 vslc_id = gvc_parts[0]
@@ -933,7 +933,7 @@ class ZFIN(Source):
                 geno.addGenomicBackgroundToGenotype(background_id, gt)
 
             geno.addTaxon(taxon_id, background_id,
-                          genopart_category=blv.PopulationOfIndividualOrganisms.value)
+                          genopart_category=blv.terms.PopulationOfIndividualOrganisms)
 
             # add genotype_name + background as label for this gt
             genotype_name_background = genotype_name + ' (' + background_label + ')'
@@ -942,14 +942,14 @@ class ZFIN(Source):
             # add monarch_genotype_name as synonym
             monarch_genotype_name = gvc_label + ' [' + background_label + ']'
             model.addSynonym(gt, monarch_genotype_name,
-                             class_category=blv.Genotype.value)
+                             class_category=blv.terms.Genotype)
 
             self.id_label_map[gt] = monarch_genotype_name
 
             # Add the GVC to the genotype
             geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'],
-                          part_category=blv.InformationContentEntity.value,
-                          parent_category=blv.Genotype.value)
+                          part_category=blv.terms.InformationContentEntity,
+                          parent_category=blv.terms.Genotype)
 
             # end of gvc loop
 
@@ -991,7 +991,7 @@ class ZFIN(Source):
         # Add the taxon as a class
         taxon_id = self.globaltt['Danio rerio']
         model.addClassToGraph(taxon_id, None,
-                              class_category=blv.OrganismTaxon.value)
+                              class_category=blv.terms.OrganismTaxon)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1017,7 +1017,7 @@ class ZFIN(Source):
                 # hang the taxon from the background
                 geno.addTaxon(taxon_id, background_id,
                               genopart_category=
-                              blv.PopulationOfIndividualOrganisms.value)
+                              blv.terms.PopulationOfIndividualOrganisms)
 
                 # add the intrinsic genotype to the graph
                 # we DO NOT ADD THE LABEL here
@@ -1079,8 +1079,8 @@ class ZFIN(Source):
                     genotype_id, fish_abbreviation, background_type, fish_name)
 
                 graph.addTriple(fish_id, self.globaltt['has_genotype'], genotype_id,
-                                subject_category=blv.IndividualOrganism.value,
-                                object_category=blv.Genotype.value)
+                                subject_category=blv.terms.IndividualOrganism,
+                                object_category=blv.terms.Genotype)
 
                 # Build the hash for the wild type genotypes.
                 self.id_label_map[genotype_id] = fish_abbreviation
@@ -1125,10 +1125,10 @@ class ZFIN(Source):
                 # Add the stage as a class, and it's obo equivalent
                 stage_id = 'ZFIN:' + stage_id.strip()
                 model.addClassToGraph(stage_id, stage_name,
-                                      class_category=blv.LifeStage.value)
+                                      class_category=blv.terms.LifeStage)
                 model.addEquivalentClass(stage_id, stage_obo_id,
-                                         subject_category=blv.LifeStage.value,
-                                         object_category=blv.LifeStage.value)
+                                         subject_category=blv.terms.LifeStage,
+                                         object_category=blv.terms.LifeStage)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1218,7 +1218,7 @@ class ZFIN(Source):
 
                     # add association
                     assoc = G2PAssoc(graph, self.name, fish_id, phenotype_id,
-                                     entity_category=blv.IndividualOrganism.value)
+                                     entity_category=blv.terms.IndividualOrganism)
 
                     # only add the environment if there's components to it
                     if env_id in self.environment_hash \
@@ -1233,7 +1233,7 @@ class ZFIN(Source):
                             or len(self.environment_hash.get(env_id)) > 0:
                         model.addComment(
                             assoc_id, 'Legacy environment id ' + env_id,
-                            subject_category=blv.Association.value)
+                            subject_category=blv.terms.Association)
                 else:
                     # TODO add normal phenotypes as associations #134 when
                     # https://github.com/sba1/bio-ontology-zp/issues/9
@@ -1249,8 +1249,8 @@ class ZFIN(Source):
                     c = ' '.join(("Normal phenotype observed:", c, "(" + pub_id + ")"))
                     if pub_id != '':
                         graph.addTriple(pub_id, self.globaltt['mentions'], fish_id,
-                                        subject_category=blv.Publication.value,
-                                        object_category=blv.IndividualOrganism.value)
+                                        subject_category=blv.terms.Publication,
+                                        object_category=blv.terms.IndividualOrganism)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1307,8 +1307,8 @@ class ZFIN(Source):
                 else:
                     geno.addGene(gene_id, gene_symbol)
                     model.addEquivalentClass(gene_id, ncbi_gene_id,
-                                             subject_category=blv.Gene.value,
-                                             object_category=blv.Gene.value)
+                                             subject_category=blv.terms.Gene,
+                                             object_category=blv.terms.Gene)
 
         LOG.info("Done with genes")
         return
@@ -1357,11 +1357,11 @@ class ZFIN(Source):
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
                 model.addIndividualToGraph(
                     genomic_feature_id, genomic_feature_name, feature_so_id,
-                    ind_category=blv.GenomicSequenceLocalization.value)
+                    ind_category=blv.terms.GenomicSequenceLocalization)
 
                 model.addSynonym(
                     genomic_feature_id, genomic_feature_abbreviation,
-                    class_category=blv.GenomicSequenceLocalization.value)
+                    class_category=blv.terms.GenomicSequenceLocalization)
                 if construct_id is not None and construct_id != '':
                     construct_id = 'ZFIN:' + construct_id.strip()
                     geno.addConstruct(
@@ -1489,7 +1489,7 @@ class ZFIN(Source):
                         genomic_feature_id, vl_id)
                     model.addIndividualToGraph(
                         vl_id, vl_label, self.globaltt['variant_locus'],
-                        ind_category=blv.GenomicSequenceLocalization.value)
+                        ind_category=blv.terms.GenomicSequenceLocalization)
                     geno.addAlleleOfGene(vl_id, gene_id)
 
                     # note that deficiencies or translocations
@@ -1593,10 +1593,10 @@ class ZFIN(Source):
                         model.addIndividualToGraph(
                             transgene_part_id, transgene_part_label,
                             self.globaltt['coding_transgene_feature'],
-                            ind_category=blv.Gene.value)
+                            ind_category=blv.terms.Gene)
                         geno.addSequenceDerivesFrom(transgene_part_id, gene_id,
-                                                    child_category=blv.Gene.value,
-                                                    parent_category=blv.Gene.value)
+                                                    child_category=blv.terms.Gene,
+                                                    parent_category=blv.terms.Gene)
 
                         # save the transgenic parts in a hashmap for later
                         if marker_id not in self.transgenic_parts:
@@ -1619,10 +1619,10 @@ class ZFIN(Source):
                         model.addIndividualToGraph(
                             transgene_part_id, transgene_part_label,
                             self.globaltt['regulatory_transgene_feature'],
-                            ind_category=blv.Gene.value)
+                            ind_category=blv.terms.Gene)
                         geno.addSequenceDerivesFrom(transgene_part_id, gene_id,
-                                                    child_category=blv.Gene.value,
-                                                    parent_category=blv.Gene.value)
+                                                    child_category=blv.terms.Gene,
+                                                    parent_category=blv.terms.Gene)
 
                         # save the transgenic parts in a hashmap for later
                         if marker_id not in self.transgenic_parts:
@@ -1634,11 +1634,11 @@ class ZFIN(Source):
                         # instead of this special relationship?
                         model.addIndividualToGraph(
                             marker_id, marker_symbol, marker_so_id,
-                            ind_category=blv.Gene.value)
+                            ind_category=blv.terms.Gene)
                         graph.addTriple(
                             marker_id, self.globaltt['targets_gene'], gene_id,
-                            subject_category=blv.Gene.value,
-                            object_category=blv.Gene.value)
+                            subject_category=blv.terms.Gene,
+                            object_category=blv.terms.Gene)
                     else:
                         pass
 
@@ -1730,9 +1730,9 @@ class ZFIN(Source):
                     rpm.addRefToGraph()
 
                     model.addSameIndividual(pub_id, pubmed_id,
-                                            subject_category=blv.Publication.value,
-                                            object_category=blv.Publication.value)
-                    model.makeLeader(pubmed_id, node_category=blv.Publication.value)
+                                            subject_category=blv.terms.Publication,
+                                            object_category=blv.terms.Publication)
+                    model.makeLeader(pubmed_id, node_category=blv.terms.Publication)
 
                 ref.addRefToGraph()
 
@@ -1784,8 +1784,8 @@ class ZFIN(Source):
                     rpm = Reference(graph, pubmed_id, rtype)
                     rpm.addRefToGraph()
                     model.addSameIndividual(pub_id, pubmed_id,
-                                            subject_category=blv.Publication.value,
-                                            object_category=blv.Publication.value)
+                                            subject_category=blv.terms.Publication,
+                                            object_category=blv.terms.Publication)
                 ref = Reference(graph, pub_id, rtype)
                 ref.addRefToGraph()
                 if not self.test_mode and limit is not None and line_counter > limit:
@@ -1888,13 +1888,13 @@ class ZFIN(Source):
                         ref = Reference(graph, pub_id)
                         ref.addRefToGraph()
                         graph.addTriple(pub_id, self.globaltt['mentions'], reagent_id,
-                                        subject_category=blv.Publication.value,
-                                        object_category=blv.ChemicalSubstance.value)
+                                        subject_category=blv.terms.Publication,
+                                        object_category=blv.terms.ChemicalSubstance)
 
                 # Add comment?
                 if note != '':
                     model.addComment(reagent_id, note,
-                                     subject_category=blv.ChemicalSubstance.value)
+                                     subject_category=blv.terms.ChemicalSubstance)
 
                 # use the variant hash for reagents to list the affected genes
                 if reagent_id not in self.variant_loci_genes:
@@ -2031,9 +2031,9 @@ class ZFIN(Source):
                 environment_labels += [env_comp_label]
                 envo.addComponentToEnvironment(env_id, env_comp_id,
                                                environment_category=
-                                               blv.Environment.value,
+                                               blv.terms.Environment,
                                                component_category=
-                                               blv.Environment.value)
+                                               blv.terms.Environment)
             environment_labels.sort()
             env_label = 'Environment that includes: ' + '; '.join(environment_labels)
             envo.addEnvironment(env_id, env_label)
@@ -2089,20 +2089,20 @@ class ZFIN(Source):
                 if re.match(r'ZDB-GENE.*', zfin_num):
                     # assume type and label get added elsewhere
                     model.addClassToGraph(zfin_id, None,
-                                          class_category=blv.Gene.value)
+                                          class_category=blv.terms.Gene)
                     geno.addTaxon(taxon_id, zfin_id,
-                                  genopart_category=blv.Gene.value)
+                                  genopart_category=blv.terms.Gene)
                 elif re.match(r'ZDB-ALT.*', zfin_num):
                     # assume type and label get added elsewhere
                     model.addIndividualToGraph(zfin_id, None,
-                                               ind_category=blv.Gene.value)
+                                               ind_category=blv.terms.Gene)
                     geno.addTaxon(taxon_id, zfin_id,
-                                  genopart_category=blv.Gene.value)
+                                  genopart_category=blv.terms.Gene)
                 else:
                     continue
                     # skip any of the others
                 # ZFIN don't catalog non-fish things, thankfully
-                model.makeLeader(zfin_id, node_category=blv.Gene.value)
+                model.makeLeader(zfin_id, node_category=blv.terms.Gene)
                 # make the chromosome class
                 chr_id = makeChromID(chromosome, taxon_id, 'CHR')
                 # chr_label = makeChromLabel(chromosome, taxon_label)
@@ -2123,7 +2123,7 @@ class ZFIN(Source):
                         chromosome, panel_id, panel_label, chr_id)
                     # add the feature to the mapping-panel chromosome
                     feat = Feature(graph, zfin_id, None, None,
-                                   feature_category=blv.Gene.value)
+                                   feature_category=blv.terms.Gene)
                     feat.addSubsequenceOfFeature(chr_inst_id)
                     # TODO add the coordinates see:
                     # https://github.com/JervenBolleman/FALDO/issues/24
@@ -2182,10 +2182,10 @@ class ZFIN(Source):
                 # TODO: Abstract to one of the model utilities
                 model.addIndividualToGraph(
                     uniprot_id, None, self.globaltt['polypeptide'],
-                    ind_category=blv.Protein.value)
+                    ind_category=blv.terms.Protein)
                 graph.addTriple(
                     gene_id, self.globaltt['has gene product'], uniprot_id,
-                    subject_category=blv.Gene.value, object_category=blv.Protein.value)
+                    subject_category=blv.terms.Gene, object_category=blv.Protein.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -2303,7 +2303,7 @@ class ZFIN(Source):
                 chrom_id = makeChromID(chrom, self.globaltt['Danio rerio'], 'CHR')
                 # assume it gets added elsewhere
                 model.addClassToGraph(chrom_id, None,
-                                      class_category=blv.GenomicEntity.value)
+                                      class_category=blv.terms.GenomicEntity)
                 # FIXME - remove this hardcoding
                 build_label = 'danRer10'
                 build_id = 'UCSC:'+build_label
@@ -2311,7 +2311,7 @@ class ZFIN(Source):
                 geno.addChromosomeInstance(
                     chrom, build_id, build_label, chrom_id)
                 feat = Feature(graph, gene_id, None, None,
-                               feature_category=blv.Gene.value)
+                               feature_category=blv.terms.Gene)
                 feat.addFeatureStartLocation(start, chrom_in_build, strand)
                 feat.addFeatureEndLocation(end, chrom_in_build, strand)
                 feat.addFeatureToGraph(True, None, True)
@@ -2378,8 +2378,8 @@ class ZFIN(Source):
                     fish_id, fish_label, fish_taxon, 'zebrafish')
 
                 assoc = Assoc(graph, self.name,
-                              subject_category=blv.IndividualOrganism.value,
-                              object_category=blv.Disease.value)
+                              subject_category=blv.terms.IndividualOrganism,
+                              object_category=blv.terms.Disease)
                 assoc.set_subject(fish_id)
                 assoc.set_object(disease_id)
                 assoc.set_relationship(self.globaltt['is model of'])

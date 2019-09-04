@@ -99,7 +99,7 @@ class Orphanet(Source):
 
                 # assuming that these are in the ontology (...any particular one?)
                 model.addClassToGraph(disorder_id, disorder_label,
-                                      class_category=blv.Disease.value)
+                                      class_category=blv.terms.Disease)
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
                 LOG.info(
@@ -128,7 +128,7 @@ class Orphanet(Source):
                             gene_curie = pfx + ':' + gene_set[pfx]
                             gene_set.pop(pfx)
                             model.addClassToGraph(gene_curie, None,
-                                                  class_category=blv.Gene.value)
+                                                  class_category=blv.terms.Gene)
                             break
 
                     # TEC have reservations w.r.t aggerator links being gene classes
@@ -141,10 +141,10 @@ class Orphanet(Source):
 
                         if gene_curie != dbxref:
                             model.addClassToGraph(dbxref, None,
-                                                  class_category=blv.Gene.value)
+                                                  class_category=blv.terms.Gene)
                             model.addEquivalentClass(gene_curie, dbxref,
-                                                     subject_category=blv.Gene.value,
-                                                     object_category=blv.Gene.value)
+                                                     subject_category=blv.terms.Gene,
+                                                     object_category=blv.terms.Gene)
 
                     # TEC. would prefer this not happen here. let HGNC handle it
                     # except there are some w/o explicit external links ...
@@ -155,7 +155,7 @@ class Orphanet(Source):
                     if int(syn_list.get('count')) > 0:
                         for syn in syn_list.findall('./Synonym'):
                             model.addSynonym(gene_curie, syn.text,
-                                             class_category=blv.Gene.value)
+                                             class_category=blv.terms.Gene)
 
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
 
@@ -168,7 +168,7 @@ class Orphanet(Source):
                     
                     g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie,
                                          disorder_id, rel_id,
-                                         phenotype_category=blv.Disease.value)
+                                         phenotype_category=blv.terms.Disease)
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
 

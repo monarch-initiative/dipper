@@ -107,11 +107,11 @@ class Reactome(Source):
         eco_curie = eco_map[go_ecode]
         pathway.addPathway(pathway_curie, pathway_label)
         pathway.addComponentToPathway(gene_curie, pathway_curie,
-                                      component_category=blv.Gene.value)
+                                      component_category=blv.terms.Gene)
 
         association = Assoc(self.graph, self.name,
-                            subject_category=blv.Gene.value,
-                            object_category=blv.Pathway.value)
+                            subject_category=blv.terms.Gene,
+                            object_category=blv.terms.Pathway)
         association.sub = gene_curie
         association.rel = self.globaltt['involved in']
         association.obj = pathway_curie

@@ -275,7 +275,7 @@ class MMRRC(Source):
                 # is a good example of 4 genotype parts
 
                 model.addClassToGraph(mouse_taxon, None,
-                                      class_category=blv.OrganismTaxon.value)
+                                      class_category=blv.terms.OrganismTaxon)
                 if research_areas == '':
                     research_areas = None
                 else:
@@ -285,14 +285,14 @@ class MMRRC(Source):
                     strain_type = stem_cell_class
                 model.addIndividualToGraph(   # an inst of mouse??
                     strain_id, strain_label, strain_type, research_areas,
-                    ind_category=blv.PopulationOfIndividualOrganisms.value)
+                    ind_category=blv.terms.PopulationOfIndividualOrganisms)
                 model.makeLeader(strain_id)
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
                     # assume the phenotype label is in some ontology
                     model.addClassToGraph(pid, None,
-                                          class_category=blv.PhenotypicFeature.value)
+                                          class_category=blv.terms.PhenotypicFeature)
                     if mgi_allele_id is not None and mgi_allele_id != '':
                         assoc = G2PAssoc(
                             graph, self.name, mgi_allele_id, pid,
@@ -356,7 +356,7 @@ class MMRRC(Source):
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
                         self.globaltt['variant single locus complement'],
-                        ind_category=blv.SequenceVariant.value)
+                        ind_category=blv.terms.SequenceVariant)
                 if len(vslc_list) > 0:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
@@ -366,11 +366,11 @@ class MMRRC(Source):
                         model.addIndividualToGraph(
                             gvc_id, gvc_label,
                             self.globaltt['genomic_variation_complement'],
-                            ind_category=blv.GenomicEntity.value)
+                            ind_category=blv.terms.GenomicEntity)
                         for vslc_id in vslc_list:
                             geno.addVSLCtoParent(vslc_id, gvc_id,
                                                  parent_category=
-                                                 blv.GenomicEntity.value)
+                                                 blv.terms.GenomicEntity)
                     else:
                         # the GVC == VSLC, so don't have to make an extra piece
                         gvc_id = vslc_list.pop()
@@ -392,13 +392,13 @@ class MMRRC(Source):
                         self.globaltt['unspecified_genomic_background'])
                     geno.addParts(
                         gvc_id, genotype_id, self.globaltt['has_variant_part'],
-                        part_category=blv.GenomicEntity.value,
-                        parent_category=blv.Genotype.value)
+                        part_category=blv.terms.GenomicEntity,
+                        parent_category=blv.terms.Genotype)
                     geno.addGenotype(genotype_id, genotype_label)
                     graph.addTriple(
                         s, self.globaltt['has_genotype'], genotype_id,
-                        subject_category=blv.PopulationOfIndividualOrganisms.value,
-                        object_category=blv.Genotype.value)
+                        subject_category=blv.terms.PopulationOfIndividualOrganisms,
+                        object_category=blv.terms.Genotype)
                 else:
                     # LOG.debug(
                     #   "Strain %s is not making a proper genotype.", s)

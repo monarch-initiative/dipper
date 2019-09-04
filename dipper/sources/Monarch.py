@@ -179,16 +179,16 @@ class Monarch(Source):
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
                         model.addDescription(aid, phenotype_description,
-                                             subject_category=blv.Association.value)
+                                             subject_category=blv.terms.Association)
                     if breed_name != '':
                         model.addDescription(aid, breed_name + ' [observed in]',
-                                             subject_category=blv.Association.value)
+                                             subject_category=blv.terms.Association)
                     if assay != '':
                         model.addDescription(aid, assay + ' [assay]',
-                                             subject_category=blv.Association.value)
+                                             subject_category=blv.terms.Association)
                     if curator_notes != '':
                         model.addComment(aid, curator_notes,
-                                         subject_category=blv.Association.value)
+                                         subject_category=blv.terms.Association)
 
                     if entity_id != '' or quality_id != '':
                         LOG.info(

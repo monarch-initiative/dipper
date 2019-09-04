@@ -105,54 +105,54 @@ class Assoc:
         assert self.assoc_id is not None
 
         self.model.addType(self.assoc_id, self.model.globaltt['association'],
-                           subject_category=blv.Association.value)
+                           subject_category=blv.terms.Association)
 
         self.graph.addTriple(
             self.assoc_id, self.globaltt['association has subject'], self.sub,
-            subject_category=blv.Association.value)
+            subject_category=blv.terms.Association)
         self.graph.addTriple(
             self.assoc_id, self.globaltt['association has object'], self.obj,
-            subject_category=blv.Association.value)
+            subject_category=blv.terms.Association)
         self.graph.addTriple(
             self.assoc_id, self.globaltt['association has predicate'], self.rel,
-            subject_category=blv.Association.value)
+            subject_category=blv.terms.Association)
 
         if self.description is not None:
             self.model.addDescription(self.assoc_id, self.description,
-                                      subject_category=blv.Association.value)
+                                      subject_category=blv.terms.Association)
 
         if self.evidence is not None and len(self.evidence) > 0:
             for evi in self.evidence:
                 self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi,
-                                     subject_category=blv.Association.value,
-                                     object_category=blv.EvidenceType.value)
+                                     subject_category=blv.terms.Association,
+                                     object_category=blv.terms.EvidenceType)
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
                 # TODO assume that the source is a publication? use Reference class
                 self.graph.addTriple(self.assoc_id, self.globaltt['source'], src,
-                                     subject_category=blv.Association.value,
-                                     object_category=blv.EvidenceType.value)
+                                     subject_category=blv.terms.Association,
+                                     object_category=blv.terms.EvidenceType)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:
                 self.graph.addTriple(
                     self.assoc_id, self.globaltt['has_provenance'], prov,
-                    subject_category=blv.Association.value,
-                    object_category=blv.EvidenceType.value)
+                    subject_category=blv.terms.Association,
+                    object_category=blv.terms.EvidenceType)
 
         if self.date is not None and len(self.date) > 0:
             for dat in self.date:
                 self.graph.addTriple(
                     self.assoc_id,self.globaltt['created_on'], dat,
-                    subject_category=blv.Association.value,
+                    subject_category=blv.terms.Association,
                     object_is_literal=True)
 
         if self.score is not None:
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['has measurement value'], self.score,
                 True, 'xsd:float',
-                subject_category=blv.Association.value)
+                subject_category=blv.terms.Association)
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
@@ -166,13 +166,13 @@ class Assoc:
             if datatype is not None:
                 self.graph.addTriple(
                     self.assoc_id, predicate, object_node, True, datatype,
-                    subject_category=blv.Association.value)
+                    subject_category=blv.terms.Association)
             else:
                 self.graph.addTriple(self.assoc_id, predicate, object_node, True,
-                                     subject_category=blv.Association.value)
+                                     subject_category=blv.terms.Association)
         else:
             self.graph.addTriple(self.assoc_id, predicate, object_node, False,
-                                 subject_category=blv.Association.value)
+                                 subject_category=blv.terms.Association)
 
         return
 

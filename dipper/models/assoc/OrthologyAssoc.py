@@ -8,7 +8,7 @@ __author__ = 'nlw'
 class OrthologyAssoc(Assoc):
 
     def __init__(self, graph, definedby, gene1, gene2, rel=None,
-                 subject_category=blv.Gene.value, object_category=blv.Gene.value):
+                 subject_category=blv.terms.Gene, object_category=blv.Gene.value):
         super().__init__(graph, definedby)
         self.globaltt = graph.globaltt
         self.globaltcid = graph.globaltcid
@@ -48,14 +48,14 @@ class OrthologyAssoc(Assoc):
         # make the assumption that the genes
         # have already been added as classes previously
         self.model.addIndividualToGraph(family_id, None, gene_family,
-                                        ind_category=blv.GeneFamily.value)
+                                        ind_category=blv.terms.GeneFamily)
 
         # add each gene to the family
         family.addMember(family_id, self.sub,
-                         group_category=blv.GeneFamily.value,
+                         group_category=blv.terms.GeneFamily,
                          member_category=self.subject_category)
         family.addMember(family_id, self.obj,
-                         group_category=blv.GeneFamily.value,
+                         group_category=blv.terms.GeneFamily,
                          member_category=self.object_category)
 
         return

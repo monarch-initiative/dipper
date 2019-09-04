@@ -91,7 +91,7 @@ class Reference:
 
     def addPage(self, subject_id, page_url,
                 subject_category=None,
-                page_category=blv.InformationContentEntity.value):
+                page_category=blv.terms.InformationContentEntity):
         self.graph.addTriple(
             subject_id, self.globaltt['page'],   # foaf:page  not  <sio:web page>
             page_url, object_is_literal=False,    # URL is not a literal
@@ -104,7 +104,7 @@ class Reference:
             self.graph.addTriple(
                 subject_id, self.globaltt['title (dce)'], title,
                 object_is_literal=True,
-                subject_category=blv.InformationContentEntity.value)
+                subject_category=blv.terms.InformationContentEntity)
         return
 
     def addRefToGraph(self):
@@ -117,12 +117,12 @@ class Reference:
             if self.title is not None:
                 self.addTitle(self.ref_url, self.title)
             self.model.addType(self.ref_url, self.ref_type,
-                               subject_category=blv.InformationContentEntity.value)
+                               subject_category=blv.terms.InformationContentEntity)
             if cite is not None:
                 self.model.addLabel(self.ref_url, cite)
         elif self.ref_id is not None:
             self.model.addIndividualToGraph(self.ref_id, cite, self.ref_type,
-                                            ind_category=blv.Publication.value)
+                                            ind_category=blv.terms.Publication)
             if self.title is not None:
                 self.addTitle(self.ref_id, self.title)
         else:

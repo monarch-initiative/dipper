@@ -236,7 +236,7 @@ class CTD(Source):
             pathway_id = re.sub(r'KEGG:', 'KEGG-path:map', pathway_id)
         # just in case, add it as a class
         model.addClassToGraph(entrez_id, None,
-                              class_category=blv.Gene.value)
+                              class_category=blv.terms.Gene)
 
         self.pathway.addPathway(pathway_id, pathway_name)
         self.pathway.addGeneToPathway(entrez_id, pathway_id)
@@ -360,9 +360,9 @@ class CTD(Source):
         if re.match(evidence_pattern, direct_evidence):
             rel_id = self.resolve(direct_evidence)
             model.addClassToGraph(chem_id, chem_name,
-                                  class_category=blv.ChemicalSubstance.value)
+                                  class_category=blv.terms.ChemicalSubstance)
             model.addClassToGraph(disease_id, None,
-                                  class_category=blv.Disease.value)
+                                  class_category=blv.terms.Disease)
             self._make_association(chem_id, disease_id, rel_id, reference_list,
                                    )
         else:
@@ -571,8 +571,8 @@ class CTD(Source):
                 else:
                     pubids = None
                 self._make_association(chem_id, disease_id, rel_id, pubids,
-                                       subject_category=blv.ChemicalSubstance.value,
-                                       object_category=blv.Disease.value)
+                                       subject_category=blv.terms.ChemicalSubstance,
+                                       object_category=blv.terms.Disease)
 
                 if not self.test_mode and limit is not None and line_counter >= limit:
                     break
