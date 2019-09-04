@@ -557,8 +557,10 @@ class WormBase(Source):
                 if xref_id is not None:
                     reference.addRefToGraph()
                     model.addSameIndividual(ref_id, xref_id,
-                                            subject_category=blv.terms.Publication.value,
-                                            object_category=blv.terms.Publication.value)
+                                            subject_category=
+                                            blv.terms.Publication.value,
+                                            object_category=
+                                            blv.terms.Publication.value)
 
                 if limit is not None and line_counter > limit:
                     break
