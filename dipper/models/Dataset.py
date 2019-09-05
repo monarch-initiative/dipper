@@ -391,7 +391,7 @@ class Dataset:
         :return: None
         """
         query = "SELECT ?o (COUNT(DISTINCT ?s) AS ?distinctInstances)" + \
-                "{ ?s " + f"<{predicate_iri}>" + " ?o }" + \
+                "{ ?s " + "<%s>" % predicate_iri + " ?o }" + \
                 "GROUP BY ?o"
 
         individ_classes_count_q = target_graph.query(query)
