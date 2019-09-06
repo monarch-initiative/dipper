@@ -315,7 +315,7 @@ class Dataset:
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:triples',
+                             self.globaltt['triples'],
                              Literal(triples_count, datatype=XSD.integer))
 
     def _compute_distinct_subjects_count(self, target_graph):
@@ -325,7 +325,7 @@ class Dataset:
             """)
         distinct_subjects = distinct_subjects_q.bindings[0].get("DistinctSubjects")
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:distinctSubjects',
+                             self.globaltt['distinctSubjects'],
                              Literal(distinct_subjects, datatype=XSD.integer))
 
     def _compute_distinct_objects_count(self, target_graph):
@@ -337,7 +337,7 @@ class Dataset:
             """)
         distinct_objects = distinct_objects_q.bindings[0].get("distinctObjects")
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:distinctObjects',
+                             self.globaltt['distinctObjects'],
                              Literal(distinct_objects, datatype=XSD.integer))
 
     def _compute_distinct_entities_count(self, target_graph):
@@ -349,7 +349,7 @@ class Dataset:
         )
         distinct_entities = distinct_entities_q.bindings[0].get("entities")
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:entities',
+                             self.globaltt['entities'],
                              Literal(distinct_entities, datatype=XSD.integer))
 
     def _compute_distinct_properties_count(self, target_graph):
@@ -361,7 +361,7 @@ class Dataset:
         )
         distinct_entities = distinct_entities_q.bindings[0].get("distinctProperties")
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:properties',
+                             self.globaltt['properties'],
                              Literal(distinct_entities, datatype=XSD.integer))
 
     def _compute_distinct_classes_count(self,
@@ -380,9 +380,9 @@ class Dataset:
         partition = Dataset.make_id(partition_label)
 
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'void:classPartition', partition)
-        self.graph.addTriple(partition, 'void:class', 'rdfs:Class')
-        self.graph.addTriple(partition, 'void:distinctSubjects',
+                             self.globaltt['classPartition'], partition)
+        self.graph.addTriple(partition, self.globaltt['class (void)'], 'rdfs:Class')
+        self.graph.addTriple(partition, self.globaltt['distinctSubjects'],
                              Literal(distinct_classes_count, datatype=XSD.integer))
 
     def _compute_indiv_class_counts(self, target_graph, partition_label_base,
@@ -410,11 +410,12 @@ class Dataset:
                 partition = Dataset.make_id(label)
                 LOG.debug("label: {label}\npartition id: %s", partition)
                 self.graph.addTriple(self.distribution_level_turtle_curie,
-                                     'void:classPartition', partition)
+                                     self.globaltt['classPartition'], partition)
                 self.graph.addTriple(partition, 'rdfs:label',
                                      "predicate: " + predicate_iri)
-                self.graph.addTriple(partition, 'void:class', this_binding.get("o"))
-                self.graph.addTriple(partition, 'void:distinctSubjects',
+                self.graph.addTriple(partition, self.globaltt['class (void)'],
+                                     this_binding.get("o"))
+                self.graph.addTriple(partition, self.globaltt['distinctSubjects'],
                                      Literal(this_binding.get("distinctInstances")))
             except Exception as this_e:
                 LOG.warning("problem computing biolink category counts: %s",
@@ -550,7 +551,7 @@ class Dataset:
         """
         self.citation.add(citation_id)
         self.graph.addTriple(
-            self.version_level_curie, 'cito:citesAsAuthority', citation_id)
+            self.version_level_curie, self.globaltt['citesAsAuthority'], citation_id)
 
     @staticmethod
     def make_id(long_string, prefix='MONARCH'):

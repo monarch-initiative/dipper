@@ -81,6 +81,8 @@
 "entities": "void:entities",
 "properties": "void:properties",
 "triples": "void:triples",
+# "Citation Typing Ontology": "cito:!!!",
+"citesAsAuthority": "cito:citesAsAuthority",
 # "Human Disease Ontology": "DOID:!!!",
 "disease": "DOID:4",
 "inherited blood coagulation disease": "DOID:2214",
