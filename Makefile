@@ -49,8 +49,7 @@ IMPC-test:
 	$(TEST) tests/test_impc.py
 
 GWAS-test:
-	$(TEST) tests.test_gwascatalog.TestGwasSNPModel
-	$(TEST) tests.test_gwascatalog.TestGwasHaplotypeModel
+	$(TEST) tests/test_gwascatalog.py
 
 reactome-test:
 	$(TEST) tests/test_reactome.py
