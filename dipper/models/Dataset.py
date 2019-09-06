@@ -153,6 +153,12 @@ class Dataset:
 
      which apparently in theory could lead to blank node ID collisions between the two
      graphs.
+
+     Note also that this implementation currently does not support producing metadata
+     for StreamedGraph graphs (see dipper/graph/StreamedGraph.py). StreamedGraph is
+     currently not being used for any ingests, so this isn't a problem. There was
+     talk of using StreamedGraph for a rewrite/refactor of the Clinvar ingest, which
+     would probably require adding support here for StreamedGraph's.
     """
 
     def __init__(
