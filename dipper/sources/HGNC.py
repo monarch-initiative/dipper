@@ -81,7 +81,7 @@ class HGNC(OMIMSource):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized,
+    def __init__(self, graph_type, are_bnodes_skolemized, skip_stats=False,
                  tax_ids=None, gene_ids=None):
         super().__init__(
             graph_type=graph_type,

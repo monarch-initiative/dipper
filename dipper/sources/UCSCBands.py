@@ -138,7 +138,7 @@ class UCSCBands(Source):
         # TODO rainbow trout, 8022, when available
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, skip_stats=False, tax_ids=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

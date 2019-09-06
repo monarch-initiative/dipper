@@ -105,6 +105,7 @@ class NCBIGene(OMIMSource):
             self,
             graph_type,
             are_bnodes_skolemized,
+            skip_stats=False,
             tax_ids=None,
             gene_ids=None
     ):

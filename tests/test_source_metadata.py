@@ -191,6 +191,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         # is correct here, because we do that in test_dataset.py)
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
+                                      skip_stats=False,
                                       identifier=self.identifier,
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
