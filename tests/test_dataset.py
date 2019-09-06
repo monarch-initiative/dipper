@@ -27,7 +27,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.curie_map = curiemap.get()
 
         # parameters passed to code, to be returned in graph
-        cls.monarch_data_curie_prefix = "MonarchData"
+        cls.monarch_data_curie_prefix = "MonarchArchive"
         cls.identifier = "fakeingest"
         cls.ingest_description = "some ingest description"
         cls.ingest_url = "http://fakeingest.com"
@@ -43,7 +43,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.test_graph.parse(cls.test_ttl, format="turtle")
 
         # expected things:
-        cls.expected_curie_prefix = "MonarchData"
+        cls.expected_curie_prefix = "MonarchArchive"
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
