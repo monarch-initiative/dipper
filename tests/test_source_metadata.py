@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 import logging
 import os
 from datetime import datetime
@@ -76,6 +77,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         # load source and fetch files to make dataset graph containing metadata
         self.source = FakeIngestClass("rdf_graph",
                                       are_bnodes_skolemized=False,
+                                      skip_stats=False,
                                       identifier=self.identifier,
                                       ingest_url=self.ingest_url,
                                       ingest_title=self.ingest_title,
@@ -92,6 +94,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         # load source and fetch files to make dataset graph containing metadata
         self.pg_source = FakeIngestUsingPostgres("rdf_graph",
                                                  are_bnodes_skolemized=False,
+                                                 skip_stats=False,
                                                  identifier=self.identifier,
                                                  ingest_url=self.ingest_url,
                                                  ingest_title=self.ingest_title,
@@ -203,6 +206,26 @@ class SourceMetadataTestCase(unittest.TestCase):
                         "distribution level doesn't have triples "
                         "count after call to write")
 
+    def test_skip_stats(self):
+        for skip in [True, False]:
+            self.source = FakeIngestClass("rdf_graph",
+                                          are_bnodes_skolemized=False,
+                                          skip_stats=skip,
+                                          identifier=self.identifier,
+                                          ingest_url=self.ingest_url,
+                                          ingest_title=self.ingest_title,
+                                          ingest_logo=self.ingest_logo_url,
+                                          license_url=self.license_url,
+                                          data_rights=self.data_rights,
+                                          files=self.theseFiles)
+        self.source.dataset.compute_triples_statistics = MagicMock()
+        self.source.fetch()
+        self.source.write()
+        if skip:
+            self.source.dataset.compute_triples_statistics.assert_not_called()
+        else:
+            self.source.dataset.compute_triples_statistics.assert_called()
+
 
 if __name__ == '__main__':
     unittest.main()
@@ -216,6 +239,7 @@ class FakeIngestClass(Source):
     def __init__(self,
                  graph_type,
                  are_bnodes_skolemized,
+                 skip_stats,
                  identifier=None,
                  ingest_url=None,
                  ingest_title=None,
@@ -228,6 +252,7 @@ class FakeIngestClass(Source):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name=identifier,
             ingest_url=ingest_url,
             ingest_title=ingest_title,
@@ -262,6 +287,7 @@ class FakeIngestUsingPostgres(PostgreSQLSource):
     def __init__(self,
                  graph_type,
                  are_bnodes_skolemized,
+                 skip_stats=False,
                  identifier=None,
                  ingest_url=None,
                  ingest_title=None,
@@ -274,6 +300,7 @@ class FakeIngestUsingPostgres(PostgreSQLSource):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name=identifier,
             ingest_url=ingest_url,
             ingest_title=ingest_title,
