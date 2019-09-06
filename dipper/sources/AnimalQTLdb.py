@@ -167,6 +167,7 @@ class AnimalQTLdb(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='animalqtldb',
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',

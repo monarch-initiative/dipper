@@ -142,6 +142,7 @@ class UCSCBands(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='ucscbands',
             ingest_title='UCSC Cytogenic Bands',
             ingest_url='http://hgdownload.cse.ucsc.edu',

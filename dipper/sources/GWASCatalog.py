@@ -98,6 +98,7 @@ class GWASCatalog(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='gwascatalog',
             ingest_title='NHGRI-EBI Catalog of ' +
             'published genome-wide association studies',

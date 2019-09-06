@@ -34,6 +34,7 @@ class ZFINSlim(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='zfinslim',
             ingest_title='Simplified ZFIN',
             ingest_url='https://zfin.org/',

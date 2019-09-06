@@ -156,6 +156,7 @@ class ZFIN(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='zfin',
             ingest_title='Zebra Fish Information Network',
             ingest_url='https://zfin.org',

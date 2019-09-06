@@ -119,6 +119,7 @@ class Coriell(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='coriell',
             ingest_title='Coriell Institute for Medical Research',
             ingest_url='https://ccr.coriell.org/',

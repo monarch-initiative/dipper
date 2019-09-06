@@ -31,6 +31,7 @@ class Reactome(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='reactome',
             ingest_title='Reactome',
             ingest_url='http://reactome.org/',

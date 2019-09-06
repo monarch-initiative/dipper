@@ -44,6 +44,7 @@ class Decipher(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            skip_stats=skip_stats,
             name='decipher',
             ingest_title='Development Disorder Genotype Phenotype Database',
             ingest_url='https://decipher.sanger.ac.uk/',
