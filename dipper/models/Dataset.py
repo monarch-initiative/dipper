@@ -319,8 +319,7 @@ class Dataset:
         # calculate counts of each rdf:type:
         self._compute_indiv_class_counts(target_graph,
                                          partition_label_base="rdf_type_counts",
-                                         predicate_iri=
-                                         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+                                         predicate_iri=self.globaltt['type'])
 
     def _compute_triples_count(self, target_graph):
         triples_count = len(list(target_graph.triples((None, None, None))))
