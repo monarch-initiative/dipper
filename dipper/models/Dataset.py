@@ -503,7 +503,7 @@ class Dataset:
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
-        self.graph.addTriple(file_iri, self.globaltt['retrievedOn'], date,
+        self.graph.addTriple(file_iri, self.globaltt['retrieved_on'], date,
                              object_is_literal=True, literal_type=datatype)
 
     def set_ingest_source(self, url,
