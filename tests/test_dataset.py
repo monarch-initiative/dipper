@@ -46,18 +46,16 @@ class DatasetTestCase(unittest.TestCase):
         cls.expected_curie_prefix = "MonarchArchive"
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
-        # base URIs to dry out expected IRIs below
-        # these possibly shouldn't be pulling from (and therefore testing) curie_map
-        cls.base_cito = cls.curie_map.get("cito")
-        cls.base_dc = cls.curie_map.get("dc")
-        cls.base_dcat = cls.curie_map.get("dcat")
-        cls.base_dcterms = cls.curie_map.get("dcterms")
-        cls.base_dctypes = cls.curie_map.get("dctypes")
-        cls.base_pav = cls.curie_map.get("pav")
-        cls.base_rdf = cls.curie_map.get("rdf")
-        cls.base_rdfs = cls.curie_map.get("rdfs")
-        cls.base_schemaorg = cls.curie_map.get("schemaorg")
-        cls.base_void = cls.curie_map.get("void")
+        cls.base_cito = 'http://purl.org/spar/cito/'
+        cls.base_dc = 'http://purl.org/dc/elements/1.1/'
+        cls.base_dcat = 'http://www.w3.org/ns/dcat#'
+        cls.base_dcterms = 'http://purl.org/dc/terms/'
+        cls.base_dctypes = 'http://purl.org/dc/dcmitype/'
+        cls.base_pav = 'http://purl.org/pav/'
+        cls.base_rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+        cls.base_rdfs = 'http://www.w3.org/2000/01/rdf-schema#'
+        cls.base_schemaorg = 'http://schema.org/'
+        cls.base_void = 'http://rdfs.org/ns/void#'
 
         # expected summary level IRI
         cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
