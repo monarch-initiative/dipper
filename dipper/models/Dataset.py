@@ -214,75 +214,75 @@ class Dataset:
         self._set_distribution_level_triples()
 
     def _set_summary_level_triples(self):
-        self.model.addType(self.summary_level_curie, 'dctypes:Dataset')
+        self.model.addType(self.summary_level_curie, self.globaltt['Dataset'])
         self.graph.addTriple(self.summary_level_curie,
-                             'dcterms:title',
+                             self.globaltt['title'],
                              self.ingest_title,
                              True)
-        self.model.addTriple(self.summary_level_curie, 'dcterms:Publisher',
+        self.model.addTriple(self.summary_level_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))
         self.model.addTriple(self.summary_level_curie,
                              "schemaorg:logo",
                              self.ingest_logo)
-        self.graph.addTriple(self.summary_level_curie, 'dcterms:identifier',
+        self.graph.addTriple(self.summary_level_curie, self.globaltt['identifier'],
                              self.identifier, True)
         if self.ingest_url is not None:
             self.graph.addTriple(self.summary_level_curie,
-                                 "dcterms:source",
+                                 self.globaltt["Source (dct)"],
                                  self.ingest_url)
         if self.ingest_description is not None:
             self.model.addDescription(self.identifier, self.ingest_description)
 
     def _set_version_level_triples(self):
-        self.model.addType(self.version_level_curie, 'dctypes:Dataset')
-        self.graph.addTriple(self.version_level_curie, 'dcterms:title',
+        self.model.addType(self.version_level_curie, self.globaltt['Dataset'])
+        self.graph.addTriple(self.version_level_curie, self.globaltt['title'],
                              self.ingest_title, True)
         self.model.addDescription(self.version_level_curie, self.ingest_description)
-        self.graph.addTriple(self.version_level_curie, 'dcterms:created',
+        self.graph.addTriple(self.version_level_curie, self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, 'pav:version',
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.version_level_curie, 'dcterms:creator',
+        self.graph.addTriple(self.version_level_curie, self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.version_level_curie, 'dcterms:Publisher',
+        self.graph.addTriple(self.version_level_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.version_level_curie, 'dcterms:isVersionOf',
+        self.graph.addTriple(self.version_level_curie, self.globaltt['isVersionOf'],
                              self.summary_level_curie)
 
     def _set_distribution_level_triples(self):
-        self.model.addType(self.distribution_level_turtle_curie, 'dctypes:Dataset')
+        self.model.addType(self.distribution_level_turtle_curie, self.globaltt['Dataset'])
         self.model.addType(self.distribution_level_turtle_curie, 'dcat:Distribution')
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:title',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['title'],
                              self.ingest_title, True)
         self.model.addDescription(self.distribution_level_turtle_curie,
                                   self.ingest_description)
         self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:version',
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:created',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:creator',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:Publisher',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:createdWith',
                              "https://github.com/monarch-initiative/dipper")
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'dcterms:format',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['format'],
                              "https://www.w3.org/TR/turtle/")
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             'dcterms:downloadURL',
+                             self.globaltt['downloadURL'],
                              self.distribution_level_turtle_curie)
         if self.license_url is None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'dcterms:license',
+                                 self.globaltt['license'],
                                  'https://project-open-data.cio.gov/unknown-license/')
         else:
             self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'dcterms:license',
+                                 self.globaltt['license'],
                                  self.license_url)
 
         if self.data_rights is not None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
-                                 'dcterms:rights',
+                                 self.globaltt['rights'],
                                  self.data_rights)
 
     def compute_triples_statistics(self, target_graph):
@@ -496,7 +496,7 @@ class Dataset:
                              object_is_literal=True, literal_type=datatype)
 
     def set_ingest_source(self, url,
-                          predictate='dcterms:source',
+                          predicate=None,
                           is_object_literal=False):
         """
         This method writes a triple to the dataset graph indicating that the ingest
@@ -519,8 +519,10 @@ class Dataset:
                 its original distribution."
         :return: None
         """
+        if predicate is None:
+            predicate = self.globaltt["Source (dct)"]
         self.graph.addTriple(
-            self.version_level_curie, predictate, url,
+            self.version_level_curie, predicate, url,
             object_is_literal=is_object_literal)
 
     def get_graph(self):
