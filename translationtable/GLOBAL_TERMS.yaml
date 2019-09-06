@@ -477,6 +477,7 @@
 "created_on": "pav:createdOn",
 "version": "pav:version",
 "retrieved_on": "pav:retrievedOn",
+"created_with": "pav:createdWith",
 # "Population and Community Ontology": "PCO:!!!",
 "population": "PCO:0000001",
 "family": "PCO:0000020",

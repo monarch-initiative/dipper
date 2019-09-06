@@ -240,7 +240,7 @@ class Dataset:
         self.model.addDescription(self.version_level_curie, self.ingest_description)
         self.graph.addTriple(self.version_level_curie, self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.version_level_curie, 'pav:version',
+        self.graph.addTriple(self.version_level_curie, self.globaltt['version'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org
@@ -256,7 +256,7 @@ class Dataset:
                              self.ingest_title, True)
         self.model.addDescription(self.distribution_level_turtle_curie,
                                   self.ingest_description)
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:version',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['version'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
@@ -264,7 +264,7 @@ class Dataset:
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.distribution_level_turtle_curie, 'pav:createdWith',
+        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['created_with'],
                              "https://github.com/monarch-initiative/dipper")
         self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['format'],
                              "https://www.w3.org/TR/turtle/")
@@ -439,7 +439,7 @@ class Dataset:
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
-        self.graph.addTriple(file_iri, 'pav:version', version, object_is_literal=True)
+        self.graph.addTriple(file_iri, self.globaltt['version'], version, object_is_literal=True)
 
     def set_ingest_source_file_version_date(self, file_iri, date, datatype=XSD.date):
         """
@@ -464,7 +464,7 @@ class Dataset:
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
-        self.graph.addTriple(file_iri, 'pav:version', date,
+        self.graph.addTriple(file_iri, self.globaltt['version'], date,
                              object_is_literal=True, literal_type=datatype)
 
     def set_ingest_source_file_version_retrieved_on(self,
@@ -493,7 +493,7 @@ class Dataset:
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
-        self.graph.addTriple(file_iri, 'pav:retrievedOn', date,
+        self.graph.addTriple(file_iri, self.globaltt['retrievedOn'], date,
                              object_is_literal=True, literal_type=datatype)
 
     def set_ingest_source(self, url,
