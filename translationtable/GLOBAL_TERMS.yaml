@@ -83,6 +83,8 @@
 "triples": "void:triples",
 # "Citation Typing Ontology": "cito:!!!",
 "citesAsAuthority": "cito:citesAsAuthority",
+# "Data Catalog Vocabulary": "dcat"
+"distribution": "dcat:Distribution",
 # "Human Disease Ontology": "DOID:!!!",
 "disease": "DOID:4",
 "inherited blood coagulation disease": "DOID:2214",
