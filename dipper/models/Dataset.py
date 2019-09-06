@@ -115,6 +115,7 @@ class Dataset:
      [distribution level resource] - dct:publisher -> monarchinitiative.org
      [distribution level resource] - dct:license -> [license info, if available
                     otherwise indicate unknown]
+     [distribution level resource] - dcterms:rights -> [data rights IRI]
      [distribution level resource] - pav:createdWith -> [Dipper github URI]
      [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
      [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
