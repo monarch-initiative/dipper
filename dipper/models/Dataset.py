@@ -250,23 +250,32 @@ class Dataset:
                              self.summary_level_curie)
 
     def _set_distribution_level_triples(self):
-        self.model.addType(self.distribution_level_turtle_curie, self.globaltt['Dataset'])
-        self.model.addType(self.distribution_level_turtle_curie, self.globaltt['distribution'])
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['title'],
+        self.model.addType(self.distribution_level_turtle_curie,
+                           self.globaltt['Dataset'])
+        self.model.addType(self.distribution_level_turtle_curie,
+                           self.globaltt['distribution'])
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['title'],
                              self.ingest_title, True)
         self.model.addDescription(self.distribution_level_turtle_curie,
                                   self.ingest_description)
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['version'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['version'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['created'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['creator'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['Publisher'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['Publisher'],
                              self.curie_map.get(""))  # eval's to MI.org
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['created_with'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['created_with'],
                              "https://github.com/monarch-initiative/dipper")
-        self.graph.addTriple(self.distribution_level_turtle_curie, self.globaltt['format'],
+        self.graph.addTriple(self.distribution_level_turtle_curie,
+                             self.globaltt['format'],
                              "https://www.w3.org/TR/turtle/")
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['downloadURL'],
@@ -439,7 +448,8 @@ class Dataset:
         uses to refer to this version of the file/resource used during the ingest
         :return: None
         """
-        self.graph.addTriple(file_iri, self.globaltt['version'], version, object_is_literal=True)
+        self.graph.addTriple(file_iri, self.globaltt['version'], version,
+                             object_is_literal=True)
 
     def set_ingest_source_file_version_date(self, file_iri, date, datatype=XSD.date):
         """
