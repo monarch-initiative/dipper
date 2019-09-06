@@ -62,7 +62,7 @@
 # "dublin core terms": "dcterms:!!!",
 "identifier": "dcterms:identifier",
 "title": "dcterms:title",
-"Source (dct)": "dcterms:source", # different from dc:source
+"Source (dct)": "dcterms:source",  # different from dc:source
 "Publisher": "dcterms:Publisher",
 "created": "dcterms:created",
 "creator": "dcterms:creator",
