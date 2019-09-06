@@ -388,7 +388,7 @@ class Source:
 
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
             self.dataset.graph.addTriple(self.dataset.version_level_curie,
-                                         "dcterms:source",
+                                         self.globaltt["Source (dct)"],
                                          # self.resolve("source") eval's to "dc:source"
                                          # which isn't what we want
                                          filesource['url']
@@ -397,7 +397,7 @@ class Source:
                 datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
                 datatype=XSD.date)
             self.dataset.graph.addTriple(filesource['url'],
-                                         "pav:retrievedOn",
+                                         self.globaltt['retrieved_on'],
                                          filedate)
 
 

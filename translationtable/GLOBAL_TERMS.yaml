@@ -62,6 +62,7 @@
 # "dublin core terms": "dcterms:!!!",
 "identifier": "dcterms:identifier",
 "title": "dcterms:title",
+"Source (dct)": "dcterms:source", # different from dc:source
 # "Human Disease Ontology": "DOID:!!!",
 "disease": "DOID:4",
 "inherited blood coagulation disease": "DOID:2214",
@@ -453,6 +454,7 @@
 # "Provenance, Authoring and Versioning": "pav:!!!",
 "created_on": "pav:createdOn",
 "version": "pav:version",
+"retrieved_on": "pav:retrievedOn",
 # "Population and Community Ontology": "PCO:!!!",
 "population": "PCO:0000001",
 "family": "PCO:0000020",
