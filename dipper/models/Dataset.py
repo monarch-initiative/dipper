@@ -411,7 +411,7 @@ class Dataset:
                 LOG.debug("label: {label}\npartition id: %s", partition)
                 self.graph.addTriple(self.distribution_level_turtle_curie,
                                      self.globaltt['classPartition'], partition)
-                self.graph.addTriple(partition, 'rdfs:label',
+                self.graph.addTriple(partition, self.globaltt['label'],
                                      "predicate: " + predicate_iri)
                 self.graph.addTriple(partition, self.globaltt['class (void)'],
                                      this_binding.get("o"))
