@@ -227,13 +227,9 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                # 2019-May three snp-id have  ' e' or ' a'  appended. note space.
-                # examples: 'rs2440154 e-A'  and 'rs2440154 e'
-                # including the suffix in the url is a web noop but breaks rdflib
-                strongest_snp_risk_allele = strongest_snp_risk_allele.split(' ')[0]
                 snp_id_current = snp_id_current.split(' ')[0]
 
-                # note: that these will no longer pattenn match other instances
+                # note: that these will no longer pattern match other instances
 
                 variant_curie, variant_type = self._get_curie_and_type_from_id(
                     strongest_snp_risk_allele)
@@ -352,7 +348,12 @@ class GWASCatalog(Source):
                     snp_curie, snp_labels[index], chrom_nums[index],
                     chrom_positions[index], context_list[index])
 
-                if mapped_genes and len(mapped_genes) == len(snp_labels):
+                if mapped_genes and len(mapped_genes) != len(snp_labels):
+                    LOG.warning(
+                        "More mapped genes than snps,"
+                        " cannot disambiguate for\n%s\n%s",
+                        mapped_genes, snp_labels)  # hap_label)
+                else:
                     so_class = self.resolve(context_list[index])
                     so_query = """
         SELECT ?variant_label
@@ -364,26 +365,16 @@ class GWASCatalog(Source):
 
                     query_result = so_ontology.query(so_query)
 
-                    if len(list(query_result)) == 1:
-                        gene_id = DipperUtil.get_hgnc_id_from_symbol(
-                            mapped_genes[index])
-
-                        if gene_id is not None:
-                            geno.addAffectedLocus(snp_curie, gene_id)
-                            geno.addAffectedLocus(hap_id, gene_id)
-                            variant_in_gene_count += 1
-
                     gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
-                    if gene_id is not None \
-                            and context_list[index] in ['upstream_gene_variant',
-                                                        'downstream_gene_variant']:
+
+                    if gene_id is not None and len(list(query_result)) == 1:
+                        if context_list[index] in ['upstream_gene_variant',
+                                                   'downstream_gene_variant']:
                             graph.addTriple(
                                 snp_curie, self.resolve(context_list[index]), gene_id)
-                    else:
-                        LOG.warning(
-                            "More mapped genes than snps,"
-                            " cannot disambiguate for\n%s\n%s",
-                            mapped_genes, snp_labels)  # hap_label)
+                        else:
+                            geno.addAffectedLocus(snp_curie, gene_id)
+                            variant_in_gene_count += 1
 
             # Seperate in case we want to apply a different relation
             # If not this is redundant with triples added above
@@ -570,6 +561,11 @@ class GWASCatalog(Source):
         """
         Given a variant id, our best guess at its curie and type (snp, haplotype, etc)
         'None' will be used for both curie and type  for IDs that we can't process
+
+        # 2019-May three snp-id have  ' e' or ' a'  appended. note space.
+        # examples: 'rs2440154 e-A'  and 'rs2440154 e'
+        # including the suffix in the url is a web noop but breaks rdflib
+
         :param variant_id:
         :return:
         """
@@ -585,13 +581,14 @@ class GWASCatalog(Source):
             curie = ':haplotype_' + Source.hash_id(variant_id)   # deliberate 404
             variant_type = "haplotype"
         elif variant_id[:2] == 'rs':
-            curie = 'dbSNP:' + variant_id.split('-')[0]
+            # remove whitespace from errant id, rs6194 5053-?
+            curie = 'dbSNP:' + variant_id.split('-')[0].replace(' ', '')
             # curie = re.sub(r'-.*$', '', curie).strip()
             variant_type = "snp"
             # remove the alteration
         elif variant_id[:3] == 'kgp':
             # http://www.1000genomes.org/faq/what-are-kgp-identifiers
-            curie = ':kgp-' + variant_id   # deliberate 404
+            curie = 'GWAS:' + variant_id.split('-')[0]
             variant_type = "snp"
         elif variant_id[:3] == 'chr':
             # like: chr10:106180121-G

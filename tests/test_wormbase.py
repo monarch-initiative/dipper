@@ -40,7 +40,7 @@ class WormBaseTestCase(unittest.TestCase):
         self.wormbase.graph = RDFGraph(True)
 
     def tearDown(self):
-        self.flybase = None
+        self.wormbase = None
 
     def tearDownAndSetUp(self):
         """
