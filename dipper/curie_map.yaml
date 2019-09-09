@@ -5,6 +5,7 @@
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
 'MonarchArchive': 'https://archive.monarchinitiative.org/201908/'   # Release RDF data
+'DatasetBase': 'https://archive.monarchinitiative.org/'             # Base IRI for dataset metadata
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework

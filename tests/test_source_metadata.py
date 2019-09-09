@@ -55,7 +55,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         }
 
         # expected things:
-        cls.expected_curie_prefix = "MonarchArchive"
+        cls.expected_curie_prefix = "DatasetBase"
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
