@@ -7,8 +7,8 @@ import urllib
 import csv
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
-from rdflib import XSD, Literal
 from inspect import getdoc
+from rdflib import XSD, Literal
 
 import yaml
 from dipper.graph.RDFGraph import RDFGraph
@@ -399,7 +399,6 @@ class Source:
             self.dataset.graph.addTriple(filesource['url'],
                                          self.globaltt['retrieved_on'],
                                          filedate)
-
 
     def fetch_from_url(
             self, remotefile, localfile=None, is_dl_forced=False, headers=None):
