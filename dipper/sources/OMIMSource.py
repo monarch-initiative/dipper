@@ -143,7 +143,7 @@ class OMIMSource(Source):
 
         src_key = 'mimtitles'
 
-        self.get_files(is_dl_forced=True, files=self.mimfiles)
+        self.get_files(is_dl_forced=False, files=self.mimfiles)
 
         myfile = '/'.join((self.rawdir, self.mimfiles[src_key]['file']))
 
