@@ -389,8 +389,6 @@ class Source:
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
             self.dataset.graph.addTriple(self.dataset.version_level_curie,
                                          self.globaltt["Source (dct)"],
-                                         # self.resolve("source") eval's to "dc:source"
-                                         # which isn't what we want
                                          filesource['url']
                                          )
             filedate = Literal(
