@@ -174,9 +174,6 @@ class HPOAnnotations(Source):
 
         raw = '/'.join((self.rawdir, file_info['file']))
 
-        filedate = datetime.utcfromtimestamp(
-            os.stat(raw)[ST_CTIME]).strftime("%Y-%m-%d")
-
         # this will cause two dates to be attached to the dataset
         # (one from the filedate, and the other from here)
         # TODO when #112 is implemented,
