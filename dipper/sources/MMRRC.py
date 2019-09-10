@@ -1,8 +1,5 @@
 import csv
 import re
-import os
-from datetime import datetime
-from stat import ST_CTIME
 import logging
 
 from dipper.sources.Source import Source
