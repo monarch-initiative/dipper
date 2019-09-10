@@ -85,7 +85,6 @@ class BioGrid(Source):
         # BIOGRID-ALL-3.2.119.mitab.txt, where the version number is 3.2.119
         f = '/'.join((self.rawdir, self.files['interactions']['file']))
         st = os.stat(f)
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         with ZipFile(f, 'r') as myzip:
             flist = myzip.namelist()
             # assume that the first entry is the item
