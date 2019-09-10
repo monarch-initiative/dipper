@@ -88,10 +88,6 @@ class MMRRC(Source):
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        # TODO note: can set the data version to what is in the header
-        # first line like:
-        # This MMRRC catalog data file was generated on 2015-04-22
-
         return
 
     def parse(self, limit=None):
