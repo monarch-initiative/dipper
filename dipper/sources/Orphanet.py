@@ -160,7 +160,11 @@ class Orphanet(Source):
 
                     rel_id = self.resolve(dg_label)
 
-                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
+                    g2p_assoc = G2PAssoc(self.graph,
+                                         self.name,
+                                         gene_curie,
+                                         disorder_id,
+                                         rel_id)
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
 

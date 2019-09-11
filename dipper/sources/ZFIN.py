@@ -1903,7 +1903,8 @@ class ZFIN(Source):
                  ncbi_taxon_name, ncbi_taxon_id) = row
 
                 environment_id = 'ZFIN:' + environment_id.strip()
-                if self.test_mode and environment_id not in self.test_ids['environment']:
+                if self.test_mode and \
+                        environment_id not in self.test_ids['environment']:
                     continue
 
                 # We can start to build the extrinsic genotype using this file.

@@ -51,9 +51,9 @@ class WormBase(Source):
             'url': wbprod + species +
                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
-        #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-        #    'url': wbdev + species +
-        #     '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        #   'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
+        #   'url': wbdev + species +
+        #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
             'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
@@ -391,7 +391,7 @@ class WormBase(Source):
                             # Could type the IRI as both the reagant and reagant
                             # targeted gene but not sure if this needed
                             # geno.addGeneTargetingReagent(
-                            #    allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
+                            #   allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
 
                             model.addIndividualToGraph(
                                 allele_id, None,
@@ -433,7 +433,8 @@ class WormBase(Source):
                                 reference.setType(self.globaltt['person'])
                                 assoc.add_evidence(
                                     self.globaltt[
-                                        'inference from background scientific knowledge'])
+                                        'inference from background scientific knowledge'
+                                    ])
                             reference.addRefToGraph()
                             assoc.add_source(ref)
 

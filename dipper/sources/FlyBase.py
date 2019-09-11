@@ -572,7 +572,9 @@ class FlyBase(PostgreSQLSource):
                     try:
                         if species_map[allele_prefix[0]][0] == 'drosophilid':
                             geno.addAllele(allele_curie, allele_label)
-                            geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie)
+                            geno.addTaxon(
+                                species_map[allele_prefix[0]][1],
+                                allele_curie)
                         else:
                             # If it's a foreign transgenic allele, skip
                             continue

@@ -16,7 +16,8 @@ class RGD(Source):
     Ingest of Rat Genome Database gene to mammalian phenotype gaf file
 
     """
-    RGD_BASE = 'ftp://ftp.rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/'
+    RGD_BASE = \
+        'ftp://ftp.rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/'
     files = {
         'rat_gene2mammalian_phenotype': {
             'file': 'rattus_genes_mp',
