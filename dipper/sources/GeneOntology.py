@@ -189,7 +189,6 @@ class GeneOntology(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
-            skip_stats=skip_stats,
             name='go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',

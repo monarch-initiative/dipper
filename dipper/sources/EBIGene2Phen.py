@@ -75,7 +75,6 @@ class EBIGene2Phen(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
-            skip_stats=skip_stats,
             name='ebi_g2p',
             ingest_title='EBI',
             ingest_url='https://www.ebi.ac.uk/gene2phenotype',

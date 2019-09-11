@@ -72,7 +72,6 @@ class Ensembl(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
-            skip_stats=skip_stats,
             name='ensembl',
             ingest_title='ENSEMBL',
             ingest_url='http://uswest.ensembl.org',

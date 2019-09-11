@@ -53,7 +53,6 @@ class Monarch(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
-            skip_stats=skip_stats,
             name='monarch',
             ingest_title='The Monarch Initiative',
             ingest_url='https://monarchinitiative.org',

@@ -27,7 +27,6 @@ class RGD(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
-            skip_stats=skip_stats,
             name='rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
