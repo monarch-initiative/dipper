@@ -56,6 +56,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.base_rdfs = 'http://www.w3.org/2000/01/rdf-schema#'
         cls.base_schemaorg = 'http://schema.org/'
         cls.base_void = 'http://rdfs.org/ns/void#'
+        cls.base_owl = 'http://www.w3.org/2002/07/owl#'
 
         # expected summary level IRI
         cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
@@ -87,26 +88,13 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_license = URIRef(cls.base_dcterms + "license")
         cls.iri_data_rights = URIRef(cls.base_dcterms + "rights")
         cls.iri_cites_as_authority = URIRef(cls.base_cito + "citesAsAuthority")
-        cls.iri_triples_count = URIRef(cls.base_void + "triples")
-        cls.iri_entities_count = URIRef(cls.base_void + "entities")
-        cls.iri_distinct_subjects = URIRef(cls.base_void + "distinctSubjects")
-        cls.iri_distinct_objects = URIRef(cls.base_void + "distinctObjects")
-        cls.iri_distinct_properties = URIRef(cls.base_void + "properties")
-        cls.iri_void_class = URIRef(cls.base_void + "class")
-        cls.iri_rdfs_class = URIRef(cls.base_rdfs + "Class")
         cls.iri_rdfs_label = URIRef(cls.base_rdfs + "label")
-        cls.iri_void_class_partition = URIRef(cls.base_void + "classPartition")
+        cls.iri_owl_ontology = URIRef(cls.base_owl + "Ontology")
+        cls.iri_owl_version_iri = URIRef(cls.base_owl + "versionIRI")
+        cls.iri_owl_version_info = URIRef(cls.base_owl + "versionInfo")
 
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
-
-        cls.iri_biolink_category = URIRef("http://w3id.org/biolink/vocab/category")
-        cls.iri_biolink_case = URIRef("http://w3id.org/biolink/vocab/case")
-        cls.iri_biolink_info_content = \
-            URIRef("http://w3id.org/biolink/vocab/InformationContentEntity")
-
-        cls.iri_distinct_class_count_blank_node = URIRef(
-            RDFGraph.curie_util.get_uri(Dataset.make_id("distinct_class_count")))
 
     @classmethod
     def tearDownClass(cls):
@@ -373,6 +361,22 @@ class DatasetTestCase(unittest.TestCase):
              URIRef(self.license_url_default))))
         self.assertTrue(len(triples) == 1,
                         "distribution level default license triple not set")
+
+    def test_distribution_level_ontology_type_declaration(self):
+            triples = list(self.dataset.graph.triples(
+                (self.distribution_level_IRI_ttl,
+                 self.iri_rdf_type,
+                 self.iri_owl_ontology)))
+            self.assertTrue(len(triples) == 1,
+                            "missing distribution level owl ontology type triple")
+
+    def test_distribution_level_version_iri(self):
+            triples = list(self.dataset.graph.triples(
+                (self.distribution_level_IRI_ttl,
+                 self.iri_owl_version_iri,
+                 self.version_level_IRI)))
+            self.assertTrue(len(triples) == 1,
+                            "missing distribution level version iri triple")
 
 
 if __name__ == '__main__':

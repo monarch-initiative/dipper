@@ -295,6 +295,9 @@ class Dataset:
                                  self.globaltt['rights'],
                                  self.data_rights)
 
+        self._declare_as_ontology()
+
+
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
         This method sets the version of a remote file or resource that is used in the
@@ -427,6 +430,37 @@ class Dataset:
         self.citation.add(citation_id)
         self.graph.addTriple(
             self.version_level_curie, self.globaltt['citesAsAuthority'], citation_id)
+
+    def _declare_as_ontology(self, version_info=None):
+        """
+        Declare the distribution level IRI as an ontology, and also make triple
+        distribution level IRI - version_iri -> version level IRI
+
+        TEC: I am not convinced dipper reformatting external data as RDF triples
+        makes an OWL ontology (nor that it should be considered a goal).
+
+        Proper ontologies are built by ontologists. Dipper reformats data
+        and annotates/decorates it with a minimal set of carefully arranged
+        terms drawn from from multiple proper ontologies.
+        Which allows the whole (dipper's RDF triples and parent ontologies)
+        to function as a single ontology we can reason over when combined
+        in a store such as SciGraph.
+
+        Including more than the minimal ontological terms in dipper's RDF
+        output constitutes a liability as it allows greater divergence
+        between dipper artifacts and the proper ontologies.
+
+        :param version_info: a string describing version info for the ontology
+        :return:
+
+        """
+        model = Model(self.graph)
+        model.addOntologyDeclaration(self.distribution_level_turtle_curie)
+        model.addOWLVersionIRI(self.distribution_level_turtle_curie,
+                               self.version_level_curie)
+        if version_info is not None:
+            model.addOWLVersionInfo(self.distribution_level_turtle_curie,
+                                    version_info)
 
     @staticmethod
     def make_id(long_string, prefix='MONARCH'):

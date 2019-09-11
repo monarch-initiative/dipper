@@ -148,9 +148,6 @@ class Source:
             file_handle=file_handle
         )
 
-        for graph in [self.graph, self.testgraph]:
-            self.declareAsOntology(graph)
-
     def fetch(self, is_dl_forced=False):
         """
         abstract method to fetch all data from an external resource.
@@ -625,55 +622,6 @@ class Source:
         return None
 
     # TODO: pramaterising the release date
-
-    def declareAsOntology(self, graph):
-        """
-        The file we output needs to be declared as an ontology,
-        including it's version information.
-
-        TEC: I am not convinced dipper reformatting external data as RDF triples
-        makes an OWL ontology (nor that it should be considered a goal).
-
-        Proper ontologies are built by ontologists. Dipper reformats data
-        and annotates/decorates it with a minimal set of carefully arranged
-        terms drawn from from multiple proper ontologies.
-        Which allows the whole (dipper's RDF triples and parent ontologies)
-        to function as a single ontology we can reason over when combined
-        in a store such as SciGraph.
-
-        Including more than the minimal ontological terms in dipper's RDF
-        output constitutes a liability as it allows greater divergence
-        between dipper artifacts and the proper ontologies.
-
-        Further information will be augmented in the dataset object.
-        :param version:
-        :return:
-
-        """
-
-        # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
-        # owl:versionInfo
-        # <https://archive.monarchinitiative.org/YYYYMM/ttl/biogrid.ttl>
-
-        model = Model(graph)
-
-        # is self.outfile suffix set yet???
-        ontology_file_id = 'MonarchData:' + self.name + ".ttl"
-        model.addOntologyDeclaration(ontology_file_id)
-
-        # add timestamp as version info
-
-        cur_time = datetime.now()
-        t_string = cur_time.strftime("%Y-%m-%d")
-        ontology_version = t_string
-        # TEC this means the MonarchArchive IRI needs the release updated
-        # maybe extract the version info from there
-
-        # should not hardcode the suffix as it may change
-        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
-        model.addOWLVersionIRI(ontology_file_id, archive_url)
-        model.addOWLVersionInfo(ontology_file_id, ontology_version)
-        # TODO make sure this is synced with the Dataset class
 
     @staticmethod
     def remove_backslash_r(filename, encoding):
