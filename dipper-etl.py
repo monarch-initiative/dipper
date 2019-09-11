@@ -86,9 +86,6 @@ def main():
         '--debug', help='turn on debug logging', action="store_true")
     parser.add_argument(
         '--skip_tests', help='skip any testing', action="store_true")
-    parser.add_argument(
-        '--skip_stats', help='skip calculation of graph statistics for metadata',
-        action="store_true")
     # Blank Nodes can't be visualized in Protege, default to Skolemizing them
     parser.add_argument(
         '-b', '--use_bnodes',
@@ -210,11 +207,6 @@ def main():
             graph_type=args.graph
         )
         source_args['are_bnodes_skolemized'] = not args.use_bnodes
-
-        # We are using rdflib sparql queries to compute stats such as number of triples,
-        # numbers of each rdf:type, etc. in the final graph. These queries can be slow,
-        # so we provide this flag to skip these queries
-        source_args['skip_stats'] = args.skip_stats
 
         # args should be available to source supported (yet) or not
         if src in taxa_supported:

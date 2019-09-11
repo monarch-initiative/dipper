@@ -214,8 +214,6 @@ class Source:
         graph_util = GraphUtils(None)
 
         # the  _dataset description is always turtle
-        if not self.skip_stats:
-            self.dataset.compute_triples_statistics(self.graph)
         graph_util.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
 
         if self.test_mode:
