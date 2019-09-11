@@ -170,7 +170,7 @@ class AnimalQTLdb(Source):
             name='animalqtldb',
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-animalqtldb.png',
+            ingest_logo='source-animalqtldb.png',
             license_url=None,
             data_rights="'" + AQDL + '/faq#32',
             # file_handle=None

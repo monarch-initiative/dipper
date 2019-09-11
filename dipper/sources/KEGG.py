@@ -110,7 +110,7 @@ class KEGG(OMIMSource):
             name='kegg',
             ingest_title='Kyoto Encyclopedia of Genes and Genomes',
             ingest_url='http://www.genome.jp/kegg/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-kegg.png',
+            ingest_logo='source-kegg.png',
             license_url=None,
             data_rights='http://www.kegg.jp/kegg/legal.html'
             # file_handle=None

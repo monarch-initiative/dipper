@@ -72,7 +72,7 @@ class MMRRC(Source):
             name='mmrrc',
             ingest_title='Mutant Mouse Regional Resource Centers',
             ingest_url='https://www.mmrrc.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-mmrrc.png',
+            ingest_logo='source-mmrrc.png',
             # license_url=None,
             data_rights='https://www.mmrrc.org/about/data_download.php'
             # file_handle=None

@@ -47,7 +47,7 @@ class Source:
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
-            ingest_logo=None,
+            ingest_logo=None,     # this should be the name of file on 'MonarchLogoRepo'
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic

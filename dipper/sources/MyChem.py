@@ -17,7 +17,7 @@ class MyChem(Source):
             name='mychem',
             ingest_title='BioThings chemical and drug annotation data',
             ingest_url='http://mychem.info/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-mychem.jpg',
+            ingest_logo='source-mychem.jpg',
             license_url=None,
             data_rights='http://mychem.info/terms'
             # file_handle=None

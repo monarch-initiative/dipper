@@ -88,7 +88,7 @@ class Bgee(Source):
             name='bgee',
             ingest_title='Bgee Gene expression data in animals',
             ingest_url='http://bgee.org/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-bgee.png',
+            ingest_logo='source-bgee.png',
             # license_url=None,
             data_rights='https://bgee.org/?page=about'
             # file_handle=None

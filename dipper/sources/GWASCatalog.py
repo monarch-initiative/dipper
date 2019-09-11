@@ -102,7 +102,7 @@ class GWASCatalog(Source):
             ingest_title='NHGRI-EBI Catalog of ' +
             'published genome-wide association studies',
             ingest_url='http://www.ebi.ac.uk/gwas/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-gwascatalog.png',
+            ingest_logo='source-gwascatalog.png',
             license_url=None,
             data_rights='http://www.ebi.ac.uk/gwas/docs/about'
             # file_handle=None

@@ -84,7 +84,7 @@ class OMIM(OMIMSource):
             name='omim',
             ingest_title='Online Mendelian Inheritance in Man',
             ingest_url='http://www.omim.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-omim.png',
+            ingest_logo='source-omim.png',
             # ingest_desc=None,
             license_url=None,
             data_rights='http://omim.org/help/agreement',

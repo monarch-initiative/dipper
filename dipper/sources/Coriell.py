@@ -122,7 +122,7 @@ class Coriell(Source):
             name='coriell',
             ingest_title='Coriell Institute for Medical Research',
             ingest_url='https://ccr.coriell.org/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-coriell.png',
+            ingest_logo='source-coriell.png',
             # website disclaimer 'https://www.coriell.org/1/About-Us/Legal-Notice'
             # wet material https://www.coriell.org/1/NINDS/About/Shared-Usage-Guidelines
             # license_url=None,

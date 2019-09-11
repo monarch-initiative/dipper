@@ -32,7 +32,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.ingest_description = "some ingest description"
         cls.ingest_url = "http://fakeingest.com"
         cls.ingest_title = "this ingest title"
-        cls.ingest_logo_url = "http://fakeingest.com/logo.png"
+        cls.ingest_logo_url = "logo.png"
         cls.license_url = "https://choosealicense.com/licenses/mit/"
         cls.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
         cls.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
@@ -57,7 +57,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.base_schemaorg = 'http://schema.org/'
         cls.base_void = 'http://rdfs.org/ns/void#'
         cls.base_owl = 'http://www.w3.org/2002/07/owl#'
-
+        cls.base_logo_url = "https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/"
         # expected summary level IRI
         cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
                                        + cls.identifier)
@@ -92,6 +92,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_owl_ontology = URIRef(cls.base_owl + "Ontology")
         cls.iri_owl_version_iri = URIRef(cls.base_owl + "versionIRI")
         cls.iri_owl_version_info = URIRef(cls.base_owl + "versionInfo")
+        cls.iri_returned_logo = URIRef(cls.base_logo_url + cls.ingest_logo_url)
 
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -195,7 +196,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_summary_level_source_logo(self):
         triples = list(self.dataset.graph.triples(
-            (self.summary_level_IRI, self.iri_logo, URIRef(self.ingest_logo_url))))
+            (self.summary_level_IRI, self.iri_logo, URIRef(self.iri_returned_logo))))
         self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
     #

@@ -90,7 +90,7 @@ class EOM(PostgreSQLSource):
             name='eom',
             ingest_title='Elements of Morphology',
             ingest_url='http://elementsofmorphology.nih.gov',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-eom.png',
+            ingest_logo='source-eom.png',
             data_rights='http://www.genome.gov/copyright.cfm',
             license_url='https://creativecommons.org/publicdomain/mark/1.0/'
             # file_handle=None

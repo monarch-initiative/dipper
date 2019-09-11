@@ -30,7 +30,7 @@ class MyDrug(Source):
             name='mydrug',
             ingest_title='Drugs and Compounds in BioThings',
             ingest_url='http://c.biothings.io/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-mydrug.png',
+            ingest_logo='source-mydrug.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

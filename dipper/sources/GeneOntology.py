@@ -192,7 +192,7 @@ class GeneOntology(Source):
             name='go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-geneontology.png',
+            ingest_logo='source-geneontology.png',
             license_url=None,
             data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None

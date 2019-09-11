@@ -31,7 +31,7 @@ class RGD(Source):
             name='rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-rgd.png',
+            ingest_logo='source-rgd.png',
             license_url=None,
             data_rights='https://rgd.mcw.edu/wg/disclaimer/',
             # file_handle=None

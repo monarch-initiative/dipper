@@ -89,7 +89,7 @@ class HGNC(OMIMSource):
             name='hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-hgnc.png',
+            ingest_logo='source-hgnc.png',
             license_url=None,
             data_rights='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt',
             # file_handle=None

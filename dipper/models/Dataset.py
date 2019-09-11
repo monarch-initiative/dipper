@@ -186,7 +186,6 @@ class Dataset:
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        # TODO: move hard coded curies to translation table calls
         self.identifier = identifier
         self.citation = set()
 
@@ -195,7 +194,7 @@ class Dataset:
             self.ingest_title = identifier
 
         self.ingest_url = ingest_url
-        self.ingest_logo = ingest_logo
+        self.ingest_logo = self.curie_map.get('MonarchLogoRepo') + ingest_logo
         self.ingest_description = ingest_description
 
         self.version = None

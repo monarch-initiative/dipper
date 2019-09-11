@@ -75,7 +75,7 @@ class Ensembl(Source):
             name='ensembl',
             ingest_title='ENSEMBL',
             ingest_url='http://uswest.ensembl.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-ensembl.png',
+            ingest_logo='source-ensembl.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

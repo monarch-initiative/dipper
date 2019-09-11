@@ -121,7 +121,7 @@ class IMPC(Source):
             name='impc',
             ingest_title='International Mouse Phenotyping Consortium',
             ingest_url='http://www.mousephenotype.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-impc.png',
+            ingest_logo='source-impc.png',
             license_url=None,
             data_rights=GITHUBRAW + 'mpi2/PhenotypeArchive/master/LICENSE',
             file_handle=None

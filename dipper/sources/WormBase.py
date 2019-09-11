@@ -105,7 +105,7 @@ class WormBase(Source):
             name='wormbase',
             ingest_title='WormBase',
             ingest_url='http://www.wormbase.org',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-wormbase.png',
+            ingest_logo='source-wormbase.png',
             # license_url=None,
             data_rights='https://wormbase.org/about/citing_wormbase#012--10'
             # file_handle=None

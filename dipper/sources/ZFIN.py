@@ -159,7 +159,7 @@ class ZFIN(Source):
             name='zfin',
             ingest_title='Zebra Fish Information Network',
             ingest_url='https://zfin.org',
-            ingest_logo="https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-zfin.png",
+            ingest_logo="source-zfin.png",
             license_url=None,
             data_rights='http://zfin.org/warranty.html'
             # file_handle=None

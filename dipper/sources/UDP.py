@@ -83,7 +83,7 @@ class UDP(Source):
             name='udp',
             ingest_title='Undiagnosed Diseases Program',
             ingest_url='https://rarediseases.info.nih.gov/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-udp.png',
+            ingest_logo='source-udp.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

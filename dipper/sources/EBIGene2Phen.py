@@ -78,7 +78,7 @@ class EBIGene2Phen(Source):
             name='ebi_g2p',
             ingest_title='EBI',
             ingest_url='https://www.ebi.ac.uk/gene2phenotype',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-ebigene2phen.png',
+            ingest_logo='source-ebigene2phen.png',
             license_url=None,
             data_rights='https://www.ebi.ac.uk/about/terms-of-use',
             file_handle=None

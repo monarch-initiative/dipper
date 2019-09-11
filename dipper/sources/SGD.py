@@ -32,7 +32,7 @@ class SGD(Source):
             name='sgd',
             ingest_title='Saccharomyces Genome Database',
             ingest_url='https://www.yeastgenome.org/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-sgd.png',
+            ingest_logo='source-sgd.png',
             license_url='https://sites.google.com/view/yeastgenome-help/about',
             data_rights=None,
             file_handle=None

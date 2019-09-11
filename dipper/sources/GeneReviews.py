@@ -65,7 +65,7 @@ class GeneReviews(OMIMSource):
             name='genereviews',
             ingest_title='Gene Reviews',
             ingest_url='http://genereviews.org/',
-            ingest_logo='https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/source-genereviews.png',
+            ingest_logo='source-genereviews.png',
             license_url=None,
             data_rights='http://www.ncbi.nlm.nih.gov/books/NBK138602/',
             # file_handle=None
