@@ -44,7 +44,6 @@ class Source:
             self,
             graph_type='rdf_graph',     # or streamed_graph
             are_bnodes_skized=False,    # typically True
-            skip_stats=False,
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
@@ -60,7 +59,6 @@ class Source:
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
-        self.skip_stats = skip_stats
         self.ingest_title = ingest_title
         self.ingest_url = ingest_url
         self.ingest_logo = ingest_logo
