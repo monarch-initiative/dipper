@@ -70,7 +70,7 @@ class OMIA(OMIMSource):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, skip_stats=False):
+    def __init__(self, graph_type, are_bnodes_skolemized):
 
         super().__init__(
             graph_type=graph_type,

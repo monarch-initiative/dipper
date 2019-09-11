@@ -50,7 +50,6 @@ class OMIMSource(Source):
             self,
             graph_type,
             are_bnodes_skolemized,
-            skip_stats=False,
             name=None,
             ingest_title=None,
             ingest_url=None,

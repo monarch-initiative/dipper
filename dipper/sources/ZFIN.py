@@ -152,7 +152,7 @@ class ZFIN(Source):
                          '../../tests/resources/zfin/zfin_test_ids.yaml')) as fhandle:
         test_ids = yaml.safe_load(fhandle)
 
-    def __init__(self, graph_type, are_bnodes_skolemized, skip_stats=False):
+    def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
