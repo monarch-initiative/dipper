@@ -220,7 +220,8 @@ class Coriell(Source):
                     filedate = datetime.utcfromtimestamp(
                         fstat[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
-                self.dataset.set_ingest_source(remotef.filename, True)
+                self.dataset.set_ingest_source(remotef.filename,
+                                               is_object_literal=True)
                 self.dataset.set_ingest_source_file_version_date(remotef, filedate)
 
         return
