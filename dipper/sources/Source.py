@@ -133,7 +133,7 @@ class Source:
         self.test_only = False
         self.test_mode = False
 
-        if self.ingest_description is None:
+        if self.ingest_description and getdoc(self) is not None:
             self.ingest_description = getdoc(self)
 
         self.dataset = Dataset(

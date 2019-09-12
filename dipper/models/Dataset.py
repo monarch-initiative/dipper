@@ -237,7 +237,9 @@ class Dataset:
         self.model.addType(self.version_level_curie, self.globaltt['Dataset'])
         self.graph.addTriple(self.version_level_curie, self.globaltt['title'],
                              self.ingest_title, True)
-        self.model.addDescription(self.version_level_curie, self.ingest_description)
+        if self.ingest_description is not None:
+            self.model.addDescription(self.version_level_curie,
+                                      self.ingest_description)
         self.graph.addTriple(self.version_level_curie, self.globaltt['created'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['version'],
@@ -257,8 +259,9 @@ class Dataset:
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['title'],
                              self.ingest_title, True)
-        self.model.addDescription(self.distribution_level_turtle_curie,
-                                  self.ingest_description)
+        if self.ingest_description is not None:
+            self.model.addDescription(self.distribution_level_turtle_curie,
+                                      self.ingest_description)
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['version'],
                              Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
@@ -295,7 +298,6 @@ class Dataset:
                                  self.data_rights)
 
         self._declare_as_ontology()
-
 
     def set_ingest_source_file_version_num(self, file_iri, version):
         """
