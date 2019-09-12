@@ -222,7 +222,8 @@ class Coriell(Source):
 
                 self.dataset.set_ingest_source(remotef.filename,
                                                is_object_literal=True)
-                self.dataset.set_ingest_source_file_version_date(remotef, filedate)
+                self.dataset.set_ingest_source_file_version_date(remotef.filename,
+                                                                 filedate)
 
         return
 
