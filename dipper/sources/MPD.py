@@ -76,7 +76,7 @@ class MPD(Source):
     mgd_agent_label = "Mouse Phenotype Database"
     mgd_agent_type = "foaf:organization"
 
-    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, data_release_version=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

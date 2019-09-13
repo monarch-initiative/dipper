@@ -26,7 +26,7 @@ class Orphanet(Source):
             'url': 'http://www.orphadata.org/data/xml/en_product6.xml'}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, data_release_version=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
