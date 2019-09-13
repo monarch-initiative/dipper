@@ -24,7 +24,7 @@ class RGD(Source):
             'url': RGD_BASE + 'rattus_genes_mp'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, data_release_version):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
