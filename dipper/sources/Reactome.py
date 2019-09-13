@@ -27,7 +27,10 @@ class Reactome(Source):
         'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

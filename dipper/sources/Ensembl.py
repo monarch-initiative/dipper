@@ -68,7 +68,12 @@ class Ensembl(Source):
         ]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, tax_ids=None, gene_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None,
+                 gene_ids=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
