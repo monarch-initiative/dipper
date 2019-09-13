@@ -214,7 +214,7 @@ class Dataset:
 
         # set HCLS resource CURIEs
         self.summary_level_curie = identifier
-        self.version_level_curie = identifier + self.data_release_version
+        self.version_level_curie = identifier + "_" + self.data_release_version
         self.distribution_level_turtle_curie = \
             self.version_level_curie + "." + self.distribution_type
 

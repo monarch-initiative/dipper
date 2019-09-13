@@ -64,9 +64,9 @@ class DatasetTestCase(unittest.TestCase):
                                        + cls.identifier)
         # expected version level IRI
         cls.data_release_version = "19700101"
-        cls.version_level_IRI = URIRef(cls.summary_level_IRI +
+        cls.version_level_IRI = URIRef(cls.summary_level_IRI + "_" +
                                        cls.data_release_version)
-        cls.version_level_IRI_default_version = URIRef(cls.summary_level_IRI +
+        cls.version_level_IRI_default_version = URIRef(cls.summary_level_IRI + "_" +
                                                       cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
@@ -74,6 +74,7 @@ class DatasetTestCase(unittest.TestCase):
                                                 "." +
                                                 cls.distribution_type)
         cls.distribution_level_IRI_ttl_default_version = URIRef(cls.summary_level_IRI +
+                                                                "_" +
                                                                 cls.timestamp_date +
                                                                 "." +
                                                                 cls.distribution_type)
