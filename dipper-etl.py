@@ -113,6 +113,15 @@ def main():
 
     parser.add_argument('-v', '--version', help='version of source', type=str)
 
+    parser.add_argument('-d',
+                        '--data_release_version',
+                        help='string indicating the version of data release, e.g. '
+                             '\'201908\', used to construct metadata, including ' +
+                             'version and distribution IRIs and downloadURLs ' +
+                             '[defaults to date at start of runtime in ISO 8601 ' +
+                             'format]',
+                        type=str)
+
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
