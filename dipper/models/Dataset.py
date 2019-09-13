@@ -166,6 +166,7 @@ class Dataset:
             self,
             identifier,       # name? should be Archive url via Source
             data_release_version,
+            ingest_name,
             ingest_title,
             ingest_url,
             ingest_logo=None,
@@ -196,6 +197,7 @@ class Dataset:
         self.identifier = identifier
         self.citation = set()
 
+        self.ingest_name = ingest_name
         self.ingest_title = ingest_title
         if self.ingest_title is None:
             self.ingest_title = identifier
@@ -208,11 +210,22 @@ class Dataset:
 
         self.license_url = license_url
         self.data_rights = data_rights
+        self.distribution_type = distribution_type
 
         # set HCLS resource CURIEs
         self.summary_level_curie = identifier
         self.version_level_curie = identifier + self.data_release_version
-        self.distribution_level_turtle_curie = self.version_level_curie + ".ttl"
+        self.distribution_level_turtle_curie = \
+            self.version_level_curie + "." + self.distribution_type
+
+        # The following might seem a little odd, but we need to set downloadURLs this
+        # way in order for them to point to where they will end up in archive.MI.org as
+        # of Sept 2019. URL is:
+        #  https://archive.MI.org/[release version]/[dist type]/[source].[dist type]
+        self.download_url = \
+            self.curie_map.get("DatasetBase") + \
+            self.data_release_version + "/" + self.distribution_type + "/" + \
+            self.ingest_name + "." + self.distribution_type
 
         self._set_summary_level_triples()
         self._set_version_level_triples()
@@ -287,7 +300,7 @@ class Dataset:
                              "https://www.w3.org/TR/turtle/")
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['downloadURL'],
-                             self.distribution_level_turtle_curie)
+                             self.download_url)
         if self.license_url is None:
             self.graph.addTriple(self.distribution_level_turtle_curie,
                                  self.globaltt['license'],

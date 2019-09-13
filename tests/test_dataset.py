@@ -36,6 +36,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.license_url = "https://choosealicense.com/licenses/mit/"
         cls.license_url_default = "https://project-open-data.cio.gov/unknown-license/"
         cls.data_rights = "https://www.gnu.org/licenses/gpl-3.0.html"
+        cls.distribution_type = "ttl"
 
         # parse test graph once, to test triples counts/statistics below
         cls.test_ttl = "tests/resources/fakeingest/test_graph_simple.ttl"
@@ -69,10 +70,13 @@ class DatasetTestCase(unittest.TestCase):
                                                       cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
-        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
+        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI +
+                                                "." +
+                                                cls.distribution_type)
         cls.distribution_level_IRI_ttl_default_version = URIRef(cls.summary_level_IRI +
                                                                 cls.timestamp_date +
-                                                                ".ttl")
+                                                                "." +
+                                                                cls.distribution_type)
 
         # set expected IRIs for predicates and other things
         cls.iri_rdf_type = URIRef(cls.base_rdf + "type")
@@ -100,6 +104,11 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_owl_version_iri = URIRef(cls.base_owl + "versionIRI")
         cls.iri_owl_version_info = URIRef(cls.base_owl + "versionInfo")
         cls.iri_returned_logo = URIRef(cls.base_logo_url + cls.ingest_logo_url)
+        cls.iri_expected_download_url_value = URIRef(
+            cls.curie_map.get("DatasetBase") +
+            cls.data_release_version + "/" + cls.distribution_type + "/" +
+            cls.identifier + "." +
+            cls.distribution_type)
 
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -112,6 +121,7 @@ class DatasetTestCase(unittest.TestCase):
         self.dataset = Dataset(
             identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
             data_release_version=self.data_release_version,
+            ingest_name=self.identifier,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo_url,
@@ -249,6 +259,7 @@ class DatasetTestCase(unittest.TestCase):
         self.dataset = Dataset(
             identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
             data_release_version=self.data_release_version,
+            ingest_name=self.identifier,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo_url,
@@ -356,9 +367,11 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_download_url,
-             self.distribution_level_IRI_ttl)))
+             None)))
         self.assertTrue(len(triples) == 1,
-                        "missing distribution level downloadUrl triple")
+                        "didn't get exactly 1 downloadURL triple")
+        self.assertEqual(triples[0][2], self.iri_expected_download_url_value,
+                         "didn't get the expected downloadURL value")
 
     def test_distribution_level_license_url(self):
         triples = list(self.dataset.graph.triples(
@@ -380,6 +393,7 @@ class DatasetTestCase(unittest.TestCase):
         self.dataset = Dataset(
             identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
             data_release_version=None,
+            ingest_name=self.identifier,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo_url,

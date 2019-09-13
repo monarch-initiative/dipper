@@ -138,6 +138,7 @@ class Source:
         self.dataset = Dataset(
             identifier=self.curie_map.get("DatasetBase") + self.name,
             data_release_version=self.data_release_version,
+            ingest_name=self.name,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo,
