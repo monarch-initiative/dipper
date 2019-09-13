@@ -77,7 +77,7 @@ class Bgee(Source):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, tax_ids=None, version=None):
         """
         :param tax_ids: [str,], List of NCBI taxon  identifiers
         :return:

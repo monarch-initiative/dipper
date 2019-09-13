@@ -38,7 +38,7 @@ class BioGrid(Source):
         108899, 110308, 110364, 110678, 111642, 112300, 112365, 112771, 112898,
         199832, 203220, 247276, 120150, 120160, 124085]
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, tax_ids=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

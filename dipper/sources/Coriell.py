@@ -115,7 +115,7 @@ class Coriell(Source):
         'GM00142', 'NA17944', 'AG02505', 'GM01602', 'GM02455', 'AG00364',
         'GM13707', 'AG00780']
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

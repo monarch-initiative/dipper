@@ -65,7 +65,7 @@ class MMRRC(Source):
         'MMRRC:000255-MU', 'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
     ]
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,

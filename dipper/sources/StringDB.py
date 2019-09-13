@@ -35,7 +35,7 @@ class StringDB(Source):
     From: http://string-db.org/cgi/help.pl
     """
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None, tax_ids=None, version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
