@@ -107,6 +107,7 @@ class KEGG(OMIMSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='kegg',
             ingest_title='Kyoto Encyclopedia of Genes and Genomes',
             ingest_url='http://www.genome.jp/kegg/',

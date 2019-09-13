@@ -14,6 +14,7 @@ class MyChem(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='mychem',
             ingest_title='BioThings chemical and drug annotation data',
             ingest_url='http://mychem.info/',

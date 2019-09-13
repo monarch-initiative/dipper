@@ -81,6 +81,7 @@ class OMIM(OMIMSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='omim',
             ingest_title='Online Mendelian Inheritance in Man',
             ingest_url='http://www.omim.org',

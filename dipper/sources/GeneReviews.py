@@ -62,6 +62,7 @@ class GeneReviews(OMIMSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='genereviews',
             ingest_title='Gene Reviews',
             ingest_url='http://genereviews.org/',

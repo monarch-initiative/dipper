@@ -69,6 +69,7 @@ class MMRRC(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='mmrrc',
             ingest_title='Mutant Mouse Regional Resource Centers',
             ingest_url='https://www.mmrrc.org',

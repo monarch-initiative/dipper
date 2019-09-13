@@ -81,6 +81,7 @@ class UDP(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='udp',
             ingest_title='Undiagnosed Diseases Program',
             ingest_url='https://rarediseases.info.nih.gov/',

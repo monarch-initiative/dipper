@@ -85,6 +85,7 @@ class Bgee(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='bgee',
             ingest_title='Bgee Gene expression data in animals',
             ingest_url='http://bgee.org/',

@@ -133,6 +133,7 @@ class FlyBase(PostgreSQLSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='flybase',
             ingest_title='FlyBase',
             ingest_url='http://www.flybase.org/',

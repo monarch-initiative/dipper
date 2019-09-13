@@ -86,6 +86,7 @@ class HGNC(OMIMSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',

@@ -112,6 +112,7 @@ class NCBIGene(OMIMSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='ncbigene',
             ingest_title='National Center for Biotechnology Information',
             ingest_url='http://ncbi.nih.nlm.gov/gene',

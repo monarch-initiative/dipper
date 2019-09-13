@@ -131,6 +131,7 @@ class Monochrom(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='monochrom',
             ingest_title='Monarch Chromosome Ontology',
             ingest_url='https://monarchinitiative.org',   # TODO can we be more specific

@@ -42,6 +42,7 @@ class BioGrid(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='biogrid',
             ingest_title='Biological General Repository for Interaction Datasets',
             ingest_url='http://thebiogrid.org',

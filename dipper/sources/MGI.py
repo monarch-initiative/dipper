@@ -145,6 +145,7 @@ class MGI(PostgreSQLSource):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='mgi',
             ingest_title='Mouse Genome Informatics',
             ingest_url='http://www.informatics.jax.org/',

@@ -69,6 +69,7 @@ class Panther(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='panther',
             ingest_title='Protein ANalysis THrough Evolutionary Relationships',
             ingest_url='http://pantherdb.org',

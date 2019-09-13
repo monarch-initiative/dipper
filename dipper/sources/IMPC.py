@@ -118,6 +118,7 @@ class IMPC(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='impc',
             ingest_title='International Mouse Phenotyping Consortium',
             ingest_url='http://www.mousephenotype.org',

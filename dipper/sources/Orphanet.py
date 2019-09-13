@@ -30,6 +30,7 @@ class Orphanet(Source):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='orphanet',
             ingest_title='Orphanet',
             ingest_url='http://www.orpha.net',
