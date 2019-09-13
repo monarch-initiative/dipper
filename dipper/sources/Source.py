@@ -44,6 +44,7 @@ class Source:
             self,
             graph_type='rdf_graph',     # or streamed_graph
             are_bnodes_skized=False,    # typically True
+            data_release_version=None,
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
@@ -59,6 +60,7 @@ class Source:
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
+        self.data_release_version = data_release_version
         self.ingest_title = ingest_title
         self.ingest_url = ingest_url
         self.ingest_logo = ingest_logo
@@ -135,6 +137,7 @@ class Source:
 
         self.dataset = Dataset(
             identifier=self.curie_map.get("DatasetBase") + self.name,
+            data_release_version=self.data_release_version,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo,

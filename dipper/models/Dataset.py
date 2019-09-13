@@ -165,6 +165,7 @@ class Dataset:
     def __init__(
             self,
             identifier,       # name? should be Archive url via Source
+            data_release_version,
             ingest_title,
             ingest_url,
             ingest_logo=None,
@@ -172,7 +173,8 @@ class Dataset:
             license_url=None,
             data_rights=None,
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
-            file_handle=None
+            file_handle=None,
+            distribution_type='ttl',
     ):
 
         if graph_type is None:
@@ -181,6 +183,11 @@ class Dataset:
             self.graph = StreamedGraph(True, identifier, file_handle=file_handle)
         elif graph_type == 'rdf_graph':
             self.graph = RDFGraph(True, identifier)
+
+        if data_release_version is not None:
+            self.data_release_version = data_release_version
+        else:
+            self.data_release_version = datetime.today().strftime("%Y%m%d")
 
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
@@ -197,16 +204,14 @@ class Dataset:
         self.ingest_logo = self.curie_map.get('MonarchLogoRepo') + ingest_logo
         self.ingest_description = ingest_description
 
-        self.version = None
         self.date_issued = None
 
         self.license_url = license_url
         self.data_rights = data_rights
 
         # set HCLS resource CURIEs
-        self.date_timestamp_iso_8601 = datetime.today().strftime("%Y%m%d")
         self.summary_level_curie = identifier
-        self.version_level_curie = identifier + self.date_timestamp_iso_8601
+        self.version_level_curie = identifier + self.data_release_version
         self.distribution_level_turtle_curie = self.version_level_curie + ".ttl"
 
         self._set_summary_level_triples()
@@ -241,9 +246,9 @@ class Dataset:
             self.model.addDescription(self.version_level_curie,
                                       self.ingest_description)
         self.graph.addTriple(self.version_level_curie, self.globaltt['created'],
-                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+                             Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['version'],
-                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+                             Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.version_level_curie, self.globaltt['Publisher'],
@@ -264,10 +269,10 @@ class Dataset:
                                       self.ingest_description)
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['version'],
-                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+                             Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['created'],
-                             Literal(self.date_timestamp_iso_8601, datatype=XSD.date))
+                             Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org

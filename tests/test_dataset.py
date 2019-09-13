@@ -27,7 +27,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.curie_map = curiemap.get()
 
         # parameters passed to code, to be returned in graph
-        cls.monarch_data_curie_prefix = "MonarchArchive"
+        cls.monarch_data_curie_prefix = "DatasetBase"
         cls.identifier = "fakeingest"
         cls.ingest_description = "some ingest description"
         cls.ingest_url = "http://fakeingest.com"
@@ -43,7 +43,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.test_graph.parse(cls.test_ttl, format="turtle")
 
         # expected things:
-        cls.expected_curie_prefix = "MonarchArchive"
+        cls.expected_curie_prefix = "DatasetBase"
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         cls.base_cito = 'http://purl.org/spar/cito/'
@@ -62,10 +62,17 @@ class DatasetTestCase(unittest.TestCase):
         cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
                                        + cls.identifier)
         # expected version level IRI
-        cls.version_level_IRI = URIRef(cls.summary_level_IRI + cls.timestamp_date)
+        cls.data_release_version = "19700101"
+        cls.version_level_IRI = URIRef(cls.summary_level_IRI +
+                                       cls.data_release_version)
+        cls.version_level_IRI_default_version = URIRef(cls.summary_level_IRI +
+                                                      cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
         cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
+        cls.distribution_level_IRI_ttl_default_version = URIRef(cls.summary_level_IRI +
+                                                                cls.timestamp_date +
+                                                                ".ttl")
 
         # set expected IRIs for predicates and other things
         cls.iri_rdf_type = URIRef(cls.base_rdf + "type")
@@ -104,6 +111,7 @@ class DatasetTestCase(unittest.TestCase):
     def setUp(self):
         self.dataset = Dataset(
             identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            data_release_version=self.data_release_version,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo_url,
@@ -224,17 +232,37 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level created triple")
         self.assertEqual(triples[0][2],
-                         Literal(self.timestamp_date, datatype=XSD.date),
+                         Literal(self.data_release_version, datatype=XSD.date),
                          "version level created triple has the wrong timestamp")
 
-    def test_version_level_version(self):
+    def test_version_level_version_default(self):
         triples = list(self.dataset.graph.triples(
             (self.version_level_IRI, self.iri_version, None)))
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly one version level version triple")
         self.assertEqual(triples[0][2],
-                         Literal(self.timestamp_date, datatype=XSD.date),
-                         "version level version triple has the wrong timestamp")
+                         Literal(self.data_release_version, datatype=XSD.date),
+                         "version level version triple (default) has the wrong " +
+                         "timestamp")
+
+    def test_version_level_version_set_explicitly(self):
+        self.dataset = Dataset(
+            identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            data_release_version=self.data_release_version,
+            ingest_title=self.ingest_title,
+            ingest_url=self.ingest_url,
+            ingest_logo=self.ingest_logo_url,
+            ingest_description=self.ingest_description,
+            license_url=None,
+            data_rights=self.data_rights
+        )
+        triples = list(self.dataset.graph.triples(
+            (self.version_level_IRI, self.iri_version, None)))
+        self.assertTrue(len(triples) == 1,
+                        "didn't get exactly one version level version triple")
+        self.assertEqual(triples[0][2],
+                         Literal(self.data_release_version, datatype=XSD.date),
+                         "version level version triple (set explicitly) is wrong ")
 
     def test_version_level_creator(self):
         triples = list(self.dataset.graph.triples(
@@ -285,14 +313,16 @@ class DatasetTestCase(unittest.TestCase):
             (self.distribution_level_IRI_ttl, self.iri_created, None)))
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level type created triple")
-        self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
+        self.assertEqual(triples[0][2], Literal(self.data_release_version,
+                                                datatype=XSD.date))
 
     def test_distribution_level_version(self):
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl, self.iri_version, None)))
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level type version triple")
-        self.assertEqual(triples[0][2], Literal(self.timestamp_date, datatype=XSD.date))
+        self.assertEqual(triples[0][2], Literal(self.data_release_version,
+                                                datatype=XSD.date))
 
     def test_distribution_level_creator(self):
         triples = list(self.dataset.graph.triples(
@@ -349,6 +379,7 @@ class DatasetTestCase(unittest.TestCase):
     def test_distribution_level_no_license_url_default_value(self):
         self.dataset = Dataset(
             identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            data_release_version=None,
             ingest_title=self.ingest_title,
             ingest_url=self.ingest_url,
             ingest_logo=self.ingest_logo_url,
@@ -357,7 +388,7 @@ class DatasetTestCase(unittest.TestCase):
             data_rights=self.data_rights
         )
         triples = list(self.dataset.graph.triples(
-            (self.distribution_level_IRI_ttl,
+            (self.distribution_level_IRI_ttl_default_version,
              self.iri_license,
              URIRef(self.license_url_default))))
         self.assertTrue(len(triples) == 1,

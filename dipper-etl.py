@@ -222,6 +222,8 @@ def main():
             source_args['tax_ids'] = tax_ids
         if args.version:
             source_args['version'] = args.version
+        if args.data_release_version:
+            source_args['data_release_version'] = args.data_release_version
 
         mysource = source_class(**source_args)
         if args.parse_only is False:

@@ -24,10 +24,11 @@ class RGD(Source):
             'url': RGD_BASE + 'rattus_genes_mp'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
