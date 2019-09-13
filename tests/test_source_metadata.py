@@ -62,7 +62,7 @@ class SourceMetadataTestCase(unittest.TestCase):
         cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
                                        + cls.identifier)
         # expected version level IRI
-        cls.version_level_IRI = URIRef(cls.summary_level_IRI + cls.timestamp_date)
+        cls.version_level_IRI = URIRef(cls.summary_level_IRI + "_" + cls.timestamp_date)
 
         # expected distribution level IRI (for ttl resource)
         cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
