@@ -85,9 +85,6 @@ class Source:
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
         self.datasetfile = None
 
-        # still need to pull in file suffix  -- this ia a curie not a url
-        self.archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
-
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
