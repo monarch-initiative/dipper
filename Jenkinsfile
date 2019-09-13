@@ -20,6 +20,8 @@ pipeline {
             returnStdout: true
         ).trim()
 
+        DATA_RELEASE_VERSION = "201910"
+
         MONARCH_DATA_FS = 'monarch-ttl-prod'
         DIPPER = 'venv/bin/python dipper-etl.py'
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
@@ -149,7 +151,7 @@ pipeline {
                                         SOURCE=genereviews
                                         cd .. && mkdir -p raw/genereviews/books
                                         cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
-                                        $DIPPER --sources genereviews
+                                        $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                     '''
                                 }
@@ -539,7 +541,7 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            SOURCE=orphanet 
+                            SOURCE=orphanet
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
