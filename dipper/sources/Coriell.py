@@ -224,10 +224,9 @@ class Coriell(Source):
                     filedate = datetime.utcfromtimestamp(
                         fstat[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
-                self.dataset.set_ingest_source(remotef.filename,
-                                               is_object_literal=True)
-                self.dataset.set_ingest_source_file_version_date(remotef.filename,
-                                                                 filedate)
+                remote_url = self.files[rmt]['page'] + "/" + remotef.filename
+                self.dataset.set_ingest_source(remote_url)
+                self.dataset.set_ingest_source_file_version_date(remote_url, filedate)
 
         return
 
