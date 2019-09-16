@@ -111,7 +111,8 @@ def main():
         '--dest_fmt',
         help='serialization format: [turtle], nt, nquads, rdfxml, n3, raw', type=str)
 
-    parser.add_argument('-v', '--version', help='version of source', type=str)
+    parser.add_argument('-v', '--version', help='version of source (deprecated)',
+                        type=str)
 
     parser.add_argument('-d',
                         '--data_release_version',
