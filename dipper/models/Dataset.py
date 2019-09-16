@@ -223,9 +223,8 @@ class Dataset:
         # of Sept 2019. URL is:
         #  https://archive.MI.org/[release version]/[dist type]/[source].[dist type]
         self.download_url = \
-            self.curie_map.get("DatasetBase") + \
-            self.data_release_version + "/" + self.distribution_type + "/" + \
-            self.ingest_name + "." + self.distribution_type
+            self.curie_map.get("MonarchArchive") + self.data_release_version + \
+            "/rdf/" + self.ingest_name + "." + self.distribution_type
 
         self._set_summary_level_triples()
         self._set_version_level_triples()

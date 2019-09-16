@@ -27,7 +27,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.curie_map = curiemap.get()
 
         # parameters passed to code, to be returned in graph
-        cls.monarch_data_curie_prefix = "DatasetBase"
+        cls.monarch_archive_curie_prefix = "MonarchArchive"
         cls.identifier = "fakeingest"
         cls.ingest_description = "some ingest description"
         cls.ingest_url = "http://fakeingest.com"
@@ -44,7 +44,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.test_graph.parse(cls.test_ttl, format="turtle")
 
         # expected things:
-        cls.expected_curie_prefix = "DatasetBase"
+        cls.expected_curie_prefix = "MonarchArchive"
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         cls.base_cito = 'http://purl.org/spar/cito/'
@@ -106,9 +106,8 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_owl_version_info = URIRef(cls.base_owl + "versionInfo")
         cls.iri_returned_logo = URIRef(cls.base_logo_url + cls.ingest_logo_url)
         cls.iri_expected_download_url_value = URIRef(
-            cls.curie_map.get("DatasetBase") +
-            cls.data_release_version + "/" + cls.distribution_type + "/" +
-            cls.identifier + "." +
+            cls.curie_map.get("MonarchArchive") +
+            cls.data_release_version + "/rdf/" + cls.identifier + "." +
             cls.distribution_type)
 
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
@@ -120,7 +119,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.dataset = Dataset(
-            identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
             data_release_version=self.data_release_version,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
@@ -258,7 +257,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_version_level_version_set_explicitly(self):
         self.dataset = Dataset(
-            identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
             data_release_version=self.data_release_version,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
@@ -392,7 +391,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_no_license_url_default_value(self):
         self.dataset = Dataset(
-            identifier=self.monarch_data_curie_prefix + ":" + self.identifier,
+            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
             data_release_version=None,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
