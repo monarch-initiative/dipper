@@ -290,6 +290,12 @@ class AnimalQTLdb(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
+
+                if len(row) != 32:
+                    LOG.warning("Row in {} did not have the expected 32 columns: {}".
+                                format(raw, row))
+                    continue
+
                 (qtl_id,
                  qtl_symbol,
                  trait_name,
@@ -531,7 +537,10 @@ class AnimalQTLdb(Source):
                 line_counter += 1
                 if re.match(r'^#', ' '.join(row)):
                     continue
-
+                if len(row) != 9:
+                    LOG.warning("Row in {} did not have the expected 9 columns: {}".
+                                format(raw, row))
+                    continue
                 (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
                  score, attr) = row
                 example = '''
