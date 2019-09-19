@@ -421,11 +421,7 @@ class FlyBase(PostgreSQLSource):
 
         col = self.files[src_key]['columns']
 
-        # JR - I've set encoding to latin-1 to fix the UnicodeDecodeError that happens
-        # when the default encoding (utf-8) is used. This possibly will break if/when
-        # the encoding of this file upstream at Flybase is changed to utf-8. If so,
-        # trying setting encoding='utf-8' below
-        with gzip.open(raw, 'rt', encoding='latin-1') as tsvfile:
+        with gzip.open(raw, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             # skip first four lines
             for _ in range(0, 2):
