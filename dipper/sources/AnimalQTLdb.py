@@ -51,12 +51,91 @@ class AnimalQTLdb(Source):
     GENEINFO = 'ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO'
     GITDIP = 'https://raw.githubusercontent.com/monarch-initiative/dipper/master'
 
+    gff_columns = [  # GFF files (QTL_*.gff.txt.gz) should contain these columns
+        'SEQNAME',
+        'SOURCE',
+        'FEATURE',
+        'START',
+        'END',
+        'SCORE',
+        'STRAND',
+        'FRAME',
+        'ATTRIBUTE'
+    ]
+
+    qtl_columns = [  # columns in *_QTLdata.txt files
+        'qtl_id',
+        'qtl_symbol',
+        'trait_name',
+        'assotype',
+        'empty',
+        'chromosome',
+        'position_cm',
+        'range_cm',
+        'flankmark_a2',
+        'flankmark_a1',
+        'peak_mark',
+        'flankmark_b1',
+        'flankmark_b2',
+        'exp_id',
+        'model_id',
+        'test_base',
+        'psig_level',
+        'lod_score',
+        'ls_mean',
+        'p_values',
+        'f_statistics',
+        'variance',
+        'bayes_value',
+        'likelihood_ratio',
+        'trait_id',
+        'dom_effect',
+        'add_effect',
+        'pubmed_id',
+        'gene_id',
+        'gene_id_src',
+        'gene_id_type',
+        'empty2'
+     ]
+
+    gene_info_columns = [  # columns from *.gene_info.gz files
+        'tax_id',
+        'GeneID',
+        'Symbol',
+        'LocusTag',
+        'Synonyms',
+        'dbXrefs',
+        'chromosome',
+        'map_location',
+        'description',
+        'type_of_gene',
+        'Symbol_from_nomenclature_authority',
+        'Full_name_from_nomenclature_authority',
+        'Nomenclature_status',
+        'Other_designations',
+        'Modification_date',
+        'Feature_type'
+    ]
+
+    trait_mapping_columns = [  # columns in file 'trait_mappings'
+                               # (column info only used for this file at the moment)
+        'VT',
+        'LPT',
+        'CMO',
+        'ATO',
+        'Species',
+        'Class',
+        'Type',
+        'QTL_Count'
+    ]
+
     files = {
         # defaulting to this
         'cattle_bp': {
             'file': 'QTL_Btau_4.6.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz',
             'curie': 'cattleQTL',
+            'columnns': gff_columns
         },
         # disabling this for now
         # 'cattle_umd_bp': {
@@ -68,51 +147,61 @@ class AnimalQTLdb(Source):
             'file': 'cattle_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt',
             'curie': 'cattleQTL',
+            'columnns': qtl_columns
         },
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz',
             'curie': 'chickenQTL',
+            'columnns': gff_columns
         },
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt',
             'curie': 'chickenQTL',
+            'columnns': qtl_columns
         },
         'pig_bp': {
             'file': 'QTL_SS_10.2.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz',
             'curie': 'pigQTL',
+            'columnns': gff_columns
         },
         'pig_cm': {
             'file': 'pig_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt',
             'curie': 'pigQTL',
+            'columnns': qtl_columns
         },
         'sheep_bp': {
             'file': 'QTL_OAR_3.1.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz',
             'curie': 'sheepQTL',
+            'columnns': gff_columns
         },
         'sheep_cm': {
             'file': 'sheep_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt',
             'curie': 'sheepQTL',
+            'columnns': qtl_columns
         },
         'horse_bp': {
             'file': 'QTL_EquCab2.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz',
             'curie': 'horseQTL',
+            'columnns': gff_columns
         },
         'horse_cm': {
             'file': 'horse_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt',
             'curie': 'horseQTL',
+            'columnns': qtl_columns
         },
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt',
             'curie': 'rainbow_troutQTL',
+            'columnns': qtl_columns
         },
 
         #                  Gene_info from NCBI
@@ -124,37 +213,44 @@ class AnimalQTLdb(Source):
         'Sus_scrofa_info': {
             'file': 'Sus_scrofa.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Sus_scrofa.gene_info.gz',
+            'columnns': gene_info_columns
         },
         # cattle  # "Bos taurus"      # NCBITaxon:9913
         'Bos_taurus_info': {
             'file': 'Bos_taurus.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Bos_taurus.gene_info.gz',
+            'columnns': gene_info_columns
         },
         # chicken  # "Gallus gallus"  # NCBITaxon:9031
         'Gallus_gallus_info': {
             'file': 'Gallus_gallus.gene_info.gz',
             'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
+            'columnns': gene_info_columns
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
             'file': 'Equus_caballus.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Equus_caballus.gene_info.gz',
+            'columnns': gene_info_columns
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
             'file': 'Ovis_aries.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Ovis_aries.gene_info.gz',
+            'columnns': gene_info_columns
         },
         # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
         'Oncorhynchus_mykiss_info': {
             'file': 'Oncorhynchus_mykiss.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Oncorhynchus_mykiss.gene_info.gz',
+            'columnns': gene_info_columns
         },
         ########################################
         # TODO add rainbow_trout_bp when available
         'trait_mappings': {
             'file': 'trait_mappings',
-            'url': AQDL + '/export/trait_mappings.csv'
+            'url': AQDL + '/export/trait_mappings.csv',
+            'columns': trait_mapping_columns
         },
     }
 
@@ -223,11 +319,14 @@ class AnimalQTLdb(Source):
                     if row[0][0] == '#':
                         continue
                     else:
+                        if len(row) != len(self.gene_info_columns):
+                            LOG.warning("Problem parsing %s row %s\n" +
+                                        "in %s row %s\ngot %s cols but expected %s",
+                                        gene_info_file, row, len(row),
+                                        len(self.gene_info_columns))
                         self.gene_info.append(str(row[1]))  # tossing lots of good stuff
             LOG.info(
                 'Gene Info for %s has %i enteries', common_name, len(self.gene_info))
-            # LOG.info('Gene Info entery looks like %s', self.gene_info[5])
-
             build = None
 
             fname_bp = common_name + '_bp'
@@ -240,8 +339,6 @@ class AnimalQTLdb(Source):
                     build = mch.group(1)
                     build_id = self.localtt[build]
                     LOG.info("Build UCSC label is: %s", build_id)
-
-                    # NCBI assembly curie is
 
                     geno.addReferenceGenome(build_id, build, txid_num)
 
@@ -289,7 +386,12 @@ class AnimalQTLdb(Source):
             for row in filereader:
                 line_counter += 1
 
-                try:
+                if len(row) != len(self.qtl_columns):
+                    LOG.warning("Problem parsing %s row %s\n" +
+                                "in %s row %s\ngot %s cols but expected %s",
+                                raw, row, len(row), len(self.qtl_columns))
+                    continue
+                else:
                     (qtl_id,
                      qtl_symbol,
                      trait_name,
@@ -321,10 +423,6 @@ class AnimalQTLdb(Source):
                      gene_id_src,
                      gene_id_type,
                      empty2) = row
-                except ValueError as verror:
-                    LOG.warning("Problem in {} parsing row {}: {}".
-                                format(raw, row, verror))
-                    continue
 
                 if self.test_mode and int(qtl_id) not in self.test_ids:
                     continue
@@ -536,13 +634,14 @@ class AnimalQTLdb(Source):
                 if re.match(r'^#', ' '.join(row)):
                     continue
 
-                try:
+                if len(row) != len(self.gff_columns):
+                    LOG.warning("Problem parsing %s row %s\n" +
+                                "in %s row %s\ngot %s cols but expected %s",
+                                raw, row, len(row), len(self.gff_columns))
+                    continue
+                else:
                     (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
                      score, attr) = row
-                except ValueError as verror:
-                    LOG.warning("Problem in {} parsing row {}: {}".
-                                format(raw, row, verror))
-                    continue
 
                 example = '''
 Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
