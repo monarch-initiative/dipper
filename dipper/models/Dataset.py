@@ -242,7 +242,7 @@ class Dataset:
                              "schemaorg:logo",
                              self.ingest_logo)
         self.graph.addTriple(self.summary_level_curie, self.globaltt['identifier'],
-                             self.identifier, True)
+                             self.identifier)
         if self.ingest_url is not None:
             self.graph.addTriple(self.summary_level_curie,
                                  self.globaltt["Source (dct)"],
