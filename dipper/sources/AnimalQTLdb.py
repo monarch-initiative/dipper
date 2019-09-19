@@ -288,37 +288,43 @@ class AnimalQTLdb(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (qtl_id,
-                 qtl_symbol,
-                 trait_name,
-                 assotype,
-                 empty,
-                 chromosome,
-                 position_cm,
-                 range_cm,
-                 flankmark_a2,
-                 flankmark_a1,
-                 peak_mark,
-                 flankmark_b1,
-                 flankmark_b2,
-                 exp_id,
-                 model_id,
-                 test_base,
-                 sig_level,
-                 lod_score,
-                 ls_mean,
-                 p_values,
-                 f_statistics,
-                 variance,
-                 bayes_value,
-                 likelihood_ratio,
-                 trait_id, dom_effect,
-                 add_effect,
-                 pubmed_id,
-                 gene_id,
-                 gene_id_src,
-                 gene_id_type,
-                 empty2) = row
+
+                try:
+                    (qtl_id,
+                     qtl_symbol,
+                     trait_name,
+                     assotype,
+                     empty,
+                     chromosome,
+                     position_cm,
+                     range_cm,
+                     flankmark_a2,
+                     flankmark_a1,
+                     peak_mark,
+                     flankmark_b1,
+                     flankmark_b2,
+                     exp_id,
+                     model_id,
+                     test_base,
+                     sig_level,
+                     lod_score,
+                     ls_mean,
+                     p_values,
+                     f_statistics,
+                     variance,
+                     bayes_value,
+                     likelihood_ratio,
+                     trait_id, dom_effect,
+                     add_effect,
+                     pubmed_id,
+                     gene_id,
+                     gene_id_src,
+                     gene_id_type,
+                     empty2) = row
+                except ValueError as verror:
+                    LOG.warning("Problem in {} parsing row {}: {}".
+                                format(raw, row, verror))
+                    continue
 
                 if self.test_mode and int(qtl_id) not in self.test_ids:
                     continue
@@ -530,8 +536,14 @@ class AnimalQTLdb(Source):
                 if re.match(r'^#', ' '.join(row)):
                     continue
 
-                (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
-                 score, attr) = row
+                try:
+                    (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
+                     score, attr) = row
+                except ValueError as verror:
+                    LOG.warning("Problem in {} parsing row {}: {}".
+                                format(raw, row, verror))
+                    continue
+
                 example = '''
 Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
 QTL_ID=2242;Name="Spleen percentage";Abbrev="SPLP";PUBMED_ID=17012160;trait_ID=2234;
