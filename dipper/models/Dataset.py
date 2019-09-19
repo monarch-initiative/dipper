@@ -253,7 +253,10 @@ class Dataset:
     def _set_version_level_triples(self):
         self.model.addType(self.version_level_curie, self.globaltt['Dataset'])
         self.graph.addTriple(self.version_level_curie, self.globaltt['title'],
-                             self.ingest_title, True)
+                             self.ingest_title +
+                             " Monarch version " +
+                             self.data_release_version,
+                             True)
         if self.ingest_description is not None:
             self.model.addDescription(self.version_level_curie,
                                       self.ingest_description)
@@ -275,7 +278,10 @@ class Dataset:
                            self.globaltt['distribution'])
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['title'],
-                             self.ingest_title, True)
+                             self.ingest_title +
+                             " distribution " +
+                             self.distribution_type,
+                             True)
         if self.ingest_description is not None:
             self.model.addDescription(self.distribution_level_turtle_curie,
                                       self.ingest_description)

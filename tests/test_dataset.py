@@ -227,8 +227,13 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_version_level_title(self):
         triples = list(self.dataset.graph.triples(
-            (self.version_level_IRI, self.iri_title, Literal(self.ingest_title))))
+            (self.version_level_IRI, self.iri_title, None)))
         self.assertTrue(len(triples) == 1, "missing version level title triple")
+        self.assertEqual(triples[0][2],
+                         Literal(self.ingest_title +
+                                 " Monarch version " +
+                                 self.data_release_version),
+                         "version level title triple has wrong value")
 
     def test_version_level_description(self):
         triples = list(self.dataset.graph.triples(
@@ -308,9 +313,15 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_title(self):
         triples = list(self.dataset.graph.triples(
-            (self.distribution_level_IRI_ttl, self.iri_title,
-             Literal(self.ingest_title))))
-        self.assertTrue(len(triples) == 1, "missing version level type title triple")
+            (self.distribution_level_IRI_ttl, self.iri_title, None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level type title triple")
+        self.assertEqual(triples[0][2],
+                         Literal(self.ingest_title +
+                                 " distribution " +
+                                 self.distribution_type),
+                         "distribution level title triple has wrong value")
+
 
     def test_distribution_level_description(self):
         triples = list(self.dataset.graph.triples(
