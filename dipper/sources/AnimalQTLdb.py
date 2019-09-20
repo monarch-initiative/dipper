@@ -320,7 +320,7 @@ class AnimalQTLdb(Source):
                         continue
                     else:
                         if len(row) != len(self.gene_info_columns):
-                            LOG.warning("Problem parsing %s row %s\n" +
+                            LOG.warning("Problem parsing\n" +
                                         "in %s row %s\ngot %s cols but expected %s",
                                         gene_info_file, row, len(row),
                                         len(self.gene_info_columns))
@@ -387,7 +387,7 @@ class AnimalQTLdb(Source):
                 line_counter += 1
 
                 if len(row) != len(self.qtl_columns):
-                    LOG.warning("Problem parsing %s row %s\n" +
+                    LOG.warning("Problem parsing\n" +
                                 "in %s row %s\ngot %s cols but expected %s",
                                 raw, row, len(row), len(self.qtl_columns))
                     continue
@@ -635,8 +635,8 @@ class AnimalQTLdb(Source):
                     continue
 
                 if len(row) != len(self.gff_columns):
-                    LOG.warning("Problem parsing %s row %s\n" +
-                                "in %s row %s\ngot %s cols but expected %s",
+                    LOG.warning("Problem parsing\n" +
+                                "got %s cols but expected %s",
                                 raw, row, len(row), len(self.gff_columns))
                     continue
                 else:
