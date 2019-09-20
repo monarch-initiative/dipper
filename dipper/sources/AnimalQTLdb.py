@@ -267,7 +267,7 @@ class AnimalQTLdb(Source):
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
             license_url=None,
-            data_rights="'" + AQDL + '/faq#32',
+            data_rights="'" + AQDL + '/faq#32' + "'"
             # file_handle=None
         )
 
