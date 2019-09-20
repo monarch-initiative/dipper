@@ -229,8 +229,8 @@ class MMRRC(Source):
                     try:
                         [curie, localid] = mgi_gene_id.split(':')
                     except ValueError as verror:
-                        LOG.warning("Problem parsing mgi_gene_id {} from file {}: {}".
-                            format(mgi_gene_id, fname, verror))
+                        LOG.warning("Problem parsing mgi_gene_id %s from file %s: %s",
+                                    mgi_gene_id, fname, verror)
                     if curie not in ['MGI', 'NCBIGene']:
                         LOG.info("MGI Gene id not recognized: %s", mgi_gene_id)
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
@@ -309,7 +309,7 @@ class MMRRC(Source):
                 genes = h['genes']
                 vl_set = set()
                 # make variant loci for each gene
-                if len(variants) > 0:
+                if variants:
                     for var in variants:
                         vl_id = var.strip()
                         vl_symbol = self.id_label_hash[vl_id]
@@ -350,7 +350,7 @@ class MMRRC(Source):
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
                         self.globaltt['variant single locus complement'])
-                if len(vslc_list) > 0:
+                if vslc_list:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
                         gvc_id = re.sub(r'_|:', '', gvc_id)

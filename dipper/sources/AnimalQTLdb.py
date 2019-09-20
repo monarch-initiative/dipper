@@ -96,7 +96,7 @@ class AnimalQTLdb(Source):
         'gene_id_src',
         'gene_id_type',
         'empty2'
-     ]
+    ]
 
     gene_info_columns = [  # columns from *.gene_info.gz files
         'tax_id',
@@ -320,8 +320,8 @@ class AnimalQTLdb(Source):
                         continue
                     else:
                         if len(row) != len(self.gene_info_columns):
-                            LOG.warning("Problem parsing\n" +
-                                        "in %s row %s\ngot %s cols but expected %s",
+                            LOG.warning("Problem parsing in %s row %s\n"
+                                        "got %s cols but expected %s",
                                         gene_info_file, row, len(row),
                                         len(self.gene_info_columns))
                         self.gene_info.append(str(row[1]))  # tossing lots of good stuff
@@ -387,8 +387,8 @@ class AnimalQTLdb(Source):
                 line_counter += 1
 
                 if len(row) != len(self.qtl_columns):
-                    LOG.warning("Problem parsing\n" +
-                                "in %s row %s\ngot %s cols but expected %s",
+                    LOG.warning("Problem parsing in %s row %s\n"
+                                "got %s cols but expected %s",
                                 raw, row, len(row), len(self.qtl_columns))
                     continue
                 else:
@@ -635,7 +635,7 @@ class AnimalQTLdb(Source):
                     continue
 
                 if len(row) != len(self.gff_columns):
-                    LOG.warning("Problem parsing\n" +
+                    LOG.warning("Problem parsing in %s row %s\n"
                                 "got %s cols but expected %s",
                                 raw, row, len(row), len(self.gff_columns))
                     continue
