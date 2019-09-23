@@ -967,7 +967,7 @@ def parse():
 
                     # blank node identifiers
                     _evidence_id = '_:' + digest_id(monarch_id + '_evidence')
-                    
+
                     write_spo(_evidence_id, 'rdfs:label', monarch_id + '_evidence', rcvtriples,
                               subject_category=blv.terms.EvidenceType.value)
 
@@ -992,15 +992,16 @@ def parse():
 
                     # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
                     write_spo(
-                        monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie, rcvtriples,
+                        monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie,
+                        rcvtriples,
                         subject_category=blv.terms.Association.value,
                         object_category=blv.terms.Disease.value)
                         # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # medgen might not have a disease label
-                    if condition.label is not None:                      
-                        write_spo(rcv_disease_curie, 'rdfs:label', condition.label, rcvtriples,
-                              subject_category=blv.terms.Disease.value)
+                    if condition.label is not None:
+                        write_spo(rcv_disease_curie, 'rdfs:label', condition.label,
+                                  rcvtriples, subject_category=blv.terms.Disease.value)
 
                     # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
                     write_spo(

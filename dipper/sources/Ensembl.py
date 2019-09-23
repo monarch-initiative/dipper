@@ -334,15 +334,15 @@ class Ensembl(Source):
                         model.addEquivalentClass(gene_id, entrez_curie,
                                                  subject_category=blv.terms.Gene.value,
                                                  object_category=blv.terms.Gene.value)
-  
+
                 if hgnc_curie is not None and hgnc_curie != '':
                     model.addEquivalentClass(gene_id, hgnc_curie,
                                              subject_category=blv.terms.Gene.value,
                                              object_category=blv.terms.Gene.value)
-        
+
                 geno.addTaxon('NCBITaxon:' + taxid, gene_id,
                               genopart_category=blv.terms.Gene.value)
-          
+
                 if ensembl_peptide_id is not None and ensembl_peptide_id != '':
                     peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
                     model.addIndividualToGraph(peptide_curie, None, gene_type_id,

@@ -720,9 +720,11 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id,
-                                            subject_category=blv.terms.Publication.value,
-                                            object_category=blv.terms.SequenceVariant.value)
-                                            
+                                            subject_category=
+                                            blv.terms.Publication.value,
+                                            object_category=
+                                            blv.terms.SequenceVariant.value)
+
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
                             dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
@@ -730,7 +732,8 @@ class OMIM(OMIMSource):
                                 did = 'dbSNP:'+dnum.strip()
                                 model.addIndividualToGraph(did, None,
                                                            ind_category=
-                                                           blv.terms.SequenceVariant.value)
+                                                           blv.terms.SequenceVariant.
+                                                           value)
                                 model.addSameIndividual(al_id, did,
                                                         subject_category=
                                                         blv.terms.SequenceVariant.value,
