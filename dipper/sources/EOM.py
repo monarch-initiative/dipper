@@ -310,7 +310,8 @@ class EOM(PostgreSQLSource):
                 if re.match(".*HP:.*", hp_id):
                     # add the HP term as a class
                     model.addClassToGraph(hp_id, None,
-                                          class_category=blv.terms.PhenotypicFeature.value)  # TEC subclass of phenotype??
+                                          class_category=blv.terms.PhenotypicFeature.
+                                          value)  # TEC subclass of phenotype??
                     # Add the HP ID as an equivalent class
                     model.addEquivalentClass(morphology_term_id, hp_id,
                                              subject_category=
