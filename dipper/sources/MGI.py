@@ -1726,7 +1726,9 @@ SELECT  r._relationship_key as rel_key,
                         if not re.match(r'MMRRC:', strain_id):
                             strain_id = 'MMRRC:'+strain_id
                     elif logicaldb_key == '37':  # EMMA
-                        strain_id = re.sub(r'EM:', 'EMMA:', accid)
+                        # replace EM: prefix with EMMA:, or for accid's
+                        # with bare digits (e.g. 06335) prepend 'EMMA:'
+                        strain_id = re.sub(r'^(EM:)*', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
                         strain_id = 'APB:' + accid  # Check
                     elif logicaldb_key == '40':  # ORNL
