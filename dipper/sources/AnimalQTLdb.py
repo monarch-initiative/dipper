@@ -311,11 +311,12 @@ class AnimalQTLdb(Source):
             LOG.info('Ingesting %s', gene_info_file)
             with gzip.open(gene_info_file, 'rt') as gi_gz:
                 filereader = csv.reader(gi_gz, delimiter='\t')
-                header = next(filereader)
-                header[0] = re.sub('^#', '', header[0])
+                # skipping header checking, b/c not all of these gene_info files have
+                # headers
                 col = self.files[src_key]['columns']
-                self.check_fileheader(col, header)
                 for row in filereader:
+                    if re.match('^#', row[0][0]):
+                        continue
                     if len(row) != len(col):
                         LOG.warning("Problem parsing in %s row %s\n"
                                     "got %s cols but expected %s",
@@ -425,7 +426,8 @@ class AnimalQTLdb(Source):
                     # variance = row[col.index('variance')].strip()
                     # bayes_value = row[col.index('bayes_value')].strip()
                     # likelihood_ratio = row[col.index('likelihood_ratio')].strip()
-                    # trait_iddom_effect = row[col.index('trait_iddom_effect')].strip()
+                    trait_id = row[col.index('trait_id')].strip()
+                    # dom_effect = row[col.index('dom_effect')].strip()
                     # add_effect = row[col.index('add_effect')].strip()
                     pubmed_id = row[col.index('pubmed_id')].strip()
                     gene_id = row[col.index('gene_id')].strip()
@@ -652,18 +654,18 @@ class AnimalQTLdb(Source):
                                 raw, row, len(row), len(col))
                     continue
                 else:
-                    # Not sure we need to do this 'non-positional mapping' with GFF -
-                    # columns in GFF are probably not going to change anytime soon.
-                    # Doing this anyway for consistency
-                    chromosome = row[col.index('chromosome')].strip()
-                    # qtl_source = row[col.index('qtl_source')].strip()
-                    # qtl_type = row[col.index('qtl_type')].strip()
-                    start_bp = row[col.index('start_bp')].strip()
-                    stop_bp = row[col.index('stop_bp')].strip()
-                    # frame = row[col.index('frame')].strip()
-                    strand = row[col.index('strand')].strip()
-                    # score = row[col.index('score')].strip()
-                    attr = row[col.index('attr')].strip()
+                    # Doing this non-positional mapping for consistency, but I'm not
+                    # sure we need to do this for GFF, since columns in GFF are probably
+                    # not going to change anytime soon.
+                    chromosome = row[col.index('SEQNAME')].strip()
+                    # qtl_source = row[col.index('SOURCE')].strip()
+                    # qtl_type = row[col.index('FEATURE')].strip()
+                    start_bp = row[col.index('START')].strip()
+                    stop_bp = row[col.index('END')].strip()
+                    # score = row[col.index('SCORE')].strip()
+                    strand = row[col.index('STRAND')].strip()
+                    # frame = row[col.index('FRAME')].strip()
+                    attr = row[col.index('ATTRIBUTE')].strip()
 
                 example = '''
 Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
@@ -797,14 +799,14 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 if len(row) != len(col):
                     LOG.info("skipping line %d: %s", line_counter, '\t'.join(row))
                     continue
-                vto_id = row[col.index('vto_id')].strip()
-                pto_id = row[col.index('pto_id')].strip()
-                cmo_id = row[col.index('cmo_id')].strip()
-                ato_column = row[col.index('ato_column')].strip()
-                # species = row[col.index('species')].strip()
-                # trait_class = row[col.index('trait_class')].strip()
-                # trait_type = row[col.index('trait_type')].strip()
-                # qtl_count = row[col.index('qtl_count')].strip()
+                vto_id = row[col.index('VT')].strip()
+                pto_id = row[col.index('LPT')].strip()
+                cmo_id = row[col.index('CMO')].strip()
+                ato_column = row[col.index('ATO')].strip()
+                # species = row[col.index('Species')].strip()
+                # trait_class = row[col.index('Class')].strip()
+                # trait_type = row[col.index('Type')].strip()
+                # qtl_count = row[col.index('QTL_Count')].strip()
 
                 ato_id = re.sub(
                     r'ATO #', 'AQTLTrait:', re.sub(
