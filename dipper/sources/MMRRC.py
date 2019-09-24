@@ -150,21 +150,15 @@ class MMRRC(Source):
         geno = Genotype(graph)
         with open(fname, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            # This MMRRC catalog data file was generated on YYYY-MM-DD
-            # insert or check date w/dataset
-            line = next(reader)
-            # gen_date = line[-10:]
-            line = next(reader)
+            # First line is header not date/version info. This changed recently,
+            # apparently as of Sep 2019. Also, 3rd line is no longer blank.
+            header = next(reader)
             col = self.files['catalog']['columns']
-            if col != line:
+            if col != header:
                 LOG.error(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t%s\n',
-                    src_key, col, line)
-                LOG.info(set(col) - set(line))
-
-            line = next(reader)
-            if line != []:
-                LOG.warning('Expected third line to be blank. got "%s" instead', line)
+                    '%s\nExpected Headers:\t%s\nReceived Headers:\t%s\n',
+                    src_key, col, header)
+                LOG.info(set(col) - set(header))
 
             for row in reader:
                 strain_id = row[col.index('STRAIN/STOCK_ID')].strip()
@@ -232,7 +226,11 @@ class MMRRC(Source):
                     mgi_gene_id = 'NCBIGene:' + mgi_gene_id[7:]
 
                 if mgi_gene_id != '':
-                    [curie, localid] = mgi_gene_id.split(':')
+                    try:
+                        [curie, localid] = mgi_gene_id.split(':')
+                    except ValueError as verror:
+                        LOG.warning("Problem parsing mgi_gene_id %s from file %s: %s",
+                                    mgi_gene_id, fname, verror)
                     if curie not in ['MGI', 'NCBIGene']:
                         LOG.info("MGI Gene id not recognized: %s", mgi_gene_id)
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
@@ -311,7 +309,7 @@ class MMRRC(Source):
                 genes = h['genes']
                 vl_set = set()
                 # make variant loci for each gene
-                if len(variants) > 0:
+                if variants:
                     for var in variants:
                         vl_id = var.strip()
                         vl_symbol = self.id_label_hash[vl_id]
@@ -352,7 +350,7 @@ class MMRRC(Source):
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
                         self.globaltt['variant single locus complement'])
-                if len(vslc_list) > 0:
+                if vslc_list:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
                         gvc_id = re.sub(r'_|:', '', gvc_id)
