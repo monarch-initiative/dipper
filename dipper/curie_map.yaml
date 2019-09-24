@@ -102,6 +102,7 @@
 'NCIT': 'http://purl.obolibrary.org/obo/NCIT_'                      # National Cancer Institute Thesaurus
 'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'                    # Scientific Evidence and Provenance Information Ontology
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
+'vfb': 'http://virtualflybrain.org/reports/'                        # Drosophila neuroanatomy
 
 # phenotype
 'EOM': 'https://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
