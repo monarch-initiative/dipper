@@ -137,12 +137,6 @@ class AnimalQTLdb(Source):
             'curie': 'cattleQTL',
             'columns': gff_columns
         },
-        # disabling this for now
-        # 'cattle_umd_bp': {
-        #   'file': 'QTL_UMD_3.1.gff.txt.gz',
-        #   'url': AQDL + '/tmp/QTL_UMD_3.1.gff.txt.gz',
-        #   'curie': 'cattleQTL',
-        # },
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt',
@@ -658,8 +652,9 @@ class AnimalQTLdb(Source):
                                 raw, row, len(row), len(col))
                     continue
                 else:
-                    # not sure we need to do this 'non-positional mapping' with GFF -
-                    # columns in GFF are probably not going to change anytime soon
+                    # Not sure we need to do this 'non-positional mapping' with GFF -
+                    # columns in GFF are probably not going to change anytime soon.
+                    # Doing this anyway for consistency
                     chromosome = row[col.index('chromosome')].strip()
                     # qtl_source = row[col.index('qtl_source')].strip()
                     # qtl_type = row[col.index('qtl_type')].strip()
