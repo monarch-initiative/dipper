@@ -25,13 +25,18 @@ class SGD(Source):
             'url': SGD_BASE + 'phenotype_data.tab'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'sgd',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='sgd',
             ingest_title='Saccharomyces Genome Database',
             ingest_url='https://www.yeastgenome.org/',
+            ingest_logo='source-sgd.png',
             license_url='https://sites.google.com/view/yeastgenome-help/about',
             data_rights=None,
             file_handle=None

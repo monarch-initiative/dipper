@@ -13,7 +13,13 @@ all: test prefix_equivalents
 
 test: ClinVar-test FlyBase-test WormBase-test trans-test IMPC-test reactome-test \
       RGD-test CTD-test string-test UDP-test Orphanet-test MGI-test \
-      GWAS-test # IMPC-fetch
+      GWAS-test Dataset SourceMetadata # IMPC-fetch
+
+Dataset:
+	$(TEST) tests/test_dataset.py
+
+SourceMetadata:
+	$(TEST) tests/test_source_metadata.py
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase

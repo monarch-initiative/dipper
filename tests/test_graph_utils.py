@@ -13,7 +13,7 @@ class GraphUtilsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.graph_object = rdflib.Graph()
-        self.graph_object2 = rdflib.Graph()        
+        self.graph_object2 = rdflib.Graph()
         self.graph_util = GraphUtils.GraphUtils
         self.test_graph = self.graph_object.parse(
             "tests/resources/graphutils/gu_test_graph.ttl", format="ttl")
@@ -33,33 +33,33 @@ class GraphUtilsTestCase(unittest.TestCase):
                         "count_predicates isn't a method or doesn't exist")
         count = self.graph_util.count_predicates(self.test_graph)
         self.assertEqual(
-            count.get(self.name), 1, 
+            count.get(self.name), 1,
             "didn't get correct count for 'name'")
         self.assertEqual(
-            count.get(self.enemyOf), 2, 
+            count.get(self.enemyOf), 2,
             "didn't get correct count for 'enemy of'")
-        
+
     def test_compare_graph_predicates(self):
-        self.assertTrue(hasattr(self.graph_util.compare_graph_predicates, 
+        self.assertTrue(hasattr(self.graph_util.compare_graph_predicates,
                                 '__call__'),
-                        "compare_graph_predicates isn't a method " + 
+                        "compare_graph_predicates isn't a method " +
                         "or doesn't exist")
-                        
+
         compare = self.graph_util.compare_graph_predicates(
-            self.test_graph, 
+            self.test_graph,
             self.test_graph2)
         self.assertTrue(
             compare.get(self.enemyOf).get(str(self.test_graph_id)) == 2,
             "testing > 1 count, didn't get correct count for 'enemyOf'")
         self.assertTrue(
             compare.get(self.name).get(str(self.test_graph_id)) == 1,
-            "testing hit on both graphs, " + 
+            "testing hit on both graphs, " +
             "didn't get correct count for 'name' (graph 1)")
         self.assertTrue(
             compare.get(self.name).get(str(self.test_graph2_id)) == 1,
             "testing hit on both graphs, " +
             "didn't get correct count for 'name' (graph 2)")
-        
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -111,7 +111,17 @@ def main():
         '--dest_fmt',
         help='serialization format: [turtle], nt, nquads, rdfxml, n3, raw', type=str)
 
-    parser.add_argument('-v', '--version', help='version of source', type=str)
+    parser.add_argument('-v', '--version', help='version of source (deprecated)',
+                        type=str)
+
+    parser.add_argument('-d',
+                        '--data_release_version',
+                        help='string indicating the version of data release, e.g. '
+                             '\'201908\', used to construct metadata, including ' +
+                             'version and distribution IRIs and downloadURLs ' +
+                             '[defaults to date at start of runtime in ISO 8601 ' +
+                             'format]',
+                        type=str)
 
     args = parser.parse_args()
     tax_ids = None
@@ -213,6 +223,8 @@ def main():
             source_args['tax_ids'] = tax_ids
         if args.version:
             source_args['version'] = args.version
+        if args.data_release_version:
+            source_args['data_release_version'] = args.data_release_version
 
         mysource = source_class(**source_args)
         if args.parse_only is False:
@@ -259,17 +271,7 @@ def main():
                 mysource.write(fmt=args.dest_fmt)
                 LOG.info("Writing time: %d sec", time.perf_counter()-start_write)
 
-        # if args.no_verify is not True:
-        #    status = mysource.verify()
-        #    if status is not True:
-        #        LOG.error(
-        #            'Source %s did not pass verification tests.', source)
-        #        exit(1)
-        # else:
-        #    LOG.info('skipping verification step')
         LOG.info('***** Finished with %s *****', source)
-    # load configuration parameters
-    # for example, keys
 
     LOG.info("All done.")
 

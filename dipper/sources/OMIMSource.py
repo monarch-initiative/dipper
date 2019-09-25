@@ -50,23 +50,27 @@ class OMIMSource(Source):
             self,
             graph_type,
             are_bnodes_skolemized,
+            data_release_version=None,
             name=None,
             ingest_title=None,
             ingest_url=None,
+            ingest_logo=None,
             license_url=None,
             data_rights=None,
             file_handle=None
     ):
 
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            name,
-            ingest_title,
-            ingest_url,
-            license_url,
-            data_rights,
-            file_handle)
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name=name,
+            ingest_title=ingest_title,
+            ingest_url=ingest_url,
+            ingest_logo=ingest_logo,
+            license_url=license_url,
+            data_rights=data_rights,
+            file_handle=file_handle)
 
         self.omim_type = {}
         self.omim_replaced = {}
@@ -139,7 +143,7 @@ class OMIMSource(Source):
 
         src_key = 'mimtitles'
 
-        self.get_files(is_dl_forced=True, files=self.mimfiles)
+        self.get_files(is_dl_forced=False, files=self.mimfiles)
 
         myfile = '/'.join((self.rawdir, self.mimfiles[src_key]['file']))
 
