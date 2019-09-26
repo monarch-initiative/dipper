@@ -9,11 +9,11 @@
     '''
 
 import sys
+import os
 
-x = '0'
-try:
-    sys.real_prefix
-except:
+if hasattr(sys, 'real_prefix') or "VIRTUAL_ENV" in os.environ:
+    x = '0'
+else:
     x = '1'
 
 sys.stdout.write(x)
