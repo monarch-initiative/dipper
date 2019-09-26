@@ -133,7 +133,7 @@ class NCBIGene(OMIMSource):
 
         self.tax_ids = [str(x) for x in self.tax_ids]
 
-        LOG.info("Filtering on the following taxa: %s", tax_ids)
+        LOG.info("Filtering on the following taxa: %s", self.tax_ids)
 
         if 'gene' in self.all_test_ids:
             self.gene_ids = self.all_test_ids['gene']
