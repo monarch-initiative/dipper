@@ -249,13 +249,11 @@ class Panther(Source):
                     gene_a = re.sub(r'=', ':', gene_a)
                     gene_b = re.sub(r'=', ':', gene_b)
 
-                    clean_gene = self._clean_up_gene_id(
-                        gene_a, species_a, self.curie_map)
+                    clean_gene = self._clean_up_gene_id(gene_a, species_a)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_a)
                     gene_a = clean_gene
-                    clean_gene = self._clean_up_gene_id(
-                        gene_b, species_b, self.curie_map)
+                    clean_gene = self._clean_up_gene_id(gene_b, species_b)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_b)
                     gene_b = clean_gene
@@ -289,8 +287,7 @@ class Panther(Source):
                     # note this is incomplete...
                     # it won't construct the full family hierarchy,
                     # just the top-grouping
-                    assoc.add_gene_family_to_graph(
-                        ':'.join(('PANTHER', panther_id)))
+                    assoc.add_gene_family_to_graph('PANTHER:' + panther_id)
 
                     if not self.test_mode \
                             and limit is not None and line_counter > limit:
@@ -303,7 +300,7 @@ class Panther(Source):
                 str(unprocessed_gene_ids))
 
     @staticmethod
-    def _clean_up_gene_id(geneid, species, curie_map):
+    def _clean_up_gene_id(self, geneid, species):
         """
         A series of identifier rewriting to conform with
         standard gene identifiers.
@@ -311,10 +308,10 @@ class Panther(Source):
         :param species:
         :return:
         """
-        # special case for MGI
-        geneid = re.sub(r'MGI:MGI:', 'MGI:', geneid)
+        # no curie should have more than one colon. generalize as
+        geneid = ':'.join(geneid.split(':')[-2:])
 
-        # rewrite Ensembl --> ENSEMBL
+        # rewrite Ensembl --> ENSEMBL     # ... why? they don't
         geneid = re.sub(r'Ensembl', 'ENSEMBL', geneid)
 
         # rewrite Gene:CELE --> WormBase
@@ -359,7 +356,7 @@ class Panther(Source):
 
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
-        if pfx is None or pfx not in curie_map:
+        if pfx is None or pfx not in self.curie_map:
             # LOG.warning( "No curie prefix for (species %s): %s", species, geneid)
             geneid = None
         return geneid
