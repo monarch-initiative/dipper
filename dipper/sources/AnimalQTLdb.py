@@ -253,13 +253,15 @@ class AnimalQTLdb(Source):
         28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'animalqtldb',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='animalqtldb',
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
+            ingest_logo='source-animalqtldb.png',
             license_url=None,
             data_rights="'" + AQDL + '/faq#32' + "'"
             # file_handle=None

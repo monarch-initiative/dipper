@@ -83,13 +83,18 @@ class EOM(PostgreSQLSource):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'eom',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='eom',
             ingest_title='Elements of Morphology',
             ingest_url='http://elementsofmorphology.nih.gov',
+            ingest_logo='source-eom.png',
             data_rights='http://www.genome.gov/copyright.cfm',
             license_url='https://creativecommons.org/publicdomain/mark/1.0/'
             # file_handle=None
@@ -104,9 +109,8 @@ class EOM(PostgreSQLSource):
         cxn['user'] = config.get_config()['user']['disco']
         cxn['password'] = config.get_config()['keys'][cxn['user']]
 
-        self.dataset.setFileAccessUrl(
-            'jdbc:postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database'],
-            is_object_literal=True)
+        pg_iri = 'jdbc:postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database']
+        self.dataset.set_ingest_source(pg_iri)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -114,10 +118,10 @@ class EOM(PostgreSQLSource):
 
         self.get_files(is_dl_forced)
 
-        # FIXME: Everything needed for data provenance?
         fstat = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
         filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
-        self.dataset.setVersion(filedate)
+
+        self.dataset.set_ingest_source_file_version_date(pg_iri, filedate)
 
     def parse(self, limit=None):
         '''

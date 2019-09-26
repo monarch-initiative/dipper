@@ -1,8 +1,5 @@
 import csv
 import re
-import os
-from datetime import datetime
-from stat import ST_CTIME
 import logging
 
 from dipper.sources.Source import Source
@@ -68,13 +65,18 @@ class MMRRC(Source):
         'MMRRC:000255-MU', 'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
     ]
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mmrrc',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='mmrrc',
             ingest_title='Mutant Mouse Regional Resource Centers',
             ingest_url='https://www.mmrrc.org',
+            ingest_logo='source-mmrrc.png',
             # license_url=None,
             data_rights='https://www.mmrrc.org/about/data_download.php'
             # file_handle=None
@@ -86,16 +88,6 @@ class MMRRC(Source):
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        fname = '/'.join((self.rawdir, self.files['catalog']['file']))
-        st = os.stat(fname)
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        # TODO note: can set the data version to what is in the header
-        # first line like:
-        # This MMRRC catalog data file was generated on 2015-04-22
-
-        self.dataset.setVersion(filedate)
-
         return
 
     def parse(self, limit=None):

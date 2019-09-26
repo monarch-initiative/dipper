@@ -185,13 +185,19 @@ class GeneOntology(Source):
         'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'go',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',
+            ingest_logo='source-geneontology.png',
             license_url=None,
             data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None

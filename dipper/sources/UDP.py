@@ -75,14 +75,17 @@ class UDP(Source):
     def __init__(
             self,
             graph_type,
-            are_bnodes_skolemized
+            are_bnodes_skolemized,
+            data_release_version=None
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'udp',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='udp',
             ingest_title='Undiagnosed Diseases Program',
-            ingest_url='https://rarediseases.info.nih.gov/'
+            ingest_url='https://rarediseases.info.nih.gov/',
+            ingest_logo='source-udp.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

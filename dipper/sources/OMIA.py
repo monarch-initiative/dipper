@@ -70,14 +70,18 @@ class OMIA(OMIMSource):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'omia',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='omia',
             ingest_title='Online Mendelian Inheritance in Animals',
             ingest_url='https://omia.org',
+            ingest_logo='source-omia.png',
             # ingest_desc=None,
             license_url=None,
             data_rights='http://sydney.edu.au/disclaimer.shtml',

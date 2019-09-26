@@ -65,13 +65,19 @@ class Panther(Source):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'panther',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='panther',
             ingest_title='Protein ANalysis THrough Evolutionary Relationships',
             ingest_url='http://pantherdb.org',
+            ingest_logo='source-panther.jpg',
             license_url=None,
             data_rights='http://www.pantherdb.org/terms/disclaimer.jsp'
             # file_handle=None

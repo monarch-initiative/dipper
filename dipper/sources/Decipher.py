@@ -40,13 +40,18 @@ class Decipher(Source):
             'headers': []}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'decipher',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='decipher',
             ingest_title='Development Disorder Genotype Phenotype Database',
             ingest_url='https://decipher.sanger.ac.uk/',
+            ingest_logo='source-decipher.png',
             license_url='https://decipher.sanger.ac.uk/legal',
             data_rights='https://decipher.sanger.ac.uk/datasharing',
             # file_handle=None
