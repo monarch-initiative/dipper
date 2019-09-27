@@ -92,6 +92,20 @@ trans-test:
 omia-int-test:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
+# lint if within a python virtual env
+# make can be called without being in a venv and produce unhelpfull results
+lint_error:
+	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
+	if [ $${INPYVENV} -eq 0 ];then pylint -E ./dipper;else echo "Not within a python venev";fi
+
+lint_warn:
+	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
+	if [ $${INPYVENV} -eq 0 ];then pylint --disable=C,R ./dipper;else echo "Not within a python venev";fi
+
+lint:
+	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
+	if [ $${INPYVENV} -eq 0 ];then pylint ./dipper;else echo "Not within a python venev";fi
+
 # Generate specalized files from our various mapping files
 
 prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
