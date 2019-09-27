@@ -13,7 +13,7 @@ logging.getLogger().setLevel(logging.WARN)
 LOG = logging.getLogger(__name__)
 
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/clinvar')
-NT_PATH  = TEST_PATH + "/nt/"
+NT_PATH = TEST_PATH + "/nt/"
 DOT_PATH = TEST_PATH + "/dot/"
 XML_PATH = TEST_PATH + "/input/"
 TTL_PATH = TEST_PATH + "/expected/"
@@ -45,7 +45,7 @@ class ClinVarTestCase(unittest.TestCase):
                     "test_clinvar.py",
                     "--inputdir", XML_PATH,
                     "--filename", input_xml,
-                    "--mapfile",  MAP_FILE,
+                    "--mapfile", MAP_FILE,
                     "--destination", NT_PATH,
                     "--output", output_nt
                 ]

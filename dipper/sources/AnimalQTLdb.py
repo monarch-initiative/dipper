@@ -51,68 +51,151 @@ class AnimalQTLdb(Source):
     GENEINFO = 'ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO'
     GITDIP = 'https://raw.githubusercontent.com/monarch-initiative/dipper/master'
 
+    gff_columns = [  # GFF files (QTL_*.gff.txt.gz) should contain these columns
+        'SEQNAME',
+        'SOURCE',
+        'FEATURE',
+        'START',
+        'END',
+        'SCORE',
+        'STRAND',
+        'FRAME',
+        'ATTRIBUTE'
+    ]
+
+    qtl_columns = [  # columns in *_QTLdata.txt files
+        'qtl_id',
+        'qtl_symbol',
+        'trait_name',
+        'assotype',
+        'empty',
+        'chromosome',
+        'position_cm',
+        'range_cm',
+        'flankmark_a2',
+        'flankmark_a1',
+        'peak_mark',
+        'flankmark_b1',
+        'flankmark_b2',
+        'exp_id',
+        'model_id',
+        'test_base',
+        'psig_level',
+        'lod_score',
+        'ls_mean',
+        'p_values',
+        'f_statistics',
+        'variance',
+        'bayes_value',
+        'likelihood_ratio',
+        'trait_id',
+        'dom_effect',
+        'add_effect',
+        'pubmed_id',
+        'gene_id',
+        'gene_id_src',
+        'gene_id_type',
+        'empty2'
+    ]
+
+    gene_info_columns = [  # columns from *.gene_info.gz files
+        'tax_id',
+        'GeneID',
+        'Symbol',
+        'LocusTag',
+        'Synonyms',
+        'dbXrefs',
+        'chromosome',
+        'map_location',
+        'description',
+        'type_of_gene',
+        'Symbol_from_nomenclature_authority',
+        'Full_name_from_nomenclature_authority',
+        'Nomenclature_status',
+        'Other_designations',
+        'Modification_date',
+        'Feature_type'
+    ]
+
+    trait_mapping_columns = [  # columns in file 'trait_mappings'
+                               # (column info only used for this file at the moment)
+        'VT',
+        'LPT',
+        'CMO',
+        'ATO',
+        'Species',
+        'Class',
+        'Type',
+        'QTL_Count'
+    ]
+
     files = {
         # defaulting to this
         'cattle_bp': {
             'file': 'QTL_Btau_4.6.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz',
             'curie': 'cattleQTL',
+            'columns': gff_columns
         },
-        # disabling this for now
-        # 'cattle_umd_bp': {
-        #   'file': 'QTL_UMD_3.1.gff.txt.gz',
-        #   'url': AQDL + '/tmp/QTL_UMD_3.1.gff.txt.gz',
-        #   'curie': 'cattleQTL',
-        # },
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt',
             'curie': 'cattleQTL',
+            'columns': qtl_columns
         },
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz',
             'curie': 'chickenQTL',
+            'columns': gff_columns
         },
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt',
             'curie': 'chickenQTL',
+            'columns': qtl_columns
         },
         'pig_bp': {
             'file': 'QTL_SS_10.2.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz',
             'curie': 'pigQTL',
+            'columns': gff_columns
         },
         'pig_cm': {
             'file': 'pig_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt',
             'curie': 'pigQTL',
+            'columns': qtl_columns
         },
         'sheep_bp': {
             'file': 'QTL_OAR_3.1.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz',
             'curie': 'sheepQTL',
+            'columns': gff_columns
         },
         'sheep_cm': {
             'file': 'sheep_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt',
             'curie': 'sheepQTL',
+            'columns': qtl_columns
         },
         'horse_bp': {
             'file': 'QTL_EquCab2.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz',
             'curie': 'horseQTL',
+            'columns': gff_columns
         },
         'horse_cm': {
             'file': 'horse_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt',
             'curie': 'horseQTL',
+            'columns': qtl_columns
         },
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt',
             'curie': 'rainbow_troutQTL',
+            'columns': qtl_columns
         },
 
         #                  Gene_info from NCBI
@@ -124,37 +207,44 @@ class AnimalQTLdb(Source):
         'Sus_scrofa_info': {
             'file': 'Sus_scrofa.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Sus_scrofa.gene_info.gz',
+            'columns': gene_info_columns
         },
         # cattle  # "Bos taurus"      # NCBITaxon:9913
         'Bos_taurus_info': {
             'file': 'Bos_taurus.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Bos_taurus.gene_info.gz',
+            'columns': gene_info_columns
         },
         # chicken  # "Gallus gallus"  # NCBITaxon:9031
         'Gallus_gallus_info': {
             'file': 'Gallus_gallus.gene_info.gz',
             'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
+            'columns': gene_info_columns
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
             'file': 'Equus_caballus.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Equus_caballus.gene_info.gz',
+            'columns': gene_info_columns
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
             'file': 'Ovis_aries.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Ovis_aries.gene_info.gz',
+            'columns': gene_info_columns
         },
         # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
         'Oncorhynchus_mykiss_info': {
             'file': 'Oncorhynchus_mykiss.gene_info.gz',
             'url': GITDIP + '/resources/animalqtldb/Oncorhynchus_mykiss.gene_info.gz',
+            'columns': gene_info_columns
         },
         ########################################
         # TODO add rainbow_trout_bp when available
         'trait_mappings': {
             'file': 'trait_mappings',
-            'url': AQDL + '/export/trait_mappings.csv'
+            'url': AQDL + '/export/trait_mappings.csv',
+            'columns': trait_mapping_columns
         },
     }
 
@@ -163,15 +253,17 @@ class AnimalQTLdb(Source):
         28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'animalqtldb',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='animalqtldb',
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
+            ingest_logo='source-animalqtldb.png',
             license_url=None,
-            data_rights="'" + AQDL + '/faq#32',
+            data_rights="'" + AQDL + '/faq#32' + "'"
             # file_handle=None
         )
 
@@ -200,8 +292,9 @@ class AnimalQTLdb(Source):
         else:
             graph = self.graph
 
-        traitmap = '/'.join((self.rawdir, self.files['trait_mappings']['file']))
-        self._process_trait_mappings(traitmap, limit)
+        trait_src_key = 'trait_mappings'
+        traitmap = '/'.join((self.rawdir, self.files[trait_src_key]['file']))
+        self._process_trait_mappings(traitmap, trait_src_key, limit)
 
         geno = Genotype(graph)
         animals = ['chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
@@ -213,21 +306,26 @@ class AnimalQTLdb(Source):
             taxon_num = taxon_curie.split(':')[1]
             txid_num = taxon_num  # for now
             taxon_word = taxon_label.replace(' ', '_')
+            src_key = taxon_word + '_info'
             gene_info_file = '/'.join((
-                self.rawdir, self.files[taxon_word + '_info']['file']))
+                self.rawdir, self.files[src_key]['file']))
             self.gene_info = list()
             LOG.info('Ingesting %s', gene_info_file)
             with gzip.open(gene_info_file, 'rt') as gi_gz:
                 filereader = csv.reader(gi_gz, delimiter='\t')
+                # skipping header checking, b/c not all of these gene_info files have
+                # headers
+                col = self.files[src_key]['columns']
                 for row in filereader:
-                    if row[0][0] == '#':
+                    if re.match('^#', row[0][0]):
                         continue
-                    else:
-                        self.gene_info.append(str(row[1]))  # tossing lots of good stuff
+                    if len(row) != len(col):
+                        LOG.warning("Problem parsing in %s row %s\n"
+                                    "got %s cols but expected %s",
+                                    gene_info_file, row, len(row), len(col))
+                    self.gene_info.append(row[col.index('GeneID')])
             LOG.info(
-                'Gene Info for %s has %i enteries', common_name, len(self.gene_info))
-            # LOG.info('Gene Info entery looks like %s', self.gene_info[5])
-
+                'Gene Info for %s has %i entries', common_name, len(self.gene_info))
             build = None
 
             fname_bp = common_name + '_bp'
@@ -241,26 +339,33 @@ class AnimalQTLdb(Source):
                     build_id = self.localtt[build]
                     LOG.info("Build UCSC label is: %s", build_id)
 
-                    # NCBI assembly curie is
-
                     geno.addReferenceGenome(build_id, build, txid_num)
 
                 if build_id is not None:
                     self._process_qtls_genomic_location(
-                        '/'.join((self.rawdir, bpfile)), txid_num, build_id, build,
-                        common_name, limit)
+                        '/'.join((self.rawdir, bpfile)),
+                        fname_bp,
+                        txid_num,
+                        build_id,
+                        build,
+                        common_name,
+                        limit)
 
             fname_cm = common_name + '_cm'
             if fname_cm in self.files:
                 cmfile = self.files[fname_cm]['file']
                 self._process_qtls_genetic_location(
-                    '/'.join((self.rawdir, cmfile)), txid_num, common_name, limit)
+                    '/'.join((self.rawdir, cmfile)),
+                    fname_cm,
+                    txid_num,
+                    common_name,
+                    limit)
 
         LOG.info("Finished parsing")
         return
 
     def _process_qtls_genetic_location(
-            self, raw, txid, common_name, limit=None):
+            self, raw, src_key, txid, common_name, limit=None):
         """
         This function processes
 
@@ -270,7 +375,7 @@ class AnimalQTLdb(Source):
         :return:
 
         """
-        aql_curie = self.files[common_name + '_cm']['curie']
+        aql_curie = self.files[src_key]['curie']
 
         if self.test_mode:
             graph = self.testgraph
@@ -286,39 +391,51 @@ class AnimalQTLdb(Source):
         LOG.info("Processing genetic location for %s from %s", taxon_curie, raw)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            # no header in these files, so no header checking
+
+            col = self.files[src_key]['columns']
+
             for row in filereader:
                 line_counter += 1
-                (qtl_id,
-                 qtl_symbol,
-                 trait_name,
-                 assotype,
-                 empty,
-                 chromosome,
-                 position_cm,
-                 range_cm,
-                 flankmark_a2,
-                 flankmark_a1,
-                 peak_mark,
-                 flankmark_b1,
-                 flankmark_b2,
-                 exp_id,
-                 model_id,
-                 test_base,
-                 sig_level,
-                 lod_score,
-                 ls_mean,
-                 p_values,
-                 f_statistics,
-                 variance,
-                 bayes_value,
-                 likelihood_ratio,
-                 trait_id, dom_effect,
-                 add_effect,
-                 pubmed_id,
-                 gene_id,
-                 gene_id_src,
-                 gene_id_type,
-                 empty2) = row
+
+                if len(row) != len(self.qtl_columns):
+                    LOG.warning("Problem parsing in %s row %s\n"
+                                "got %s cols but expected %s",
+                                raw, row, len(row), len(col))
+                    continue
+                else:
+                    qtl_id = row[col.index('qtl_id')].strip()
+                    qtl_symbol = row[col.index('qtl_symbol')].strip()
+                    trait_name = row[col.index('trait_name')].strip()
+                    # assotype = row[col.index('assotype')].strip()
+                    # empty = row[col.index('empty')].strip()
+                    chromosome = row[col.index('chromosome')].strip()
+                    position_cm = row[col.index('position_cm')].strip()
+                    range_cm = row[col.index('range_cm')].strip()
+                    # flankmark_a2 = row[col.index('flankmark_a2')].strip()
+                    # flankmark_a1 = row[col.index('flankmark_a1')].strip()
+                    peak_mark = row[col.index('peak_mark')].strip()
+                    # flankmark_b1 = row[col.index('flankmark_b1')].strip()
+                    # flankmark_b2 = row[col.index('flankmark_b2')].strip()
+                    # exp_id = row[col.index('exp_id')].strip()
+                    # model_id = row[col.index('model_id')].strip()
+                    # test_base = row[col.index('test_base')].strip()
+                    # sig_level = row[col.index('sig_level')].strip()
+                    # lod_score = row[col.index('lod_score')].strip()
+                    # ls_mean = row[col.index('ls_mean')].strip()
+                    p_values = row[col.index('p_values')].strip()
+                    # f_statistics = row[col.index('f_statistics')].strip()
+                    # variance = row[col.index('variance')].strip()
+                    # bayes_value = row[col.index('bayes_value')].strip()
+                    # likelihood_ratio = row[col.index('likelihood_ratio')].strip()
+                    trait_id = row[col.index('trait_id')].strip()
+                    # dom_effect = row[col.index('dom_effect')].strip()
+                    # add_effect = row[col.index('add_effect')].strip()
+                    pubmed_id = row[col.index('pubmed_id')].strip()
+                    gene_id = row[col.index('gene_id')].strip()
+                    gene_id_src = row[col.index('gene_id_src')].strip()
+                    # gene_id_type = row[col.index('gene_id_type')].strip()
+                    # empty2 = row[col.index('empty2')].strip()
 
                 if self.test_mode and int(qtl_id) not in self.test_ids:
                     continue
@@ -495,6 +612,7 @@ class AnimalQTLdb(Source):
 
                     assoc.add_association_to_graph()
 
+                # off by one - the following actually gives us (limit + 1) records
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
@@ -502,7 +620,7 @@ class AnimalQTLdb(Source):
         return
 
     def _process_qtls_genomic_location(
-            self, raw, txid, build_id, build_label, common_name, limit=None):
+            self, raw, src_key, txid, build_id, build_label, common_name, limit=None):
         """
         This method
 
@@ -525,13 +643,32 @@ class AnimalQTLdb(Source):
         LOG.info("Processing QTL locations for %s from %s", taxon_curie, raw)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
+            # no header in GFF, so no header checking
+            col = self.files[src_key]['columns']
             for row in reader:
                 line_counter += 1
                 if re.match(r'^#', ' '.join(row)):
                     continue
 
-                (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
-                 score, attr) = row
+                if len(row) != len(col):
+                    LOG.warning("Problem parsing in %s row %s\n"
+                                "got %s cols but expected %s",
+                                raw, row, len(row), len(col))
+                    continue
+                else:
+                    # Doing this non-positional mapping for consistency, but I'm not
+                    # sure we need to do this for GFF, since columns in GFF are probably
+                    # not going to change anytime soon.
+                    chromosome = row[col.index('SEQNAME')].strip()
+                    # qtl_source = row[col.index('SOURCE')].strip()
+                    # qtl_type = row[col.index('FEATURE')].strip()
+                    start_bp = row[col.index('START')].strip()
+                    stop_bp = row[col.index('END')].strip()
+                    # score = row[col.index('SCORE')].strip()
+                    strand = row[col.index('STRAND')].strip()
+                    # frame = row[col.index('FRAME')].strip()
+                    attr = row[col.index('ATTRIBUTE')].strip()
+
                 example = '''
 Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
 QTL_ID=2242;Name="Spleen percentage";Abbrev="SPLP";PUBMED_ID=17012160;trait_ID=2234;
@@ -636,7 +773,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
         LOG.info("Done with QTL genomic mappings for %s", taxon_curie)
         return
 
-    def _process_trait_mappings(self, raw, limit=None):
+    def _process_trait_mappings(self, raw, src_key, limit=None):
         """
         This method mapps traits from/to ...
 
@@ -652,17 +789,26 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
         line_counter = 0
         model = Model(graph)
 
+        col = self.files[src_key]['columns']
+
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            next(filereader, None)  # skip header line
+            header = next(filereader, None)
+            self.check_fileheader(col, header)
             for row in filereader:
                 line_counter += 1
                 # need to skip the last line
-                if len(row) < 8:
+                if len(row) != len(col):
                     LOG.info("skipping line %d: %s", line_counter, '\t'.join(row))
                     continue
-                (vto_id, pto_id, cmo_id, ato_column, species, trait_class,
-                 trait_type, qtl_count) = row
+                vto_id = row[col.index('VT')].strip()
+                pto_id = row[col.index('LPT')].strip()
+                cmo_id = row[col.index('CMO')].strip()
+                ato_column = row[col.index('ATO')].strip()
+                # species = row[col.index('Species')].strip()
+                # trait_class = row[col.index('Class')].strip()
+                # trait_type = row[col.index('Type')].strip()
+                # qtl_count = row[col.index('QTL_Count')].strip()
 
                 ato_id = re.sub(
                     r'ATO #', 'AQTLTrait:', re.sub(

@@ -35,13 +35,20 @@ class StringDB(Source):
     From: http://string-db.org/cgi/help.pl
     """
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None,
+                 version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'string',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='string',
             ingest_title='Known and predicted protein-protein interactions',
             ingest_url=STRING,
+            ingest_logo='source-string.png',
             license_url=None,
             data_rights=STRING+'/cgi/access.pl?footer_active_subpage=licensing'
             # file_handle=None

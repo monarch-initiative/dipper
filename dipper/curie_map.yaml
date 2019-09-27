@@ -4,7 +4,8 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201908/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/'          # Release RDF data
+'MonarchLogoRepo': 'https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/'    # Monarch's stash of logos for sources we ingest - this is used to set schemalogo in Dataset.py
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
@@ -16,12 +17,15 @@
 'owl': 'http://www.w3.org/2002/07/owl#'                             # Web Ontology Language
 'skos': 'https://www.w3.org/TR/skos-reference/#'                    # Simple Knowledge Organization System
 # 'Annotation': 'http://www.w3.org/ns/oa#Annotation'                # Web annotation
+'schemaorg': 'http://schema.org/'                                   # Schema.org "provides schemas for structured data on the Internet"
 
 # dataset description
 'dcat': 'http://www.w3.org/ns/dcat#'                                # Data Catalog Vocabulary
 'dctypes': 'http://purl.org/dc/dcmitype/'                           # Dublin Core Metadata Initiative (types)
 'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (addtional terms)
 'pav': 'http://purl.org/pav/'                                       # Provenance, Authoring and Versioning
+'cito': 'http://purl.org/spar/cito/'                                # Citation Typing Ontology
+'void': 'http://rdfs.org/ns/void#'                                  # Vocabulary of Interlinked Datasets (VOID)
 
 # ontologies
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'               # Animal Quantitative Trait Loci Database
@@ -189,6 +193,7 @@
 'dictyBase': 'http://dictybase.org/gene/'                                       # Dictyostelium discoideum database (social amoebae)
 'EcoGene': 'http://ecogene.org/gene/'                                           # Escherichia coli K-1
 'ENSEMBL': 'http://ensembl.org/id/'                                             # joint EMBL, EBI, Sanger Institute central resource
+'EnsemblGenome': 'http://www.ensemblgenomes.org/id/'                            # The Ensembl genome annotation system
 'FlyBase': 'http://flybase.org/reports/'                                        # Fruitfly database
 'Genatlas': 'http://genatlas.medecine.univ-paris5.fr/fiche.php?symbol='         # gene mapping and genetic diseases (Human)
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences

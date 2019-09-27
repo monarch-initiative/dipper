@@ -105,15 +105,18 @@ class NCBIGene(OMIMSource):
             self,
             graph_type,
             are_bnodes_skolemized,
+            data_release_version=None,
             tax_ids=None,
             gene_ids=None
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ncbigene',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='ncbigene',
             ingest_title='National Center for Biotechnology Information',
             ingest_url='http://ncbi.nih.nlm.gov/gene',
+            ingest_logo='source-ncbi.png',
             # ingest_desc=None,
             license_url='https://creativecommons.org/publicdomain/mark/1.0/',
             data_rights='https://www.ncbi.nlm.nih.gov/home/about/policies/'
