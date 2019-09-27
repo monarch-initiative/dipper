@@ -311,22 +311,22 @@ class Panther(Source):
         # no curie should have more than one colon. generalize as
         geneid = ':'.join(geneid.split(':')[-2:])
 
-        # rewrite Ensembl --> ENSEMBL     # ... why? they don't
-        geneid = re.sub(r'Ensembl', 'ENSEMBL', geneid)
+        # rewrite Ensembl --> ENSEMBL    ... why? they don't
+        geneid = re.sub(r'Ensembl:', 'ENSEMBL:', geneid)
 
         # rewrite Gene:CELE --> WormBase
         # these are old-school cosmid identifier
         geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
         if species == 'CAEEL':
-            if re.match(r'(Gene|ENSEMBLGenome):\w+\.\d+', geneid):
+            if re.match(r'(Gene|EnsemblGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:Gene|ENSEMBLGenome):(\w+\.\d+)',
+                    r'(?:Gene|EnsemblGenome):(\w+\.\d+)',
                     r'WormBase:\1', geneid)
 
         if species == 'DROME':
-            if re.match(r'(ENSEMBLGenome):\w+\.\d+', geneid):
+            if re.match(r'(EnsemblGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:ENSEMBLGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
+                    r'(?:EnsemblGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
 
         # rewrite GeneID --> NCBIGene
         geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
@@ -337,7 +337,7 @@ class Panther(Source):
         geneid = re.sub(r'Gene:CG', 'FlyBase:CG', geneid)
 
         # rewrite ENSEMBLGenome:FBgn --> FlyBase:FBgn
-        geneid = re.sub(r'ENSEMBLGenome:FBgn', 'FlyBase:FBgn', geneid)
+        geneid = re.sub(r'EnsemblGenome:FBgn', 'FlyBase:FBgn', geneid)
 
         # rewrite Gene:<ensembl ids> --> ENSEMBL:<id>
         geneid = re.sub(r'Gene:ENS', 'ENSEMBL:ENS', geneid)
