@@ -48,6 +48,7 @@ import yaml
 from dipper.models.ClinVarRecord import ClinVarRecord, Gene,\
     Variant, Allele, Condition, Genotype
 from dipper import curie_map
+from dipper.models.Dataset import Dataset
 
 LOG = logging.getLogger(__name__)
 
@@ -476,6 +477,68 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
         raise ValueError("Invalid type for genovar in rcv {}".format(rcv.id))
 
 
+def write_review_status_scores():
+    """
+    Make triples that attach a "star" score to each of ClinVar's review statuses.
+    (Stars are basically a 0-4 rating of the review status.)
+
+    Per https://www.ncbi.nlm.nih.gov/clinvar/docs/details/
+    Table 1. The review status and assignment of stars( with changes made mid-2015)
+    Number of gold stars Description and review statuses
+
+    NO STARS:
+    <ReviewStatus> "no assertion criteria provided"
+    <ReviewStatus> "no assertion provided"
+    No submitter provided an interpretation with assertion criteria (no assertion
+    criteria provided), or no interpretation was provided (no assertion provided)
+
+    ONE STAR:
+    <ReviewStatus> "criteria provided, single submitter"
+    <ReviewStatus> "criteria provided, conflicting interpretations"
+    One submitter provided an interpretation with assertion criteria (criteria
+    provided, single submitter) or multiple submitters provided assertion criteria
+    but there are conflicting interpretations in which case the independent values
+    are enumerated for clinical significance (criteria provided, conflicting
+    interpretations)
+
+    TWO STARS:
+    <ReviewStatus> "criteria provided, multiple submitters, no conflicts"
+    Two or more submitters providing assertion criteria provided the same
+    interpretation (criteria provided, multiple submitters, no conflicts)
+
+    THREE STARS:
+    <ReviewStatus> "reviewed by expert panel"
+    reviewed by expert panel
+
+    FOUR STARS:
+    <ReviewStatus> "practice guideline"
+    practice guideline
+    A group wishing to be recognized as an expert panel must first apply to ClinGen
+    by completing the form that can be downloaded from our ftp site.
+
+    :param None
+    :return: list of that attach a "star" score to each of ClinVar's review statuses
+
+    """
+    triples = []
+    status_and_scores = {
+        "no assertion criteria provided": '0',
+        "no assertion provided": '0',
+        "criteria provided, single submitter": '1',
+        "criteria provided, conflicting interpretations": '1',
+        "criteria provided, multiple submitters, no conflicts": '2',
+        "reviewed by expert panel": '3',
+        "practice guideline": '4',
+    }
+    for status, score in status_and_scores.items():
+        triples.append(
+            make_spo(
+                GLOBALTT[status],
+                GLOBALTT['has specified numeric value'],
+                score))
+    return triples
+
+
 def parse():
     """
     Main function for parsing a clinvar XML release and outputting triples
@@ -576,6 +639,9 @@ def parse():
     # Buffer to store the triples below a MONARCH_association
     # before we decide to whether to keep or not"
     rcvtriples = []
+
+    # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
+    rcvtriples.append(write_review_status_scores())
 
     # Buffer to store non redundant triples between RCV sets
     releasetriple = set()
@@ -1022,9 +1088,15 @@ def parse():
                     # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
                     # RecordStatus                             # assert =='current' ?
 
-                    # SCV_ReviewStatus = ClinicalSignificance.find('./ReviewStatus')
-                    # if SCV_ReviewStatus is not None:
-                    #    scv_review = SCV_ReviewStatus.text
+                    SCV_ReviewStatus = ClinicalSignificance.find('./ReviewStatus')
+                    if SCV_ReviewStatus is not None:
+                        scv_review = SCV_ReviewStatus.text
+
+                        write_spo(
+                            _evidence_id,
+                            GLOBALTT['assertion method'],
+                            GLOBALTT[scv_review],
+                            rcvtriples)
 
                     # SCV/ClinicalSignificance/Citation/ID
                     # see also:
