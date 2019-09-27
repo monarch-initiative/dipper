@@ -193,6 +193,7 @@
 'dictyBase': 'http://dictybase.org/gene/'                                       # Dictyostelium discoideum database (social amoebae)
 'EcoGene': 'http://ecogene.org/gene/'                                           # Escherichia coli K-1
 'ENSEMBL': 'http://ensembl.org/id/'                                             # joint EMBL, EBI, Sanger Institute central resource
+'EnsemblGenome': 'http://www.ensemblgenomes.org/id/'                            # The Ensembl genome annotation system
 'FlyBase': 'http://flybase.org/reports/'                                        # Fruitfly database
 'Genatlas': 'http://genatlas.medecine.univ-paris5.fr/fiche.php?symbol='         # gene mapping and genetic diseases (Human)
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences
