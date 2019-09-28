@@ -60,24 +60,32 @@ class DatasetTestCase(unittest.TestCase):
         cls.base_owl = 'http://www.w3.org/2002/07/owl#'
         cls.base_logo_url = "https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/"
         # expected summary level IRI
-        cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
-                                       + cls.identifier)
+        cls.summary_level_IRI = URIRef(
+                                       cls.curie_map.get(cls.expected_curie_prefix) +
+                                       "#" + cls.identifier)
         # expected version level IRI
         cls.data_release_version = "19700101"
-        cls.version_level_IRI = URIRef(cls.summary_level_IRI + "_" +
-                                       cls.data_release_version)
-        cls.version_level_IRI_default_version = URIRef(cls.summary_level_IRI + "_" +
-                                                      cls.timestamp_date)
+        cls.version_level_IRI = URIRef(
+                                       cls.curie_map.get(cls.expected_curie_prefix) +
+                                       cls.data_release_version + "/" +
+                                       "#" + cls.identifier)
+        cls.version_level_IRI_default_version = \
+            URIRef(
+                   cls.curie_map.get(cls.expected_curie_prefix) +
+                   cls.timestamp_date + "/" +
+                   "#" + cls.identifier)
 
         # expected distribution level IRI (for ttl resource)
-        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI +
-                                                "." +
-                                                cls.distribution_type)
-        cls.distribution_level_IRI_ttl_default_version = URIRef(cls.summary_level_IRI +
-                                                                "_" +
-                                                                cls.timestamp_date +
-                                                                "." +
-                                                                cls.distribution_type)
+        cls.distribution_level_IRI_ttl = \
+            URIRef(
+                   cls.curie_map.get(cls.expected_curie_prefix) +
+                   cls.data_release_version + "/rdf/" +
+                   cls.identifier + "." + cls.distribution_type)
+        cls.distribution_level_IRI_ttl_default_version = \
+            URIRef(
+                   cls.curie_map.get(cls.expected_curie_prefix) +
+                   cls.timestamp_date + "/rdf/" +
+                   cls.identifier + "." + cls.distribution_type)
 
         # set expected IRIs for predicates and other things
         cls.iri_rdf_type = URIRef(cls.base_rdf + "type")
@@ -105,10 +113,11 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_owl_version_iri = URIRef(cls.base_owl + "versionIRI")
         cls.iri_owl_version_info = URIRef(cls.base_owl + "versionInfo")
         cls.iri_returned_logo = URIRef(cls.base_logo_url + cls.ingest_logo_url)
-        cls.iri_expected_download_url_value = URIRef(
-            cls.curie_map.get("MonarchArchive") +
-            cls.data_release_version + "/rdf/" + cls.identifier + "." +
-            cls.distribution_type)
+        cls.iri_expected_download_url_value = \
+            URIRef(
+                   cls.curie_map.get("MonarchArchive") +
+                   cls.data_release_version + "/rdf/" +
+                   cls.identifier + "." + cls.distribution_type)
 
         cls.iri_dipper = URIRef("https://github.com/monarch-initiative/dipper")
         cls.iri_ttl_spec = URIRef("https://www.w3.org/TR/turtle/")
@@ -119,7 +128,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.dataset = Dataset(
-            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
+            identifier=self.identifier,
             data_release_version=self.data_release_version,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
@@ -262,7 +271,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_version_level_version_set_explicitly(self):
         self.dataset = Dataset(
-            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
+            identifier=self.identifier,
             data_release_version=self.data_release_version,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
@@ -402,7 +411,7 @@ class DatasetTestCase(unittest.TestCase):
 
     def test_distribution_level_no_license_url_default_value(self):
         self.dataset = Dataset(
-            identifier=self.monarch_archive_curie_prefix + ":" + self.identifier,
+            identifier=self.identifier,
             data_release_version=None,
             ingest_name=self.identifier,
             ingest_title=self.ingest_title,
@@ -420,20 +429,23 @@ class DatasetTestCase(unittest.TestCase):
                         "distribution level default license triple not set")
 
     def test_distribution_level_ontology_type_declaration(self):
-            triples = list(self.dataset.graph.triples(
-                (self.distribution_level_IRI_ttl,
-                 self.iri_rdf_type,
-                 self.iri_owl_ontology)))
-            self.assertTrue(len(triples) == 1,
-                            "missing distribution level owl ontology type triple")
+        triples = list(self.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+             self.iri_rdf_type,
+             self.iri_owl_ontology)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level owl ontology type triple")
 
-    def test_distribution_level_version_iri(self):
-            triples = list(self.dataset.graph.triples(
-                (self.distribution_level_IRI_ttl,
-                 self.iri_owl_version_iri,
-                 self.version_level_IRI)))
-            self.assertTrue(len(triples) == 1,
-                            "missing distribution level version iri triple")
+    def test_distribution_level_owl_version_iri(self):
+        triples = list(self.dataset.graph.triples(
+            (self.distribution_level_IRI_ttl,
+            self.iri_owl_version_iri,
+            None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level owl version iri triple")
+        self.assertEqual(triples[0][2],
+                         URIRef(self.version_level_IRI),
+                         "owl version iri triple has the wrong object")
 
 
 if __name__ == '__main__':
