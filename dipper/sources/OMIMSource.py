@@ -6,14 +6,9 @@ from dipper import config
 
 LOG = logging.getLogger(__name__)
 
-
-# omimftp key EXPIRES
-# get a new one here: https://omim.org/help/api
-
 OMIMURL = 'https://data.omim.org/downloads/'
-OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
-USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
-             "info@monarchinitiative.org)"
+MONARCHURL = 'https://archive.monarchinitiative.org/'
+MONARCHIVE = MONARCHURL + config.get_config()['keys']['monarchive']
 
 
 class OMIMSource(Source):
@@ -33,9 +28,8 @@ class OMIMSource(Source):
     mimfiles = {  # do not conflict with subclasses 'files' dict
         'mimtitles': {
             'file': 'mimTitles.txt',
-            'url':  OMIMFTP + '/mimTitles.txt',
+            'url':   MONARCHIVE + '/mimTitles.txt',
             'clean': OMIMURL,
-            'headers': {'User-Agent': USER_AGENT},
             'columns': [  # expected
                 'Prefix',
                 'Mim Number',
