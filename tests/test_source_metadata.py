@@ -59,13 +59,22 @@ class SourceMetadataTestCase(unittest.TestCase):
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         # expected summary level IRI
-        cls.summary_level_IRI = URIRef(cls.curie_map.get(cls.expected_curie_prefix)
-                                       + cls.identifier)
+        cls.summary_level_IRI = URIRef(
+                                       cls.curie_map.get(cls.expected_curie_prefix) +
+                                       "#" + cls.identifier)
+
         # expected version level IRI
-        cls.version_level_IRI = URIRef(cls.summary_level_IRI + "_" + cls.timestamp_date)
+        cls.version_level_IRI = URIRef(
+                                       cls.curie_map.get(cls.expected_curie_prefix) +
+                                       cls.timestamp_date + "/" +
+                                       "#" + cls.identifier)
 
         # expected distribution level IRI (for ttl resource)
-        cls.distribution_level_IRI_ttl = URIRef(cls.version_level_IRI + ".ttl")
+        cls.distribution_level_IRI_ttl = \
+            URIRef(
+                   cls.curie_map.get(cls.expected_curie_prefix) +
+                   cls.timestamp_date + "/rdf/" +
+                   cls.identifier + ".ttl")
 
         # expected IRIs
         cls.iri_version = URIRef(cls.curie_map.get("pav") + "version")

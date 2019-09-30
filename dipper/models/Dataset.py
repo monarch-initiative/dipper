@@ -164,7 +164,7 @@ class Dataset:
 
     def __init__(
             self,
-            identifier,       # name? should be Archive url via Source
+            identifier,
             data_release_version,
             ingest_name,
             ingest_title,
@@ -176,14 +176,19 @@ class Dataset:
             graph_type='rdf_graph',     # rdf_graph, streamed_graph
             file_handle=None,
             distribution_type='ttl',
+            dataset_curie_prefix='MonarchArchive'
     ):
 
         if graph_type is None:
-            self.graph = RDFGraph(None, identifier)
+            self.graph = RDFGraph(None,
+                                  ":".join([dataset_curie_prefix, identifier]))
         elif graph_type == 'streamed_graph':
-            self.graph = StreamedGraph(True, identifier, file_handle=file_handle)
+            self.graph = StreamedGraph(True,
+                                       ":".join([dataset_curie_prefix, identifier]),
+                                       file_handle=file_handle)
         elif graph_type == 'rdf_graph':
-            self.graph = RDFGraph(True, identifier)
+            self.graph = RDFGraph(True,
+                                  ':'.join([dataset_curie_prefix, identifier]))
 
         if data_release_version is not None:
             self.data_release_version = data_release_version
@@ -194,13 +199,13 @@ class Dataset:
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        self.identifier = identifier
+        self.identifier = ':'.join([dataset_curie_prefix, identifier])
         self.citation = set()
 
         self.ingest_name = ingest_name
         self.ingest_title = ingest_title
         if self.ingest_title is None:
-            self.ingest_title = identifier
+            self.ingest_title = ":".join([dataset_curie_prefix, identifier])
 
         self.ingest_url = ingest_url
         self.ingest_logo = self.curie_map.get('MonarchLogoRepo') + ingest_logo
@@ -213,10 +218,16 @@ class Dataset:
         self.distribution_type = distribution_type
 
         # set HCLS resource CURIEs
-        self.summary_level_curie = identifier
-        self.version_level_curie = identifier + "_" + self.data_release_version
+        self.summary_level_curie = ':'.join([dataset_curie_prefix, '#' + identifier])
+        self.version_level_curie = \
+            dataset_curie_prefix + ':' + \
+            self.data_release_version + \
+            '/#' + identifier
         self.distribution_level_turtle_curie = \
-            self.version_level_curie + "." + self.distribution_type
+            dataset_curie_prefix + ':' + \
+            self.data_release_version + \
+            '/rdf/' + \
+            identifier + "." + self.distribution_type
 
         # The following might seem a little odd, but we need to set downloadURLs this
         # way in order for them to point to where they will end up in archive.MI.org as
@@ -242,13 +253,13 @@ class Dataset:
                              "schemaorg:logo",
                              self.ingest_logo)
         self.graph.addTriple(self.summary_level_curie, self.globaltt['identifier'],
-                             self.identifier)
+                             self.summary_level_curie)
         if self.ingest_url is not None:
             self.graph.addTriple(self.summary_level_curie,
                                  self.globaltt["Source (dct)"],
                                  self.ingest_url)
         if self.ingest_description is not None:
-            self.model.addDescription(self.identifier, self.ingest_description)
+            self.model.addDescription(self.summary_level_curie, self.ingest_description)
 
     def _set_version_level_triples(self):
         self.model.addType(self.version_level_curie, self.globaltt['Dataset'])
@@ -269,7 +280,7 @@ class Dataset:
         self.graph.addTriple(self.version_level_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.version_level_curie, self.globaltt['isVersionOf'],
-                             self.summary_level_curie)
+                             self.summary_level_curie, object_is_literal=False)
 
     def _set_distribution_level_triples(self):
         self.model.addType(self.distribution_level_turtle_curie,
