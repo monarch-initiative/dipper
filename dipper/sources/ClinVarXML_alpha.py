@@ -517,7 +517,8 @@ def write_review_status_scores():
     by completing the form that can be downloaded from our ftp site.
 
     :param None
-    :return: list of that attach a "star" score to each of ClinVar's review statuses
+    :return: list of triples that attach a "star" score to each of ClinVar's review
+    statuses
 
     """
     triples = []
@@ -640,11 +641,11 @@ def parse():
     # before we decide to whether to keep or not"
     rcvtriples = []
 
-    # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
-    rcvtriples.append(write_review_status_scores())
-
     # Buffer to store non redundant triples between RCV sets
     releasetriple = set()
+
+    # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
+    releasetriple.append(write_review_status_scores())
 
     g2pmap = {}
     # this needs to be read first
