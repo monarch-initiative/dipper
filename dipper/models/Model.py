@@ -218,7 +218,10 @@ class Model():
             ontology_id, self.globaltt['type'], self.globaltt['ontology'])
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
-        self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri)
+        self.graph.addTriple(ontology_id,
+                             self.globaltt['version_iri'],
+                             version_iri,
+                             object_is_literal=False)
 
     def addOWLVersionInfo(self, ontology_id, version_info):
         self.graph.addTriple(

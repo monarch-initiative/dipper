@@ -120,6 +120,7 @@ class OMIA(OMIMSource):
         # to write a report for curation
         self.stored_omia_mol_gen = {}
         self.graph = self.graph
+        self.ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
 
     def fetch(self, is_dl_forced=False):
         """
@@ -128,11 +129,9 @@ class OMIA(OMIMSource):
         """
         self.get_files(is_dl_forced)
 
-        ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
-        # ncbi.fetch()
-        gene_group = ncbi.files['gene_group']
+        gene_group = self.ncbi.files['gene_group']
         self.fetch_from_url(
-            gene_group['url'], '/'.join((ncbi.rawdir, gene_group['file'])), False)
+            gene_group['url'], '/'.join((self.ncbi.rawdir, gene_group['file'])), False)
 
     def parse(self, limit=None):
         # names of tables to iterate - probably don't need all these:
@@ -169,8 +168,7 @@ class OMIA(OMIMSource):
 
         # process the vertebrate orthology for genes
         # that are annotated with phenotypes
-        ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
-        ncbi.add_orthologs_by_gene_group(self.graph, self.annotated_genes)
+        self.ncbi.add_orthologs_by_gene_group(self.graph, self.annotated_genes)
 
         LOG.info("Done parsing.")
 
@@ -223,7 +221,7 @@ class OMIA(OMIMSource):
         with gzip.open(myfile, 'rb') as readbin:
             filereader = io.TextIOWrapper(readbin, newline="")
             filereader.readline()  # remove the xml declaration line
-            for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
+            for event, elem in ET.iterparse(filereader):
                 # Species ids are == NCBITaxon ids
                 self.process_xml_table(
                     elem, 'Species_gb', self._process_species_table_row, limit)
@@ -246,7 +244,6 @@ class OMIA(OMIMSource):
             filereader = io.TextIOWrapper(readbin, newline="")
             filereader.readline()  # remove the xml declaration line
 
-            # iterparse is not deprecated
             for event, elem in ET.iterparse(filereader):
                 self.process_xml_table(
                     elem, 'Articles', self._process_article_row, limit)

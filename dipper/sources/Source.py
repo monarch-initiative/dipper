@@ -136,7 +136,7 @@ class Source:
             self.ingest_description = getdoc(self)
 
         self.dataset = Dataset(
-            identifier="MonarchArchive:" + self.name,
+            identifier=self.name,
             data_release_version=self.data_release_version,
             ingest_name=self.name,
             ingest_title=self.ingest_title,
