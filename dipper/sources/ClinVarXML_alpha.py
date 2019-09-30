@@ -645,7 +645,7 @@ def parse():
     releasetriple = set()
 
     # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
-    releasetriple.append(write_review_status_scores())
+    releasetriple.update(set(write_review_status_scores()))
 
     g2pmap = {}
     # this needs to be read first
