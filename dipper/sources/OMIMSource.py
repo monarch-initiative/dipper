@@ -28,7 +28,7 @@ class OMIMSource(Source):
     mimfiles = {  # do not conflict with subclasses 'files' dict
         'mimtitles': {
             'file': 'mimTitles.txt',
-            'url':   MONARCHIVE + '/mimTitles.txt',
+            'url': MONARCHIVE + '/mimTitles.txt',
             'clean': OMIMURL,
             'columns': [  # expected
                 'Prefix',
