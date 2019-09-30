@@ -720,6 +720,12 @@ def parse():
             # /RCV/RecordStatus
             # /RCV/TraitSet
 
+            RCV_ClinicalSignificance = RCVAssertion.find('./ClinicalSignificance')
+            if RCV_ClinicalSignificance is not None:
+                RCV_ReviewStatus = RCV_ClinicalSignificance.find('./ReviewStatus')
+                if RCV_ReviewStatus is not None:
+                     rcv_review = GLOBALTT[RCV_ReviewStatus.text.strip()]
+
             #######################################################################
             # Our Genotype/Subject is a sequence alteration / Variant
             # which apparently was Measured
@@ -926,6 +932,15 @@ def parse():
                     monarch_id = digest_id(rcv.id + scv_id + condition.id)
                     monarch_assoc = 'MONARCH:' + monarch_id
 
+                    # if we parsed a review status up above, attach this review status
+                    # to this association to allow filtering of RCV by review status
+                    if rcv_review is not None:
+                        write_spo(
+                                  monarch_assoc,
+                                  GLOBALTT['assertion method'],
+                                  rcv_review,
+                                  rcvtriples)
+
                     ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')
                     scv_acc = ClinVarAccession.get('Acc')
                     scv_accver = ClinVarAccession.get('Version')
@@ -1088,15 +1103,9 @@ def parse():
                     # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
                     # RecordStatus                             # assert =='current' ?
 
-                    SCV_ReviewStatus = ClinicalSignificance.find('./ReviewStatus')
-                    if SCV_ReviewStatus is not None:
-                        scv_review = SCV_ReviewStatus.text
-
-                        write_spo(
-                            _evidence_id,
-                            GLOBALTT['assertion method'],
-                            GLOBALTT[scv_review],
-                            rcvtriples)
+                    # SCV_ReviewStatus = ClinicalSignificance.find('./ReviewStatus')
+                    # if SCV_ReviewStatus is not None:
+                    #    scv_review = SCV_ReviewStatus.text
 
                     # SCV/ClinicalSignificance/Citation/ID
                     # see also:

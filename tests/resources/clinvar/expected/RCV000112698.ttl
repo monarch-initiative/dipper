@@ -115,3 +115,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
     owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=80356977> .
 
 <http://omim.org/entry/604370> rdfs:label "Breast-ovarian cancer, familial 1" .
+
+:MONARCH_b0c37985b4c9880212d8 OBO:SEPIO_0000037 OBO:SEPIO_9999995 .
+:MONARCH_b688d9615bbfa9e0f7df OBO:SEPIO_0000037 OBO:SEPIO_9999995 .
+:MONARCH_b9abe7978a362ddcafa3 OBO:SEPIO_0000037 OBO:SEPIO_9999995 .
