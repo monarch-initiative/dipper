@@ -104,13 +104,18 @@ class KEGG(OMIMSource):
             "ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'kegg',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='kegg',
             ingest_title='Kyoto Encyclopedia of Genes and Genomes',
             ingest_url='http://www.genome.jp/kegg/',
+            ingest_logo='source-kegg.png',
             license_url=None,
             data_rights='http://www.kegg.jp/kegg/legal.html'
             # file_handle=None

@@ -21,6 +21,7 @@ tests/resources/clinvar/input/*reject.xml
 # auto generated svg files
 docs/img/*.svg
 
+# Tom's bad habit
 junk/*
 
 # cmap files
@@ -31,7 +32,6 @@ project.idx
 
 ### Linters, static type checkers ###
 
-.pylintrc
 .pytype/*
 pytype.cfg
 Pipfile.lock

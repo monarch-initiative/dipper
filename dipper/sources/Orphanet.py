@@ -27,13 +27,18 @@ class Orphanet(Source):
             'url': 'http://www.orphadata.org/data/xml/en_product6.xml'}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'orphanet',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='orphanet',
             ingest_title='Orphanet',
             ingest_url='http://www.orpha.net',
+            ingest_logo='source-orphanet.png',
             license_url=None,
             data_rights='http://www.orphadata.org/cgi-bin/index.php'
             # file_handle=None
@@ -165,9 +170,11 @@ class Orphanet(Source):
                         assoc.find('DisorderGeneAssociationStatus/Name').text)
 
                     rel_id = self.resolve(dg_label)
-
-                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie,
-                                         disorder_id, rel_id,
+                    g2p_assoc = G2PAssoc(self.graph,
+                                         self.name,
+                                         gene_curie,
+                                         disorder_id,
+                                         rel_id,
                                          phenotype_category=blv.terms.Disease.value)
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
@@ -182,4 +189,3 @@ class Orphanet(Source):
                 return
 
         return
-

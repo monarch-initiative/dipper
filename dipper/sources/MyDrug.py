@@ -23,13 +23,18 @@ class MyDrug(Source):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mydrug',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='mydrug',
             ingest_title='Drugs and Compounds in BioThings',
-            ingest_url='http://c.biothings.io/'
+            ingest_url='http://c.biothings.io/',
+            ingest_logo='source-mydrug.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None
@@ -49,7 +54,7 @@ class MyDrug(Source):
         """
         dir_path = Path(self.rawdir)
         aeolus_file = dir_path / self.files['aeolus']['file']
-        if self.checkIfRemoteIsNewer(aeolus_file):
+        if self.check_if_remote_is_newer(aeolus_file):
             aeolis_fh = aeolus_file.open('w')
             aeolis_fh.write("[\n")
             params = {
@@ -210,7 +215,7 @@ class MyDrug(Source):
         return
 
     # Override
-    def checkIfRemoteIsNewer(self, localfile):
+    def check_if_remote_is_newer(self, localfile):
         """
         Need to figure out how biothings records releases,
         for now if the file exists we will assume it is

@@ -66,13 +66,19 @@ class Panther(Source):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'panther',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='panther',
             ingest_title='Protein ANalysis THrough Evolutionary Relationships',
             ingest_url='http://pantherdb.org',
+            ingest_logo='source-panther.jpg',
             license_url=None,
             data_rights='http://www.pantherdb.org/terms/disclaimer.jsp'
             # file_handle=None
@@ -244,13 +250,11 @@ class Panther(Source):
                     gene_a = re.sub(r'=', ':', gene_a)
                     gene_b = re.sub(r'=', ':', gene_b)
 
-                    clean_gene = self._clean_up_gene_id(
-                        gene_a, species_a, self.curie_map)
+                    clean_gene = self._clean_up_gene_id(gene_a, species_a)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_a)
                     gene_a = clean_gene
-                    clean_gene = self._clean_up_gene_id(
-                        gene_b, species_b, self.curie_map)
+                    clean_gene = self._clean_up_gene_id(gene_b, species_b)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_b)
                     gene_b = clean_gene
@@ -289,8 +293,7 @@ class Panther(Source):
                     # note this is incomplete...
                     # it won't construct the full family hierarchy,
                     # just the top-grouping
-                    assoc.add_gene_family_to_graph(
-                        ':'.join(('PANTHER', panther_id)))
+                    assoc.add_gene_family_to_graph('PANTHER:' + panther_id)
 
                     if not self.test_mode \
                             and limit is not None and line_counter > limit:
@@ -303,7 +306,7 @@ class Panther(Source):
                 str(unprocessed_gene_ids))
 
     @staticmethod
-    def _clean_up_gene_id(geneid, species, curie_map):
+    def _clean_up_gene_id(self, geneid, species):
         """
         A series of identifier rewriting to conform with
         standard gene identifiers.
@@ -311,25 +314,25 @@ class Panther(Source):
         :param species:
         :return:
         """
-        # special case for MGI
-        geneid = re.sub(r'MGI:MGI:', 'MGI:', geneid)
+        # no curie should have more than one colon. generalize as
+        geneid = ':'.join(geneid.split(':')[-2:])
 
-        # rewrite Ensembl --> ENSEMBL
-        geneid = re.sub(r'Ensembl', 'ENSEMBL', geneid)
+        # rewrite Ensembl --> ENSEMBL    ... why? they don't
+        geneid = re.sub(r'Ensembl:', 'ENSEMBL:', geneid)
 
         # rewrite Gene:CELE --> WormBase
         # these are old-school cosmid identifier
         geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
         if species == 'CAEEL':
-            if re.match(r'(Gene|ENSEMBLGenome):\w+\.\d+', geneid):
+            if re.match(r'(Gene|EnsemblGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:Gene|ENSEMBLGenome):(\w+\.\d+)',
+                    r'(?:Gene|EnsemblGenome):(\w+\.\d+)',
                     r'WormBase:\1', geneid)
 
         if species == 'DROME':
-            if re.match(r'(ENSEMBLGenome):\w+\.\d+', geneid):
+            if re.match(r'(EnsemblGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:ENSEMBLGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
+                    r'(?:EnsemblGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
 
         # rewrite GeneID --> NCBIGene
         geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
@@ -340,7 +343,7 @@ class Panther(Source):
         geneid = re.sub(r'Gene:CG', 'FlyBase:CG', geneid)
 
         # rewrite ENSEMBLGenome:FBgn --> FlyBase:FBgn
-        geneid = re.sub(r'ENSEMBLGenome:FBgn', 'FlyBase:FBgn', geneid)
+        geneid = re.sub(r'EnsemblGenome:FBgn', 'FlyBase:FBgn', geneid)
 
         # rewrite Gene:<ensembl ids> --> ENSEMBL:<id>
         geneid = re.sub(r'Gene:ENS', 'ENSEMBL:ENS', geneid)
@@ -359,7 +362,7 @@ class Panther(Source):
 
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
-        if pfx is None or pfx not in curie_map:
+        if pfx is None or pfx not in self.curie_map:
             # LOG.warning( "No curie prefix for (species %s): %s", species, geneid)
             geneid = None
         return geneid

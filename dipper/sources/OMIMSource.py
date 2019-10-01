@@ -6,14 +6,9 @@ from dipper import config
 
 LOG = logging.getLogger(__name__)
 
-
-# omimftp key EXPIRES
-# get a new one here: https://omim.org/help/api
-
 OMIMURL = 'https://data.omim.org/downloads/'
-OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
-USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
-             "info@monarchinitiative.org)"
+MONARCHURL = 'https://archive.monarchinitiative.org/'
+MONARCHIVE = MONARCHURL + config.get_config()['keys']['monarchive']
 
 
 class OMIMSource(Source):
@@ -33,9 +28,8 @@ class OMIMSource(Source):
     mimfiles = {  # do not conflict with subclasses 'files' dict
         'mimtitles': {
             'file': 'mimTitles.txt',
-            'url':  OMIMFTP + '/mimTitles.txt',
+            'url': MONARCHIVE + '/mimTitles.txt',
             'clean': OMIMURL,
-            'headers': {'User-Agent': USER_AGENT},
             'columns': [  # expected
                 'Prefix',
                 'Mim Number',
@@ -50,23 +44,27 @@ class OMIMSource(Source):
             self,
             graph_type,
             are_bnodes_skolemized,
+            data_release_version=None,
             name=None,
             ingest_title=None,
             ingest_url=None,
+            ingest_logo=None,
             license_url=None,
             data_rights=None,
             file_handle=None
     ):
 
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            name,
-            ingest_title,
-            ingest_url,
-            license_url,
-            data_rights,
-            file_handle)
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name=name,
+            ingest_title=ingest_title,
+            ingest_url=ingest_url,
+            ingest_logo=ingest_logo,
+            license_url=license_url,
+            data_rights=data_rights,
+            file_handle=file_handle)
 
         self.omim_type = {}
         self.omim_replaced = {}

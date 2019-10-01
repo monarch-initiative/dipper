@@ -273,7 +273,10 @@ class Model():
             subject_category=blv.terms.OntologyClass.value)
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
-        self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri,
+        self.graph.addTriple(ontology_id,
+                             self.globaltt['version_iri'],
+                             version_iri,
+                             object_is_literal=False,
                              subject_category=blv.terms.OntologyClass.value)
 
     def addOWLVersionInfo(self, ontology_id, version_info):

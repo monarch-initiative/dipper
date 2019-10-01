@@ -15,8 +15,14 @@ class HGNC(OMIMSource):
     """
     This is the processing module for HGNC.
 
-    We create equivalences between HGNC identifiers and ENSEMBL and NCBIGene.
-    We also add the links to cytogenic locations for the gene features.
+    - HGNC is authoratatitive for human gene symbols.
+    - We adopt HGNC's reporting of
+        - OMIM, Ensembl & Entrez equivalences of HGNC identifiers.
+
+    - We include HGNC's reporting of publications "about" a human gene.
+
+    - We also add the links to cytogenic locations for the gene features.
+        - although HGNC is not authoratatitive for genomic locations
 
     """
 
@@ -81,14 +87,19 @@ class HGNC(OMIMSource):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized,
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
                  tax_ids=None, gene_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'hgnc',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',
+            ingest_logo='source-hgnc.png',
             license_url=None,
             data_rights='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt',
             # file_handle=None

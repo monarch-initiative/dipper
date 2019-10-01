@@ -5,7 +5,6 @@ from unittest.mock import mock_open
 from unittest.mock import MagicMock
 import logging
 from dipper.sources.UDP import UDP
-from rdflib import URIRef
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
 

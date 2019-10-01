@@ -52,9 +52,9 @@ class WormBase(Source):
             'url': wbprod + species +
                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
-        #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-        #    'url': wbdev + species +
-        #     '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        #   'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
+        #   'url': wbdev + species +
+        #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
             'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
@@ -99,13 +99,18 @@ class WormBase(Source):
             'url':  wbprod + '/CHECKSUMS'}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'wormbase',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='wormbase',
             ingest_title='WormBase',
             ingest_url='http://www.wormbase.org',
+            ingest_logo='source-wormbase.png',
             # license_url=None,
             data_rights='https://wormbase.org/about/citing_wormbase#012--10'
             # file_handle=None
@@ -136,10 +141,14 @@ class WormBase(Source):
                 "Couldn't figure out version number from FTP site.  Exiting.")
             exit(1)
         else:
-
             self.update_wsnum_in_files(wsver.group(1))
 
-        self.dataset.set_version_by_num(self.version_num)
+        # set version for all files to self.version_num
+        for key in self.files:
+            if self.files[key].get("url") is not None:
+                self.dataset.set_ingest_source_file_version_num(
+                    self.files[key].get("url"), self.version_num)
+
         # fetch all the files
         self.get_files(is_dl_forced)
         return
@@ -391,7 +400,7 @@ class WormBase(Source):
                             # Could type the IRI as both the reagant and reagant
                             # targeted gene but not sure if this needed
                             # geno.addGeneTargetingReagent(
-                            #    allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
+                            #   allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
 
                             model.addIndividualToGraph(
                                 allele_id, None,
@@ -437,7 +446,8 @@ class WormBase(Source):
                                 reference.setType(self.globaltt['person'])
                                 assoc.add_evidence(
                                     self.globaltt[
-                                        'inference from background scientific knowledge'])
+                                        'inference from background scientific knowledge'
+                                    ])
                             reference.addRefToGraph()
                             assoc.add_source(ref)
 

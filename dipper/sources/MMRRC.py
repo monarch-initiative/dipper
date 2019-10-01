@@ -1,8 +1,5 @@
 import csv
 import re
-import os
-from datetime import datetime
-from stat import ST_CTIME
 import logging
 
 from dipper.sources.Source import Source
@@ -69,13 +66,18 @@ class MMRRC(Source):
         'MMRRC:000255-MU', 'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
     ]
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'mmrrc',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='mmrrc',
             ingest_title='Mutant Mouse Regional Resource Centers',
             ingest_url='https://www.mmrrc.org',
+            ingest_logo='source-mmrrc.png',
             # license_url=None,
             data_rights='https://www.mmrrc.org/about/data_download.php'
             # file_handle=None
@@ -87,16 +89,6 @@ class MMRRC(Source):
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        fname = '/'.join((self.rawdir, self.files['catalog']['file']))
-        st = os.stat(fname)
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        # TODO note: can set the data version to what is in the header
-        # first line like:
-        # This MMRRC catalog data file was generated on 2015-04-22
-
-        self.dataset.setVersion(filedate)
-
         return
 
     def parse(self, limit=None):
@@ -151,21 +143,15 @@ class MMRRC(Source):
         geno = Genotype(graph)
         with open(fname, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            # This MMRRC catalog data file was generated on YYYY-MM-DD
-            # insert or check date w/dataset
-            line = next(reader)
-            # gen_date = line[-10:]
-            line = next(reader)
+            # First line is header not date/version info. This changed recently,
+            # apparently as of Sep 2019. Also, 3rd line is no longer blank.
+            header = next(reader)
             col = self.files['catalog']['columns']
-            if col != line:
+            if col != header:
                 LOG.error(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t%s\n',
-                    src_key, col, line)
-                LOG.info(set(col) - set(line))
-
-            line = next(reader)
-            if line != []:
-                LOG.warning('Expected third line to be blank. got "%s" instead', line)
+                    '%s\nExpected Headers:\t%s\nReceived Headers:\t%s\n',
+                    src_key, col, header)
+                LOG.info(set(col) - set(header))
 
             for row in reader:
                 strain_id = row[col.index('STRAIN/STOCK_ID')].strip()
@@ -233,7 +219,11 @@ class MMRRC(Source):
                     mgi_gene_id = 'NCBIGene:' + mgi_gene_id[7:]
 
                 if mgi_gene_id != '':
-                    [curie, localid] = mgi_gene_id.split(':')
+                    try:
+                        [curie, localid] = mgi_gene_id.split(':')
+                    except ValueError as verror:
+                        LOG.warning("Problem parsing mgi_gene_id %s from file %s: %s",
+                                    mgi_gene_id, fname, verror)
                     if curie not in ['MGI', 'NCBIGene']:
                         LOG.info("MGI Gene id not recognized: %s", mgi_gene_id)
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
@@ -315,7 +305,7 @@ class MMRRC(Source):
                 genes = h['genes']
                 vl_set = set()
                 # make variant loci for each gene
-                if len(variants) > 0:
+                if variants:
                     for var in variants:
                         vl_id = var.strip()
                         vl_symbol = self.id_label_hash[vl_id]
@@ -357,7 +347,7 @@ class MMRRC(Source):
                         vslc_id, vslc_label,
                         self.globaltt['variant single locus complement'],
                         ind_category=blv.terms.SequenceVariant.value)
-                if len(vslc_list) > 0:
+                if vslc_list:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
                         gvc_id = re.sub(r'_|:', '', gvc_id)

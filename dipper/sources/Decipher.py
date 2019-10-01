@@ -40,13 +40,18 @@ class Decipher(Source):
             'headers': []}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'decipher',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='decipher',
             ingest_title='Development Disorder Genotype Phenotype Database',
             ingest_url='https://decipher.sanger.ac.uk/',
+            ingest_logo='source-decipher.png',
             license_url='https://decipher.sanger.ac.uk/legal',
             data_rights='https://decipher.sanger.ac.uk/datasharing',
             # file_handle=None
@@ -130,7 +135,7 @@ class Decipher(Source):
 
         # in order for this to work, we need to map the HGNC id-symbol;
         hgnc = HGNC(self.graph_type, self.are_bnodes_skolemized)
-        hgnc_symbol_id_map = hgnc.get_symbol_id_map()
+        # hgnc_symbol_id_map = hgnc.get_symbol_id_map()  # Does Not Exists in hgnc
 
         myzip = ZipFile(
             '/'.join((self.rawdir, self.files['annot']['file'])), 'r')
@@ -153,7 +158,7 @@ class Decipher(Source):
                 (gencode_gene_name, mode, category, consequence, disease, omim,
                  ddg2p_id, pubmed_ids, hpo_codes) = row
 
-                hgnc_id = hgnc_symbol_id_map.get(gencode_gene_name.strip())
+                # hgnc_id = hgnc_symbol_id_map.get(gencode_gene_name.strip())
                 if hgnc_id is None:
                     LOG.error(
                         "Couldn't map the gene symbol %s to HGNC.",

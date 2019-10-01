@@ -159,7 +159,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                 node = BNode(re.sub(r'^_:|^_', '', curie, 1))
 
         # Check if curie string is actually an IRI
-        elif curie[:4] == 'http' or curie[:3] == 'ftp':
+        elif curie[:4] == 'http' or curie[:3] == 'ftp' or curie[:4] == 'jdbc':
             node = URIRef(curie)
         else:
             iri = RDFGraph.curie_util.get_uri(curie)

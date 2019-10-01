@@ -127,13 +127,19 @@ class Monochrom(Source):
         },
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'monochrom',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='monochrom',
             ingest_title='Monarch Chromosome Ontology',
             ingest_url='https://monarchinitiative.org',   # TODO can we be more specific
+            ingest_logo='source-monochrom.png',
             license_url='http://creativecommons.org/licenses/by/4.0/'  # make our lic
             # data_rights=None,
             # file_handle=None

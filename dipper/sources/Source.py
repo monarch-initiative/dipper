@@ -7,6 +7,8 @@ import urllib
 import csv
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
+from inspect import getdoc
+from rdflib import XSD, Literal
 
 import yaml
 from dipper.graph.RDFGraph import RDFGraph
@@ -42,9 +44,12 @@ class Source:
             self,
             graph_type='rdf_graph',     # or streamed_graph
             are_bnodes_skized=False,    # typically True
+            data_release_version=None,
             name=None,                  # identifier; make an IRI for nquads
             ingest_title=None,
             ingest_url=None,
+            ingest_logo=None,     # this should be the name of file on 'MonarchLogoRepo'
+            ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic
             file_handle=None
@@ -55,8 +60,13 @@ class Source:
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
-        self.ingest_url = ingest_url
+        self.data_release_version = data_release_version
         self.ingest_title = ingest_title
+        self.ingest_url = ingest_url
+        self.ingest_logo = ingest_logo
+        self.ingest_description = ingest_description
+        self.license_url = license_url
+        self.data_rights = data_rights
         self.localtt = self.load_local_translationtable(name)
 
         if name is not None:
@@ -77,9 +87,6 @@ class Source:
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
         self.datasetfile = None
 
-        # still need to pull in file suffix  -- this ia a curie not a url
-        self.archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
-
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
@@ -93,7 +100,7 @@ class Source:
             LOG.info("created output directory %s", pth)
 
         LOG.info("Creating Test graph %s", self.testname)
-        # note: tools such as protoge need slolemized blank nodes
+        # note: tools such as protoge need skolemized blank nodes
         self.testgraph = RDFGraph(True, self.testname)
 
         if graph_type == 'rdf_graph':
@@ -125,20 +132,22 @@ class Source:
         self.test_only = False
         self.test_mode = False
 
-        # this may eventually support Bagits
-        self.dataset = Dataset(
-            self.archive_url,
-            self.ingest_title,
-            self.ingest_url,
-            None,           # description
-            license_url,    # only _OUR_ lic
-            data_rights,    # tries to point to others lics
-            graph_type,
-            file_handle
-        )
+        if self.ingest_description and getdoc(self) is not None:
+            self.ingest_description = getdoc(self)
 
-        for graph in [self.graph, self.testgraph]:
-            self.declareAsOntology(graph)
+        self.dataset = Dataset(
+            identifier=self.name,
+            data_release_version=self.data_release_version,
+            ingest_name=self.name,
+            ingest_title=self.ingest_title,
+            ingest_url=self.ingest_url,
+            ingest_logo=self.ingest_logo,
+            ingest_description=self.ingest_description,   # description
+            license_url=self.license_url,    # only _OUR_ lic
+            data_rights=self.data_rights,    # tries to point to others lics
+            graph_type=graph_type,
+            file_handle=file_handle
+        )
 
     def fetch(self, is_dl_forced=False):
         """
@@ -158,7 +167,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, fmt='turtle', stream=None):
+    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=True):
         """
         This convenience method will write out all of the graphs
         associated with the source.
@@ -194,23 +203,22 @@ class Source:
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
             LOG.info("Setting dataset file to %s", self.datasetfile)
-
-            if self.dataset is not None and self.dataset.version is None:
-                self.dataset.set_version_by_date()
-                LOG.info("No version for %s setting to date issued.", self.name)
         else:
             LOG.warning("No output file set. Using stdout")
             stream = 'stdout'
 
-        gu = GraphUtils(None)
+        graph_util = GraphUtils(None)
 
         # the  _dataset description is always turtle
-        gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
+        graph_util.write(self.dataset.get_graph(), 'turtle', filename=self.datasetfile)
 
         if self.test_mode:
             # unless we stop hardcoding, the test dataset is always turtle
             LOG.info("Setting testfile to %s", self.testfile)
-            gu.write(self.testgraph, 'turtle', filename=self.testfile)
+            graph_util.write(self.testgraph, 'turtle', filename=self.testfile)
+
+        if write_metadata_in_main_graph:
+            self.graph = self.graph + self.dataset.get_graph()
 
         # print graph out
         if stream is None:
@@ -220,7 +228,8 @@ class Source:
         else:
             LOG.error("I don't understand our stream.")
             return
-        gu.write(self.graph, fmt, filename=outfile)
+
+        graph_util.write(self.graph, fmt, filename=outfile)
 
     def whoami(self):
         '''
@@ -260,7 +269,7 @@ class Source:
         """
         return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
 
-    def checkIfRemoteIsNewer(self, remote, local, headers):
+    def check_if_remote_is_newer(self, remote, local, headers):
         """
         Given a remote file location, and the corresponding local file
         this will check the datetime stamp on the files to see if the remote
@@ -360,9 +369,9 @@ class Source:
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
-                self.dataset.setFileAccessUrl(filesource['clean'])
+                self.dataset.set_ingest_source(filesource['clean'])
             else:
-                self.dataset.setFileAccessUrl(filesource['url'])
+                self.dataset.set_ingest_source(filesource['url'])
                 LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
 
             time.sleep(delay)
@@ -372,13 +381,16 @@ class Source:
                 is_dl_forced, headers)
 
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
-
-        # only keeping the date from the last file
-        filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
-
-        # FIXME
-        # change this so the date is attached only to each file, not the entire dataset
-        self.dataset.set_date_issued(filedate)
+            self.dataset.graph.addTriple(self.dataset.version_level_curie,
+                                         self.globaltt["Source (dct)"],
+                                         filesource['url']
+                                         )
+            filedate = Literal(
+                datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
+                datatype=XSD.date)
+            self.dataset.graph.addTriple(filesource['url'],
+                                         self.globaltt['retrieved_on'],
+                                         filedate)
 
     def fetch_from_url(
             self, remotefile, localfile=None, is_dl_forced=False, headers=None):
@@ -395,7 +407,7 @@ class Source:
 
         response = None
         if ((is_dl_forced is True) or localfile is None or
-                (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
+                (self.check_if_remote_is_newer(remotefile, localfile, headers))):
             # TODO url verification, etc
             if headers is None:
                 headers = self._get_default_request_headers()
@@ -611,55 +623,6 @@ class Source:
         return None
 
     # TODO: pramaterising the release date
-
-    def declareAsOntology(self, graph):
-        """
-        The file we output needs to be declared as an ontology,
-        including it's version information.
-
-        TEC: I am not convinced dipper reformatting external data as RDF triples
-        makes an OWL ontology (nor that it should be considered a goal).
-
-        Proper ontologies are built by ontologists. Dipper reformats data
-        and annotates/decorates it with a minimal set of carefully arranged
-        terms drawn from from multiple proper ontologies.
-        Which allows the whole (dipper's RDF triples and parent ontologies)
-        to function as a single ontology we can reason over when combined
-        in a store such as SciGraph.
-
-        Including more than the minimal ontological terms in dipper's RDF
-        output constitutes a liability as it allows greater divergence
-        between dipper artifacts and the proper ontologies.
-
-        Further information will be augmented in the dataset object.
-        :param version:
-        :return:
-
-        """
-
-        # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
-        # owl:versionInfo
-        # <https://archive.monarchinitiative.org/YYYYMM/ttl/biogrid.ttl>
-
-        model = Model(graph)
-
-        # is self.outfile suffix set yet???
-        ontology_file_id = 'MonarchData:' + self.name + ".ttl"
-        model.addOntologyDeclaration(ontology_file_id)
-
-        # add timestamp as version info
-
-        cur_time = datetime.now()
-        t_string = cur_time.strftime("%Y-%m-%d")
-        ontology_version = t_string
-        # TEC this means the MonarchArchive IRI needs the release updated
-        # maybe extract the version info from there
-
-        # should not hardcode the suffix as it may change
-        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
-        model.addOWLVersionIRI(ontology_file_id, archive_url)
-        model.addOWLVersionInfo(ontology_file_id, ontology_version)
-        # TODO make sure this is synced with the Dataset class
 
     @staticmethod
     def remove_backslash_r(filename, encoding):

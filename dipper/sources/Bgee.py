@@ -77,17 +77,24 @@ class Bgee(Source):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None,
+                 version=None):
         """
         :param tax_ids: [str,], List of NCBI taxon  identifiers
         :return:
         """
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'bgee',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='bgee',
             ingest_title='Bgee Gene expression data in animals',
             ingest_url='http://bgee.org/',
+            ingest_logo='source-bgee.png',
             # license_url=None,
             data_rights='https://bgee.org/?page=about'
             # file_handle=None
@@ -140,7 +147,7 @@ class Bgee(Source):
                 self._convert_ftp_time_to_iso(info['modify']))
 
             if not os.path.exists(localfile) or is_dl_forced or \
-                    self.checkIfRemoteIsNewer(
+                    self.check_if_remote_is_newer(
                             localfile, int(info['size']), info['modify']):
 
                 LOG.info("Fetching %s", dlname)
@@ -227,9 +234,9 @@ class Bgee(Source):
             self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
 
     # Override
-    def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
+    def check_if_remote_is_newer(self, localfile, remote_size, remote_modify):
         """
-        Overrides checkIfRemoteIsNewer in Source class
+        Overrides check_if_remote_is_newer in Source class
 
         :param localfile: str file path
         :param remote_size: str bytes

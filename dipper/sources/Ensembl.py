@@ -68,13 +68,20 @@ class Ensembl(Source):
         ]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None,
+                 tax_ids=None,
+                 gene_ids=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ensembl',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='ensembl',
             ingest_title='ENSEMBL',
-            ingest_url='http://uswest.ensembl.org'
+            ingest_url='http://uswest.ensembl.org',
+            ingest_logo='source-ensembl.png',
             # license_url=None,
             # data_rights=None,
             # file_handle=None

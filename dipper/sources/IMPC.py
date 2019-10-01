@@ -115,13 +115,18 @@ class IMPC(Source):
             'url': IMPCDL + '/checksum.md5'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'impc',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='impc',
             ingest_title='International Mouse Phenotyping Consortium',
             ingest_url='http://www.mousephenotype.org',
+            ingest_logo='source-impc.png',
             license_url=None,
             data_rights=GITHUBRAW + 'mpi2/PhenotypeArchive/master/LICENSE',
             file_handle=None

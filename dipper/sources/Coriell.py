@@ -116,13 +116,18 @@ class Coriell(Source):
         'GM00142', 'NA17944', 'AG02505', 'GM01602', 'GM02455', 'AG00364',
         'GM13707', 'AG00780']
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'coriell',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='coriell',
             ingest_title='Coriell Institute for Medical Research',
-            ingest_url='https://ccr.coriell.org/'
+            ingest_url='https://ccr.coriell.org/',
+            ingest_logo='source-coriell.png',
             # website disclaimer 'https://www.coriell.org/1/About-Us/Legal-Notice'
             # wet material https://www.coriell.org/1/NINDS/About/Shared-Usage-Guidelines
             # license_url=None,
@@ -220,8 +225,10 @@ class Coriell(Source):
                     filedate = datetime.utcfromtimestamp(
                         fstat[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
-                self.dataset.setFileAccessUrl(remotef.filename, True)
-                self.dataset.setVersion(filedate)
+                remote_url = self.files[rmt]['page'] + "/" + remotef.filename
+                self.dataset.set_ingest_source(remote_url)
+                self.dataset.set_ingest_source_file_version_date(remote_url, filedate)
+
         return
 
     def parse(self, limit=None):

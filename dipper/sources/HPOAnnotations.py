@@ -108,13 +108,18 @@ class HPOAnnotations(Source):
         ]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'hpoa',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='hpoa',
             ingest_title='Human Phenotype Ontology',
             ingest_url='https://hpo.jax.org/app/',
+            ingest_logo='source-hpo.png',
             license_url=None,
             data_rights='https://hpo.jax.org/app/license',
             # file_handle=None
@@ -141,8 +146,7 @@ class HPOAnnotations(Source):
         if self.test_only:
             self.test_mode = True
 
-        self._process_phenotype_hpoa(
-            '/'.join((self.rawdir, self.files['hpoa']['file'])), limit)
+        self._process_phenotype_hpoa(self.files['hpoa'], limit=limit)
 
         # TODO add negative phenotype statements #113
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
@@ -154,7 +158,7 @@ class HPOAnnotations(Source):
 
         return
 
-    def _process_phenotype_hpoa(self, raw, limit):
+    def _process_phenotype_hpoa(self, file_info, limit=None):
         """
         see info on format here:
         http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
@@ -172,8 +176,7 @@ class HPOAnnotations(Source):
             graph = self.graph
         model = Model(graph)
 
-        filedate = datetime.utcfromtimestamp(
-            os.stat(raw)[ST_CTIME]).strftime("%Y-%m-%d")
+        raw = '/'.join((self.rawdir, file_info['file']))
 
         # this will cause two dates to be attached to the dataset
         # (one from the filedate, and the other from here)
@@ -188,7 +191,10 @@ class HPOAnnotations(Source):
             LOG.info("Ingest from %s", row)
             date = datetime.strptime(
                 row.strip(), '%Y-%m-%d').strftime("%Y-%m-%d-%H-%M")
-            self.dataset.setVersion(filedate, date)
+
+            if file_info.get("url") is not None:
+                self.dataset.set_ingest_source_file_version_date(
+                    file_info.get("url"), date)
 
             row = next(reader)  # drop tracker url
             row = next(reader)  # drop release url
@@ -368,7 +374,7 @@ class HPOAnnotations(Source):
         print(repo_hash)
         repo_hash = str(repo_hash)
         # (note this makes little sense as it is a private repo)
-        self.dataset.setFileAccessUrl(
+        self.dataset.set_ingest_source(
             '/'.join((
                 'https://github.com/monarch-initiative/hpo-annotation-data/tree',
                 repo_hash)))

@@ -139,14 +139,17 @@ class MGI(PostgreSQLSource):
     def __init__(
             self,
             graph_type,
-            are_bnodes_skolemized
+            are_bnodes_skolemized,
+            data_release_version=None
     ):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
             name='mgi',
             ingest_title='Mouse Genome Informatics',
             ingest_url='http://www.informatics.jax.org/',
+            ingest_logo="source-mgi.png",
             license_url='http://www.informatics.jax.org/mgihome/other/copyright.shtml',
             data_rights=None,
             file_handle=None)
@@ -200,9 +203,9 @@ class MGI(PostgreSQLSource):
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
 
-        self.dataset.setFileAccessUrl(''.join((
-            'jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
-            cxn['database'])), is_object_literal=True)
+        pg_iri = ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
+                          cxn['database']))
+        self.dataset.set_ingest_source(pg_iri)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
@@ -240,7 +243,8 @@ class MGI(PostgreSQLSource):
                 datestamp = datetime.strptime(
                     dat, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-        self.dataset.setVersion(datestamp, ver)
+        self.dataset.set_ingest_source_file_version_num(pg_iri, ver)
+        self.dataset.set_ingest_source_file_version_date(pg_iri, datestamp)
 
         return
 
@@ -1775,7 +1779,9 @@ SELECT  r._relationship_key as rel_key,
                         if not re.match(r'MMRRC:', strain_id):
                             strain_id = 'MMRRC:' + strain_id
                     elif logicaldb_key == '37':  # EMMA
-                        strain_id = re.sub(r'EM:', 'EMMA:', accid)
+                        # replace EM: prefix with EMMA:, or for accid's
+                        # with bare digits (e.g. 06335) prepend 'EMMA:'
+                        strain_id = re.sub(r'^(EM:)*', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
                         strain_id = 'APB:' + accid  # Check
                     elif logicaldb_key == '40':  # ORNL

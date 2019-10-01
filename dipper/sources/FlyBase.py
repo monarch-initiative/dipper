@@ -129,13 +129,18 @@ class FlyBase(PostgreSQLSource):
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'flybase',
+            graph_type=graph_type,
+            are_bnodes_skolemized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='flybase',
             ingest_title='FlyBase',
             ingest_url='http://www.flybase.org/',
+            ingest_logo='source-flybase.png',
             license_url=None,
             data_rights='https://wiki.flybase.org/wiki/FlyBase_Wiki:General_disclaimer',
             file_handle=None
@@ -154,7 +159,7 @@ class FlyBase(PostgreSQLSource):
             'host': 'chado.flybase.org', 'database': 'flybase', 'port': 5432,
             'user': 'flybase', 'password': 'no password'}
 
-        self.dataset.setFileAccessUrl(
+        self.dataset.set_ingest_source(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                      '/', cxn['database'])), is_object_literal=True)
 
@@ -419,7 +424,11 @@ class FlyBase(PostgreSQLSource):
 
         col = self.files[src_key]['columns']
 
-        with gzip.open(raw, 'rt') as tsvfile:
+        # JR - I've set encoding to latin-1 to fix the UnicodeDecodeError that happens
+        # when the default encoding (utf-8) is used. This possibly will break if/when
+        # the encoding of this file upstream at Flybase is changed to utf-8. If so,
+        # trying setting encoding='utf-8' below
+        with gzip.open(raw, 'rt', encoding='latin-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             # skip first four lines
             for _ in range(0, 2):
@@ -576,8 +585,10 @@ class FlyBase(PostgreSQLSource):
                     try:
                         if species_map[allele_prefix[0]][0] == 'drosophilid':
                             geno.addAllele(allele_curie, allele_label)
-                            geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie,
-                                          genopart_category=blv.terms.SequenceVariant.value)
+                            geno.addTaxon(
+                                species_map[allele_prefix[0]][1],
+                                allele_curie,
+                                genopart_category=blv.terms.SequenceVariant.value)
                         else:
                             # If it's a foreign transgenic allele, skip
                             continue

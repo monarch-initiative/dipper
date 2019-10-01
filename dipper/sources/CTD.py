@@ -74,13 +74,18 @@ class CTD(Source):
         'publications': {'file': 'CTD_curated_references.tsv'}
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
+    def __init__(self,
+                 graph_type,
+                 are_bnodes_skolemized,
+                 data_release_version=None):
         super().__init__(
-            graph_type,
-            are_bnodes_skolemized,
-            'ctd',
+            graph_type=graph_type,
+            are_bnodes_skized=are_bnodes_skolemized,
+            data_release_version=data_release_version,
+            name='ctd',
             ingest_title='Comparative Toxicogenomics Database',
             ingest_url='http://ctdbase.org',
+            ingest_logo='source-ctd.png',
             license_url=None,
             data_rights='http://ctdbase.org/about/legal.jsp'
             # file_handle=None
@@ -148,11 +153,10 @@ class CTD(Source):
         self.pathway = Pathway(self.graph)
 
         self._parse_ctd_file(
-            limit, self.files['chemical_disease_interactions']['file'])
+            limit, self.files['chemical_disease_interactions'])
+        #self._parse_ctd_file(limit, self.files['gene_pathway'])
+        #self._parse_ctd_file(limit, self.files['gene_disease'])
 
-        # Per @cmungall's request, removing gene disease associations
-        #self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
-        #self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self._parse_curated_chem_disease(limit)
 
         LOG.info("Done parsing files.")
@@ -164,14 +168,15 @@ class CTD(Source):
         Parses files in CTD.files dictionary
         Args:
             :param limit (int): limit the number of rows processed
-            :param file (str): file name (must be defined in CTD.file)
+            :param file (str): dictionary containing file name ('file') and ('url')
+            (must be defined in CTD.file)
         Returns:
             :return None
         """
         row_count = 0
         version_pattern = re.compile(r'^# Report created: (.+)$')
         is_versioned = False
-        file_path = '/'.join((self.rawdir, file))
+        file_path = '/'.join((self.rawdir, file['file']))
         with gzip.open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -181,9 +186,10 @@ class CTD(Source):
                 if is_versioned is False:
                     match = re.match(version_pattern, ' '.join(row))
                     if match:
-                        version = re.sub(r'\s|:', '-', match.group(1))
-                        # TODO convert this timestamp to a proper timestamp
-                        self.dataset.setVersion(version)
+                        version_date = re.sub(r'\s|:', '-', match.group(1))
+                        self.dataset.set_ingest_source_file_version_date(
+                            file['url'],
+                            version_date)
                         is_versioned = True
                 elif re.match(r'^#', ' '.join(row)):
                     pass
@@ -192,10 +198,10 @@ class CTD(Source):
                     if file == self.files[
                             'chemical_disease_interactions']['file']:
                         self._process_interactions(row)
-                    elif file == self.files['gene_pathway']['file']:
-                        self._process_pathway(row)
-                    elif file == self.files['gene_disease']['file']:
-                        self._process_disease2gene(row)
+                    # elif file == self.files['gene_pathway']['file']:
+                    #     self._process_pathway(row)
+                    # elif file == self.files['gene_disease']['file']:
+                    #     self._process_disease2gene(row)
 
                 if not self.test_mode and limit is not None and row_count >= limit:
                     break
