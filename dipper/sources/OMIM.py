@@ -858,8 +858,7 @@ class OMIM(OMIMSource):
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-    @staticmethod
-    def _get_phenotypicseries_parents(entry, graph):
+    def _get_phenotypicseries_parents(self, entry, graph):
         """
         Extract the phenotypic series parent relationship out of the entry
         :param entry:
@@ -869,6 +868,7 @@ class OMIM(OMIMSource):
         model = Model(graph)
         omim_num = str(entry['mimNumber'])
         omim_curie = 'OMIM:' + omim_num
+        omimtype = self.omim_type[omim_num]
         # the phenotypic series mappings
         serieslist = []
         if 'phenotypeMapList' in entry:
@@ -894,7 +894,16 @@ class OMIM(OMIMSource):
         for phser in set(serieslist):
             series_curie = 'OMIMPS:' + phser
             model.addClassToGraph(series_curie, None)
-            model.addSubClass(omim_curie, series_curie)
+            if omimtype in [
+                    self.globaltt['gene'], self.globaltt['has_affected_feature']]:
+                model.addTriple(
+                    omim_curie,
+                    self.globaltt['contributes to condition'],
+                    series_curie)
+            elif omimtype == 'disease':
+                model.addSubClass(omim_curie, series_curie)
+            else:
+                LOG.info('Unable to map type %s to phenotypic series', omimtype)
 
     @staticmethod
     def _get_mappedids(entry, graph):
