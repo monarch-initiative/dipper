@@ -61,7 +61,7 @@
 "description": "dc:description",
 "source": "dc:source",
 "title (dce)": "dc:title",
-# "Data Catalog Vocabulary": "dcat"
+# "Data Catalog Vocabulary": "dcat:!!!"
 "distribution": "dcat:Distribution",
 # "dublin core terms": "dcterms:!!!",
 "identifier": "dcterms:identifier",
@@ -288,6 +288,7 @@
 "photograph": "IAO:0000185",
 "document": "IAO:0000310",
 "publication": "IAO:0000311",
+"OBO foundry unique label": "IAO:0000589",
 "term replaced by": "IAO:0100001",
 # "Medical Subject Headings": "MESH:!!!",
 "Dwarfism": "MESH:D004392",
