@@ -349,8 +349,7 @@ class GeneOntology(Source):
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
                             model.addSynonym(gene_id, syn,
-                                             class_category=blv.terms.Gene.value,
-                                             synonym_type_category=blv.terms.Gene.value)
+                                             class_category=blv.terms.Gene.value)
                         else:
                             model.addSynonym(gene_id, syn,
                                              class_category=blv.terms.Gene.value)
