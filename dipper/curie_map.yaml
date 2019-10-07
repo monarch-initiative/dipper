@@ -1,3 +1,4 @@
+---
 # Monarch-specific
 '': 'https://monarchinitiative.org/'                                # local BASE IRI
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
@@ -114,19 +115,19 @@
 'ISBN': 'https://monarchinitiative.org/ISBN_'                       # International Standard Book Number
 'ISBN-10': 'https://monarchinitiative.org/ISBN10_'                  # Same as ISBN has 10 digits pre 2007
 'ISBN-13': 'https://monarchinitiative.org/ISBN13_'                  # International Standard Book Number with 13 digits starts w/ 978 or 979
-#'ISBN-15': 'https://monarchinitiative.org/ISBN15_'                 # I would like to think it is a typo blindly propagated   ***
+# 'ISBN-15': 'https://monarchinitiative.org/ISBN15_'                # I would like to think it is a typo blindly propagated   ***
 'J': 'http://www.informatics.jax.org/reference/J:'                  # MGI-internal identifiers for pubs (Journals)
 'MPD': 'https://phenome.jax.org/'                                   # Mouse Phenome Database
-'MPD-assay': 'https://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='  #
+'MPD-assay': 'https://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='  # Mouse Phenome Database assay
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'                       # PubMed Identifier
 'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'                         # PubMed Central Identifier
-'AspGD_REF': 'http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid=' # Aspergillus DB citation
+'AspGD_REF': 'http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid='  # Aspergillus DB citation
 
-'AQTLPub': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID=' # Animal Quantitative Trait Locus Publication
-'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'          # GO Reference Collection
-'PAINT_REF': 'http://www.geneontology.org/gene-associations/submission/paint/'  # Phylogenetic Annotation INference Tool
-'HPO': 'http://human-phenotype-ontology.org/'                                   # Human Phenotype Ontology
-'APO': 'http://purl.obolibrary.org/obo/APO_'                                    # Ascomycete phenotype ontolog
+'AQTLPub': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='  # Animal Quantitative Trait Locus Publication
+'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'           # GO Reference Collection
+'PAINT_REF': 'http://www.geneontology.org/gene-associations/submission/paint/'   # Phylogenetic Annotation INference Tool
+'HPO': 'http://human-phenotype-ontology.org/'                                    # Human Phenotype Ontology
+'APO': 'http://purl.obolibrary.org/obo/APO_'                                     # Ascomycete phenotype ontolog
 
 # strains, lines, or organismal reagents
 'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='                          # Australian Phenome Bank
@@ -147,7 +148,7 @@
 'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'            # RIKEN BioResource Research Center
 
 # organisms and genome builds
-                                                                        # National Center for Biotechnology Information
+#                                                                       # National Center for Biotechnology Information
 'NCBIAssembly': 'https://www.ncbi.nlm.nih.gov/assembly?term='           #   Assembly  e.g. GRCh38
 'NCBIGenome': 'https://www.ncbi.nlm.nih.gov/genome/'                    #   Genome	  e.g. 51  (for human)
 'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon     e.g. 9606
@@ -222,16 +223,16 @@
 'PDB': 'http://www.ebi.ac.uk/pdbsum/'                                           # Protein Data Bank
 
 'SwissProt': 'http://identifiers.org/SwissProt:'                                # UniProt Knowledgebase UniProtKB  Manual
-'TrEMBL':    'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Automated
+'TrEMBL': 'http://purl.uniprot.org/uniprot/'                                    # UniProt Knowledgebase UniProtKB  Automated
 'UniProtKB': 'http://identifiers.org/uniprot/'                                  # UniProt Knowledgebase UniProtKB  Both
 
-                                                            # International Mouse Phenotyping Resource of Standardised Screens
+#                                                           # International Mouse Phenotyping Resource of Standardised Screens
 'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'
-'IMPRESS-protocol':  'https://www.mousephenotype.org/impress/protocol/'
+'IMPRESS-protocol': 'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
 
-                                                                                   # may become "GtoPdb"
-'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=' # Omnibus pharmacological information portal
+#                                                                                   # may become "GtoPdb"
+'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='  # Omnibus pharmacological information portal
 
 # Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound

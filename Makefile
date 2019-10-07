@@ -3,114 +3,136 @@
 ###
 
 DIPPER_BIN = ./dipper-etl.py --debug
-TEST = python3 -m unittest
+TEST = python -m unittest
 
-all: test prefix_equivalents
+VENV != python ./scripts/within_pip_env.py
+# $(warning python virtual env detection report $(VENV))
+
+NP=4
+
+PYUTEST = @([ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment"
+GTT = "translationtable/GLOBAL_TERMS.yaml"
+
+all: lint_error test tt_generated
 
 ###
 ### Tests
 ###
 
-test: ClinVar-test FlyBase-test WormBase-test trans-test IMPC-test reactome-test \
-      RGD-test CTD-test string-test UDP-test Orphanet-test MGI-test \
-      GWAS-test Dataset SourceMetadata # IMPC-fetch
+test: test_translationtable test_impc test_reactome test_clinvar test_wormbase \
+	test_rgd test_ctd test_string test_udp test_orphanet test_mgi test_gwascatalog \
+	test_dataset test_source_metadata # test_impc_fetch
 
-Dataset:
-	$(TEST) tests/test_dataset.py
+test_dataset:
+	$(PYUTEST)
 
-SourceMetadata:
-	$(TEST) tests/test_source_metadata.py
+test_source_metadata:
+	@$(PYUTEST)
 
-MGI-test:
-	$(TEST) tests.test_mgi.EvidenceTestCase
+test_mgi:
+	$(PYUTEST)
 
-ClinVar-test:
-	$(TEST) tests/test_clinvar.py
+test_clinvar:
+	$(PYUTEST)
 
-FlyBase-test:
-	$(TEST) tests/test_flybase.py
+test_flybase:
+	$(PYUTEST)
 
-WormBase-test:
-	$(TEST) tests/test_wormbase.py
+test_wormbase:
+	@$(PYUTEST)
 
-Orphanet-test:
+test_string:
+	$(PYUTEST)
+
+test_udp:
+	$(PYUTEST)
+
+test_impc:
+	$(PYUTEST)
+
+test_gwascatalog:
+	$(PYUTEST)
+
+test_reactome:
+	$(PYUTEST)
+
+test_rgd:
+	$(PYUTEST)
+
+test_sgd:
+	$(PYUTEST)
+
+test_ctd:
+	$(PYUTEST)
+
+test_mychem:
+	$(PYUTEST)
+
+test_ncbi:
+	$(PYUTEST)
+
+test_omim:
+	$(PYUTEST)
+
+test_biogrid:
+	$(PYUTEST)
+
+test_orphanet:
 	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
 
-string-test:
-	$(TEST) tests/test_string.py
-
-UDP-test:
-	$(TEST) tests/test_udp.py
-
-IMPC-fetch:
+test_impc_fetch:
 	$(DIPPER_BIN) --sources impc --no_verify --fetch_only
 
-IMPC-test:
-	$(TEST) tests/test_impc.py
-
-GWAS-test:
-	$(TEST) tests/test_gwascatalog.py
-
-reactome-test:
-	$(TEST) tests/test_reactome.py
-
-RGD-test:
-	$(TEST) tests/test_rgd.py
-
-SGD-test:
-	$(TEST) tests/test_sgd.py
-
-CTD-test:
-	$(TEST) tests/test_ctd.py
-
-mychem-test:
-	$(TEST) tests/test_mychem.py
-
-ncbi-test:
-	$(TEST) tests/test_ncbi.py
-
-OMIM-test:
-	$(TEST) tests/test_omim.py
-
-biogrid-test:
-	$(TEST) tests/test_biogrid.py
-
-GTT = "translationtable/GLOBAL_TERMS.yaml"
-trans-test:
-	@ echo  "Is yamllint installed?"
-	@ yamllint --version
-	@ echo  "Are TT files valid?"
-	@ # note:  sudo apt-get install yamllint
-	@ yamllint -c translationtable/.yamllint translationtable/ && echo "TT files Lint OKAY."
-	@ echo "python unit test for duplicate keys and invertablility"
-	@ $(TEST) tests/test_trtable.py
-	@ echo "Is $(GTT) table ordered by ontology curie?"
-	@ (sort -k2,2 -k3,3n -t ':' --stable --check $(GTT) && echo "GLOBALTT order is OKAY") || echo "sort order of GLOBALTT seems to be wrong"
-	@ echo "Are terms found in dipper/source/Ingest.py, \nbut not in $(GTT)?"
-	@ scripts/check_labels_v_gtt.sh
-
-omia-int-test:
+test_omia-integration:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
+###################################################################################
+###  checks on supporting artefacts
+
+test_translationtable:
+	@ echo  "lint curie_map yaml file"
+	@ yamllint -c .yamllint dipper/curie_map.yaml
+	@ echo "----------------------------------------------------------------------"
+	@ echo  "lint translation table yaml files"
+	@ yamllint -c .yamllint translationtable/
+	@ echo "----------------------------------------------------------------------"
+	@ echo "python unit test for duplicate keys and invertablility in global tt"
+	@ $(TEST) tests/test_trtable.py
+	@ echo "----------------------------------------------------------------------"
+	@ echo -e "Is _entire_ $(GTT) file ordered by ontology curie?"
+	@ sort -k2,2 -k3,3n -t ':' --stable --check $(GTT)
+	@ echo "----------------------------------------------------------------------"
+	@ echo "Orphan labels in dipper/source/Ingest.py  w.r.t. $(GTT)?"
+	@ scripts/check_labels_v_gtt.sh
+	@ echo "----------------------------------------------------------------------"
+
+
 # lint if within a python virtual env
-# make can be called without being in a venv and produce unhelpfull results
+# make can be called without being in a venv and produce unhelpful results
 lint_error:
-	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
-	if [ $${INPYVENV} -eq 0 ];then pylint -E ./dipper;else echo "Not within a python venev";fi
+	@ # runs single threaded just under a minute with 4 cores ~ 20 seconds
+	@ echo "Lint for errors"
+	@ ([ $(VENV) -eq 0 ] && time -f"Linted in %Es" pylint -j $(NP) -E ./dipper)||\
+		echo "Not in python virtual enviroment"
+	@ echo "----------------------------------------------------------------------"
 
 lint_warn:
-	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
-	if [ $${INPYVENV} -eq 0 ];then pylint --disable=C,R ./dipper;else echo "Not within a python venev";fi
+	@ echo "Lint for warnings"
+	@ ([ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) --disable=C,R ./dipper)||\
+		echo "Not in python virtual enviroment"
+	@ echo "----------------------------------------------------------------------"
 
 lint:
-	@ INPYVENV=$$(python ./scripts/within_pip_env.py) && \
-	if [ $${INPYVENV} -eq 0 ];then pylint ./dipper;else echo "Not within a python venev";fi
+	@ echo "Lint for everything"
+	@ [ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
+		echo "Not in python virtual enviroment"
+	@ echo "----------------------------------------------------------------------"
 
-# Generate specalized files from our various mapping files
+# Generate specialized files from our various mapping files
 
-prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
+tt_generated:  translationtable/generated/prefix_equivalents.yaml
 
-clean_prefix_equivalents:
+clean_tt_generated:
 	rm translationtable/generated/prefix_equivalents.yaml
 	rm translationtable/generated/curiemap_prefix.txt
 	rm /tmp/local_inverse.tab
@@ -123,7 +145,7 @@ translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
 	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
 		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
 			print "\"" $$4 "\"\t\"" $$2 "\""}' \
-				translationtable/[a-z_-]*.yaml | LC_ALL=C sort -u > $@
+				$^ | LC_ALL=C sort -u > $@
 
 translationtable/generated/prefix_equivalents.yaml: \
 		translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
