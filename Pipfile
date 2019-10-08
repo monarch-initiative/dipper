@@ -18,6 +18,7 @@ py-spy = "*"
 "bs4" = "*"
 "psycopg2" = "*"
 pylint = "*"
+yamllint = "*"
 
 [requires]
 python_version = "3.6"
