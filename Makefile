@@ -99,7 +99,7 @@ test_translationtable:
 	@ echo "python unit test for duplicate keys and invertablility in global tt"
 	@ $(TEST) tests/test_trtable.py
 	@ echo "----------------------------------------------------------------------"
-	@ echo -e "Is _entire_ $(GTT) file ordered by ontology curie?"
+	@ echo "Is the _entire_ $(GTT) file ordered by ontology curie?"
 	@ sort -k2,2 -k3,3n -t ':' --stable --check $(GTT)
 	@ echo "----------------------------------------------------------------------"
 	@ echo "Orphan labels in dipper/source/Ingest.py  w.r.t. $(GTT)?"
