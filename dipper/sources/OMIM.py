@@ -5,7 +5,8 @@ import urllib
 from urllib.error import HTTPError
 from datetime import date
 
-from dipper.sources.OMIMSource import OMIMSource, USER_AGENT
+from dipper.sources.OMIMSource import OMIMSource
+from dipper.sources.Source import USER_AGENT
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
