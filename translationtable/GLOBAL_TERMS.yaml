@@ -178,7 +178,6 @@
 "organization": "foaf:organization",
 "page": "foaf:page",
 "person": "foaf:Person",
-# ??? PATO_0000470: GENO:0000876
 # "Genotype Partonomy Ontology": "GENO:!!!",
 "intrinsic_genotype": "GENO:0000000",
 "variant_locus": "GENO:0000002",
@@ -474,7 +473,6 @@
 # "Population and Community Ontology": "PCO:!!!",
 "population": "PCO:0000001",
 "family": "PCO:0000020",
-# Place holder predicates: predicates
 # "PathWay ontology": "PW:!!!",
 "pathway": "PW:0000001",
 # "Resource Description Framework": "rdf:!!!",
@@ -552,8 +550,6 @@
 "is causal somatic mutation in": "RO:0004014",
 "is causal susceptibility factor for": "RO:0004015",
 "is causal germline mutation partially giving rise to": "RO:0004016",
-# found in sepio_developer.owl:  SEPIO:0000019
-# is not found in sepio:  SEPIO:0000111 --
 # "Scientific Evidence and Provenance Information Ontology": "SEPIO:!!!",
 "assertion": "SEPIO:0000001",
 "assertion process": "SEPIO:0000003",

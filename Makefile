@@ -5,7 +5,7 @@
 DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python -m unittest
 
-VENV != python ./scripts/within_pip_env.py
+VENV = `python ./scripts/within_pip_env.py`
 # $(warning python virtual env detection report $(VENV))
 
 NP=4
@@ -27,7 +27,7 @@ test_dataset:
 	$(PYUTEST)
 
 test_source_metadata:
-	@$(PYUTEST)
+	$(PYUTEST)
 
 test_mgi:
 	$(PYUTEST)
@@ -39,7 +39,7 @@ test_flybase:
 	$(PYUTEST)
 
 test_wormbase:
-	@$(PYUTEST)
+	$(PYUTEST)
 
 test_string:
 	$(PYUTEST)
@@ -100,7 +100,7 @@ test_translationtable:
 	@ $(TEST) tests/test_trtable.py
 	@ echo "----------------------------------------------------------------------"
 	@ echo "Is the _entire_ $(GTT) file ordered by ontology curie?"
-	@ LC_ALL=en_US.UTF-8 sort -k2,2 -k3,3n -t ':' --stable --check $(GTT)
+	@ sort -f -k2,2 -k3,3n -t ':' --stable --check $(GTT)
 	@ echo "----------------------------------------------------------------------"
 	@ echo "Orphan labels in dipper/source/Ingest.py  w.r.t. $(GTT)?"
 	@ scripts/check_labels_v_gtt.sh
@@ -112,19 +112,19 @@ test_translationtable:
 lint_error:
 	@ # runs single threaded just under a minute with 4 cores ~ 20 seconds
 	@ echo "Lint for errors"
-	@ ([ $(VENV) -eq 0 ] && time -f"Linted in %Es" pylint -j $(NP) -E ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && time pylint -j $(NP) -E ./dipper)||\
 		echo "Not in python virtual enviroment"
 	@ echo "----------------------------------------------------------------------"
 
 lint_warn:
 	@ echo "Lint for warnings"
-	@ ([ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) --disable=C,R ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && time pylint  -j $(NP) --disable=C,R ./dipper)||\
 		echo "Not in python virtual enviroment"
 	@ echo "----------------------------------------------------------------------"
 
 lint:
 	@ echo "Lint for everything"
-	@ [ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && time pylint  -j $(NP) ./dipper)||\
 		echo "Not in python virtual enviroment"
 	@ echo "----------------------------------------------------------------------"
 
