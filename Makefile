@@ -5,7 +5,7 @@
 DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python -m unittest
 
-VENV = `python ./scripts/within_pip_env.py`
+VENV = $(shell python ./scripts/within_pip_env.py)
 # $(warning python virtual env detection report $(VENV))
 
 NP=4
