@@ -25,7 +25,7 @@ pipeline {
         MONARCH_DATA_FS = 'monarch-ttl-prod'
         DIPPER = 'venv/bin/python dipper-etl.py'
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
-        DATA_DEST = "${env.RELEASE ? '/var/www/data/ttl/' : '/var/www/data/dev/'}"
+        DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
     }
 
     options {
