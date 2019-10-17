@@ -4,7 +4,7 @@
     OBAN:association_has_object <http://omim.org/entry/130050> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/101408> ;
-    oboInOwl:hasdbxref ClinVar:RCV000087646 .
+    oboInOwl:hasDbXref ClinVar:RCV000087646 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/1058> a foaf:organization ;
     rdfs:label "Collagen Diagnostic Laboratory,University of Washington" .

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.utils.rdf2dot import rdf2dot
 from dipper.utils.TestUtils import TestUtils
-from dipper.sources.ClinVarXML_alpha import parse as clinvar_parse
+from dipper.sources.ClinVar import parse as clinvar_parse
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.WARN)
