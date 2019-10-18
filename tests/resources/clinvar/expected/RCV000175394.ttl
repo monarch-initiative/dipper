@@ -4,7 +4,7 @@
     OBAN:association_has_object <http://omim.org/entry/609016> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/194917> ;
-   oboInOwl:hasDbXref ClinVar:RCV000175394 .
+    oboInOwl:hasDbXref ClinVar:RCV000175394 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> a foaf:organization ;
     rdfs:label "Counsyl" .
