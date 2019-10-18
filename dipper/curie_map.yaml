@@ -1,4 +1,3 @@
----
 # Monarch-specific
 '': 'https://monarchinitiative.org/'                                # local BASE IRI
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
