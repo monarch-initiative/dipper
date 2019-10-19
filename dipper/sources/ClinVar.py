@@ -1,11 +1,10 @@
 #! /usr/bin/env python3
 
 """
-    clinvarxml_alpha
-    First pass at converting ClinVar XML into
+    Converts ClinVar XML into
     RDF triples to be ingested by SciGraph.
     These triples conform to the core of the
-    SEPIO Evidence & Provenance model 2016 Apr
+    SEPIO Evidence & Provenance model
 
     We also use the clinvar curated gene to disease
     mappings to discern the functional consequence of
@@ -26,7 +25,7 @@
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    ./dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
@@ -361,12 +360,17 @@ def allele_to_triples(allele, triples) -> None:
     if allele.label is not None:
         write_spo(allele.id, 'rdfs:label', allele.label, triples)
 
-    # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
+    # <ClinVarVariant:rcv_variant_id><OWL:hasDbXref><dbSNP:rs>
+    #
+    # Note that making clinvar variants and dbSNPs equivalent
+    # causes clique merge bugs, so best to leave them as xrefs
+    # Example: https://www.ncbi.nlm.nih.gov/clinvar/variation/31915/
+    # https://www.ncbi.nlm.nih.gov/clinvar/variation/21303/
     for dbsnp_id in allele.dbsnps:
         # sameAs or hasdbxref?
         write_spo(
             allele.id,
-            'owl:sameAs',
+            GLOBALTT['database_cross_reference'],
             dbsnp_id,
             triples)
 
@@ -407,15 +411,24 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
         # First look at the rcv variant gene relationship type to get the correct
         # curie, but override has_affected_feature in cases where a gene to disease
         # association has not been curated
+
+        # TODO remove all this when
+        # https://github.com/monarch-initiative/dipper/pull/831 is merged
         if len([val[1] for val in gene_allele
                 if LOCALTT[val[1]] == 'has_affected_feature']) == len(gene_allele):
             for gene, allele_rel in gene_allele:
                 is_affected = True
-                for condition in rcv.conditions:
-                    if condition.medgen_id is None \
-                            or gene not in g2p_map \
-                            or condition.medgen_id not in g2p_map[gene]:
-                        is_affected = False
+                if not rcv.significance == GLOBALTT['pathogenic_for_condition'] \
+                        and not rcv.significance == \
+                               GLOBALTT['likely_pathogenic_for_condition']:
+                    is_affected = False
+                else:
+                    for condition in rcv.conditions:
+                        if condition.medgen_id is None \
+                                or gene not in g2p_map \
+                                or condition.medgen_id not in g2p_map[gene]:
+                            is_affected = False
+                            break
                 if is_affected:
                     write_spo(
                         rcv.genovar.id,
@@ -642,6 +655,10 @@ def parse():
                 LOG.warning(
                     "%s <is not current on>", rcv_acc)  # + rs_dated)
 
+            ClinicalSignificance = RCVAssertion.find(
+                './ClinicalSignificance/Description').text
+            significance = resolve(ClinicalSignificance)
+
             # # # Child elements
             #
             # /RCV/Assertion
@@ -708,7 +725,8 @@ def parse():
                 accession=rcv_acc,
                 created=RCVAssertion.get('DateCreated'),
                 updated=RCVAssertion.get('DateLastUpdated'),
-                genovar=genovar
+                genovar=genovar,
+                significance=significance
             )
 
             #######################################################################
@@ -746,6 +764,8 @@ def parse():
                     for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="OMIM"]'):
                         rcv_disease_db = RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
+                        if rcv_disease_id.startswith('PS'):
+                            rcv_disease_db = 'OMIMPS'
                         break
 
                     # Accept Orphanet if no OMIM
@@ -1082,7 +1102,7 @@ def parse():
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
                             write_spo(
                                 monarch_assoc,
-                                'oboInOwl:hasdbxref',
+                                GLOBALTT['database_cross_reference'],
                                 'ClinVar:' + rcv_acc,
                                 rcvtriples)
 

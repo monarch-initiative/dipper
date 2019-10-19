@@ -301,14 +301,14 @@ pipeline {
                         sh '''
                             mkdir -p out
                             mkdir -p raw && cd raw
-                            mkdir -p clinvarxml_alpha && cd clinvarxml_alpha
+                            mkdir -p clinvar && cd clinvar
                             wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
                             wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
                             cd ../..
 
                             export PYTHONPATH=.:$PYTHONPATH
-                            venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
-                            scp ./out/clinvarxml_alpha.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
+                            venv/bin/python ./dipper/sources/ClinVar.py
+                            scp ./out/clinvar.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
                         '''
                     }
                 }

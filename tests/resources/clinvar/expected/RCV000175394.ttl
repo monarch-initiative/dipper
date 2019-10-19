@@ -4,7 +4,7 @@
     OBAN:association_has_object <http://omim.org/entry/609016> ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/194917> ;
-    oboInOwl:hasdbxref ClinVar:RCV000175394 .
+    oboInOwl:hasDbXref ClinVar:RCV000175394 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> a foaf:organization ;
     rdfs:label "Counsyl" .
@@ -19,7 +19,7 @@
         "NC_000002.12:g.26191482C>T",
         "NG_007121.1:g.58139G>A",
         "NM_000182.4:c.2146+1G>A" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219> .
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219> .
 
 BNODE:b13b11feeac6001ef4e1 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_1540968",
