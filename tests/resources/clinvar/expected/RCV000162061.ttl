@@ -18,7 +18,8 @@
         "NC_000001.11:g.197086966G>A",
         "NG_015867.1:g.64729C>T",
         "NM_018136.4:c.10168C>T",
-        "NP_060606.3:p.Arg3390Ter" ;
+        "NP_060606.3:p.Arg3390Ter" ,
+        "rs587783211" ;
     oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/242641> a OBO:SO_0001483 ;
@@ -30,7 +31,8 @@
         "NG_015867.1:g.50542C>T",
         "NM_001206846.1:c.4066-4989C>T",
         "NM_018136.4:c.8098C>T",
-        "NP_060606.3:p.Arg2700Ter" ;
+        "NP_060606.3:p.Arg2700Ter" ,
+        "rs730882076" ;
     oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=730882076> .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> a OBO:GENO_0000402 ;
@@ -62,4 +64,4 @@ BNODE:b8e43a4f4ce6a8409c4a a OBO:ECO_0000000 ;
     OBO:SEPIO_0000085 BNODE:bcff6acb169553f68e9b ;
     OBO:SEPIO_0000124 <http://www.ncbi.nlm.nih.gov/pubmed/25786579> .
 
-:MONARCH_b25e1dcae8dd05dc4d16 SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#double> .
+:MONARCH_b25e1dcae8dd05dc4d16 SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#integer> .

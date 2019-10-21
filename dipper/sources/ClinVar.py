@@ -125,6 +125,8 @@ def make_spo(sub, prd, obj):
         # allow unexpanded bnodes in object
         if objcuri != '_' or CURIEMAP[objcuri] != '_:b':
             objt = '<' + objt + '>'
+    elif obj.isdigit():
+        objt = '"' + obj + '"^^<http://www.w3.org/2001/XMLSchema#integer>'
     elif obj.isnumeric():
         objt = '"' + obj + '"^^<http://www.w3.org/2001/XMLSchema#double>'
     else:
@@ -269,6 +271,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         # XRef[@DB="dbSNP"]/@ID
         for dbsnp in rcv_measure.findall('./XRef[@DB="dbSNP"]'):
             allele.dbsnps.append('dbSNP:' + dbsnp.get('ID'))
+            allele.synonyms.append('rs' +dbsnp.get('ID'))
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID

@@ -59,7 +59,8 @@ BNODE:bf70802edf14e71809f4 a OBO:SEPIO_0000066 ;
         "NC_000005.9:g.127685083C>A",
         "NG_008750.1:g.193653G>T",
         "NM_001999.3:c.2945G>T",
-        "NP_001990.2:p.Cys982Phe" ;
+        "NP_001990.2:p.Cys982Phe" ,
+        "rs1057519321" ;
     oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=1057519321> .
 
 BNODE:b1aa769f10db16b258de a OBO:ECO_0000000 ;
@@ -74,5 +75,5 @@ BNODE:b4d40a7eefacbfe43164 a OBO:ECO_0000000 ;
     rdfs:label "b6b194b585b6811c6b2a_evidence" ;
     OBO:SEPIO_0000085 BNODE:bf70802edf14e71809f4 .
 
-:MONARCH_b49bb52f6925e2bf5458 SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#double> .
-:MONARCH_b6b194b585b6811c6b2a SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#double> .
+:MONARCH_b49bb52f6925e2bf5458 SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b6b194b585b6811c6b2a SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#integer> .

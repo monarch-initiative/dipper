@@ -100,13 +100,14 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
         "NG_031837.1:g.79764T>A",
         "NM_018082.5:c.1568T>A",
         "NP_060552.4:p.Val523Glu",
-        "Q9NW08:p.Val523Glu" ;
+        "Q9NW08:p.Val523Glu" ,
+        "rs138249161" ;
     oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161> .
 
 BNODE:b23790c2cc493199c951 a OBO:SEPIO_0000037 ;
     rdfs:label "ACMG Guidelines, 2015",
         "ACMG Guidelines, 2015_assertionmethod" .
 
-:MONARCH_b04d83bd71a9e5ed689f SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#double> .
-:MONARCH_b3135a4d36760903bbc8 SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#double> .
-:MONARCH_bb8218e5dd5e028601ba SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#double> .
+:MONARCH_b04d83bd71a9e5ed689f SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b3135a4d36760903bbc8 SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_bb8218e5dd5e028601ba SEPIO:0000168 "1"^^<http://www.w3.org/2001/XMLSchema#integer> .

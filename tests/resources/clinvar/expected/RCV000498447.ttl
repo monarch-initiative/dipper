@@ -49,4 +49,4 @@ BNODE:be870b3d47783bbdcf05 a OBO:ECO_0000000 ;
     OBO:SEPIO_0000085 BNODE:b664828053687f26b867 ;
     OBO:SEPIO_0000124 <http://www.ncbi.nlm.nih.gov/pubmed/27486776> .
 
-:MONARCH_bcd52bafc1e2e04193a9 SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#double> .
+:MONARCH_bcd52bafc1e2e04193a9 SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
