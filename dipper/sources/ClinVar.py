@@ -413,8 +413,11 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
         # curie, but override has_affected_feature in cases where a gene to disease
         # association has not been curated
 
-        # TODO remove all this when
-        # https://github.com/monarch-initiative/dipper/pull/831 is merged
+        # TODO refactor this, the intention is to avoid
+        # cases where a variant is mapped to two genes on different strands
+        # and we want to connect the correct one
+        # see https://github.com/monarch-initiative/monarch-app/issues/1591
+        # https://github.com/monarch-initiative/dipper/issues/593
         if len([val[1] for val in gene_allele
                 if LOCALTT[val[1]] == 'has_affected_feature']) == len(gene_allele):
             for gene, allele_rel in gene_allele:
@@ -658,7 +661,7 @@ def parse():
     releasetriple = set()
 
     # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
-    releasetriple.update(set(write_review_status_scores()))
+    # releasetriple.update(set(write_review_status_scores()))
 
     g2pmap = {}
     # this needs to be read first
@@ -695,6 +698,17 @@ def parse():
     releasetriple.add(make_spo('MonarchData:' + args.output, 'a', 'owl:Ontology'))
 
     rjct_cnt = tot_cnt = 0
+
+    status_and_scores = {
+        "no assertion criteria provided": '0',
+        "no assertion provided": '0',
+        "criteria provided, single submitter": '1',
+        "criteria provided, conflicting interpretations": '1',
+        "criteria provided, multiple submitters, no conflicts": '2',
+        "reviewed by expert panel": '3',
+        "practice guideline": '4',
+    }
+
     #######################################################
     # main loop over xml
     # taken in chunks composed of ClinVarSet stanzas
@@ -742,7 +756,7 @@ def parse():
             if RCV_ClinicalSignificance is not None:
                 RCV_ReviewStatus = RCV_ClinicalSignificance.find('./ReviewStatus')
                 if RCV_ReviewStatus is not None:
-                     rcv_review = GLOBALTT[RCV_ReviewStatus.text.strip()]
+                     rcv_review = RCV_ReviewStatus.text.strip()
 
             #######################################################################
             # Our Genotype/Subject is a sequence alteration / Variant
@@ -958,8 +972,8 @@ def parse():
                     if rcv_review is not None:
                         write_spo(
                                   monarch_assoc,
-                                  GLOBALTT['assertion method'],
-                                  rcv_review,
+                                  GLOBALTT['confidence_score'],
+                                  status_and_scores[rcv_review],
                                   rcvtriples)
 
                     ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')

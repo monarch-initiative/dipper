@@ -3,6 +3,7 @@
 # contents in this file are sorted by the value
 # (i.e. the ontology term after the colon) in {key value} pair
 !!map {
+#
 # these need to be moved to localtts till the terms exist: :!!!
 "activating_mutation": ":activating",
 "all_missense_or_inframe": ":all_missense_or_inframe",
@@ -593,15 +594,16 @@
 "evidence_has_supporting_reference": "SEPIO:0000124",
 "is_inconsistent_with": "SEPIO:0000126",
 "asserted_by": "SEPIO:0000130",
+"confidence_score": "SEPIO:0000168",
 "phenotyping only": "SEPIO:0000186",
-"no assertion criteria provided": "SEPIO:9999990",
-"no assertion provided": "SEPIO:9999991",
-"criteria provided, single submitter": "SEPIO:9999992",
-"criteria provided, conflicting interpretations": "SEPIO:9999993",
-"criteria provided, multiple submitters, no conflicts": "SEPIO:9999994",
-"reviewed by expert panel": "SEPIO:9999995",
-"practice guideline": "SEPIO:9999996",
 # "has_evidence_with_item": "SEPIO:0000189",
+# "no assertion criteria provided": "SEPIO:9999990",
+# "no assertion provided": "SEPIO:9999991",
+# "criteria provided, single submitter": "SEPIO:9999992",
+# "criteria provided, conflicting interpretations": "SEPIO:9999993",
+# "criteria provided, multiple submitters, no conflicts": "SEPIO:9999994",
+# "reviewed by expert panel": "SEPIO:9999995",
+# "practice guideline": "SEPIO:9999996",
 # "Semanticscience Integrated Ontology": "SIO:!!!",
 "web page": "SIO:000302",
 "count": "SIO:000794",
