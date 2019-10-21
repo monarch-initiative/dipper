@@ -299,7 +299,6 @@ class Panther(Source):
                 "The following gene ids were unable to be processed: %s",
                 str(unprocessed_gene_ids))
 
-    @staticmethod
     def _clean_up_gene_id(self, geneid, species):
         """
         A series of identifier rewriting to conform with
