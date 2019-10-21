@@ -126,7 +126,7 @@ def make_spo(sub, prd, obj):
         if objcuri != '_' or CURIEMAP[objcuri] != '_:b':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
-        objt = '"' + obj + '"'
+        objt = '"' + obj + '"^^<http://www.w3.org/2001/XMLSchema#double>'
     else:
         # Literals may not contain the characters ", LF, CR '\'
         # except in their escaped forms. internal quotes as well.

@@ -62,4 +62,4 @@ BNODE:b8e43a4f4ce6a8409c4a a OBO:ECO_0000000 ;
     OBO:SEPIO_0000085 BNODE:bcff6acb169553f68e9b ;
     OBO:SEPIO_0000124 <http://www.ncbi.nlm.nih.gov/pubmed/25786579> .
 
-:MONARCH_b25e1dcae8dd05dc4d16 SEPIO:0000168 "0" .
+:MONARCH_b25e1dcae8dd05dc4d16 SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#double> .
