@@ -111,7 +111,12 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
         "NM_007299.3:c.*49C>A",
         "NP_009225.1:p.Tyr1845Ter",
         "NR_027676.1:n.5671C>A",
-        "U14680.1:n.5654C>A" ;
+        "U14680.1:n.5654C>A" ,
+        "rs80356977" ;
     oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=80356977> .
 
 <http://omim.org/entry/604370> rdfs:label "Breast-ovarian cancer, familial 1" .
+
+:MONARCH_b0c37985b4c9880212d8 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b688d9615bbfa9e0f7df SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b9abe7978a362ddcafa3 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
