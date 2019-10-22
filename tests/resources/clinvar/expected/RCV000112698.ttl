@@ -74,7 +74,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
-    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+    oboInOwl:hasDbXref ClinVar:RCV000112698 .
 
 :MONARCH_b688d9615bbfa9e0f7df a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:b5ac7f4700a842b45cea ;
@@ -84,7 +84,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
-    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+    oboInOwl:hasDbXref ClinVar:RCV000112698 .
 
 :MONARCH_b9abe7978a362ddcafa3 a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:b4605648dac1f7f6892e ;
@@ -94,7 +94,7 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
     OBAN:association_has_object <http://omim.org/entry/604370> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> ;
-    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+    oboInOwl:hasDbXref ClinVar:RCV000112698 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/55619> a OBO:SO_0001483 ;
     rdfs:label "NM_007294.3(BRCA1):c.5535C>A (p.Tyr1845Ter)" ;
@@ -111,7 +111,12 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
         "NM_007299.3:c.*49C>A",
         "NP_009225.1:p.Tyr1845Ter",
         "NR_027676.1:n.5671C>A",
-        "U14680.1:n.5654C>A" ;
-    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=80356977> .
+        "U14680.1:n.5654C>A" ,
+        "rs80356977" ;
+    oboInOwl:hasDbXref <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=80356977> .
 
 <http://omim.org/entry/604370> rdfs:label "Breast-ovarian cancer, familial 1" .
+
+:MONARCH_b0c37985b4c9880212d8 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b688d9615bbfa9e0f7df SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b9abe7978a362ddcafa3 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
