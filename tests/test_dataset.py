@@ -226,6 +226,25 @@ class DatasetTestCase(unittest.TestCase):
             (self.summary_level_IRI, self.iri_logo, URIRef(self.iri_returned_logo))))
         self.assertTrue(len(triples) == 1, "missing summary level source logo triple")
 
+    def test_summary_level_ontology_type_declaration(self):
+        triples = list(self.dataset.graph.triples(
+            (self.summary_level_IRI,
+             self.iri_rdf_type,
+             self.iri_owl_ontology)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level owl ontology type triple")
+
+    def test_summary_level_owl_version_iri(self):
+        triples = list(self.dataset.graph.triples(
+            (self.summary_level_IRI,
+            self.iri_owl_version_iri,
+            None)))
+        self.assertTrue(len(triples) == 1,
+                        "missing distribution level owl version iri triple")
+        self.assertEqual(triples[0][2],
+                         URIRef(self.version_level_IRI),
+                         "owl version iri triple has the wrong object")
+
     #
     # Test version level resource triples:
     #
@@ -303,6 +322,13 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.dataset.graph.triples(
             (self.version_level_IRI, self.iri_is_version_of, self.summary_level_IRI)))
         self.assertTrue(len(triples) == 1, "missing version level isVersionOf triple")
+
+    def test_version_level_distribution(self):
+        triples = list(self.dataset.graph.triples(
+            (self.version_level_IRI,
+             self.iri_distribution,
+             self.distribution_level_IRI_ttl)))
+        self.assertTrue(len(triples) == 1, "missing version level distribution triple")
 
     #
     # test distribution level triples
@@ -427,25 +453,6 @@ class DatasetTestCase(unittest.TestCase):
              URIRef(self.license_url_default))))
         self.assertTrue(len(triples) == 1,
                         "distribution level default license triple not set")
-
-    def test_distribution_level_ontology_type_declaration(self):
-        triples = list(self.dataset.graph.triples(
-            (self.distribution_level_IRI_ttl,
-             self.iri_rdf_type,
-             self.iri_owl_ontology)))
-        self.assertTrue(len(triples) == 1,
-                        "missing distribution level owl ontology type triple")
-
-    def test_distribution_level_owl_version_iri(self):
-        triples = list(self.dataset.graph.triples(
-            (self.distribution_level_IRI_ttl,
-            self.iri_owl_version_iri,
-            None)))
-        self.assertTrue(len(triples) == 1,
-                        "missing distribution level owl version iri triple")
-        self.assertEqual(triples[0][2],
-                         URIRef(self.version_level_IRI),
-                         "owl version iri triple has the wrong object")
 
 
 if __name__ == '__main__':
