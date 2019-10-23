@@ -13,7 +13,7 @@ class HGNCTestCase(SourceTestCase):
 
     def setUp(self):
         self.source = HGNC('rdf_graph', True)
-        self.source.test_ids = self._get_testids()['gene']
+        self.source.test_ids = self.all_test_ids['gene']
         self.source.settestonly(True)
         self._setDirToSource()
         return
