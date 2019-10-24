@@ -112,19 +112,19 @@ test_translationtable:
 lint_error:
 	@ # runs single threaded just under a minute with 4 cores ~ 20 seconds
 	@ echo "Lint for errors"
-	@ ([ $(VENV) -eq 0 ] && time -f"Linted in %Es" pylint -j $(NP) -E ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint -j $(NP) -E ./dipper)||\
 		echo "Not in python virtual enviroment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
 lint_warn:
 	@ echo "Lint for warnings"
-	@ ([ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) --disable=C,R ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) --disable=C,R ./dipper)||\
 		echo "Not in python virtual enviroment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
 lint:
 	@ echo "Lint for everything"
-	@ [ $(VENV) -eq 0 ] && & time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
+	@ [ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
 		echo "Not in python virtual enviroment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
