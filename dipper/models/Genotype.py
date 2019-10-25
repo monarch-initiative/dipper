@@ -514,7 +514,7 @@ class Genotype():
                 taxon_label = self.globaltcid[ncbitaxon]
             else:
                 logging.warning('Add ' + ncbitaxon + ' to global translation table')
-                taxon_label = taxon_id
+                taxon_label = taxon_num
         elif ncbitaxon in self.globaltcid and taxon_label != self.globaltcid[ncbitaxon]:
             logging.warning(
                 '"' + self.globaltcid[ncbitaxon] + '" may need updating from "' +
