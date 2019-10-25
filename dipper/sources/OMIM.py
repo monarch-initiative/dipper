@@ -462,7 +462,7 @@ class OMIM(OMIMSource):
             # end adding causative genes/features
 
             if ent['entry']['status'] in ['moved', 'removed']:
-                LOG.warning('UNEXPECTED! not expecting obsolete record', omim_curie)
+                LOG.warning('UNEXPECTED! not expecting obsolete record %s', omim_curie)
 
         self._get_phenotypicseries_parents(ent['entry'], graph)
         self._get_mappedids(ent['entry'], graph)
