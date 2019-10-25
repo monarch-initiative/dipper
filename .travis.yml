@@ -8,8 +8,8 @@ install:
   - "pip install -r requirements/all-sources.txt"
 
 # command to run tests
-script: 
-  - "make test"
+script:
+  - "make"
 
 # whitelist
 branches:

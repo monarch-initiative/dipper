@@ -116,6 +116,9 @@ class HGNC(OMIMSource):
             self.gene_ids = self.all_test_ids['gene']
         self.hs_txid = self.globaltt['Homo sapiens']
 
+        # to help detect obsolete usages in other ingests (someday)
+        self.withdrawn = {}
+
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
 
@@ -162,7 +165,8 @@ class HGNC(OMIMSource):
                 name = row[col.index('name')].strip()
                 # locus_group = row[col.index('locus_group')]
                 locus_type = row[col.index('locus_type')].strip()
-                # status = row[col.index('status')]
+                status = row[col.index('status')].strip()
+                # 41622 Approved  & 1752 Entry Withdrawn
                 location = row[col.index('location')].strip()
                 # location_sortable = row[col.index('location_sortable')]
                 # alias_symbol = row[col.index('alias_symbol')]
@@ -209,8 +213,12 @@ class HGNC(OMIMSource):
                 # lncipedia = row[col.index('lncipedia')]
                 # gtrnadb = row[col.index('gtrnadb')]
 
-                if self.test_mode and entrez_id != '' and \
-                        entrez_id not in self.gene_ids:
+                if status != 'Approved':
+                    self.withdrawn[hgnc_id]=symbol
+                    continue
+
+                if (self.test_mode and entrez_id != '' and
+                        entrez_id not in self.gene_ids):
                     continue
 
                 if name == '':

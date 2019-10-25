@@ -10,7 +10,7 @@ VENV = $(shell python ./scripts/within_pip_env.py)
 
 NP=4
 
-PYUTEST = @([ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment"
+PYUTEST = @(echo $@ && [ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment or ERROR"
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 
 all: lint_error test tt_generated
@@ -113,19 +113,19 @@ lint_error:
 	@ # runs single threaded just under a minute with 4 cores ~ 20 seconds
 	@ echo "Lint for errors"
 	@ ([ $(VENV) -eq 0 ] && time pylint -j $(NP) -E ./dipper)||\
-		echo "Not in python virtual enviroment"
+		echo "Not in python virtual environment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
 lint_warn:
 	@ echo "Lint for warnings"
 	@ ([ $(VENV) -eq 0 ] && time pylint  -j $(NP) --disable=C,R ./dipper)||\
-		echo "Not in python virtual enviroment"
+		echo "Not in python virtual environment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
 lint:
 	@ echo "Lint for everything"
 	@ ([ $(VENV) -eq 0 ] && time pylint  -j $(NP) ./dipper)||\
-		echo "Not in python virtual enviroment"
+		echo "Not in python virtual environment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
 # Generate specialized files from our various mapping files
