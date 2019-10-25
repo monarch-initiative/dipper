@@ -177,16 +177,17 @@ pipeline {
                                 java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
 
                                 # Hack to resolve https://github.com/monarch-initiative/monarch-ontology/issues/16
-                                sed -i "/owl#ReflexiveProperty/d" ./monarch-merged.owl
-
                                 # Hack to normalize omim and hgnc IRIs
-                                # https://github.com/monarch-initiative/dipper/issues/700
-                                sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIMPS_/http:\\/\\/www.omim.org\\/phenotypicSeries\\/PS/' ./monarch-merged.owl
-                                sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIM_/http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
-                                sed -i 's/http:\\/\\/identifiers.org\\/omim\\//http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
-                                sed -i 's/http:\\/\\/identifiers.org\\/hgnc\\//http:\\/\\/www.genenames.org\\/cgi-bin\\/gene_symbol_report?hgnc_id=/' ./monarch-merged.owl
-                                sed -i 's/http:\\/\\/www.informatics.jax.org\\/marker\\/MGI:/http:\\/\\/www.informatics.jax.org\\/accession\\/MGI:/' ./monarch-merged.owl
-                                sed -i 's/http:\\/\\/www.ncbi.nlm.nih.gov\\/gene\\//https:\\/\\/www.ncbi.nlm.nih.gov\\/gene\\//' ./monarch-merged.owl
+
+                                sed -i "/owl#ReflexiveProperty/d;\
+                                    s~http://purl.obolibrary.org/obo/OMIMPS_~http://www.omim.org/phenotypicSeries/PS~;\
+                                    s~http://purl.obolibrary.org/obo/OMIM_~http://omim.org/entry/~;\
+                                    s~http://identifiers.org/omim/~http://omim.org/entry/~;\
+                                    s~http://identifiers.org/hgnc/~https://www.genenames.org/data/gene-symbol-report/#\!/hgnc_id/HGNC:~;\
+                                    s~http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=~https://www.genenames.org/data/gene-symbol-report/#\!/hgnc_id/HGNC:~;\
+                                    s~http://www.informatics.jax.org/marker/MGI:~http://www.informatics.jax.org/accession/MGI:~;\
+                                    s~http://www.ncbi.nlm.nih.gov/gene/~https://www.ncbi.nlm.nih.gov/gene~" \
+                                    ./monarch-merged.owl
 
                                 scp monarch-merged.owl monarch@$MONARCH_DATA_FS:/var/www/data/owl/
                             """
@@ -301,14 +302,14 @@ pipeline {
                         sh '''
                             mkdir -p out
                             mkdir -p raw && cd raw
-                            mkdir -p clinvarxml_alpha && cd clinvarxml_alpha
+                            mkdir -p clinvar && cd clinvar
                             wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
                             wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
                             cd ../..
 
                             export PYTHONPATH=.:$PYTHONPATH
-                            venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
-                            scp ./out/clinvarxml_alpha.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
+                            venv/bin/python ./dipper/sources/ClinVar.py
+                            scp ./out/clinvar.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
                         '''
                     }
                 }

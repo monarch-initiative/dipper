@@ -13,7 +13,7 @@ class PantherTestCase(SourceTestCase):
 
     def setUp(self):
         self.source = Panther('rdf_graph', True)
-        self.source.test_ids = self._get_testids['protein']
+        self.source.test_ids = self.all_test_ids['protein']
         self.source.settestonly(True)
         self._setDirToSource()
         return

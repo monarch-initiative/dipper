@@ -1,4 +1,3 @@
----
 # Monarch-specific
 '': 'https://monarchinitiative.org/'                                # local BASE IRI
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
@@ -200,7 +199,8 @@
 'FlyBase': 'http://flybase.org/reports/'                                        # Fruitfly database
 'Genatlas': 'http://genatlas.medecine.univ-paris5.fr/fiche.php?symbol='         # gene mapping and genetic diseases (Human)
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences
-'HGNC': 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id='          # HUGO Gene Nomenclature Committee (Human) *** chk pfx
+# 'HGNC': 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id='        # *** pre drupal site
+'HGNC': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:'    # HUGO Gene Nomenclature Committee (Human)
 'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics

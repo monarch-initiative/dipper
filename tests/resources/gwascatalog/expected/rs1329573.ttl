@@ -10,28 +10,28 @@ dbSNP:rs1329573 a OBO:SO_0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs1329573-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> ;
-    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:GENO_0000418 <https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:8619> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
 dbSNP:rs3758171 a OBO:SO_0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs3758171-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> ;
-    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:GENO_0000418 <https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:8619> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
 dbSNP:rs3824344 a OBO:SO_0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs3824344-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> ;
-    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:GENO_0000418 <https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:8619> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
 dbSNP:rs7020413 a OBO:SO_0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs7020413-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> ;
-    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:GENO_0000418 <https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:8619> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
 <http://www.ncbi.nlm.nih.gov/pubmed/22449649> a OBO:IAO_0000013 .
@@ -62,7 +62,7 @@ dbSNP:rs7020413 a OBO:SO_0000694,
         dbSNP:rs3758171,
         dbSNP:rs3824344,
         dbSNP:rs7020413 ;
-    OBO:GENO_0000418 <http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=8619> ;
+    OBO:GENO_0000418 <https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:8619> ;
     OBO:RO_0002162 OBO:NCBITaxon_9606 ;
     OBO:RO_0003304 <http://www.ebi.ac.uk/efo/EFO_0004337> .
 

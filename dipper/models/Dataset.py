@@ -282,6 +282,10 @@ class Dataset:
                              self.curie_map.get(""))  # eval's to MI.org
         self.graph.addTriple(self.version_level_curie, self.globaltt['isVersionOf'],
                              self.summary_level_curie, object_is_literal=False)
+        self.graph.addTriple(self.version_level_curie,
+                             self.globaltt['distribution'],
+                             self.distribution_level_turtle_curie,
+                             object_is_literal=False)
 
     def _set_distribution_level_triples(self):
         self.model.addType(self.distribution_level_turtle_curie,
@@ -493,8 +497,8 @@ class Dataset:
 
         """
         model = Model(self.graph)
-        model.addOntologyDeclaration(self.distribution_level_turtle_curie)
-        model.addOWLVersionIRI(self.distribution_level_turtle_curie,
+        model.addOntologyDeclaration(self.summary_level_curie)
+        model.addOWLVersionIRI(self.summary_level_curie,
                                self.version_level_curie)
         if version_info is not None:
             model.addOWLVersionInfo(self.distribution_level_turtle_curie,

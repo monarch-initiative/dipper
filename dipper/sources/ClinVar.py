@@ -1,11 +1,10 @@
 #! /usr/bin/env python3
 
 """
-    clinvarxml_alpha
-    First pass at converting ClinVar XML into
+    Converts ClinVar XML into
     RDF triples to be ingested by SciGraph.
     These triples conform to the core of the
-    SEPIO Evidence & Provenance model 2016 Apr
+    SEPIO Evidence & Provenance model
 
     We also use the clinvar curated gene to disease
     mappings to discern the functional consequence of
@@ -26,7 +25,7 @@
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    ./dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
@@ -49,7 +48,6 @@ from dipper.models.ClinVarRecord import ClinVarRecord, Gene,\
     Variant, Allele, Condition, Genotype
 from dipper import curie_map
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
-from dipper.graph.RDFGraph import RDFGraph as rdf
 
 LOG = logging.getLogger(__name__)
 
@@ -137,8 +135,10 @@ def make_spo(sub, prd, obj,
         # allow unexpanded bnodes in object
         if objcuri != '_' or CURIEMAP[objcuri] != '_:b':
             objt = '<' + objt + '>'
+    elif obj.isdigit():
+        objt = '"' + obj + '"^^<http://www.w3.org/2001/XMLSchema#integer>'
     elif obj.isnumeric():
-        objt = '"' + obj + '"'
+        objt = '"' + obj + '"^^<http://www.w3.org/2001/XMLSchema#double>'
     else:
         # Literals may not contain the characters ", LF, CR '\'
         # except in their escaped forms. internal quotes as well.
@@ -343,6 +343,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         # XRef[@DB="dbSNP"]/@ID
         for dbsnp in rcv_measure.findall('./XRef[@DB="dbSNP"]'):
             allele.dbsnps.append('dbSNP:' + dbsnp.get('ID'))
+            allele.synonyms.append('rs' +dbsnp.get('ID'))
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
@@ -436,12 +437,17 @@ def allele_to_triples(allele, triples) -> None:
     if allele.label is not None:
         write_spo(allele.id, 'rdfs:label', allele.label, triples)
 
-    # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
+    # <ClinVarVariant:rcv_variant_id><OWL:hasDbXref><dbSNP:rs>
+    #
+    # Note that making clinvar variants and dbSNPs equivalent
+    # causes clique merge bugs, so best to leave them as xrefs
+    # Example: https://www.ncbi.nlm.nih.gov/clinvar/variation/31915/
+    # https://www.ncbi.nlm.nih.gov/clinvar/variation/21303/
     for dbsnp_id in allele.dbsnps:
         # sameAs or hasdbxref?
         write_spo(
             allele.id,
-            'owl:sameAs',
+            GLOBALTT['database_cross_reference'],
             dbsnp_id,
             triples,
             subject_category=blv.terms.SequenceVariant.value,
@@ -489,15 +495,27 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
         # First look at the rcv variant gene relationship type to get the correct
         # curie, but override has_affected_feature in cases where a gene to disease
         # association has not been curated
+
+        # TODO refactor this, the intention is to avoid
+        # cases where a variant is mapped to two genes on different strands
+        # and we want to connect the correct one
+        # see https://github.com/monarch-initiative/monarch-app/issues/1591
+        # https://github.com/monarch-initiative/dipper/issues/593
         if len([val[1] for val in gene_allele
                 if LOCALTT[val[1]] == 'has_affected_feature']) == len(gene_allele):
             for gene, allele_rel in gene_allele:
                 is_affected = True
-                for condition in rcv.conditions:
-                    if condition.medgen_id is None \
-                            or gene not in g2p_map \
-                            or condition.medgen_id not in g2p_map[gene]:
-                        is_affected = False
+                if not rcv.significance == GLOBALTT['pathogenic_for_condition'] \
+                        and not rcv.significance == \
+                               GLOBALTT['likely_pathogenic_for_condition']:
+                    is_affected = False
+                else:
+                    for condition in rcv.conditions:
+                        if condition.medgen_id is None \
+                                or gene not in g2p_map \
+                                or condition.medgen_id not in g2p_map[gene]:
+                            is_affected = False
+                            break
                 if is_affected:
                     write_spo(
                         rcv.genovar.id,
@@ -570,6 +588,69 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 object_category=blv.terms.Gene.value)
     else:
         raise ValueError("Invalid type for genovar in rcv {}".format(rcv.id))
+
+
+def write_review_status_scores():
+    """
+    Make triples that attach a "star" score to each of ClinVar's review statuses.
+    (Stars are basically a 0-4 rating of the review status.)
+
+    Per https://www.ncbi.nlm.nih.gov/clinvar/docs/details/
+    Table 1. The review status and assignment of stars( with changes made mid-2015)
+    Number of gold stars Description and review statuses
+
+    NO STARS:
+    <ReviewStatus> "no assertion criteria provided"
+    <ReviewStatus> "no assertion provided"
+    No submitter provided an interpretation with assertion criteria (no assertion
+    criteria provided), or no interpretation was provided (no assertion provided)
+
+    ONE STAR:
+    <ReviewStatus> "criteria provided, single submitter"
+    <ReviewStatus> "criteria provided, conflicting interpretations"
+    One submitter provided an interpretation with assertion criteria (criteria
+    provided, single submitter) or multiple submitters provided assertion criteria
+    but there are conflicting interpretations in which case the independent values
+    are enumerated for clinical significance (criteria provided, conflicting
+    interpretations)
+
+    TWO STARS:
+    <ReviewStatus> "criteria provided, multiple submitters, no conflicts"
+    Two or more submitters providing assertion criteria provided the same
+    interpretation (criteria provided, multiple submitters, no conflicts)
+
+    THREE STARS:
+    <ReviewStatus> "reviewed by expert panel"
+    reviewed by expert panel
+
+    FOUR STARS:
+    <ReviewStatus> "practice guideline"
+    practice guideline
+    A group wishing to be recognized as an expert panel must first apply to ClinGen
+    by completing the form that can be downloaded from our ftp site.
+
+    :param None
+    :return: list of triples that attach a "star" score to each of ClinVar's review
+    statuses
+
+    """
+    triples = []
+    status_and_scores = {
+        "no assertion criteria provided": '0',
+        "no assertion provided": '0',
+        "criteria provided, single submitter": '1',
+        "criteria provided, conflicting interpretations": '1',
+        "criteria provided, multiple submitters, no conflicts": '2',
+        "reviewed by expert panel": '3',
+        "practice guideline": '4',
+    }
+    for status, score in status_and_scores.items():
+        triples.append(
+            make_spo(
+                GLOBALTT[status],
+                GLOBALTT['has specified numeric value'],
+                score))
+    return triples
 
 
 def parse():
@@ -676,6 +757,9 @@ def parse():
     # Buffer to store non redundant triples between RCV sets
     releasetriple = set()
 
+    # make triples to relate each review status to Clinvar's "score" - 0 to 4 stars
+    # releasetriple.update(set(write_review_status_scores()))
+
     g2pmap = {}
     # this needs to be read first
     with open(mapfile, 'rt') as tsvfile:
@@ -711,6 +795,17 @@ def parse():
     releasetriple.add(make_spo('MonarchData:' + args.output, 'a', 'owl:Ontology'))
 
     rjct_cnt = tot_cnt = 0
+
+    status_and_scores = {
+        "no assertion criteria provided": '0',
+        "no assertion provided": '0',
+        "criteria provided, single submitter": '1',
+        "criteria provided, conflicting interpretations": '1',
+        "criteria provided, multiple submitters, no conflicts": '2',
+        "reviewed by expert panel": '3',
+        "practice guideline": '4',
+    }
+
     #######################################################
     # main loop over xml
     # taken in chunks composed of ClinVarSet stanzas
@@ -738,6 +833,10 @@ def parse():
                 LOG.warning(
                     "%s <is not current on>", rcv_acc)  # + rs_dated)
 
+            ClinicalSignificance = RCVAssertion.find(
+                './ClinicalSignificance/Description').text
+            significance = resolve(ClinicalSignificance)
+
             # # # Child elements
             #
             # /RCV/Assertion
@@ -749,6 +848,12 @@ def parse():
             # /RCV/ObservedIn
             # /RCV/RecordStatus
             # /RCV/TraitSet
+
+            RCV_ClinicalSignificance = RCVAssertion.find('./ClinicalSignificance')
+            if RCV_ClinicalSignificance is not None:
+                RCV_ReviewStatus = RCV_ClinicalSignificance.find('./ReviewStatus')
+                if RCV_ReviewStatus is not None:
+                     rcv_review = RCV_ReviewStatus.text.strip()
 
             #######################################################################
             # Our Genotype/Subject is a sequence alteration / Variant
@@ -804,7 +909,8 @@ def parse():
                 accession=rcv_acc,
                 created=RCVAssertion.get('DateCreated'),
                 updated=RCVAssertion.get('DateLastUpdated'),
-                genovar=genovar
+                genovar=genovar,
+                significance=significance
             )
 
             #######################################################################
@@ -842,6 +948,8 @@ def parse():
                     for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="OMIM"]'):
                         rcv_disease_db = RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
+                        if rcv_disease_id.startswith('PS'):
+                            rcv_disease_db = 'OMIMPS'
                         break
 
                     # Accept Orphanet if no OMIM
@@ -955,6 +1063,15 @@ def parse():
                     scv_id = SCV_Assertion.get('ID')
                     monarch_id = digest_id(rcv.id + scv_id + condition.id)
                     monarch_assoc = 'MONARCH:' + monarch_id
+
+                    # if we parsed a review status up above, attach this review status
+                    # to this association to allow filtering of RCV by review status
+                    if rcv_review is not None:
+                        write_spo(
+                                  monarch_assoc,
+                                  GLOBALTT['confidence_score'],
+                                  status_and_scores[rcv_review],
+                                  rcvtriples)
 
                     ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')
                     scv_acc = ClinVarAccession.get('Acc')
@@ -1210,7 +1327,7 @@ def parse():
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
                             write_spo(
                                 monarch_assoc,
-                                'oboInOwl:hasdbxref',
+                                GLOBALTT['database_cross_reference'],
                                 'ClinVar:' + rcv_acc,
                                 rcvtriples,
                                 subject_category=blv.terms.Association.value,
