@@ -26,6 +26,8 @@ GOGA = 'http://current.geneontology.org/annotations'
 FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
 UPCRKB = 'uniprot/current_release/knowledgebase/'
 
+# large entries in field 7 of ZFIN require this:
+csv.field_size_limit(sys.maxsize)
 
 class GeneOntology(Source):
     """
