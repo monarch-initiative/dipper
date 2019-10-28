@@ -170,7 +170,7 @@ pipeline {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh """
-                                wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
+                                wget http://release.geneontology.org/2019-10-07/bin/owltools
 
                                 chmod +x owltools
 
