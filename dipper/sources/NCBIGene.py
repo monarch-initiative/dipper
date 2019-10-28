@@ -423,10 +423,11 @@ class NCBIGene(OMIMSource):
                                 model.addXref(gene_id, dbxref_curie)
                                 omim_num = omim  # last wins
 
-                    elif omim_num in self.omim_type:  # and
-                            # self.omim_type[omim_num] == self.globaltt['gene']:
+                    elif omim_num in self.omim_type and\
+                            self.omim_type[omim_num] == self.globaltt['gene']:
                         model.addXref(gene_id, dbxref_curie)
-
+                    else:
+                        continue  # no equivilance between ncbigene and omin-nongene
                 # designate clique leaders
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
