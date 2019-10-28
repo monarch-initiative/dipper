@@ -201,7 +201,7 @@ class NCBIGene(OMIMSource):
         col = self.files[src_key]['columns']
         with gzip.open(gene_info, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
-            row[0] = row[0][1:]  # strip comment
+            row[0] = row[0][1:]  # strip comment char
             if not self.check_fileheader(col, row):
                 pass
 
@@ -372,7 +372,7 @@ class NCBIGene(OMIMSource):
 
                 geno.addTaxon(tax_id, gene_id)
 
-    def _add_gene_equivalencies(self, xrefs, gene_id, taxon):
+    def _add_gene_equivalencies(self, dbxrefs, gene_id, taxon):
         """
         Add equivalentClass and sameAs relationships
 
@@ -388,38 +388,48 @@ class NCBIGene(OMIMSource):
         else:
             graph = self.graph
         model = Model(graph)
-        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
+        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport', '']
 
         # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
 
-        for dbxref in xrefs.strip().split('|'):
-            prefix = ':'.join(dbxref.split(':')[:-1]).strip()
+        for dbxref in dbxrefs.strip().split('|'):
+            prefix = ':'.join(dbxref.split(':')[:-1]).strip()  # restore nonterminal ':'
+
             if prefix in self.localtt:
                 prefix = self.localtt[prefix]
-            dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
 
-            if dbxref_curie is not None and prefix != '':
+            # skip some of these for now based on curie prefix
+            if prefix in filter_out:
+                continue
+
+            dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
+            if dbxref_curie is not None:
                 if prefix == 'HPRD':  # proteins are not == genes.
                     model.addTriple(
                         gene_id, self.globaltt['has gene product'], dbxref_curie)
-                    continue
-                    # skip some of these for now based on curie prefix
-                if prefix in filter_out:
                     continue
 
                 if prefix == 'ENSEMBL':
                     model.addXref(gene_id, dbxref_curie)
                 if prefix == 'OMIM':
-                    if dbxref_curie in self.omim_replaced:
-                        repl = self.omim_replaced[dbxref_curie]
+                    omim_num = dbxref_curie[5:]
+                    if omim_num in self.omim_replaced:
+                        repl = self.omim_replaced[omim_num]
                         for omim in repl:
                             if omim in self.omim_type and \
                                     self.omim_type[omim] == self.globaltt['gene']:
-                                dbxref_curie = omim
-                    if dbxref_curie in self.omim_type and \
-                            self.omim_type[dbxref_curie] != self.globaltt['gene']:
-                        continue
+                                dbxref_curie = 'OMIM:' + omim
+                                model.addXref(gene_id, dbxref_curie)
+                                omim_num = omim  # last wins
+
+                    elif omim_num in self.omim_type and\
+                            self.omim_type[omim_num] == self.globaltt['gene']:
+                        model.addXref(gene_id, dbxref_curie)
+                    else:
+                        continue  # no equivilance between ncbigene and omin-nongene
+                # designate clique leaders
+                # (perhaps premature as this ingest can't know what else exists)
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
                         model.addEquivalentClass(gene_id, dbxref_curie)
