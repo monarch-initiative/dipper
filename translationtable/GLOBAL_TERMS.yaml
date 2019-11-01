@@ -69,7 +69,7 @@
 "title": "dcterms:title",
 "Source (dct)": "dcterms:source",  # N.B. we append ' (dct)' to their label
 "Publisher": "dcterms:Publisher",
-"created": "dcterms:created",
+"Date Created": "dcterms:created",
 "creator": "dcterms:creator",
 "downloadURL": "dcterms:downloadURL",
 "format": "dcterms:format",
