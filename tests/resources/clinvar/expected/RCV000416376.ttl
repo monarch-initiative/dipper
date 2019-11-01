@@ -6,7 +6,7 @@ BNODE:b7a901ca0f279b765a76 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_966327",
         "b6b194b585b6811c6b2a_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> ;
-    OBO:SEPIO_0000021 "2016-01-01" ;
+    dcterms:created "2016-01-01" ;
     OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
     OBO:SEPIO_0000111 BNODE:b4d40a7eefacbfe43164 ;
     dc:identifier "SCV000494030.1" .
@@ -15,7 +15,7 @@ BNODE:ba583ccbe8979e522d07 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_966327",
         "b49bb52f6925e2bf5458_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> ;
-    OBO:SEPIO_0000021 "2016-01-01" ;
+    dcterms:created "2016-01-01" ;
     OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
     OBO:SEPIO_0000111 BNODE:b1aa769f10db16b258de ;
     dc:identifier "SCV000494030.1" .

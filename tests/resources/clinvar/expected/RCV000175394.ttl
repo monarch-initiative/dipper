@@ -26,7 +26,7 @@ BNODE:b13b11feeac6001ef4e1 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_1540968",
         "b0c2b8f4b93e10f01eba_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> ;
-    OBO:SEPIO_0000021 "2017-04-04" ;
+    dcterms:created "2017-04-04" ;
     OBO:SEPIO_0000041 BNODE:bc99926ac85cd459a025 ;
     OBO:SEPIO_0000111 BNODE:bec67224cccaa828d90f ;
     dc:identifier "SCV000790664.1" .
