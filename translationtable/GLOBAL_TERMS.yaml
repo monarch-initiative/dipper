@@ -594,7 +594,7 @@
 "evidence_has_supporting_reference": "SEPIO:0000124",
 "is_inconsistent_with": "SEPIO:0000126",
 "asserted_by": "SEPIO:0000130",
-"confidence_score": "SEPIO:0000168",
+"assertion_confidence_level": "SEPIO:0000167",
 "phenotyping only": "SEPIO:0000186",
 # "has_evidence_with_item": "SEPIO:0000189",
 # "no assertion criteria provided": "SEPIO:9999990",
