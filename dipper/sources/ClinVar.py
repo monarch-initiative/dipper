@@ -25,7 +25,7 @@
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ./dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
@@ -47,7 +47,6 @@ import yaml
 from dipper.models.ClinVarRecord import ClinVarRecord, Gene,\
     Variant, Allele, Condition, Genotype
 from dipper import curie_map
-from dipper.models.Dataset import Dataset
 
 LOG = logging.getLogger(__name__)
 
@@ -271,7 +270,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         # XRef[@DB="dbSNP"]/@ID
         for dbsnp in rcv_measure.findall('./XRef[@DB="dbSNP"]'):
             allele.dbsnps.append('dbSNP:' + dbsnp.get('ID'))
-            allele.synonyms.append('rs' +dbsnp.get('ID'))
+            allele.synonyms.append('rs' + dbsnp.get('ID'))
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
@@ -427,7 +426,7 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 is_affected = True
                 if not rcv.significance == GLOBALTT['pathogenic_for_condition'] \
                         and not rcv.significance == \
-                               GLOBALTT['likely_pathogenic_for_condition']:
+                        GLOBALTT['likely_pathogenic_for_condition']:
                     is_affected = False
                 else:
                     for condition in rcv.conditions:
@@ -759,7 +758,7 @@ def parse():
             if RCV_ClinicalSignificance is not None:
                 RCV_ReviewStatus = RCV_ClinicalSignificance.find('./ReviewStatus')
                 if RCV_ReviewStatus is not None:
-                     rcv_review = RCV_ReviewStatus.text.strip()
+                    rcv_review = RCV_ReviewStatus.text.strip()
 
             #######################################################################
             # Our Genotype/Subject is a sequence alteration / Variant
@@ -1090,7 +1089,7 @@ def parse():
                             if scv_eval_date != "None":
                                 write_spo(
                                     _assertion_id,
-                                    GLOBALTT['date_created'],
+                                    GLOBALTT['Date Created'],
                                     scv_eval_date,
                                     rcvtriples)
 
