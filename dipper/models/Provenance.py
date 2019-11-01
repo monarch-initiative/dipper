@@ -71,7 +71,7 @@ class Provenance:
 
         if date is not None:
             self.graph.addTriple(
-                self.graph, assertion, self.globaltt['date_created'], date)
+                self.graph, assertion, self.globaltt['Date Created'], date)
 
         return
 
