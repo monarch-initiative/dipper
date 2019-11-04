@@ -170,7 +170,7 @@ pipeline {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh """
-                                wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
+                                wget http://release.geneontology.org/2019-10-07/bin/owltools
 
                                 chmod +x owltools
 
@@ -183,8 +183,8 @@ pipeline {
                                     s~http://purl.obolibrary.org/obo/OMIMPS_~http://www.omim.org/phenotypicSeries/PS~;\
                                     s~http://purl.obolibrary.org/obo/OMIM_~http://omim.org/entry/~;\
                                     s~http://identifiers.org/omim/~http://omim.org/entry/~;\
-                                    s~http://identifiers.org/hgnc/~https://www.genenames.org/data/gene-symbol-report/#\!/hgnc_id/HGNC:~;\
-                                    s~http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=~https://www.genenames.org/data/gene-symbol-report/#\!/hgnc_id/HGNC:~;\
+                                    s~http://identifiers.org/hgnc/~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
+                                    s~http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
                                     s~http://www.informatics.jax.org/marker/MGI:~http://www.informatics.jax.org/accession/MGI:~;\
                                     s~http://www.ncbi.nlm.nih.gov/gene/~https://www.ncbi.nlm.nih.gov/gene~" \
                                     ./monarch-merged.owl
