@@ -12,10 +12,8 @@ from dipper.models.Provenance import Provenance
 from dipper.models.Model import Model
 
 LOG = logging.getLogger(__name__)
-# temp? detour
-# IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
-# through stopgap
-IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/release-8.0/csv'
+# Sometimes latest disappears
+IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
 GITHUBRAW = 'https://raw.githubusercontent.com/'
 
 
