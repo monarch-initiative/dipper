@@ -79,7 +79,7 @@ class CTD(Source):
         #    'file': 'CTD_genes_pathways.tsv.gz',
         #    'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
         # },
-        #' gene_disease': {
+        # 'gene_disease': {
         #    'file': 'CTD_genes_diseases.tsv.gz',
         #    'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
         # }
