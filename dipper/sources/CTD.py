@@ -201,21 +201,20 @@ class CTD(Source):
         self.pathway = Pathway(self.graph)
 
         src_key = 'chemical_disease_associations'
-        self._parse_ctd_file(limit, self.files[src_key])
+        self._parse_ctd_file(limit, src_key)
 
-        # self._parse_ctd_file(limit, self.files['gene_pathway'])
-        # self._parse_ctd_file(limit, self.files['gene_disease'])
+        # self._parse_ctd_file(limit, 'gene_pathway')
+        # self._parse_ctd_file(limit, 'gene_disease')
 
         src_key = 'publications'
         file_path = '/'.join((self.rawdir, self.api_fetch[src_key]['file']))
-
         if os.path.exists(file_path) is True:
             self._parse_curated_chem_disease(file_path, limit)
         else:
             LOG.error('Batch Query file "%s" does not exist', file_path)
         LOG.info("Done parsing files.")
 
-    def _parse_ctd_file(self, limit, file):
+    def _parse_ctd_file(self, limit, src_key):
         """
         Parses files in CTD.files dictionary
         Args:
@@ -228,7 +227,7 @@ class CTD(Source):
         row_count = 0
         version_pattern = re.compile(r'^# Report created: (.+)$')
         is_versioned = False
-        file_path = '/'.join((self.rawdir, file['file']))
+        file_path = '/'.join((self.rawdir, self.files[src_key]))
         with gzip.open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -240,15 +239,15 @@ class CTD(Source):
                     if match:
                         version_date = re.sub(r'\s|:', '-', match.group(1))
                         self.dataset.set_ingest_source_file_version_date(
-                            file['url'],
-                            version_date)
+                            self.files[src_key]['url'], version_date)
                         is_versioned = True
                 elif re.match(r'^#', ' '.join(row)):
                     pass
                 else:
                     row_count += 1
-                    if file == self.files['chemical_disease_associations']['file']:
+                    if src_key == 'chemical_disease_associations':
                         self._process_interactions(row)
+
                     # elif file == self.files['gene_pathway']['file']:
                     #     self._process_pathway(row)
                     # elif file == self.files['gene_disease']['file']:
