@@ -117,6 +117,6 @@ BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
 
 <http://omim.org/entry/604370> rdfs:label "Breast-ovarian cancer, familial 1" .
 
-:MONARCH_b0c37985b4c9880212d8 SEPIO:0000167 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
-:MONARCH_b688d9615bbfa9e0f7df SEPIO:0000167 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
-:MONARCH_b9abe7978a362ddcafa3 SEPIO:0000167 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b0c37985b4c9880212d8 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b688d9615bbfa9e0f7df SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b9abe7978a362ddcafa3 SEPIO:0000168 "3"^^<http://www.w3.org/2001/XMLSchema#integer> .

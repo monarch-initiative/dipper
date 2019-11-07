@@ -974,7 +974,7 @@ def parse():
                     if rcv_review is not None:
                         write_spo(
                             monarch_assoc,
-                            GLOBALTT['assertion_confidence_level'],
+                                  GLOBALTT['confidence_score'],
                             status_and_scores[rcv_review],
                             rcvtriples)
 

@@ -52,4 +52,4 @@ BNODE:bcffea4366ef7f890f2a a OBO:ECO_0000000 ;
     rdfs:label "b409eb231ce1985a1a4d_evidence" ;
     OBO:SEPIO_0000085 BNODE:b344a747065c549662e8 .
 
-:MONARCH_b409eb231ce1985a1a4d SEPIO:0000167 "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+:MONARCH_b409eb231ce1985a1a4d SEPIO:0000168 "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
