@@ -973,10 +973,10 @@ def parse():
                     # to this association to allow filtering of RCV by review status
                     if rcv_review is not None:
                         write_spo(
-                                  monarch_assoc,
+                            monarch_assoc,
                                   GLOBALTT['confidence_score'],
-                                  status_and_scores[rcv_review],
-                                  rcvtriples)
+                            status_and_scores[rcv_review],
+                            rcvtriples)
 
                     ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')
                     scv_acc = ClinVarAccession.get('Acc')
