@@ -240,7 +240,7 @@
 "gpos75": "GENO:0000623",
 "gpos50": "GENO:0000624",
 "gpos25": "GENO:0000625",
-"short_chromosome_arm": "GENO:0000628",
+"stalk": "GENO:0000628",   # was "short_chromosome_arm" may conflict ucscbands/monochrom
 "long_chromosome_arm": "GENO:0000629",
 "has_begin_stage_qualifier": "GENO:0000630",
 "has_end_stage_qualifier": "GENO:0000631",
