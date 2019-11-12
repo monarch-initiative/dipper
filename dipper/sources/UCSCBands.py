@@ -275,7 +275,6 @@ class UCSCBands(Source):
 
         """
         tax_num = src_key
-        species_name = self.globaltcid[tax_num]  # for logging
         if limit is None:
             limit = sys.maxsize   # practical limit anyway
         model = Model(self.graph)
@@ -292,6 +291,7 @@ class UCSCBands(Source):
         # build the organism's genome from the taxon
         genome_label = self.files[src_key]['genome_label']
         taxon_curie = 'NCBITaxon:' + tax_num
+        species_name = self.globaltcid[taxon_curie]  # for logging
 
         # add the taxon as a class.  adding the class label elsewhere
         model.addClassToGraph(taxon_curie, None)
