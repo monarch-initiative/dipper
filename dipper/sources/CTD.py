@@ -227,7 +227,7 @@ class CTD(Source):
         row_count = 0
         version_pattern = re.compile(r'^# Report created: (.+)$')
         is_versioned = False
-        file_path = '/'.join((self.rawdir, self.files[src_key]))
+        file_path = '/'.join((self.rawdir, self.files[src_key]['file']))
         with gzip.open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
