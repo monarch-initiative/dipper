@@ -1,5 +1,5 @@
 ---
-"acen": "centromere"
+"acen": "centromere"  # dubious see ucsc bands
 "gvar": "chromosome_band"
 "stalk": "chromosome_band"
 "gneg": "chromosome_band"

@@ -1,0 +1,51 @@
+
+UCSC has a mapping of species binomial to assembly/build
+
+curl -s ftp://hgdownload.soe.ucsc.edu/goldenPath/currentGenomes/ |
+    cut -c 56- |
+    grep "^[A-Z]" |
+    sed 's| -> ../|\t|' |
+    tr -d '/' | LC_COLATE=C sort > data/ucsc-species_build.tab
+
+
+
+# note I must have done a taxon grep on ntriples and counted elsewhere
+
+awk -F ' ' '{a=$1;$1="";$2="";gsub(" ","_");print $0 "\t" a}' data/species_mentions_for_TT.txt |
+    grep "^__" | cut -c3- | LC_COLATE=C sort > data/top-dipper-species_taxon.tab
+
+
+grep "^[a-z]" data/top-dipper-species_taxon_build.tab
+
+    anoCar2 Anolis_carolinensis NCBITaxon:28377 (green anole)
+    bosTau7 Bos_taurus	NCBITaxon:9913
+    ce11    Caenorhabditis_elegans	NCBITaxon:6239
+    canFam3 Canis_familiaris    Canis_lupus_familiaris	NCBITaxon:9615
+    danRer11    Danio_rerio	NCBITaxon:7955
+    dm6 Drosophila_melanogaster	NCBITaxon:7227
+
+droAna2 Drosophila_ananassae	NCBITaxon:7217
+droSim1 Drosophila_simulans	NCBITaxon:7240
+droVir2 Drosophila_subobscura	NCBITaxon:7241
+
+    equCab3 Equus_caballus	NCBITaxon:9796
+    felCat9 Felis_catus	NCBITaxon:9685
+    galGal6 Gallus_gallus	NCBITaxon:9031
+    hg19    Homo_sapiens	NCBITaxon:9606
+    monDom5    Monodelphis_domestica	NCBITaxon:13616   (opossum)
+    mm10    Mus_musculus	NCBITaxon:10090
+    ornAna2 Ornithorhynchus_anatinus	NCBITaxon:9258 (platypus)
+    oviAri4 Ovis_aries	NCBITaxon:9940
+    panTro6 Pan_troglodytes	NCBITaxon:9598
+    rn6 Rattus_norvegicus	NCBITaxon:10116
+    susScr11    Sus_scrofa	NCBITaxon:9823
+    fr2 Takifugu_rubripe	NCBITaxon:31033 (pufferfish)
+
+
+
+
+
+If needed a (Coded) list of all available ucsc builds "assembly name"
+or what dipper calls "build_num" are here
+# curl -s ftp://hgdownload.soe.ucsc.edu/goldenPath/ | cut -c56-
+
