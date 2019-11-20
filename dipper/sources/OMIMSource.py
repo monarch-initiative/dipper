@@ -32,7 +32,7 @@ class OMIMSource(Source):
             'clean': OMIMURL,
             'columns': [  # expected
                 'Prefix',
-                'Mim Number',
+                'MIM Number',
                 'Preferred Title; symbol',
                 'Alternative Title(s); symbol(s)',
                 'Included Title(s); symbols',
@@ -156,7 +156,7 @@ class OMIMSource(Source):
                     continue
 
                 declared = row[col.index('Prefix')].strip()
-                omim_id = row[col.index('Mim Number')].strip()
+                omim_id = row[col.index('MIM Number')].strip()
                 pref_label = row[col.index('Preferred Title; symbol')].strip()
                 # alt_label =row[col.index('Alternative Title(s); symbol(s)')].strip()
                 # inc_label = row[col.index('Included Title(s); symbols')].strip()
