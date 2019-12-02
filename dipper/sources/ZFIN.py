@@ -21,6 +21,7 @@ LOG = logging.getLogger(__name__)
 ZFDL = 'http://zfin.org/downloads'
 ZPCURATION = 'http://purl.obolibrary.org/obo/zp/'
 
+
 class ZFIN(Source):
     """
     This is the parser for the
