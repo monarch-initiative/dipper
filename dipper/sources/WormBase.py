@@ -67,7 +67,7 @@ class WormBase(Source):
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
             'url': wbprod + species +
-                   '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+                  '/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': wbprod + '/ONTOLOGY/disease_association.WSNUMBER.wb'},
@@ -89,12 +89,12 @@ class WormBase(Source):
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
-        # 'letter': { # no longer exists 2016-11-18
-        #    'file': 'letter.WSNUMBER',
-        #    'url': wbprod + '/letter.WSNUMBER'},
+        'letter': {
+            'file': 'letter',
+            'url': wbprod + '/letter.WSNUMBER'},
 
         'checksums': {
-            'file': 'CHECKSUMS',
+            'file': 'CHECKSUMS',  # note *every* file & release eveh' most recent at top
             'url':  wbprod + '/CHECKSUMS'}
     }
 
