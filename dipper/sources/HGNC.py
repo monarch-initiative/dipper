@@ -26,11 +26,11 @@ class HGNC(OMIMSource):
 
     """
 
-    EBIFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/'
+    EBIFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv'
     files = {
         'genes': {
             'file': 'hgnc_complete_set.txt',
-            'url': EBIFTP + 'new/tsv/hgnc_complete_set.txt',
+            'url': EBIFTP + '/hgnc_complete_set.txt',
             'columns': [
                 'hgnc_id',
                 'symbol',
