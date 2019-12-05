@@ -40,6 +40,7 @@ class NCBIGene(OMIMSource):
     we simply create a "mentions" relationship.
 
     """
+    # NCBIFTP = ftp://ftp.ncbi.nih.gov/gene/DATA/  (n.b. ftp v.s http below)
 
     files = {
         'gene_info': {
