@@ -49,7 +49,7 @@ class WormBase(Source):
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
             'url': wbprod + species +
-                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
         #   'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #   'url': wbdev + species +
@@ -62,12 +62,13 @@ class WormBase(Source):
             'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
-            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?'+
+            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?' +
                    'action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
             'url': wbprod + species +
-                   '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+                    '/c_elegans/PRJNA13758/' +
+                    'c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': wbprod + '/ONTOLOGY/disease_association.WSNUMBER.wb'},
@@ -88,13 +89,13 @@ class WormBase(Source):
         'xrefs': {  # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
-                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
-        # 'letter': { # no longer exists 2016-11-18
-        #    'file': 'letter.WSNUMBER',
-        #    'url': wbprod + '/letter.WSNUMBER'},
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+        'letter': {
+            'file': 'letter',
+            'url': wbprod + '/letter.WSNUMBER'},
 
         'checksums': {
-            'file': 'CHECKSUMS',
+            'file': 'CHECKSUMS',  # note *every* file & release eveh' most recent at top
             'url':  wbprod + '/CHECKSUMS'}
     }
 
@@ -384,11 +385,11 @@ class WormBase(Source):
 
                             # Previous model - make a bnode reagent-targeted gene,
                             # & annotate that instead of the RNAi item directly
-                            #rnai_num = re.sub(r'WormBase:', '', allele_id)
-                            #rnai_id = allele_id
-                            #rtg_id = self.make_reagent_targeted_gene_id(
+                            # rnai_num = re.sub(r'WormBase:', '', allele_id)
+                            # rnai_id = allele_id
+                            # rtg_id = self.make_reagent_targeted_gene_id(
                             #    gene_num, rnai_num)
-                            #geno.addReagentTargetedGene(
+                            # geno.addReagentTargetedGene(
                             #    rnai_id, 'WormBase:' + gene_num, rtg_id)
                             # allele_id = rtg_id
 
@@ -414,10 +415,10 @@ class WormBase(Source):
                             # @kshefchek - removing this blank node
                             # in favor of simpler modeling, treat variant
                             # like an allele
-                            #vl_id = '_:'+'-'.join((gene_num, allele_num))
-                            #geno.addSequenceAlterationToVariantLocus(
+                            # vl_id = '_:'+'-'.join((gene_num, allele_num))
+                            # geno.addSequenceAlterationToVariantLocus(
                             #    allele_id, vl_id)
-                            #geno.addAlleleOfGene(vl_id, gene_id)
+                            # geno.addAlleleOfGene(vl_id, gene_id)
 
                             geno.addSequenceAlteration(allele_id, None)
                             geno.addAlleleOfGene(allele_id, gene_id)
@@ -749,7 +750,6 @@ class WormBase(Source):
                     assoc.add_source(ref)
                 assoc.add_evidence(self.resolve(eco_symbol))
                 assoc.add_association_to_graph()
-
 
     def process_gene_interaction(self, limit):
         """
