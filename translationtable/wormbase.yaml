@@ -17,4 +17,3 @@
 "transposon_pseudogene": "transposable_element_pseudogene"
 "protein_coding": "protein_coding_gene"
 "asRNA": "ncRNA_gene"  # TODO make term request
-
