@@ -130,7 +130,7 @@ class GeneOntology(Source):
             'columnns': gaf_columns
         },
         '5782': {  # Dictyostelium (slime mold genus)
-            'file': 'dictibase.gaf.gz',
+            'file': 'dictybase.gaf.gz',
             'url': GOGA + '/dictybase.gaf.gz',
             'columnns': gaf_columns
         },
