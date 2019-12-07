@@ -308,7 +308,7 @@ class Source:
             size = 0
             last_modified = None
             LOG.error(err)
-            raise Exception(
+            raise Exception()
 
         resp_headers = response.info()
         size = resp_headers.get('Content-Length')
