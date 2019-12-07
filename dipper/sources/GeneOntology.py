@@ -256,7 +256,7 @@ class GeneOntology(Source):
 
         for txid_num in list(set(self.files).intersection(self.tax_ids)):
             gaffile = '/'.join((self.rawdir, self.files[txid_num]['file']))
-            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.gaf_eco)
+            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map)
 
         LOG.info("Finished parsing.")
 
