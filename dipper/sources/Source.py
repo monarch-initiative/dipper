@@ -299,19 +299,20 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        LOG.info("Request header: %s", str(req.header_items()))
-
-        response = urllib.request.urlopen(req)
+        LOG.info("Request header for %s is: %s", remote,  str(req.header_items()))
 
         try:
-            resp_headers = response.info()
-            size = resp_headers.get('Content-Length')
-            last_modified = resp_headers.get('Last-Modified')
+            response = urllib.request.urlopen(req)
         except urllib.error.URLError as err:
             resp_headers = None
             size = 0
             last_modified = None
             LOG.error(err)
+            raise Exception(
+
+        resp_headers = response.info()
+        size = resp_headers.get('Content-Length')
+        last_modified = resp_headers.get('Last-Modified')
 
         if size is not None and size != '':
             size = int(size)
