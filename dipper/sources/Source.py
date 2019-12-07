@@ -372,11 +372,11 @@ class Source:
                     '/'.join((self.rawdir, filesource['file'])),
                     is_dl_forced):
                 LOG.info(
-                    "Found File '%s/%s' in DipperCache!",
+                    "Found File '%s/%s' in DipperCache",
                     self.name, filesource['file'])
             else:
                 LOG.warning(
-                    "File %s/%s missing from Dipper Cache!",
+                    "File %s/%s absent from DipperCache",
                     self.name, filesource['file'])
 
                 if 'headers' in filesource:
