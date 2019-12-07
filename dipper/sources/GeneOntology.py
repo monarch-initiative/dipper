@@ -29,6 +29,7 @@ UPCRKB = 'uniprot/current_release/knowledgebase/'
 # large entries in field 7 of ZFIN require this:
 csv.field_size_limit(sys.maxsize)
 
+
 class GeneOntology(Source):
     """
     This is the parser for the
@@ -180,11 +181,11 @@ class GeneOntology(Source):
                 'Ensembl_PRO',
                 'Additional PubMed'
             ]
+        },
+        'gaf-eco-mpping': {
+            'file': 'gaf-eco-mapping.yaml',
+            'url': '/'.join((Source.DIPPERCACHE, 'go', 'gaf-eco-mapping.yaml')),
         }
-    }
-    # consider moving the go-ref and id-map above to here in map_files
-    map_files = {
-        'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
 
     def __init__(self,
@@ -233,12 +234,19 @@ class GeneOntology(Source):
 
         # build the id map for mapping uniprot ids to genes ... ONCE
         self.uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
-        self.eco_map = self.get_eco_map(self.map_files['eco_map'])
+
+        # gaf evidence code mapping is built in parse(), after the file is fetched.
+        self.gaf_eco = {}
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
+
+        yamlfile = '/'.join((self.rawdir, self.files['gaf-eco-mapping']['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
+
         if limit is not None:
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
@@ -248,11 +256,11 @@ class GeneOntology(Source):
 
         for txid_num in list(set(self.files).intersection(self.tax_ids)):
             gaffile = '/'.join((self.rawdir, self.files[txid_num]['file']))
-            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.eco_map)
+            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.gaf_eco)
 
         LOG.info("Finished parsing.")
 
-    def process_gaf(self, gaffile, limit, id_map=None, eco_map=None):
+    def process_gaf(self, gaffile, limit, id_map=None):
 
         if self.test_mode:
             graph = self.testgraph
@@ -359,7 +367,7 @@ class GeneOntology(Source):
                 assoc.set_object(go_id)
 
                 try:
-                    eco_id = eco_map[eco_symbol]
+                    eco_id = self.gaf_eco[eco_symbol]
                     assoc.add_evidence(eco_id)
                 except KeyError:
                     LOG.error("Evidence code (%s) not mapped", eco_symbol)
