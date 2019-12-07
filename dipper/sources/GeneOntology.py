@@ -182,7 +182,7 @@ class GeneOntology(Source):
                 'Additional PubMed'
             ]
         },
-        'gaf-eco-mpping': {
+        'gaf-eco-mapping': {
             'file': 'gaf-eco-mapping.yaml',
             'url': '/'.join((Source.DIPPERCACHE, 'go', 'gaf-eco-mapping.yaml')),
         }
