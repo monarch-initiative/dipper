@@ -152,7 +152,7 @@ class GeneOntology(Source):
             # (http://current.geneontology.org/metadata/go-refs.json)
             'url': 'http://www.geneontology.org/doc/GO.references'
         },
-        'id-map': {  # 5GB mapping file takes 6 hours to DL ... maps UniProt to Ensembl
+        'id-map': {  # 8.5GB mapping file takes hours to DL ... maps UniProt to Ensembl
             'file': 'idmapping_selected.tab.gz',
             'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
             # ftp://ftp.uniprot.org
