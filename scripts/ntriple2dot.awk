@@ -44,13 +44,19 @@ function tokenize (str){
         # print str
         finish = length(str) - start + 1
     }
-
     return substr(str, start, finish)
 }
 
 # remove final token from token path delimited with SUBSEP
-function detail(key) {
-    return substr(key, 1, match(key, SUBSEP "[[:alnum:].]+$")-1)
+# this ends up matching chars included in local identifiers 
+# ._-;():%#,?=@*\&+   (yea ... nope)
+
+function detail(key,   start) {
+    start = match(key, ".+" SUBSEP) 
+    if(start == 1)
+        return substr(key, 1, RLENGTH -1)
+    else
+        return key
 }
 
 # for output, keep underscore, letters & numbers
@@ -105,7 +111,7 @@ function deoboify(curie,  a){
     split(curie, a , ":")
     if(match(a[2], a[1]"_") > 0){
         sub("_", ":", a[2]);
-        curie=a[2]
+        curie = a[2]
     }
     return curie
 }
@@ -144,7 +150,7 @@ BEGIN{
     prefix[tokenize("http://www.ncbi.nlm.nih.gov/genome/")]="NCBIGenome"
     prefix[tokenize("http://www.ncbi.nlm.nih.gov/assembly?term=")]="NCBIAssembly"
     # kegg
-    prefix[tokenize("http://www.genome.jp/kegg/pathway/map/map")]="KEGG-img"
+    prefix[tokenize("http://www.genome.jp/kegg/pathway/map/")]="KEGG-img"
     # in EOM
     prefix[tokenize("https://elementsofmorphology.nih.gov/images/terms/")]="EOM_IMG"
     prefix[tokenize("http://elementsofmorphology.nih.gov/index.cgi?tid=")]="EOM"  # w/o httpS
