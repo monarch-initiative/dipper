@@ -28,12 +28,14 @@ function trim(str){
 
 # break URI into tokens to use a a path in
 # multi-dim array pointing to a curie-prefix
+# base URI include "!#&-=?_"
+# which are all also present in localID as well
 function tokenize (str){
     # b/c found in local IDs leave .:
-    gsub(/[?&:#=/_-]+/, SUBSEP, str)
+    gsub(/[!&:#=?/_-]+/, SUBSEP, str)
     # discard the first token it is only low info content  http|https|ftp
     # discard any empty trailing tokens
-    tail = match(str, ".*" SUBSEP "$")  # side effects RSTART & RLENGTH
+    tail = match(str, ".*" SUBSEP)  # side effects RSTART & RLENGTH
     # print "tail = " tail " tail length = " RLENGTH
     finish = 0
     start = index(str, SUBSEP) + 1
@@ -48,11 +50,11 @@ function tokenize (str){
 }
 
 # remove final token from token path delimited with SUBSEP
-# this ends up matching chars included in local identifiers 
+# this ends up matching chars included in localID
 # ._-;():%#,?=@*\&+   (yea ... nope)
 
 function detail(key,   start) {
-    start = match(key, ".+" SUBSEP) 
+    start = match(key, ".+" SUBSEP)
     if(start == 1)
         return substr(key, 1, RLENGTH -1)
     else
@@ -90,7 +92,7 @@ function contract(uri,  u){
         return prefix[u]
     else{
         printf("WARN  %s\n", uri) > "/dev/stderr"
-        printf("BASE  %s\n", detail(tokenize(uri))) > "/dev/stderr"
+        # printf("BASE  %s\n", detail(tokenize(uri))) > "/dev/stderr"
         return simplify(uri)
     }
 }
