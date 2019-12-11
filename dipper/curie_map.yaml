@@ -144,7 +144,7 @@
 'MPD-strain': 'http://phenome.jax.org/db/q?rtn=strains/details&strainid='       # Mouse Phenome Database
 'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='  # Mouse Genetics
 'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='                  # link rot?
-'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'            # RIKEN BioResource Research Center
+'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no='                # RIKEN BioResource Research Center
 
 # organisms and genome builds
 #                                                                       # National Center for Biotechnology Information

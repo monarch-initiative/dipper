@@ -204,7 +204,7 @@ class MPD(Source):
                         model.addSameIndividual(strain_id, jax_id)
                     elif vendor == 'Rbrc':
                         # reiken
-                        reiken_id = 'RBRC:'+re.sub(r'RBRC', '', stocknum)
+                        reiken_id = 'RBRC:' + stocknum
                         model.addSameIndividual(strain_id, reiken_id)
                     else:
                         if url != '':
