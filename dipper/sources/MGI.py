@@ -1756,7 +1756,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '70':  # RIKEN
                         # like
                         # http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160
-                        strain_id = 'RBRC:RBRC' + accid
+                        strain_id = 'RBRC:' + accid
                     elif logicaldb_key == '87':
                         strain_id = 'MUGEN:' + accid
                         # I can't figure out how to get to some of the strains
