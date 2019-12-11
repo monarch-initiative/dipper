@@ -39,13 +39,10 @@ function tokenize (str){
     # print "tail = " tail " tail length = " RLENGTH
     finish = 0
     start = index(str, SUBSEP) + 1
-    if (tail>0){
+    if (tail > 0)
         finish = RLENGTH - start
-    }
-    else { # if(tail==0) {
-        # print str
+    else
         finish = length(str) - start + 1
-    }
     return substr(str, start, finish)
 }
 
@@ -55,7 +52,7 @@ function tokenize (str){
 
 function detail(key,   start) {
     start = match(key, ".+" SUBSEP)
-    if(start == 1)
+    if (start == 1)
         return substr(key, 1, RLENGTH -1)
     else
         return key
@@ -75,17 +72,19 @@ function simplify(str){
 # Otherwise whinge and return a gv printable version of the original
 function contract(uri,  u){
     u = tokenize(uri)
-    if(index(u, SUBSEP)>0)
-        u = detail(u)
 
-    if(u == "") {
-        printf("ERROR contracting %s\n", uri) > "/dev/stderr"
-        printf("ERROR tokenizeing %s\n", tokenize(uri)) > "/dev/stderr"
-        printf("ERROR detailing   %s\n", detail(tokenize(uri))) > "/dev/stderr"
-        # exit(1)  # while testing
-    }
+    # sometimes uri is already correct as is
+    # if (index(u, SUBSEP) > 0)
+    #    u = detail(u)
+    # if (u == "") {
+    #    printf("ERROR contracting %s\n", uri) > "/dev/stderr"
+    #    printf("ERROR tokenizeing %s\n", tokenize(uri)) > "/dev/stderr"
+    #    printf("ERROR detailing   %s\n", detail(tokenize(uri))) > "/dev/stderr"
+    #    # exit(1)  # while testing
+    # }
+
     # shorten till longest uri in curi map is found (or not)
-    while(!(u in prefix) &&  index(u, SUBSEP)>0)
+    while(!(u in prefix) && index(u, SUBSEP)>0)
         u = detail(u)
 
     if(u in prefix)
