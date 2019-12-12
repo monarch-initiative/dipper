@@ -10,7 +10,7 @@ from dipper.models.Genotype import Genotype
 
 
 LOG = logging.getLogger(__name__)
-ENS_URL = 'uswest.ensembl.org'    # 'www.ensembl.org'
+ENS_URL = 'www.ensembl.org'  # 'uswest.ensembl.org'
 
 
 class Ensembl(Source):
@@ -118,6 +118,9 @@ class Ensembl(Source):
             conn = http.client.HTTPConnection(ENS_URL)
             conn.request("GET", '/biomart/martservice?' + params)
             resp = conn.getresponse()
+            if resp.getcode() != 200:
+                LOG.error("Got non-200 response code while retrieving {} from {}"
+                          .format(params, ENS_URL))
             with open(loc_file, 'wb') as bin_writer:
                 bin_writer.write(resp.read())
 
