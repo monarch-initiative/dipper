@@ -21,7 +21,27 @@ class RGD(Source):
     files = {
         'rat_gene2mammalian_phenotype': {
             'file': 'rattus_genes_mp',
-            'url': RGD_BASE + 'rattus_genes_mp'},
+            'url': RGD_BASE + 'rattus_genes_mp',
+            'columns': [  # expected. GAF v2.1
+                'DB',
+                'DB Object ID',
+                'DB Object Symbol',
+                'Qualifier',
+                'GO ID',
+                'DB:Reference (|DB:Reference)',
+                'Evidence Code',
+                'With (or) From',
+                'Aspect',
+                'DB Object Name',
+                'DB Object Synonym (|Synonym)',
+                'DB Object Type',
+                'Taxon(|taxon)',
+                'Date',
+                'Assigned By',
+                'Annotation Extension',
+                'Gene Product Form ID',
+            ]
+        },
     }
 
     def __init__(self,

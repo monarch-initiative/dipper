@@ -124,12 +124,9 @@ class Monarch(Source):
             fname = '/'.join((mypath, filename))
             with open(fname, 'r') as csvfile:
                 filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-                fileheader = next(filereader)
-                if fileheader != col:
-                    LOG.error('Expected  %s to have columns: %s', fname, col)
-                    LOG.error('But Found %s to have columns: %s', fname, fileheader)
-                    raise AssertionError('Incomming data headers have changed.')
-
+                row = next(filereader)
+                if self.check_fileheader(col, row):
+                    pass
                 for row in filereader:
                     if len(row) != len(col):
                         LOG.info(
