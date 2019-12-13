@@ -10,7 +10,7 @@ from dipper.models.Genotype import Genotype
 
 
 LOG = logging.getLogger(__name__)
-ENS_URL = 'uswest.ensembl.org'
+ENS_URL = 'www.ensembl.org'  # 'uswest.ensembl.org'
 
 
 class Ensembl(Source):
