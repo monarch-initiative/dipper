@@ -327,7 +327,6 @@ SELECT  r._relationship_key as rel_key,
         self.fetch_query_from_pgdb(
             'mgi_relationship_transgene_genes', query, None, cxn)
 
-
     def _process_gxd_genotype_view(self, limit=None):
         """
         This table indicates the relationship between a genotype
@@ -1931,13 +1930,13 @@ SELECT  r._relationship_key as rel_key,
 
         notehash = {}
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for line in filereader:
-                line_counter += 1
-                if line_counter == 1:
-                    continue
-
-                (object_key, notetype, note, sequencenum) = line
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            row = next(reader)
+            for row in reader:
+                (object_key,
+                 notetype,
+                 note,
+                 sequencenum) = row
 
                 # read all the notes into a hash to concatenate
                 if object_key not in notehash:
@@ -1973,6 +1972,7 @@ SELECT  r._relationship_key as rel_key,
                 model.addDescription(allele_id, notes)
 
             if not self.test_mode and limit is not None and line_counter > limit:
+                break
 
     def _process_prb_strain_genotype_view(self, limit=None):
         """
