@@ -186,8 +186,6 @@ class MGI(PostgreSQLSource):
 
         self.test_keys = self.open_and_parse_yaml(self.resources['test_keys'])
 
-        return
-
     def fetch(self, is_dl_forced=False):
         """
         For the MGI resource, we connect to the remote database,
@@ -216,8 +214,8 @@ class MGI(PostgreSQLSource):
                 os.path.dirname(__file__), query_map['query']), 'r')
             query = query_fh.read()
             force = False
-            if 'Force' in query_map:
-                force = query_map['Force']
+            # if 'Force' in query_map:   # unused
+            #     force = query_map['Force']
             self.fetch_query_from_pgdb(
                 query_map['outfile'], query, None, cxn)
         # always get this - it has the verion info
@@ -245,8 +243,6 @@ class MGI(PostgreSQLSource):
                 f.close()
         self.dataset.set_ingest_source_file_version_num(pg_iri, ver)
         self.dataset.set_ingest_source_file_version_date(pg_iri, datestamp)
-
-        return
 
     def parse(self, limit=None):
         """
@@ -292,11 +288,8 @@ class MGI(PostgreSQLSource):
         self._process_mrk_location_cache(limit)
         self.process_mgi_relationship_transgene_genes(limit)
         self.process_mgi_note_allele_view(limit)
-
         LOG.info("Finished parsing.")
-
         LOG.info("Loaded %d nodes", len(self.graph))
-        return
 
     def fetch_transgene_genes_from_db(self, cxn):
         """
@@ -334,7 +327,6 @@ SELECT  r._relationship_key as rel_key,
         self.fetch_query_from_pgdb(
             'mgi_relationship_transgene_genes', query, None, cxn)
 
-        return
 
     def _process_gxd_genotype_view(self, limit=None):
         """
@@ -431,8 +423,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     def _process_gxd_genotype_summary_view(self, limit=None):
         """
         Add the genotype internal id to mgiid mapping to the idhashmap.
@@ -503,8 +493,6 @@ SELECT  r._relationship_key as rel_key,
                 'genotype', genotype.get('key')))
             geno.addGenotype(gt, label.strip())
 
-        return
-
     def _process_all_summary_view(self, limit):
         """
         Here, we get the allele definitions: id, label, description, type
@@ -574,8 +562,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_all_allele_view(self, limit):
         """
@@ -732,8 +718,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     def _process_gxd_allele_pair_view(self, limit):
         """
         This assumes that the genotype and alleles
@@ -797,7 +781,7 @@ SELECT  r._relationship_key as rel_key,
                 # TODO: VSLC label likely needs processing similar to
                 # the processing in the all_allele_view
                 # FIXME: handle null alleles
-                vslc_label = allele1+'/'
+                vslc_label = allele1 + '/'
                 if allele2_id is None:
                     if zygosity_id in [
                             self.globaltt['hemizygous insertion-linked'],
@@ -849,7 +833,7 @@ SELECT  r._relationship_key as rel_key,
             if len(vslcs) > 1:
                 gvc_id = re.sub(r'_', '', ('-'.join(vslcs)))
                 gvc_id = re.sub(r':', '', gvc_id)
-                gvc_id = '_:'+gvc_id
+                gvc_id = '_:' + gvc_id
                 vslc_labels = []
                 for v in vslcs:
                     vslc_labels.append(self.label_hash[v])
@@ -881,14 +865,12 @@ SELECT  r._relationship_key as rel_key,
             else:
                 bkgd_label = 'unspecified background'
             if gvc_label is not None:
-                genotype_label = gvc_label + ' ['+bkgd_label+']'
+                genotype_label = gvc_label + ' [' + bkgd_label + ']'
             else:
-                genotype_label = '['+bkgd_label+']'
+                genotype_label = '[' + bkgd_label + ']'
 
             model.addSynonym(gt, genotype_label)
             self.label_hash[gt] = genotype_label
-
-        return
 
     def _process_all_allele_mutation_view(self, limit):
         """
@@ -950,8 +932,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_voc_annot_view(self, limit):
         """
@@ -1078,8 +1058,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     def _process_evidence_view(self, limit):
         """
         Here we fetch the evidence (code and publication) for the associations.
@@ -1161,8 +1139,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_bib_acc_view(self, limit):
         """
@@ -1281,8 +1257,6 @@ SELECT  r._relationship_key as rel_key,
                         filereader.line_num > limit:
                     break
 
-        return
-
     def _process_prb_strain_view(self, limit):
         """
         Process a table to get strains (with internal ids), and their labels.
@@ -1341,8 +1315,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_mrk_marker_view(self, limit):
         """
@@ -1435,8 +1407,6 @@ SELECT  r._relationship_key as rel_key,
                             and line_counter > limit:
                         break
 
-        return
-
     def _process_mrk_summary_view(self, limit):
         """
         Here we pull the mgiid of the features, and make equivalent (or sameAs)
@@ -1506,8 +1476,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     def _process_mrk_acc_view(self):
         """
         Use this table to create the idmap between the internal marker id and
@@ -1546,8 +1514,6 @@ SELECT  r._relationship_key as rel_key,
                 # get the hashmap of the identifiers
                 if logicaldb_key == '1' and prefix_part == 'MGI:' and preferred == '1':
                     self.idhash['marker'][object_key] = accid
-
-        return
 
     def _process_mrk_acc_view_for_equiv(self, limit):
         """
@@ -1599,7 +1565,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '1' and prefix_part != 'MGI:':
                         marker_id = accid
                     elif logicaldb_key == '60':
-                        marker_id = 'ENSEMBL:'+accid
+                        marker_id = 'ENSEMBL:' + accid
                     # TODO get non-preferred ids==deprecated?
 
                 if marker_id is not None:
@@ -1614,8 +1580,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_prb_strain_acc_view(self, limit):
         """
@@ -1728,7 +1692,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
                         if not re.match(r'MMRRC:', strain_id):
-                            strain_id = 'MMRRC:'+strain_id
+                            strain_id = 'MMRRC:' + strain_id
                     elif logicaldb_key == '37':  # EMMA
                         # replace EM: prefix with EMMA:, or for accid's
                         # with bare digits (e.g. 06335) prepend 'EMMA:'
@@ -1745,7 +1709,7 @@ SELECT  r._relationship_key as rel_key,
                         model.addSynonym(mgiid, accid)
 
                     elif logicaldb_key == '54':  # NCIMR
-                        strain_id = 'NCIMR:'+accid
+                        strain_id = 'NCIMR:' + accid
                     # CMMR  not great - doesn't resolve well
                     # elif logicaldb_key == '71':
                     #     strain_id = 'CMMR:'+accid
@@ -1756,7 +1720,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '70':  # RIKEN
                         # like
                         # http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160
-                        strain_id = 'RBRC:' + accid
+                        strain_id = 'RBRC:RBRC' + accid
                     elif logicaldb_key == '87':
                         strain_id = 'MUGEN:' + accid
                         # I can't figure out how to get to some of the strains
@@ -1778,8 +1742,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_mgi_note_vocevidence_view(self, limit):
         """
@@ -1822,8 +1784,6 @@ SELECT  r._relationship_key as rel_key,
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-
-        return
 
     def _process_mrk_location_cache(self, limit):
         line_counter = 0
@@ -1897,8 +1857,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     def process_mgi_relationship_transgene_genes(self, limit=None):
         """
         Here, we have the relationship between MGI transgene alleles,
@@ -1952,8 +1910,6 @@ SELECT  r._relationship_key as rel_key,
                         filereader.line_num > limit:
                     break
 
-        return
-
     def process_mgi_note_allele_view(self, limit=None):
         """
         These are the descriptive notes about the alleles.
@@ -1995,7 +1951,7 @@ SELECT  r._relationship_key as rel_key,
                     ):
                         notehash[object_key][notetype].append('')  # ??? I don't get it
 
-                notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
+                notehash[object_key][notetype][int(sequencenum) - 1] = note.strip()
 
             # finish iteration over notes
 
@@ -2013,13 +1969,10 @@ SELECT  r._relationship_key as rel_key,
                     "found %d %s notes for %s",
                     len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
-                notes += ' ['+n+']'
+                notes += ' [' + n + ']'
                 model.addDescription(allele_id, notes)
 
             if not self.test_mode and limit is not None and line_counter > limit:
-                break
-
-        return
 
     def _process_prb_strain_genotype_view(self, limit=None):
         """
@@ -2078,8 +2031,6 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     @staticmethod
     def _makeInternalIdentifier(prefix, key):
         """
@@ -2094,7 +2045,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
         # these are just blank nodes
-        iid = '_:mgi'+prefix+'key'+key
+        iid = '_:mgi' + prefix + 'key' + key
 
         return iid
 
@@ -2114,5 +2065,3 @@ SELECT  r._relationship_key as rel_key,
     #
     #     for row in qres:
     #         print("%s knows %s" % row)
-    #
-    #     return
