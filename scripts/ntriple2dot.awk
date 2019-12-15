@@ -276,7 +276,7 @@ END{
 
     n = asorti(warn, wsort, "@val_num_desc")
     for(i=1;i<=n;i++){
-        if(warn[wsort[i]] >= toofew)
+        if(warn[wsort[i]] > toofew)
             printf("%s\t%s\t%i\n", FILENAME, wsort[i], warn[wsort[i]]) > "/dev/stderr"
         else
             i = n + 1
