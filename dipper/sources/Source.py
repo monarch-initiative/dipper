@@ -14,13 +14,12 @@ import yaml
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
-USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
-             "info@monarchinitiative.org)"
+USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; "\
+        "info@monarchinitiative.org)"
 
 
 class Source:
@@ -36,7 +35,7 @@ class Source:
     so it may as well be used everywhere.
 
     """
-
+    DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
     namespaces = {}
     files = {}
 
@@ -81,8 +80,8 @@ class Source:
         self.triple_count = 0
         self.outdir = 'out'
         self.testdir = 'tests'
-        self.rawdir = 'raw'
-        self.rawdir = '/'.join((self.rawdir, self.name))
+
+        self.rawdir = '/'.join(('raw', self.name))
         self.testname = name + "_test"
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
         self.datasetfile = None
@@ -90,14 +89,17 @@ class Source:
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
-            pth = os.path.abspath(self.rawdir)
-            LOG.info("creating raw directory for %s at %s", self.name, pth)
+            raw_pth = os.path.abspath(self.rawdir)
+            LOG.info("creating raw directory for %s at %s", self.name, raw_pth)
+        # else:  # raw data dir does  exist. maybe should consider what is in it?
 
         # if output dir doesn't exist, create it
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
-            pth = os.path.abspath(self.outdir)
-            LOG.info("created output directory %s", pth)
+            out_pth = os.path.abspath(self.outdir)
+            LOG.info("created output directory %s", out_pth)
+        else:
+            out_pth = os.path.abspath(self.outdir)
 
         LOG.info("Creating Test graph %s", self.testname)
         # note: tools such as protoge need skolemized blank nodes
@@ -112,7 +114,7 @@ class Source:
 
         elif graph_type == 'streamed_graph':
             # need to expand on export formats
-            dest_file = open(pth + '/' + name + '.nt', 'w')    # where is the close?
+            dest_file = open(out_pth + '/' + name + '.nt', 'w')    # where is the close?
             self.graph = StreamedGraph(are_bnodes_skized, dest_file)
             # leave test files as turtle (better human readibility)
         else:
@@ -297,19 +299,20 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        LOG.info("Request header: %s", str(req.header_items()))
-
-        response = urllib.request.urlopen(req)
+        LOG.info("Request header for %s is: %s", remote,  str(req.header_items()))
 
         try:
-            resp_headers = response.info()
-            size = resp_headers.get('Content-Length')
-            last_modified = resp_headers.get('Last-Modified')
+            response = urllib.request.urlopen(req)
         except urllib.error.URLError as err:
             resp_headers = None
             size = 0
             last_modified = None
             LOG.error(err)
+            raise Exception()
+
+        resp_headers = response.info()
+        size = resp_headers.get('Content-Length')
+        last_modified = resp_headers.get('Last-Modified')
 
         if size is not None and size != '':
             size = int(size)
@@ -360,37 +363,51 @@ class Source:
         fstat = None
         if files is None:
             files = self.files
-        for fname in files:
+
+        for src_key in files:
             headers = None
-            filesource = files[fname]
-            if 'headers' in filesource:
-                headers = filesource['headers']
-            LOG.info("Getting %s", fname)
-            # if the key 'clean' exists in the sources `files` dict
-            # expose that instead of the longer url
-            if 'clean' in filesource and filesource['clean'] is not None:
-                self.dataset.set_ingest_source(filesource['clean'])
+            filesource = files[src_key]
+            # attempt to fetch from a web cache
+            if self.fetch_from_url(
+                    '/'.join((self.DIPPERCACHE, self.name, filesource['file'])),
+                    '/'.join((self.rawdir, filesource['file'])),
+                    is_dl_forced):
+                LOG.info(
+                    "Found File '%s/%s' in DipperCache",
+                    self.name, filesource['file'])
             else:
-                self.dataset.set_ingest_source(filesource['url'])
-                LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
+                LOG.warning(
+                    "File %s/%s absent from DipperCache",
+                    self.name, filesource['file'])
 
-            time.sleep(delay)
+                if 'headers' in filesource:
+                    headers = filesource['headers']
+                LOG.info("Getting %s", src_key)
+                # if the key 'clean' exists in the sources `files` dict
+                # expose that instead of the longer url
+                if 'clean' in filesource and filesource['clean'] is not None:
+                    self.dataset.set_ingest_source(filesource['clean'])
+                else:
+                    self.dataset.set_ingest_source(filesource['url'])
+                    LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
 
-            self.fetch_from_url(
-                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
-                is_dl_forced, headers)
+                time.sleep(delay)
 
-            fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
-            self.dataset.graph.addTriple(self.dataset.version_level_curie,
-                                         self.globaltt["Source (dct)"],
-                                         filesource['url']
-                                         )
-            filedate = Literal(
-                datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
-                datatype=XSD.date)
-            self.dataset.graph.addTriple(filesource['url'],
-                                         self.globaltt['retrieved_on'],
-                                         filedate)
+                if not self.fetch_from_url(
+                        filesource['url'],
+                        '/'.join((self.rawdir, filesource['file'])),
+                        is_dl_forced, headers):
+                    LOG.warning('FAILED FETCH of %s', filesource['url'])
+
+                fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
+                self.dataset.graph.addTriple(
+                    self.dataset.version_level_curie, self.globaltt["Source (dct)"],
+                    filesource['url'])
+                filedate = Literal(
+                    datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
+                    datatype=XSD.date)
+                self.dataset.graph.addTriple(
+                    filesource['url'], self.globaltt['retrieved_on'], filedate)
 
     def fetch_from_url(
             self, remotefile, localfile=None, is_dl_forced=False, headers=None):
@@ -401,7 +418,8 @@ class Source:
         reporting the basic file information once it is downloaded
         :param remotefile: URL of remote file to fetch
         :param localfile: pathname of file to save locally
-        :return: None
+
+        :return: bool
 
         """
 
@@ -413,33 +431,42 @@ class Source:
                 headers = self._get_default_request_headers()
 
             request = urllib.request.Request(remotefile, headers=headers)
-            response = urllib.request.urlopen(request)
+            try:  # checking the response would be good ...
+                response = urllib.request.urlopen(request)
+                if localfile is not None:
+                    with open(localfile, 'wb') as binwrite:
+                        while True:
+                            chunk = response.read(CHUNK)
+                            if not chunk:
+                                break
+                            binwrite.write(chunk)
 
-            if localfile is not None:
-                with open(localfile, 'wb') as binwrite:
-                    while True:
-                        chunk = response.read(CHUNK)
-                        if not chunk:
-                            break
-                        binwrite.write(chunk)
+                    LOG.info("Finished.  Wrote file to %s", localfile)
+                    if self.compare_local_remote_bytes(remotefile, localfile, headers):
+                        LOG.debug("local file is same size as remote after download")
+                    else:
+                        raise Exception(
+                            "Error downloading file: "
+                            "local file size  != remote file size")
 
-                LOG.info("Finished.  Wrote file to %s", localfile)
-                if self.compare_local_remote_bytes(remotefile, localfile, headers):
-                    LOG.debug("local file is same size as remote after download")
+                    fstat = os.stat(localfile)
+                    LOG.info("file size: %s", fstat[ST_SIZE])
+                    LOG.info(
+                        "file created: %s",
+                        time.asctime(time.localtime(fstat[ST_CTIME])))
+                    response.close()
                 else:
-                    raise Exception(
-                        "Error downloading file: local file size  != remote file size")
+                    LOG.error('Local filename is required')
+                    exit(-1)
 
-                fstat = os.stat(localfile)
-                LOG.info("file size: %s", fstat[ST_SIZE])
-                LOG.info(
-                    "file created: %s", time.asctime(time.localtime(fstat[ST_CTIME])))
-                response.close()
-            else:
-                LOG.error('Local filename is required')
-                exit(-1)
+            except urllib.error.HTTPError as httpErr:
+                # raise Exception(httpErr.read())
+                LOG.error('NETWORK ERROR %s', httpErr.read())
+                return False  # allows re try
+
         else:
             LOG.info("Using existing file %s", localfile)
+        return True
 
     # TODO: rephrase as mysql-dump-xml specific format
     def process_xml_table(self, elem, table_name, processing_function, limit):
@@ -556,41 +583,6 @@ class Source:
         with open(fname) as lines:
             length = sum(1 for line in lines)
         return length
-
-    @staticmethod
-    def get_eco_map(url):
-        """
-        To convert the three column file to
-        a hashmap we join primary and secondary keys,
-        for example
-        IEA	GO_REF:0000002	ECO:0000256
-        IEA	GO_REF:0000003	ECO:0000501
-        IEA	Default	ECO:0000501
-
-        becomes
-        IEA-GO_REF:0000002: ECO:0000256
-        IEA-GO_REF:0000003: ECO:0000501
-        IEA: ECO:0000501
-
-        :return: dict
-        """
-        # this would go in a translation table but it is generated dynamically
-        # maybe when we move to a make driven system
-        eco_map = {}
-        request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
-
-        for line in response:
-            line = line.decode('utf-8').rstrip()
-            if re.match(r'^#', line):
-                continue
-            (code, go_ref, eco_curie) = line.split('\t')
-            if go_ref != 'Default':
-                eco_map["{}-{}".format(code, go_ref)] = eco_curie
-            else:
-                eco_map[code] = eco_curie
-
-        return eco_map
 
     def settestonly(self, testonly):
         """

@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/wormbase')
 DOT_PATH = TEST_PATH + "/dot/"
-RAW_PATH = TEST_PATH + "/input/"
+RAW_PATH = TEST_PATH + "/input"
 
 # Genes
 GENES = [
@@ -63,6 +63,8 @@ class WormBaseTestCase(unittest.TestCase):
         for gene in GENES:
             with self.subTest(gene_id=gene):
                 self.tearDownAndSetUp()
+                # reassigned raw directory fails to find files in original raw directory
+                self.wormbase.parse_gaf_eco('gaf-eco-mapping')
                 self.wormbase.rawdir = RAW_PATH + '/' + gene
                 self.wormbase.version_num = 'test_version'
                 self.wormbase.parse()

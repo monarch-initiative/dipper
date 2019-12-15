@@ -1,5 +1,6 @@
 import logging
 import csv
+import yaml
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Pathway import Pathway
@@ -17,14 +18,32 @@ class Reactome(Source):
     files = {
         'ensembl2pathway': {
             'file': 'Ensembl2Reactome.txt',
-            'url': REACTOME_BASE + 'Ensembl2Reactome.txt'},
+            'url': REACTOME_BASE + 'Ensembl2Reactome.txt',
+            'columns': [          # e.g.
+                'component',      # 1:C34F11.9e
+                'pathway_id',     # 2:R-CEL-201688
+                'pathway_iri',    # 3:https://reactome.org/PathwayBrowser/#/R-CEL-123
+                'pathway_label',  # 4:WNT mediated activation of DVL
+                'go_ecode',       # 5:IEA
+                'species_nam',    # 6:Caenorhabditis elegans
+            ]
+        },
         'chebi2pathway': {
             'file': 'ChEBI2Reactome.txt',
-            'url': REACTOME_BASE + 'ChEBI2Reactome.txt'},
-    }
-
-    map_files = {
-        'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
+            'url': REACTOME_BASE + 'ChEBI2Reactome.txt',
+            'columns': [          # e.g.
+                'component',      # 1:10033
+                'pathway_id',     # 2:R-BTA-6806664
+                'pathway_iri',    # 3:https://reactome.org/PathwayBrowser/#/R-BTA-123
+                'pathway_label',  # 4:Metabolism of vitamin K
+                'go_ecode',       # 5:IEA
+                'species_nam',    # 6:Bos taurus
+            ]
+        },
+        'gaf-eco-mapping': {
+            'file': 'gaf-eco-mapping.yaml',
+            'url': '/'.join((Source.DIPPERCACHE, 'reactome', 'gaf-eco-mapping.yaml')),
+        }
     }
 
     def __init__(self,
@@ -43,6 +62,8 @@ class Reactome(Source):
             data_rights='https://reactome.org/license/'
             # file_handle=None
         )
+        # gaf evidence code mapping is built in parse(), after the file is fetched.
+        self.gaf_eco = {}
 
     def fetch(self, is_dl_forced=False):
         """
@@ -55,8 +76,6 @@ class Reactome(Source):
         """
         self.get_files(is_dl_forced)
 
-        return
-
     def parse(self, limit=None):
         """
         Override Source.parse()
@@ -65,54 +84,65 @@ class Reactome(Source):
         Returns:
             :return None
         """
+        self.parse_gaf_eco('gaf-eco-mapping')
+
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
-        ensembl_file = '/'.join((self.rawdir, self.files['ensembl2pathway']['file']))
         self._parse_reactome_association_file(
-            ensembl_file, limit, subject_prefix='ENSEMBL', object_prefix='REACT')
-        chebi_file = '/'.join((self.rawdir, self.files['chebi2pathway']['file']))
-        self._parse_reactome_association_file(
-            chebi_file, limit, subject_prefix='CHEBI', object_prefix='REACT')
+            'ensembl2pathway', limit, subject_prefix='ENSEMBL', object_prefix='REACT')
 
-        return
+        self._parse_reactome_association_file(
+            'chebi2pathway', limit, subject_prefix='CHEBI', object_prefix='REACT')
+
+    def parse_gaf_eco(self, src_key):
+        ''' split out to use in test '''
+        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
 
     def _parse_reactome_association_file(
-            self, file, limit=None, subject_prefix=None, object_prefix=None):
+            self, src_key, limit=None, subject_prefix=None, object_prefix=None):
         """
         Parse ensembl gene to reactome pathway file
         :param file: file path (not handle)
         :param limit: limit (int, optional) limit the number of rows processed
         :return: None
         """
-        eco_map = Reactome.get_eco_map(Reactome.map_files['eco_map'])
-        count = 0
-        with open(file, 'r') as tsvfile:
+        src_file = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['columns']
+
+        with open(src_file, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
-                (component, pathway_id, pathway_iri, pathway_label, go_ecode,
-                species_name) = row
-                count += 1
-                self._add_component_pathway_association(
-                    eco_map, component, subject_prefix, pathway_id, object_prefix,
-                    pathway_label, go_ecode)
+                component = row[col.index('component')].strip()
+                pathway_id = row[col.index('pathway_id')].strip()
+                # pathway_iri = row[col.index('pathway_iri')]
+                pathway_label = row[col.index('pathway_label')].strip()
+                go_ecode = row[col.index('go_ecode')].strip()
+                # species_name = row[col.index('species_name')]
 
-                if limit is not None and count >= limit:
+                gene_curie = ':'.join((subject_prefix, component))
+                pathway_curie = ':'.join((object_prefix, pathway_id))
+
+                if go_ecode in self.gaf_eco:
+                    eco_curie = self.gaf_eco[go_ecode]
+                else:
+                    LOG.error(
+                        'Evidence code %s not found in %s', go_ecode, str(self.gaf_eco))
+
+                self._add_component_pathway_association(
+                   gene_curie, pathway_curie, pathway_label, eco_curie)
+
+                if limit is not None and reader.line_num >= limit:
                     break
 
-        return
-
     def _add_component_pathway_association(
-            self, eco_map, component, component_prefix, pathway_id,
-            pathway_prefix, pathway_label, go_ecode):
-        pathway = Pathway(self.graph)
+            self, gene_curie, pathway_curie, pathway_label, eco_curie):
 
-        pathway_curie = "{}:{}".format(pathway_prefix, pathway_id)
-        gene_curie = "{}:{}".format(component_prefix, component.strip())
-        eco_curie = eco_map[go_ecode]
+        pathway = Pathway(self.graph)
         pathway.addPathway(pathway_curie, pathway_label)
         pathway.addComponentToPathway(gene_curie, pathway_curie)
-
         association = Assoc(self.graph, self.name)
         association.sub = gene_curie
         association.rel = self.globaltt['involved in']
@@ -120,4 +150,3 @@ class Reactome(Source):
         association.set_association_id()
         association.add_evidence(eco_curie)
         association.add_association_to_graph()
-        return
