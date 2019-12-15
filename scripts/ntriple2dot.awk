@@ -90,8 +90,9 @@ function contract(uri,  u){
     if(u in prefix)
         return prefix[u]
     else{
-        printf("WARN  %s\n", uri) > "/dev/stderr"
+        # printf("WARN  %s\n", uri) > "/dev/stderr"  # too many
         # printf("BASE  %s\n", detail(tokenize(uri))) > "/dev/stderr"
+        warn[uri]++
         return simplify(uri)
     }
 }
@@ -247,6 +248,7 @@ BEGIN{
 
 # output graphviz dot file, include edge counts
 END{
+    # output the graphviz directed graph
     print "digraph {"
     print "rankdir=LR;"
     print "charset=\"utf-8\";"
@@ -264,4 +266,19 @@ END{
     datestamp = strftime("%Y%m%d", systime())
     print "label=\"" substr(title,1,length(title)-3) " (" datestamp ")\";"
     print "}"
+
+    ######################################################
+    # dump a summary of significant numbers of unresolved-curi uri  to stderr
+    # FNR gives at least half the number ot URI attempted to resolve for %s
+    # FILENAME gives filename we know where they were generated
+    # have warn[uri] = count
+    toofew = 10
+
+    n = asorti(warn, wsort, "@ind_str_desc")
+    for(i=1;i<=n;i++){
+        if(warn[wsort[i]] > toofew)
+            printf("%s\t%s\t%i\n", FILENAME, wsort[i], warn[wsort[i]]) > "/dev/stderr"
+        else
+            i = n + 1
+    }
 }
