@@ -90,10 +90,10 @@ class WormBase(Source):
             'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?' +
                    'action=WpaXref'},
         'feature_loc': {
+            # species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS273.annotations.gff3.gz
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
             'url': wbprod + species +
-                    '/c_elegans/PRJNA13758/' +
-                    'c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+                    '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             # pub/wormbase/releases/current-production-release/ONTOLOGY/rnai_phenotypes.WS273.wb
             'file': 'disease_association.wb',
@@ -211,9 +211,6 @@ class WormBase(Source):
         #    r'WSNUMBER', self.version_num, self.files['checksums']['file'])
 
     def parse(self, limit=None):
-
-
-
         if limit is not None:
             LOG.info("Only parsing first %s rows of each file", limit)
 
