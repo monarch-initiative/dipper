@@ -134,15 +134,14 @@ BEGIN{
     # or addressed in a local translation table
     # https://raw.githubusercontent.com/monarch-initiative/dipper/master/dipper/curie_map.yaml
 
-    # in mgi
-    prefix[tokenize("https://www.mousephenotype.org")]="IMPC"
+    # in mgi/impc
+    prefix[tokenize("https://www.mousephenotype.org/")]="IMPC"
     # in IMPC (not httpS  --- hmm all three IRI exist)
-    prefix[tokenize("http://www.mousephenotype.org")]="IMPC"
     # note in curie_map IMPC is:
     # http://www.mousephenotype.org/data/genes/
 
     # in panther
-    # prefix["http://identifiers.org/wormbase/"]="WormBase"
+    # prefix[tokenize("http://identifiers.org/wormbase/"])="WormBase"
     # note in curie_map WormBase is
     # 'https://www.wormbase.org/get?name='
 
@@ -154,7 +153,7 @@ BEGIN{
     prefix[tokenize("http://www.genome.jp/kegg/pathway/map/")]="KEGG-img"
     # in EOM
     prefix[tokenize("https://elementsofmorphology.nih.gov/images/terms/")]="EOM_IMG"
-    prefix[tokenize("http://elementsofmorphology.nih.gov/index.cgi?tid=")]="EOM"  # w/o httpS
+    # prefix[tokenize("http://elementsofmorphology.nih.gov/index.cgi?tid=")]="EOM"  # w/o httpS
 
     # playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier
@@ -233,7 +232,7 @@ BEGIN{
     done[NR]=1
 }
 ### subject is a bare blank node, predicate is a uri & the object is a literal
-(FNR != NR) && /^_:[^ ]* <[^>]*> "[^"]*".*\.$/ {
+(FNR != NR) && /^_:[^ ]* <[^>]*> "[^"]*".*\.$/ {  # "balance quote for wonky hiliter
     # s = contract($1)
     p = final(trim($2))
     ns = contract(trim($2))
