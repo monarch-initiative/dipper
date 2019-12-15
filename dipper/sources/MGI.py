@@ -1308,8 +1308,8 @@ SELECT  r._relationship_key as rel_key,
                         # they may tag a geo name on house mouse
                         if species[:17] == 'M. m. domesticus ':
                             LOG.warning("defaulting to Mus musculus")
-                            sp =  self.globaltt['Mus musculus']
-                        else;
+                            sp = self.globaltt['Mus musculus']
+                        else:
                             LOG.warning("defaulting to  genus 'Mus'")
                             sp = self.globaltt['Mus']
 
