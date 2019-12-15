@@ -1305,8 +1305,13 @@ SELECT  r._relationship_key as rel_key,
                     sp = self.resolve(species, False)
                     if sp == species:
                         LOG.error("No taxon mapping for " + species)
-                        LOG.warning("defaulting to Mus Genus")
-                        sp = self.globaltt['Mus']
+                        # they may tag a geo name on house mouse
+                        if species[:17] == 'M. m. domesticus ':
+                            LOG.warning("defaulting to Mus musculus")
+                            sp =  self.globaltt['Mus musculus']
+                        else;
+                            LOG.warning("defaulting to  genus 'Mus'")
+                            sp = self.globaltt['Mus']
 
                     model.addClassToGraph(sp, None)
                     geno.addTaxon(sp, strain_id)
@@ -1964,9 +1969,10 @@ SELECT  r._relationship_key as rel_key,
             if allele_id is None:
                 continue
             for n in notehash[allele_key]:
-                LOG.info(
-                    "found %d %s notes for %s",
-                    len(notehash[allele_key]), n, allele_id)
+                # pretty chatty for expected behavior
+                # LOG.info(
+                #    "found %d %s notes for %s",
+                #    len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
                 notes += ' [' + n + ']'
                 model.addDescription(allele_id, notes)
