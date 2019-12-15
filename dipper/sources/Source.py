@@ -18,8 +18,8 @@ from dipper.models.Dataset import Dataset
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
-USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; "\
-        "info@monarchinitiative.org)"
+USER_AGENT = \
+    "The Monarch Initiative (https://monarchinitiative.org/;info@monarchinitiative.org)"
 
 
 class Source:
@@ -187,7 +187,7 @@ class Source:
             'rdfxml': 'xml',
             'turtle': 'ttl',
             'nt': 'nt',         # ntriples
-            'nquads':  'nq',
+            'nquads': 'nq',
             'n3': 'n3'          # notation3
         }
 
@@ -299,7 +299,7 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        LOG.info("Request header for %s is: %s", remote,  str(req.header_items()))
+        LOG.info("Request header for %s is: %s", remote, str(req.header_items()))
 
         try:
             response = urllib.request.urlopen(req)
@@ -308,43 +308,44 @@ class Source:
             size = 0
             last_modified = None
             LOG.error(err)
-            raise Exception()
+            is_remote_newer = None
 
-        resp_headers = response.info()
-        size = resp_headers.get('Content-Length')
-        last_modified = resp_headers.get('Last-Modified')
+        if is_remote_newer is not None:
+            resp_headers = response.info()
+            size = resp_headers.get('Content-Length')
+            last_modified = resp_headers.get('Last-Modified')
 
-        if size is not None and size != '':
-            size = int(size)
-        else:
-            size = 0
+            if size is not None and size != '':
+                size = int(size)
+            else:
+                size = 0
 
-        fstat = os.stat(local)
-        LOG.info(
-            "Local File date: %s",
-            datetime.utcfromtimestamp(fstat[ST_CTIME]))
-
-        if last_modified is not None:
-            # Thu, 07 Aug 2008 16:20:19 GMT
-            dt_obj = datetime.strptime(
-                last_modified, "%a, %d %b %Y %H:%M:%S %Z")
-            # get local file details
-
-            # check date on local vs remote file
-            if dt_obj > datetime.utcfromtimestamp(fstat[ST_CTIME]):
-                # check if file size is different
-                if fstat[ST_SIZE] < size:
-                    LOG.info("New Remote File exists")
-                    is_remote_newer = True
-                if fstat[ST_SIZE] > size:
-                    LOG.warning("New Remote File exists but it is SMALLER")
-                    is_remote_newer = True
-                # filesize is a fairly imperfect metric here
-                LOG.info("New Remote File has same filesize--will not download")
-        elif fstat[ST_SIZE] != size:
+            fstat = os.stat(local)
             LOG.info(
-                "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
-            is_remote_newer = True
+                "Local File date: %s",
+                datetime.utcfromtimestamp(fstat[ST_CTIME]))
+
+            if last_modified is not None:
+                # Thu, 07 Aug 2008 16:20:19 GMT
+                dt_obj = datetime.strptime(
+                    last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+                # get local file details
+
+                # check date on local vs remote file
+                if dt_obj > datetime.utcfromtimestamp(fstat[ST_CTIME]):
+                    # check if file size is different
+                    if fstat[ST_SIZE] < size:
+                        LOG.info("New Remote File exists")
+                        is_remote_newer = True
+                    if fstat[ST_SIZE] > size:
+                        LOG.warning("New Remote File exists but it is SMALLER")
+                        is_remote_newer = True
+                    # filesize is a fairly imperfect metric here
+                    LOG.info("New Remote File has same filesize--will not download")
+            elif fstat[ST_SIZE] != size:
+                LOG.info(
+                    "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
+                is_remote_newer = True
 
         response.close()
 
@@ -424,9 +425,9 @@ class Source:
         """
 
         response = None
-        if ((is_dl_forced is True) or localfile is None or
-                (self.check_if_remote_is_newer(remotefile, localfile, headers))):
-            # TODO url verification, etc
+        rmt_check = self.check_if_remote_is_newer(remotefile, localfile, headers)
+        if (is_dl_forced is True) or (localfile is None) or (
+                rmt_check is not None and rmt_check):
             if headers is None:
                 headers = self._get_default_request_headers()
 
