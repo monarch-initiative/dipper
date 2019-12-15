@@ -25,10 +25,10 @@ class BioGrid(Source):
 
     files = {
         'interactions': {
-            'file': 'interactions.mitab.zip',
+            'file': 'BIOGRID-ALL-LATEST.mitab.zip',
             'url': BGDL + '/BIOGRID-ALL-LATEST.mitab.zip'},
-        'identifiers':  {  # /BIOGRID-IDENTIFIERS-LATEST.tab.zip
-            'file': 'identifiers.tab.zip',
+        'identifiers':  {
+            'file': 'BIOGRID-IDENTIFIERS-LATEST.tab.zip',
             'url': BGDL + '/BIOGRID-IDENTIFIERS-LATEST.tab.zip'}
     }
 

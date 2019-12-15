@@ -10,7 +10,7 @@ LOG = logging.getLogger(__name__)
 STRING = 'https://string-db.org'
 STRING_DWN = STRING + "/download"
 STRING_MAP = STRING + '/mapping_files/entrez'
-DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239', '4932']
+DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239', '4932', '10116']
 # https://string-db.org/cgi/access.pl?footer_active_subpage=archive
 # TODO automate it with:
 # curl https://string-db.org/api/tsv-no-header/version
@@ -104,7 +104,12 @@ class StringDB(Source):
                 'url': STRING_MAP + '/yeast.entrez_2_string.2018.tsv.gz',
                 'file': 'yeast.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
-            }
+            },
+            #'10116': {  # rat is not special enough to get its own mapping file
+            #    'url': STRING_MAP + '/rat.entrez_2_string.2018.tsv.gz',
+            #    'file': 'rat.entrez_2_string.'+YEAR+'.tsv.gz',
+            #    'headers': {'User-Agent': USER_AGENT}
+            #},
         }
 
     def fetch(self, is_dl_forced=False):

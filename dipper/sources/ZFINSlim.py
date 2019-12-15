@@ -24,7 +24,7 @@ class ZFINSlim(Source):
             # https://zfin.org/downloads#  header Documentation is burried in UI crap
         },
         'zpmap': {
-            'file': 'zp-mapping-2019.txt',
+            'file': 'id_map_zfin.tsv',
             'url': 'http://purl.obolibrary.org/obo/zp/id_map_zfin.tsv'
                    # ^^ Nico's updated mapping, May 2019
         }
