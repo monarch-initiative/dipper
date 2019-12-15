@@ -272,11 +272,11 @@ END{
     # FNR gives at least half the number ot URI attempted to resolve for %s
     # FILENAME gives filename we know where they were generated
     # have warn[uri] = count
-    toofew = 10
+    toofew = 3
 
-    n = asorti(warn, wsort, "@ind_str_desc")
+    n = asorti(warn, wsort, "@val_num_desc")
     for(i=1;i<=n;i++){
-        if(warn[wsort[i]] > toofew)
+        if(warn[wsort[i]] >= toofew)
             printf("%s\t%s\t%i\n", FILENAME, wsort[i], warn[wsort[i]]) > "/dev/stderr"
         else
             i = n + 1
