@@ -346,8 +346,7 @@ class Source:
                 LOG.info(
                     "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
                 is_remote_newer = True
-
-        response.close()
+            response.close()
 
         return is_remote_newer
 
