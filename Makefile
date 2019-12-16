@@ -124,7 +124,7 @@ lint_warn:
 
 lint:
 	@ echo "Lint for everything"
-	@ [ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
 		echo "Not in python virtual enviroment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
