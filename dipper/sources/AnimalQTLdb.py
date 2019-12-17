@@ -218,31 +218,32 @@ class AnimalQTLdb(Source):
         # chicken  # "Gallus gallus"  # NCBITaxon:9031
         'Gallus_gallus_info': {
             'file': 'Gallus_gallus.gene_info.gz',
-            'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
+            'url': Source.DIPPERCACHE + '/Gallus_gallus.gene_info.gz',
             'columns': gene_info_columns
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
             'file': 'Equus_caballus.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Equus_caballus.gene_info.gz',
+            'url': Source.DIPPERCACHE + '/Equus_caballus.gene_info.gz',
             'columns': gene_info_columns
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
             'file': 'Ovis_aries.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Ovis_aries.gene_info.gz',
+            'url': Source.DIPPERCACHE + '/Ovis_aries.gene_info.gz',
             'columns': gene_info_columns
         },
         # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
         'Oncorhynchus_mykiss_info': {
             'file': 'Oncorhynchus_mykiss.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Oncorhynchus_mykiss.gene_info.gz',
+            'url': Source.DIPPERCACHE + '/Oncorhynchus_mykiss.gene_info.gz',
             'columns': gene_info_columns
         },
         ########################################
         # TODO add rainbow_trout_bp when available
+
         'trait_mappings': {
-            'file': 'trait_mappings',
+            'file': 'trait_mappings.csv',
             'url': AQDL + '/export/trait_mappings.csv',
             'columns': trait_mapping_columns
         },
@@ -284,8 +285,6 @@ class AnimalQTLdb(Source):
         if limit is not None:
             LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        LOG.info("Parsing files...")
-
         if self.test_only:
             self.test_mode = True
             graph = self.testgraph
@@ -294,6 +293,8 @@ class AnimalQTLdb(Source):
 
         trait_src_key = 'trait_mappings'
         traitmap = '/'.join((self.rawdir, self.files[trait_src_key]['file']))
+
+        LOG.info("Parsing trait mapping  file %s", traitmap)
         self._process_trait_mappings(traitmap, trait_src_key, limit)
 
         geno = Genotype(graph)
@@ -452,8 +453,8 @@ class AnimalQTLdb(Source):
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
-                build_id = 'MONARCH:'+common_name.strip()+'-linkage'
-                build_label = common_name+' genetic map'
+                build_id = 'MONARCH:' + common_name.strip() + '-linkage'
+                build_label = common_name + ' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_curie)
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
@@ -499,7 +500,7 @@ class AnimalQTLdb(Source):
                 dbsnp_id = None
                 if peak_mark != '' and peak_mark != '.' and \
                         re.match(r'rs', peak_mark.strip()):
-                    dbsnp_id = 'dbSNP:'+peak_mark.strip()
+                    dbsnp_id = 'dbSNP:' + peak_mark.strip()
 
                     model.addIndividualToGraph(
                         dbsnp_id, None,
@@ -549,7 +550,7 @@ class AnimalQTLdb(Source):
                 # Add publication
                 reference = None
                 if re.match(r'ISU.*', pubmed_id):
-                    pub_id = 'AQTLPub:'+pubmed_id.strip()
+                    pub_id = 'AQTLPub:' + pubmed_id.strip()
                     reference = Reference(graph, pub_id)
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
