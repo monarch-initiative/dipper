@@ -1,3 +1,11 @@
+/**
+    Consider linting before running
+    see:  https://jenkins.io/doc/book/pipeline/development/
+
+    ssh -p 8675 localhost declarative-linter < ./Jenkinsfile
+
+**/
+
 pipeline {
 
     agent any
@@ -20,12 +28,18 @@ pipeline {
             returnStdout: true
         ).trim()
 
-        DATA_RELEASE_VERSION = "201910"
+        DATA_RELEASE_VERSION = "201912"
+        DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
         DIPPER = 'venv/bin/python dipper-etl.py'
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
+
+        # human, mouse, zebrafish, fly, worm
+        COMMON_TAXON = 9606,10090,7955,7227,6239
+        # 10116 is rat and might be included if found relevent where it is now missing
+
     }
 
     options {
@@ -47,8 +61,11 @@ pipeline {
                         venv/bin/pip install -r requirements.txt
                         venv/bin/pip install -r requirements/all-sources.txt
 
-                        # Clean up previous runs
-                        sudo rm -rf ./out/
+                        echo "Clean up previous runs"
+                        rm -f ./out/*.ttl ./out/*.nt
+                        echo "Anything remaining should not be in './out/'"
+                        ls -l ./out/*
+                        rm -f ./out/*
                     '''
                 }
             }
@@ -82,8 +99,8 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=ncbigene
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon \
-                                    28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
+                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION \
+                                        --taxon $COMMON_TAXON,10116,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685,559292
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
@@ -170,7 +187,7 @@ pipeline {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh """
-                                wget http://release.geneontology.org/2019-10-07/bin/owltools
+                                wget --timestamping http://release.geneontology.org/2019-10-07/bin/owltools
 
                                 chmod +x owltools
 
@@ -204,7 +221,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=stringdb
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
+                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON,10116 --version 11.0
                             scp ./out/string.ttl ./out/string_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -219,11 +236,8 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=panther
-                            mkdir -p raw/panther && cd raw/panther
-                            wget ftp://ftp.pantherdb.org/ortholog/current_release/RefGenomeOrthologs.tar.gz
-                            wget ftp://ftp.pantherdb.org/ortholog/current_release/Orthologs_HCOP.tar.gz
-                            cd -
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --parse_only --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615 --dest_fmt nt
+                            mkdir -p raw/panther
+                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION  --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,8364,9615 --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -253,7 +267,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
+                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --limit 20 --taxon $COMMON_TAXON,10116 # --version bgee_v13_2
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
@@ -286,7 +300,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=biogrid
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon 9606,10090,7955,7227,6239
+                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -301,11 +315,12 @@ pipeline {
                     steps {
                         sh '''
                             mkdir -p out
-                            mkdir -p raw && cd raw
-                            mkdir -p clinvar && cd clinvar
-                            wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
-                            wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
-                            cd ../..
+                            mkdir -p raw/clinvar && cd clinvar/raw
+                            # these are available via http in DipperCache too
+                            # ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
+                            wget --timestamping "$DIPPERCACHE/clinvar/ClinVarFullRelease_00-latest.xml.gz"
+                            wget --timestamping "$DIPPERCACHE/clinvar/gene_condition_source_id"
+                            cd -
 
                             export PYTHONPATH=.:$PYTHONPATH
                             venv/bin/python ./dipper/sources/ClinVar.py
@@ -353,7 +368,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ensembl
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon 9606,10090,7955,7227,6239
+                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -384,7 +399,7 @@ pipeline {
                         sh '''
                             SOURCE=go
                             $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon \
-                                10090,10116,4896,5052,559292,5782,6239,7227,7955,9031,9606,9615,9823,9913
+                                $COMMON_TAXON,10116,4896,5052,559292,5782,90319615,9823,9913
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
