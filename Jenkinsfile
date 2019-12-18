@@ -37,7 +37,7 @@ pipeline {
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
 
         /* human, mouse, zebrafish, fly, worm */
-        COMMON_TAXON = 9606,10090,7955,7227,6239
+        COMMON_TAXON = "9606,10090,7955,7227,6239"
         /* 10116 is rat and might be included if found relevent where it is now missing */
 
     }
