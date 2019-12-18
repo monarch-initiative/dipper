@@ -290,47 +290,33 @@ class Panther(Source):
         # which keeps the penultimate & ultimite tokens (aka last two)
 
         if species == 'CAEEL':
-            if geneid[0:13] == 'EnsemblGenome:':
-                geneid = 'WormBase' + geneid[12:]
-            elif geneid[0:4] == 'Gene:':
-                geneid = 'WormBase' + geneid[3:]
-        elif species == 'DROME':
-            if re.match(r'(EnsemblGenome):\w+\.\d+', geneid):
-                geneid = re.sub(
-                    r'(?:EnsemblGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
+            if geneid[0:14] == 'EnsemblGenome:':
+                geneid = 'WormBase:' + geneid[14:]
+            elif geneid[:9] == 'Gene:CELE':  # Gene:CELE --> WormBase: (old cosmid ids)
+                geneid = 'WormBase:' + geneid[9:]
+            elif geneid[0:5] == 'Gene:':
+                geneid = 'WormBase' + geneid[5:]
 
-        # rewrite Ensembl --> ENSEMBL    ... why? they don't
-        # geneid = re.sub(r'^Ensembl:', 'ENSEMBL:', geneid)
-        if geneid[:8] == 'Ensembl:':
-            geneid = 'ENSEMBL:' + geneid[8:]
-        # rewrite GeneID --> NCBIGene
-        # geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
-        elif geneid[:7] == 'GeneID:':
-            geneid = 'NCBIGene:' + geneid[7:]
-        # rewrite Gene:Dmel --> FlyBase
-        # geneid = re.sub(r'Gene:Dmel_', 'FlyBase:', geneid)
-        elif geneid[:10] == 'Gene:Dmel_':
-            geneid = 'FlyBase:' + geneid[10:]
-        # rewrite Gene:CG --> FlyBase:CG
-        # geneid = re.sub(r'Gene:CG', 'FlyBase:CG', geneid)
-        elif geneid[:7] == 'Gene:CG':
-            geneid = 'FlyBase:' + geneid[5:]
-        # rewrite ENSEMBLGenome:FBgn --> FlyBase:FBgn
-        # geneid = re.sub(r'EnsemblGenome:FBgn', 'FlyBase:FBgn', geneid)
-        elif geneid[:18] == 'EnsemblGenome:FBgn':
-            geneid = 'FlyBase:' + geneid[14:]
-        # rewrite Gene:<ensembl ids> --> ENSEMBL:<id>
-        # geneid = re.sub(r'Gene:ENS', 'ENSEMBL:ENS', geneid)
-        elif geneid[:8] == 'Gene:ENS':
-            geneid = 'ENSEMBL:' + geneid[5:]
-        # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
-        # geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
-        elif geneid[:12] == 'Gene:Xenbase':
-            geneid = 'Xenbase:' + geneid[12:]
-        # rewrite Gene:CELE --> WormBase  these are old-school cosmid identifier
-        # geneid = re.sub(r'^Gene:CELE', 'WormBase:', geneid)
-        elif geneid[:9] == 'Gene:CELE':
-            geneid = 'WormBase:' + geneid[9:]
+        elif species == 'DROME':
+            if geneid[0:14] == 'EnsemblGenome:':
+                geneid = 'FlyBase:' + geneid[14:]
+            elif geneid[:10] == 'Gene:Dmel_':   #  Gene:Dmel_ --> FlyBase:
+                geneid = 'FlyBase:' + geneid[10:]
+            elif geneid[:7] == 'Gene:CG':
+                geneid = 'FlyBase:' + geneid[5:]  #  Gene:CG --> FlyBase:CG
+
+        else:
+
+            if geneid[:8] == 'Ensembl:':         #  Ensembl --> ENSEMBL   (why?)
+                geneid = 'ENSEMBL:' + geneid[8:]
+            elif geneid[:7] == 'GeneID:':        #  GeneID: --> NCBIGene:
+                geneid = 'NCBIGene:' + geneid[7:]
+            elif geneid[:8] == 'Gene:ENS':       #  Gene:<ensembl ids> --> ENSEMBL:<id>
+                geneid = 'ENSEMBL:' + geneid[5:]
+
+            elif geneid[:12] == 'Gene:Xenbase':  # Gene:<Xenbase ids> --> Xenbase:<id>
+                geneid = 'Xenbase:' + geneid[12:]
+
 
         pfx = geneid.split(':')[0]
         if pfx is None or pfx not in self.curie_map:
