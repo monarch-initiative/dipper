@@ -69,6 +69,7 @@
 "ICD9"
 "IMPC"
 "IMPRESS-parameter"
+"IMPRESS-parameters"
 "IMPRESS-procedure"
 "IMPRESS-protocol"
 "ISBN"
