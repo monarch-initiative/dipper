@@ -300,23 +300,21 @@ class Panther(Source):
         elif species == 'DROME':
             if geneid[0:14] == 'EnsemblGenome:':
                 geneid = 'FlyBase:' + geneid[14:]
-            elif geneid[:10] == 'Gene:Dmel_':   #  Gene:Dmel_ --> FlyBase:
+            elif geneid[:10] == 'Gene:Dmel_':   # Gene:Dmel_ --> FlyBase:
                 geneid = 'FlyBase:' + geneid[10:]
             elif geneid[:7] == 'Gene:CG':
-                geneid = 'FlyBase:' + geneid[5:]  #  Gene:CG --> FlyBase:CG
+                geneid = 'FlyBase:' + geneid[5:]  # Gene:CG --> FlyBase:CG
 
         else:
 
-            if geneid[:8] == 'Ensembl:':         #  Ensembl --> ENSEMBL   (why?)
+            if geneid[:8] == 'Ensembl:':         # Ensembl --> ENSEMBL   (why?)
                 geneid = 'ENSEMBL:' + geneid[8:]
-            elif geneid[:7] == 'GeneID:':        #  GeneID: --> NCBIGene:
+            elif geneid[:7] == 'GeneID:':        # GeneID: --> NCBIGene:
                 geneid = 'NCBIGene:' + geneid[7:]
-            elif geneid[:8] == 'Gene:ENS':       #  Gene:<ensembl ids> --> ENSEMBL:<id>
+            elif geneid[:8] == 'Gene:ENS':       # Gene:<ensembl ids> --> ENSEMBL:<id>
                 geneid = 'ENSEMBL:' + geneid[5:]
-
             elif geneid[:12] == 'Gene:Xenbase':  # Gene:<Xenbase ids> --> Xenbase:<id>
                 geneid = 'Xenbase:' + geneid[12:]
-
 
         pfx = geneid.split(':')[0]
         if pfx is None or pfx not in self.curie_map:

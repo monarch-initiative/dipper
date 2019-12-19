@@ -313,7 +313,7 @@ pipeline {
                     steps {
                         sh '''
                             mkdir -p out
-                            mkdir -p raw/clinvar && cd clinvar/raw
+                            mkdir -p raw/clinvar && cd raw/clinvar
                             # these are available via http in DipperCache too
                             # ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
                             wget --timestamping "$DIPPERCACHE/clinvar/ClinVarFullRelease_00-latest.xml.gz"
