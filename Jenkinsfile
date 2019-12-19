@@ -2,8 +2,6 @@
     Consider linting before running
     see:  https://jenkins.io/doc/book/pipeline/development/
 
-    ssh -p 8675 localhost declarative-linter < ./Jenkinsfile
-
 **/
 
 pipeline {
