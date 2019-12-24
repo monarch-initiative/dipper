@@ -53,13 +53,15 @@ END{
 	for(e in edge1){
 		if(!(e in edge2)) edges[e "(" edge1[e] ")\", color=\"orange\"];"];
 		else {
-			# TODO flag losses?
+			# edge is in both graphs
 			if(NOCOUNTS)
-			    diff = ""
-			else
-			    diff = edge2[e] - edge1[e];
-			#if(diff < 0) diff = "<b>" diff "</b>";
-			edges[e "(" diff ")\", color=\"black\"];"]
+				edges[e "()\", color=\"black\"];"]
+			else {
+				diff = edge2[e] - edge1[e];
+				if(diff < 0)
+					diff = "<font color=\"red\">" diff "</font>";
+				edges[e "(" diff ")\", color=\"black\"];"]
+			}
 			delete edge2[e]
 		}
 	}

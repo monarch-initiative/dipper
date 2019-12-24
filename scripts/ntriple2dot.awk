@@ -258,7 +258,7 @@ END{
         edge=sortlist[i]
         split(edge ,spo, SUBSEP);
         print simplify(spo[1]) " -> " simplify(spo[3]) \
-        " [label=\"" deoboify(spo[2]) " (" edgelist[edge] ")\"];"
+        " [label=<" deoboify(spo[2]) " (" edgelist[edge] ")>];"
     }
     print "LITERAL [shape=record];"
     print "labelloc=\"t\";"
