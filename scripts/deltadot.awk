@@ -30,11 +30,10 @@
 
 # associate the count with an edge
 function parse(str, arr){
-    # split(str, a, "(")  # can't count on label being paren-free anymore
-    # arr[a[1]] = substr(a[2], 1, index(a[2], ")")-1)
-    n = index($0, / [(][[:digit:]]*[)]>];$/)
+    # can't count on label being paren-free anymore
+    n = match($0, / [(][[:digit:]]*[)]>];$/)
     if(n>0)
-        arr[substr($0,1,n)] = substr($0, n+2, length($0)-4)
+        arr[substr($0,1,n)] = substr($0, n+2, length($0)-n-5)
 }
 
 # strip metadata from filename
@@ -46,11 +45,11 @@ function de_path_ext(pth){
 BEGIN { NOCOUNTS=0}
 
 # collect the edges from both files
-NR==FNR && / -> / {
+NR==FNR && /^[^ ]+ -> [^ ]+ / {
 	label1 = FILENAME;
 	parse($0, edge1)
 }
-NR!=FNR && / -> / {
+NR!=FNR && /^[^ ]+ -> [^ ]+ / {
 	label2 = FILENAME;
 	parse($0, edge2)
 }
@@ -71,7 +70,9 @@ END{
 			delete edge2[e]
 		}
 	}
-	for(e in edge2) edges[e "(" edge2[e] ")\", color=\"blue\"];"];
+	# only edges not in first file
+	for(e in edge2)
+		edges[e "(" edge2[e] ")>, color=\"blue\"];"];
 
 	print "digraph {"
 	print "rankdir=LR;"
