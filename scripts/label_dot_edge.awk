@@ -8,35 +8,29 @@
 #
 # Arguments: two files
 # Loads the first file as a map from  to curie to label :
- # (expects: "label": "curie",)
+ # (expects: "label": "curie:term",)
 # Reads the second Graphviz digraph dot format file:
 # looks for <term> as edge-text
-# and appends "! <label> (Iff <term> is found in map)
+# and appends "! <label> (Iff curie:term is found in the translation table)
 # note: This "<term> ! <label>" structure is a convention used by Ontologists.
 
 
 BEGIN{FS="\""; OFS="\t"}
-# load labels
+# load label->curie:term  as curie:term -> label
 FNR == NR && /^"/{label[$4]=$2}
 
-# output lines that do not get labels
-FNR != NR && !/.* -> .*label=.*/ {print}
+# output graphviz lines that do not get labels
+FNR != NR && ! /.* -> .* [label=<.*>];/ {print}
 
 # output lines w/labels if they are available
-
-FNR != NR && /.* -> .*label=.*/ {
+FNR != NR && /.* -> .* [label=<.*>];/ {
 	line="";
 	split($0, row, / /)
-
-	split(row[4], term, /"/)
+	split(row[4], term, /<>/)
 	split(term[2], lclid, ":")
 
-	if (term[2] in label && lclid[2] != label[term[2]]){
-		term[2] = term[2] " ! " label[term[2]];
-		row[4] = term[1];
-		for(i=2;i<=length(term);i++)
-			row[4] = row[4] "\"" term[i]
-	}
+	if (term[2] in label && lclid[2] != label[term[2]])
+		row[4] = term[1] "<" term[2] " ! " label[term[2]] ">" term[3]
 	line = row[1]
 	for(i=2;i<=length(row);i++)
 		line = line " " row[i]
