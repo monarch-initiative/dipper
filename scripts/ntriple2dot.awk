@@ -127,7 +127,6 @@ BEGIN{
     # not expected to be added to curie map
     # in HPOA
     prefix[tokenize("http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=")]="NCBIBook"
-    prefix[tokenize("http://www.ncbi.nlm.nih.gov/books/NBK")]="NCBINBK"
 
     ############################################################
     # Often re-visit whether these exceptions are still necessary
