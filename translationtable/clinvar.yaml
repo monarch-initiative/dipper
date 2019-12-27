@@ -72,6 +72,32 @@
 "VOUS": "has_uncertain_significance_for_condition"  # "variant of unknown significance"
 # this next one is ambigous think it implies
 "POLY": "has_uncertain_significance_for_condition"  # diff disorder with diff calls?
+# 2019 Dec
+"Affects, other": "has_uncertain_significance_for_condition"
+"Benign/Likely benign": "likely_benign_for_condition"
+"Benign/Likely benign, other": "likely_benign_for_condition"
+"Benign/Likely benign, risk factor": "likely_benign_for_condition"
+"Benign, other": "benign_for_condition"
+"Benign, risk factor": "benign_for_condition"
+"Conflicting interpretations of pathogenicity": "has_uncertain_significance_for_condition"
+"Conflicting interpretations of pathogenicity, other": "has_uncertain_significance_for_condition"
+"Conflicting interpretations of pathogenicity, risk factor": "has_uncertain_significance_for_condition"
+"Likely benign, other": "likely_benign_for_condition"
+"Likely benign, risk factor": "likely_benign_for_condition"
+"Likely pathogenic, other": "likely_pathogenic_for_condition"
+"Likely pathogenic, risk factor": "likely_pathogenic_for_condition"
+"other, risk factor": "has_uncertain_significance_for_condition"
+"Pathogenic, Affects": "pathogenic_for_condition"
+"Pathogenic, association": "pathogenic_for_condition"
+"Pathogenic, drug response": "pathogenic_for_condition"
+"Pathogenic/Likely pathogenic, other": "pathogenic_for_condition"
+"Pathogenic/Likely pathogenic, risk factor": "pathogenic_for_condition"
+"Pathogenic, other": "pathogenic_for_condition"
+"Pathogenic, risk factor": "pathogenic_for_condition"
+"Uncertain significance, Affects": "has_uncertain_significance_for_condition"
+"Uncertain significance, other": "has_uncertain_significance_for_condition"
+"Uncertain significance, risk factor": "has_uncertain_significance_for_condition"
+# "": ""
 # ##  Variant (Subject) Sequence Types
 # ############################################################
 "single nucleotide variant": "SNV"

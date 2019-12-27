@@ -127,7 +127,6 @@ BEGIN{
     # not expected to be added to curie map
     # in HPOA
     prefix[tokenize("http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=")]="NCBIBook"
-    prefix[tokenize("http://www.ncbi.nlm.nih.gov/books/NBK")]="NCBINBK"
 
     ############################################################
     # Often re-visit whether these exceptions are still necessary
@@ -258,7 +257,7 @@ END{
         edge=sortlist[i]
         split(edge ,spo, SUBSEP);
         print simplify(spo[1]) " -> " simplify(spo[3]) \
-        " [label=\"" deoboify(spo[2]) " (" edgelist[edge] ")\"];"
+        " [label=<" deoboify(spo[2]) " (" edgelist[edge] ")>];"
     }
     print "LITERAL [shape=record];"
     print "labelloc=\"t\";"
