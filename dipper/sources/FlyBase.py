@@ -30,7 +30,7 @@ class FlyBase(PostgreSQLSource):
     Downloads:
     1. allele_human_disease_model_data_fb_*.tsv.gz - models of disease
     2. species.ab.gz - species prefix mappings
-    3. fbal_to_fbgn_fb_*.tsv.gz - allele to gene
+    3. fbal_to_fbgn_fb*.tsv.gz - allele to gene
     4. fbrf_pmid_pmcid_doi_fb_*.tsv.gz -  flybase ref to pmid
 
     We connect using the
@@ -45,7 +45,7 @@ class FlyBase(PostgreSQLSource):
 
     """
     FLYFTP = 'ftp.flybase.net'
-    FLYFILES = '/releases/current/precomputed_files'
+    CURREL = 'releases/current/precomputed_files'
 
     queries = {
         'allele_phenotype': {
@@ -74,7 +74,8 @@ class FlyBase(PostgreSQLSource):
     files = {
         'disease_model': {
             'file': 'disease_model_annotations.tsv.gz',
-            'url':  r'human_disease/disease_model_annotations_.*\.tsv\.gz',
+            'url': '/'.join(
+                (CURREL, r'human_disease/disease_model_annotations.+tsv\.gz$')),
             'columns': [
                 'FBgn ID',
                 'Gene symbol',
@@ -92,7 +93,7 @@ class FlyBase(PostgreSQLSource):
         },
         'species_map': {
             'file': 'species.ab.gz',
-            'url': r'species/species\.ab\.gz',
+            'url': '/'.join((CURREL, r'species/species\.ab\.gz$')),
             'columns': [
                 'internal_id',
                 'taxgroup',
@@ -106,7 +107,7 @@ class FlyBase(PostgreSQLSource):
         },
         'allele_gene': {
             'file': 'fbal_to_fbgn_fb.tsv.gz',
-            'url': r'alleles/fbal_to_fbgn_fb_.*\.tsv\.gz',
+            'url': '/'.join((CURREL, r'alleles/fbal_to_fbgn.*tsv\.gz$')),
             'columns': [
                 'AlleleID',
                 'AlleleSymbol',
@@ -116,7 +117,7 @@ class FlyBase(PostgreSQLSource):
         },
         'ref_pubmed': {
             'file': 'fbrf_pmid_pmcid_doi_fb.tsv.gz',
-            'url': r'references/fbrf_pmid_pmcid_doi_fb_.*\.tsv\.gz',
+            'url': '/'.join((CURREL, r'references/fbrf_pmid_pmcid_doi.+tsv\.gz$')),
             'columns': [
                 'FBrf',
                 'PMID',
@@ -172,15 +173,19 @@ class FlyBase(PostgreSQLSource):
             self.fetch_query_from_pgdb(
                 query_map['file'], query, None, cxn)
 
-        # Get flat files
+        # Get flat file's current name on the remote server
         ftp = FTP(FlyBase.FLYFTP)
         ftp.login("anonymous", "info@monarchinitiative.org")
 
-        for src_key, file in self.files.items():
-            filename = self._resolve_filename(file['url'], ftp)
-            # prepend ftp:// since this gets added to dataset rdf model
-            self.files[src_key]['url'] = "ftp://" + self.FLYFTP + filename
+        for src_key in self.files:
 
+            remotename = self._resolve_filename(self.files[src_key]['url'], ftp)
+            if remotename != "":
+                # prepend ftp:// since this gets added to dataset rdf model
+                self.files[src_key]['url'] = "ftp://" + self.FLYFTP + remotename
+            else:  # cached vers?
+                self.files[src_key]['url'] = "/".join(
+                    (self.DIPPERCACHE,  self.name, self.files[src_key]['file']))
         ftp.close()
 
         self.get_files(is_dl_forced)
@@ -739,26 +744,30 @@ class FlyBase(PostgreSQLSource):
         """
 
         # Represent file path as a list of directories
-        dir_path = FlyBase.FLYFILES.split('/')
-        # Also split on the filename to get prepending dirs
+        # by splitting on the filename to get prepending dirs
         file_path = filename.split('/')
-        file_regex = file_path.pop()
-        working_dir = "/".join(dir_path + file_path)
+        file_regex = file_path.pop()  # split off the file representation
+        workingdir = "/".join(file_path)
+        LOG.info('Looking for remote files in %s', workingdir)
 
-        LOG.info('Looking for remote files in %s', working_dir)
-
-        ftp.cwd(working_dir)
+        ftp.cwd("/")
+        ftp.cwd(workingdir)
         remote_files = ftp.nlst()
 
-        files_to_download = [dnload for dnload in remote_files
-                             if re.match(file_regex, dnload)]
+        files_to_download = [
+            dnload for dnload in remote_files if re.match(file_regex, dnload)]
 
         if len(files_to_download) > 1:
-            raise ValueError("Could not resolve filename from regex, "
-                             "too many matches for {}, matched: {}"
-                             .format(file_regex, files_to_download))
-        if not files_to_download:
-            raise ValueError("Could not resolve filename from regex, "
-                             "no matches for {}".format(file_regex))
+            raise ValueError(
+                "Could not resolve filename from regex, too many matches for {}," +
+                " matched: {}".format(file_regex, files_to_download))
 
-        return working_dir + '/' + files_to_download[0]
+        if not files_to_download:
+            # raise ValueError( ... a cached copy may suffice
+            LOG.error(
+                "Could not resolve filename from regex, no matches for %s",
+                str(file_regex))
+            return ""
+        LOG.info("Found remote filename %s",   files_to_download[0])
+
+        return workingdir + '/' + files_to_download[0]
