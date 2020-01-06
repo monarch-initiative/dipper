@@ -26,7 +26,7 @@ pipeline {
             returnStdout: true
         ).trim()
 
-        DATA_RELEASE_VERSION = "201912"
+        DATA_RELEASE_VERSION = "202001"
         DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
