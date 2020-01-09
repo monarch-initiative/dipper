@@ -17,7 +17,7 @@
 'owl': 'http://www.w3.org/2002/07/owl#'                             # Web Ontology Language
 'skos': 'https://www.w3.org/TR/skos-reference/#'                    # Simple Knowledge Organization System
 # 'Annotation': 'http://www.w3.org/ns/oa#Annotation'                # Web annotation
-'schemaorg': 'http://schema.org/'                                   # Schema.org "provides schemas for structured data on the Internet"
+'schema': 'http://schema.org/'                                      # Schema.org "provides schemas for structured data on the Internet"
 
 # dataset description
 'dcat': 'http://www.w3.org/ns/dcat#'                                # Data Catalog Vocabulary
