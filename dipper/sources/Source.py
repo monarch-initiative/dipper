@@ -68,6 +68,8 @@ class Source:
         self.data_rights = data_rights
         self.localtt = self.load_local_translationtable(name)
 
+        self.remote_file_timestamps = dict()
+
         if name is not None:
             self.name = name.lower()
         elif self.whoami() is not None:
@@ -329,6 +331,7 @@ class Source:
                 # Thu, 07 Aug 2008 16:20:19 GMT
                 dt_obj = datetime.strptime(
                     last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+                self.remote_file_timestamps[remote] = dt_obj
                 # get local file details
 
                 # check date on local vs remote file
@@ -375,8 +378,9 @@ class Source:
                     "Found File '%s/%s' in DipperCache",
                     self.name, filesource['file'])
                 self.dataset.set_ingest_source(remote_file)
-                timestamp = self.get_remote_last_modified(remote_file)
-                if timestamp is not None:
+                if remote_file in self.remote_file_timestamps:
+                    timestamp = Literal(self.remote_file_timestamps[remote_file],
+                                        datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
                         filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:
@@ -506,24 +510,6 @@ class Source:
                     continue
 
             elem.clear()  # discard the element
-
-    @staticmethod
-    def get_remote_last_modified(remote_file):
-        """
-        (Attempt to) get last_modified timestamp for remote file
-        :param remote_file
-        :return: datetime (or None)
-        """
-        timestamp = None
-        try:
-            conn = urllib.request.urlopen(remote_file)
-            last_modified = conn.headers['last-modified']
-            timestamp = Literal(
-                datetime.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z"),
-                datatype=XSD.dateTime)
-        except urllib.error.HTTPError:
-            logging.warning("problem getting timestamp for %s", remote_file)
-        return timestamp
 
     @staticmethod
     def _check_list_len(row, length):
