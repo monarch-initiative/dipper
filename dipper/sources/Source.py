@@ -368,13 +368,17 @@ class Source:
             headers = None
             filesource = files[src_key]
             # attempt to fetch from a web cache
-            if self.fetch_from_url(
-                    '/'.join((self.DIPPERCACHE, self.name, filesource['file'])),
-                    '/'.join((self.rawdir, filesource['file'])),
-                    is_dl_forced):
+            remote_file = '/'.join((self.DIPPERCACHE, self.name, filesource['file']))
+            local_file = '/'.join((self.rawdir, filesource['file']))
+            if self.fetch_from_url(remote_file, local_file, is_dl_forced):
                 LOG.info(
                     "Found File '%s/%s' in DipperCache",
                     self.name, filesource['file'])
+                self.dataset.set_ingest_source(remote_file)
+                timestamp = self.get_remote_last_modified(remote_file)
+                if timestamp is not None:
+                    self.dataset.graph.addTriple(
+                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache",
@@ -502,6 +506,24 @@ class Source:
                     continue
 
             elem.clear()  # discard the element
+
+    @staticmethod
+    def get_remote_last_modified(remote_file):
+        """
+        (Attempt to) get last_modified timestamp for remote file
+        :param remote_file
+        :return: datetime (or None)
+        """
+        timestamp = None
+        try:
+            conn = urllib.request.urlopen(remote_file)
+            last_modified = conn.headers['last-modified']
+            timestamp = Literal(
+                datetime.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z"),
+                datatype=XSD.dateTime)
+        except urllib.error.HTTPError:
+            logging.warning("problem getting timestamp for %s", remote_file)
+        return timestamp
 
     @staticmethod
     def _check_list_len(row, length):
