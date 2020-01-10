@@ -47,7 +47,7 @@ class Dataset:
      [summary level resource] - dct:description -> description (literal)
                                                 (use docstring from Source class)
      [summary level resource] - dcterms:source -> [source web page, e.g. omim.org]
-     [summary level resource] - schemaorg:logo -> [source logo IRI]
+     [summary level resource] - schema:logo -> [source logo IRI]
      [summary level resource] - dct:publisher -> monarchinitiative.org
         n.b: about summary level resource triples:
         -- HCLS spec says we "should" link to our logo and web page, but I'm not,
@@ -249,9 +249,7 @@ class Dataset:
                              True)
         self.model.addTriple(self.summary_level_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))
-        self.model.addTriple(self.summary_level_curie,
-                             "schemaorg:logo",
-                             self.ingest_logo)
+        self.model.addTriple(self.summary_level_curie, "schema:logo", self.ingest_logo)
         self.graph.addTriple(self.summary_level_curie, self.globaltt['identifier'],
                              self.summary_level_curie)
         if self.ingest_url is not None:
