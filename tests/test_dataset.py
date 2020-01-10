@@ -275,7 +275,8 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level created triple")
         self.assertEqual(triples[0][2],
-                         Literal(self.data_release_version, datatype=XSD.date),
+                         Literal(datetime.today().strftime("%Y%m%d"),
+                                 datatype=XSD.date),
                          "version level created triple has the wrong timestamp")
 
     def test_version_level_version_default(self):
@@ -370,7 +371,7 @@ class DatasetTestCase(unittest.TestCase):
             (self.distribution_level_IRI_ttl, self.iri_created, None)))
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level type created triple")
-        self.assertEqual(triples[0][2], Literal(self.data_release_version,
+        self.assertEqual(triples[0][2], Literal(datetime.today().strftime("%Y%m%d"),
                                                 datatype=XSD.date))
 
     def test_distribution_level_version(self):

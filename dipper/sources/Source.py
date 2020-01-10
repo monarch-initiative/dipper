@@ -68,6 +68,8 @@ class Source:
         self.data_rights = data_rights
         self.localtt = self.load_local_translationtable(name)
 
+        self.remote_file_timestamps = dict()
+
         if name is not None:
             self.name = name.lower()
         elif self.whoami() is not None:
@@ -329,6 +331,7 @@ class Source:
                 # Thu, 07 Aug 2008 16:20:19 GMT
                 dt_obj = datetime.strptime(
                     last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+                self.remote_file_timestamps[remote] = dt_obj
                 # get local file details
 
                 # check date on local vs remote file
@@ -368,13 +371,18 @@ class Source:
             headers = None
             filesource = files[src_key]
             # attempt to fetch from a web cache
-            if self.fetch_from_url(
-                    '/'.join((self.DIPPERCACHE, self.name, filesource['file'])),
-                    '/'.join((self.rawdir, filesource['file'])),
-                    is_dl_forced):
+            remote_file = '/'.join((self.DIPPERCACHE, self.name, filesource['file']))
+            local_file = '/'.join((self.rawdir, filesource['file']))
+            if self.fetch_from_url(remote_file, local_file, is_dl_forced):
                 LOG.info(
                     "Found File '%s/%s' in DipperCache",
                     self.name, filesource['file'])
+                self.dataset.set_ingest_source(remote_file)
+                if remote_file in self.remote_file_timestamps:
+                    timestamp = Literal(self.remote_file_timestamps[remote_file],
+                                        datatype=XSD.dateTime)
+                    self.dataset.graph.addTriple(
+                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache",
