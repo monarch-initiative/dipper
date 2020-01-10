@@ -145,14 +145,15 @@ class GeneOntology(Source):
         #   'file': 'gene_association.goa_uniprot.gz',
         #   'url': FTPEBI + 'GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
 
-        'go-references': {
-            'file': 'GO.references',
-            # Quoth the header of this file: "This file is DEPRECATED.
-            # Please see go-refs.json relative to this location"
-            # (http://current.geneontology.org/metadata/go-refs.json)
-            'url': 'http://www.geneontology.org/doc/GO.references'
-        },
+        # 'go-references': {  # does not seem to be used
+        #    'file': 'GO.references',
+        #   # Quoth the header of this file: "This file is DEPRECATED.
+        #    # Please see go-refs.json relative to this location"
+        #    # (http://current.geneontology.org/metadata/go-refs.json)
+        #    'url': 'http://www.geneontology.org/doc/GO.references'
+        # },
         'id-map': {  # 8.5GB mapping file takes hours to DL ... maps UniProt to Ensembl
+            # replace w/ Ensembl rdf?
             'file': 'idmapping_selected.tab.gz',
             'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
             # ftp://ftp.uniprot.org
@@ -376,7 +377,7 @@ class GeneOntology(Source):
                 for ref in refs:
                     ref = ref.strip()
                     if ref != '':
-                        prefix = ref.split(':')[0]  # sidestep 'MGI:MGI:'
+                        prefix = ref.split(':')[-2]  # sidestep 'MGI:MGI:'
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
                         ref = ':'.join((prefix, ref.split(':')[-1]))
@@ -453,7 +454,7 @@ class GeneOntology(Source):
                         for ref in refs:
                             ref = ref.strip()
                             if ref != '':
-                                prefix = ref.split(':')[0]
+                                prefix = ref.split(':')[-2]
                                 if prefix in self.localtt:
                                     prefix = self.localtt[prefix]
                                 ref = ':'.join((prefix, ref.split(':')[-1]))

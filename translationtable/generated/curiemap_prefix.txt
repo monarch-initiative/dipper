@@ -194,7 +194,7 @@
 "rainbow_troutQTL"
 "rdf"
 "rdfs"
-"schemaorg"
+"schema"
 "sheepQTL"
 "skos"
 "vfb"

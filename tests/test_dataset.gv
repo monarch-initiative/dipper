@@ -25,7 +25,7 @@ digraph metadata_model {
     summary_level -> summary_level_title [label="dct:title"]
     summary_level -> summary_level_description [label="dct:description"]
     summary_level -> source_web_page [label="dcterms:source"]
-    summary_level -> source_logo_IRI [label="schemaorg:logo"]
+    summary_level -> source_logo_IRI [label="schema:logo"]
     summary_level -> "monarchinitiative.org" [label="dct:publisher"]
 
     // version level triples:
