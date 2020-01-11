@@ -102,6 +102,15 @@ class NCBIGene(OMIMSource):
         'clique_leader': '../../resources/clique_leader.yaml'
     }
 
+    informal_species = {
+        'NCBITaxon:9913': 'cattle',
+        'NCBITaxon:9031': 'chicken',
+        'NCBITaxon:9823': 'pig',
+        'NCBITaxon:9940': 'sheep',
+        'NCBITaxon:9796': 'horse',
+        'NCBITaxon:8022': 'rainbow_trout',
+    }
+
     def __init__(
             self,
             graph_type,
@@ -274,8 +283,12 @@ class NCBIGene(OMIMSource):
                     model.addSynonym(gene_id, name)
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
+                        syn = syn.strip()
+                        if syn[:11] == 'AnimalQTLdb:' and \
+                                tax_id in self.informal_species:
+                            syn = self.informal_species[tax_id] + 'QTL:' + syn[11:]
                         model.addSynonym(
-                            gene_id, syn.strip(), model.globaltt['has_related_synonym'])
+                            gene_id, syn, model.globaltt['has_related_synonym'])
                 if other_designations != '-':
                     for syn in other_designations.split('|'):
                         model.addSynonym(
