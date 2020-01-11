@@ -284,9 +284,9 @@ class NCBIGene(OMIMSource):
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
                         syn = syn.strip()
-                        if syn[:11] == 'AnimalQTLdb:' and \
+                        if syn[:12] == 'AnimalQTLdb:' and \
                                 tax_id in self.informal_species:
-                            syn = self.informal_species[tax_id] + 'QTL:' + syn[11:]
+                            syn = self.informal_species[tax_id] + 'QTL:' + syn[12:]
                         model.addSynonym(
                             gene_id, syn, model.globaltt['has_related_synonym'])
                 if other_designations != '-':
