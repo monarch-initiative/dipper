@@ -397,7 +397,7 @@ pipeline {
                         sh '''
                             SOURCE=go
                             $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon \
-                                $COMMON_TAXON,10116,4896,5052,559292,5782,90319615,9823,9913
+                                $COMMON_TAXON,10116,4896,5052,559292,5782,9031,9615,9823,9913
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
