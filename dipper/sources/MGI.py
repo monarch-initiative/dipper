@@ -1218,7 +1218,7 @@ SELECT  r._relationship_key as rel_key,
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
                     pub_id = 'PMID:' + accid
-                elif logicaldb_key == '1' and prefixpart[:3] == 'MGI:':
+                elif logicaldb_key == '1' and prefixpart[:4] == 'MGI:':
                     # don't get the J numbers,
                     # because we dont' need to make the equiv to itself.
                     pub_id = accid
