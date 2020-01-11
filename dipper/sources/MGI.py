@@ -1880,9 +1880,10 @@ SELECT  r._relationship_key as rel_key,
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
         geno = Genotype(graph)
         col = [
-            'rel_key', 'allele_key', 'allele_id', 'allele_label', 'category_key',
-            'category_name', 'property_key', 'property_name', 'gene_num'
+            'rel_key', 'object_1', 'allele_id', 'allele_label', 'category_key',
+            'category_name', 'property_key', 'property_name', 'property_value'
         ]
+
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
@@ -1890,14 +1891,14 @@ SELECT  r._relationship_key as rel_key,
                 LOG.error('expected columns:  %s\n\tBut got:\n%s', col, header)
             for row in filereader:
                 # rel_key,
-                allele_key = int(row[col.index('allele_key')])
+                allele_key = int(row[col.index('object_1')])
                 allele_id = row[col.index('allele_id')]
                 # allele_label,
                 # category_key,
                 # category_name,
                 # property_key,
                 # property_name,
-                gene_num = int(row[col.index('gene_num')])
+                gene_num = int(row[col.index('property_value')])
 
                 if self.test_mode and allele_key not in self.test_keys.get('allele')\
                         and gene_num not in self.test_ids:
