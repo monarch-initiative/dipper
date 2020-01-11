@@ -795,7 +795,7 @@ class Source:
         exp = set(expected)
         got = set(received)
         if expected != received:
-            LOG.error('\nExpected header: %s\nRecieved header: %s', expected, received)
+            LOG.error('\nExpected header:\n %s\nRecieved header:\n %s', expected, received)
 
             # pass reordering and adding new columns (after protesting)
             # hard fail on missing expected columns (temper with mandatory cols?)

@@ -213,7 +213,7 @@ class MGI(PostgreSQLSource):
             query_fh = open(os.path.join(
                 os.path.dirname(__file__), query_map['query']), 'r')
             query = query_fh.read()
-            force = False
+            # force = False
             # if 'Force' in query_map:   # unused
             #     force = query_map['Force']
             self.fetch_query_from_pgdb(
@@ -1164,8 +1164,9 @@ SELECT  r._relationship_key as rel_key,
         LOG.info('populating pub id hash')
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         col = [
-            'accid', 'prefixpart', 'numericpart', 'object_key', 'logical_db',
-            'logicaldb_key']
+            'accid', 'prefixpart', 'numericpart', '_object_key', 'logical_db',
+            '_logicaldb_key']
+
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
@@ -1176,9 +1177,9 @@ SELECT  r._relationship_key as rel_key,
                 accid = row[col.index('accid')]
                 prefixpart = row[col.index('prefixpart')]
                 # 'numericpart'
-                object_key = int(row[col.index('object_key')])
+                object_key = int(row[col.index('_object_key')])  # likely unstable
                 # logical_db = row[col.index('logical_db')]
-                # logicaldb_key = row[col.index('logicaldb_key')]
+                # logicaldb_key = row[col.index('_logicaldb_key')]
 
                 if self.test_mode and object_key not in self.test_keys.get('pub'):
                     continue
@@ -1205,9 +1206,9 @@ SELECT  r._relationship_key as rel_key,
                 accid = row[col.index('accid')]
                 prefixpart = row[col.index('prefixpart')]
                 # 'numericpart'
-                object_key = int(row[col.index('object_key')])
+                object_key = int(row[col.index('_object_key')])
                 logical_db = row[col.index('logical_db')]
-                logicaldb_key = row[col.index('logicaldb_key')]
+                logicaldb_key = row[col.index('_logicaldb_key')]
 
                 if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
@@ -1217,7 +1218,7 @@ SELECT  r._relationship_key as rel_key,
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
                     pub_id = 'PMID:' + accid
-                elif logicaldb_key == '1' and re.match(r'MGI:', prefixpart):
+                elif logicaldb_key == '1' and prefixpart[:4] == 'MGI:':
                     # don't get the J numbers,
                     # because we dont' need to make the equiv to itself.
                     pub_id = accid
@@ -1879,9 +1880,10 @@ SELECT  r._relationship_key as rel_key,
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
         geno = Genotype(graph)
         col = [
-            'rel_key', 'allele_key', 'allele_id', 'allele_label', 'category_key',
-            'category_name', 'property_key', 'property_name', 'gene_num'
+            'rel_key', 'object_1', 'allele_id', 'allele_label', 'category_key',
+            'category_name', 'property_key', 'property_name', 'property_value'
         ]
+
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
@@ -1889,14 +1891,14 @@ SELECT  r._relationship_key as rel_key,
                 LOG.error('expected columns:  %s\n\tBut got:\n%s', col, header)
             for row in filereader:
                 # rel_key,
-                allele_key = int(row[col.index('allele_key')])
+                allele_key = int(row[col.index('object_1')])
                 allele_id = row[col.index('allele_id')]
                 # allele_label,
                 # category_key,
                 # category_name,
                 # property_key,
                 # property_name,
-                gene_num = int(row[col.index('gene_num')])
+                gene_num = int(row[col.index('property_value')])
 
                 if self.test_mode and allele_key not in self.test_keys.get('allele')\
                         and gene_num not in self.test_ids:

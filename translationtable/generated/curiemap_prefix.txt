@@ -5,6 +5,7 @@
 "AspGD"
 "AspGD_REF"
 "BFO"
+"BGD"
 "BIOGRID"
 "BNODE"
 "BT"

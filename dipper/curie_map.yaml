@@ -170,6 +170,9 @@
 'rainbow_troutQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
 'sheepQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
 
+'BGD': 'http://bovinegenome.org/genepages/btau40/genes/'                # The Bovine Genome Database (no direct link)
+#                                                                       # 'http://128.206.116.13:8080/bovinemine/report.do?id='
+
 'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'                       # Clinical Variation in Human
 'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'      # ClinVar cooked variants
 'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'  # ClinVar raw variants
