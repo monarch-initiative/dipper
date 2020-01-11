@@ -1,6 +1,8 @@
 /**
     Consider linting before running
     see:  https://jenkins.io/doc/book/pipeline/development/
+    curl -X POST -H $(curl "127.0.0.1/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)") -F "jenkinsfile=<Jenkinsfile" 127.0.0.1/pipeline-model-converter/validate
+
 
 **/
 
@@ -26,7 +28,12 @@ pipeline {
             returnStdout: true
         ).trim()
 
-        DATA_RELEASE_VERSION = 'date +%Y%m'
+        DATA_RELEASE_VERSION = sh(
+            script: 'date +%Y%m',
+            returnStdout: true
+        ).trim()
+
+
         DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
