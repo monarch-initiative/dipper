@@ -278,8 +278,7 @@ class FlyBase(PostgreSQLSource):
                 terms = re.findall(term_regex, pheno_desc)
 
                 if not terms:
-                    LOG.warning('Could not parse pheno description: %s',
-                                pheno_desc)
+                    LOG.warning('Could not @terms@ in description: %s', pheno_desc)
                     continue
 
                 term_ids, term_labels = zip(*terms)
