@@ -244,7 +244,7 @@ class Monochrom(Source):
                     pass
                 else:
                     # let's skip over anything that isn't a placed_scaffold
-                    LOG.info("Skipping non-placed chromosome %s", chrom)
+                    # LOG.info("Skipping non-placed chromosome %s", chrom)  # chatty
                     continue
                 # the chrom class, taxon as the reference
                 cclassid = makeChromID(chrom, taxon, 'CHR')
@@ -277,9 +277,10 @@ class Monochrom(Source):
                                 self.globaltt['has_sequence_attribute'],
                                 self.resolve(rtype))
                     else:
-                        # usually happens if it's a chromosome because
+                        # usually happens if it's a chromosome (SO:000340) because
                         # they don't actually have banding info
-                        LOG.info("feature type %s != chr band", region_type_id)
+                        LOG.info("feature type '%s' is not chr band",
+                            self.global_tcid [region_type_id])
                 else:
                     LOG.info('staining type not found for: %s', rtype)
 

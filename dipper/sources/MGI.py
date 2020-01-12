@@ -1164,7 +1164,7 @@ SELECT  r._relationship_key as rel_key,
         LOG.info('populating pub id hash')
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         col = [
-            'accid', 'prefixpart', 'numericpart', '_object_key', 'logical_db',
+            'accid', 'prefixpart', 'numericpart', '_object_key', 'logicaldb',
             '_logicaldb_key']
 
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1178,7 +1178,7 @@ SELECT  r._relationship_key as rel_key,
                 prefixpart = row[col.index('prefixpart')]
                 # 'numericpart'
                 object_key = int(row[col.index('_object_key')])  # likely unstable
-                # logical_db = row[col.index('logical_db')]
+                # logicaldb = row[col.index('logicaldb')]
                 # logicaldb_key = row[col.index('_logicaldb_key')]
 
                 if self.test_mode and object_key not in self.test_keys.get('pub'):
@@ -1207,13 +1207,12 @@ SELECT  r._relationship_key as rel_key,
                 prefixpart = row[col.index('prefixpart')]
                 # 'numericpart'
                 object_key = int(row[col.index('_object_key')])
-                logical_db = row[col.index('logical_db')]
+                logicaldb = row[col.index('logicaldb')].strip()
                 logicaldb_key = row[col.index('_logicaldb_key')]
 
                 if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
                         continue
-                logical_db = logical_db.strip()
                 jid = self.idhash['publication'].get(object_key)
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
@@ -1222,7 +1221,7 @@ SELECT  r._relationship_key as rel_key,
                     # don't get the J numbers,
                     # because we dont' need to make the equiv to itself.
                     pub_id = accid
-                elif logical_db == 'Journal Link':
+                elif logicaldb == 'Journal Link':
                     # some DOIs seem to have spaces
                     # FIXME MGI needs to FIX THESE UPSTREAM!!!!
                     # we'll scrub them here for the time being
@@ -1251,7 +1250,7 @@ SELECT  r._relationship_key as rel_key,
                 else:
                     LOG.warning(
                         "Publication from (%s) not mapped for %s",
-                        logical_db, object_key)
+                        logicaldb, object_key)
 
                 if not self.test_mode and limit is not None and \
                         filereader.line_num > limit:

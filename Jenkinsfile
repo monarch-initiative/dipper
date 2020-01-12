@@ -192,7 +192,7 @@ pipeline {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh """
-                                wget --timestamping http://release.geneontology.org/2019-10-07/bin/owltools
+                                wget --quiet --timestamping http://release.geneontology.org/2019-10-07/bin/owltools
 
                                 chmod +x owltools
 
@@ -323,8 +323,8 @@ pipeline {
                             mkdir -p raw/clinvar && cd raw/clinvar
                             # these are available via http in DipperCache too
                             # ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
-                            wget --timestamping "$DIPPERCACHE/clinvar/ClinVarFullRelease_00-latest.xml.gz"
-                            wget --timestamping "$DIPPERCACHE/clinvar/gene_condition_source_id"
+                            wget --quiet --timestamping "$DIPPERCACHE/clinvar/ClinVarFullRelease_00-latest.xml.gz"
+                            wget --quiet --timestamping "$DIPPERCACHE/clinvar/gene_condition_source_id"
                             cd -
 
                             export PYTHONPATH=.:$PYTHONPATH

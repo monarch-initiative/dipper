@@ -480,14 +480,10 @@ class IMPC(Source):
                 # Phenotypes associations are made to
                 # imits colony_id+center+zygosity+gender
 
-                phenotype_id = mp_term_id
-
-                # it seems that sometimes phenotype ids are missing.
-                # indicate here
-                if phenotype_id is None or phenotype_id == '':
+                # sometimes phenotype ids are missing.  (about 711 early 2020)
+                if mp_term_id is None or mp_term_id == '':
                     LOG.warning(
-                        "No phenotype id specified for row %d: %s",
-                        reader.line_num, str(row))
+                        "No phenotype id specified for row %d", reader.line_num )
                     continue
                 # hard coded ECO code
                 eco_id = self.globaltt['mutant phenotype evidence']
@@ -496,7 +492,7 @@ class IMPC(Source):
                 # a procedure in a pipeline at a center and parameter tested
 
                 assoc = G2PAssoc(
-                    graph, self.name, sex_qualified_genotype_id, phenotype_id)
+                    graph, self.name, sex_qualified_genotype_id, mp_term_id)
                 assoc.add_evidence(eco_id)
                 # assoc.set_score(float(p_value))
 

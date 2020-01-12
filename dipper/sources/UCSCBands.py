@@ -417,7 +417,7 @@ class UCSCBands(Source):
 
                 # see it new types have showed up
                 if rtype is not None and rtype not in [
-                        'gneg', 'gpos25', 'gpos50', 'gpos75',
+                        'gneg', 'gpos25', 'gpos33', 'gpos50', 'gpos66', 'gpos75',
                         'gpos100', 'acen', 'gvar', 'stalk']:
                     LOG.info(
                         'Unknown gieStain type "%s" in %s at %i',
