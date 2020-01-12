@@ -126,6 +126,11 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                     self.bind(prefix, Namespace(mapped_iri))
             else:
                 LOG.error("couldn't make URI for %s", curie)
+                # get a sense of where the CURIE-ish? thing is comming from
+                # magic number here is "steps up the call stack"
+                for call in range(3, 0, -1):
+                    LOG.warning(
+                        '\t%sfrom: %s', '\t' * call, sys._getframe(call).f_code.co_name)
         return node
 
     def bind_all_namespaces(self):
