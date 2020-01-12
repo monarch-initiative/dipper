@@ -38,6 +38,7 @@ class Source:
     DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
     namespaces = {}
     files = {}
+    ARGV = {}
 
     def __init__(
             self,
@@ -51,7 +52,7 @@ class Source:
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
             data_rights=None,           # external page that points to their current lic
-            file_handle=None
+            file_handle=None,
     ):
 
         # pull in the common test identifiers
@@ -301,7 +302,7 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        LOG.info("Request header for %s is: %s", remote, str(req.header_items()))
+        LOG.info("Request header for %s \n\tis: %s", remote, str(req.header_items()))
 
         try:
             response = urllib.request.urlopen(req)
@@ -309,7 +310,7 @@ class Source:
             resp_headers = None
             size = 0
             last_modified = None
-            LOG.error(err)
+            LOG.error('%s\n\tFor: %s', err, remote)
             is_remote_newer = None
 
         if is_remote_newer is not None:
@@ -418,13 +419,13 @@ class Source:
                     filesource['url'], self.globaltt['retrieved_on'], filedate)
 
     def fetch_from_url(
-            self, remotefile, localfile=None, is_dl_forced=False, headers=None):
+            self, remoteurl, localfile=None, is_dl_forced=False, headers=None):
         """
         Given a remote url and a local filename, attempt to determine
         if the remote file is newer; if it is,
         fetch the remote file and save it to the specified localfile,
         reporting the basic file information once it is downloaded
-        :param remotefile: URL of remote file to fetch
+        :param remoteurl: URL of remote file to fetch
         :param localfile: pathname of file to save locally
 
         :return: bool
@@ -432,13 +433,13 @@ class Source:
         """
 
         response = None
-        rmt_check = self.check_if_remote_is_newer(remotefile, localfile, headers)
+        rmt_check = self.check_if_remote_is_newer(remoteurl, localfile, headers)
         if (is_dl_forced is True) or (localfile is None) or (
                 rmt_check is not None and rmt_check):
             if headers is None:
                 headers = self._get_default_request_headers()
 
-            request = urllib.request.Request(remotefile, headers=headers)
+            request = urllib.request.Request(remoteurl, headers=headers)
             try:  # checking the response would be good ...
                 response = urllib.request.urlopen(request)
                 if localfile is not None:
@@ -450,7 +451,7 @@ class Source:
                             binwrite.write(chunk)
 
                     LOG.info("Finished.  Wrote file to %s", localfile)
-                    if self.compare_local_remote_bytes(remotefile, localfile, headers):
+                    if self.compare_local_remote_bytes(remoteurl, localfile, headers):
                         LOG.debug("local file is same size as remote after download")
                     else:
                         raise Exception(
@@ -469,8 +470,8 @@ class Source:
 
             except urllib.error.HTTPError as httpErr:
                 # raise Exception(httpErr.read())
-                LOG.error('NETWORK ERROR %s', httpErr.read())
-                return False  # allows re try
+                LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
+                return False  # allows re try (e.g. not found in Cache)
 
         else:
             LOG.info("Using existing file %s", localfile)
@@ -556,7 +557,7 @@ class Source:
             byte_size = resp_header.get('Content-length')
         except OSError as err:
             byte_size = None
-            LOG.error(err)
+            LOG.error('%s\n\tFor: %s', err, remote)
 
         return byte_size
 
@@ -621,8 +622,6 @@ class Source:
 
         """
         return None
-
-    # TODO: pramaterising the release date
 
     @staticmethod
     def remove_backslash_r(filename, encoding):
@@ -795,7 +794,8 @@ class Source:
         exp = set(expected)
         got = set(received)
         if expected != received:
-            LOG.error('\nExpected header:\n %s\nRecieved header:\n %s', expected, received)
+            LOG.error(
+                '\nExpected header:\n %s\nRecieved header:\n %s', expected, received)
 
             # pass reordering and adding new columns (after protesting)
             # hard fail on missing expected columns (temper with mandatory cols?)
@@ -809,3 +809,15 @@ class Source:
                 LOG.warning('Check columns order')
 
         return (exp ^ got) & exp == set()
+
+    def command_args(self):
+        '''
+            To make arbitrary variables from dipper-etl.py's calling enviroment
+            available when working in source ingests in a hopefully universal way
+
+            Does not appear to be populated till after an ingest's _init_() finishes.
+        '''
+        # testing
+        LOG.info(
+            'Command line arguments available to %s:\n%s', self.name,
+            "\n".join(["\t'{}': '{}'".format(k, v) for k, v in self.ARGV.items()]))
