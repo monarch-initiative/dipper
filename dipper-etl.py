@@ -229,6 +229,8 @@ def main():
         # WIP cli args should be available to source
         if hasattr(mysource, 'ARGV'):
             mysource.ARGV = vars(args)
+        else:
+            LOG.error('no where to to put args in %s', mysource.__class__)
 
         if args.parse_only is False:
             start_fetch = time.perf_counter()
@@ -239,16 +241,7 @@ def main():
 
         mysource.settestonly(args.test_only)
 
-        # run tests first
-        if (args.no_verify or args.skip_tests) is not True:
-            suite = mysource.getTestSuite()
-            if suite is None:
-                LOG.warning("No tests configured for this source: %s", source)
-            else:
-                unittest.TextTestRunner(verbosity=2).run(suite)
-        else:
-            LOG.info("Skipping Tests for source: %s", source)
-
+        # create source ingest graph first (with pristine arguments)
         if args.test_only is False and args.fetch_only is False:
             start_parse = time.perf_counter()
             mysource.parse(args.limit)
@@ -273,6 +266,16 @@ def main():
                 mysource.write(fmt=args.dest_fmt)
                 LOG.info("Writing time: %d sec", time.perf_counter() - start_write)
             # elif args.graph == 'streamed_graph': ...
+
+        # '*_test.ttl' graphs if requested
+        if (args.no_verify or args.skip_tests) is False:
+            suite = mysource.getTestSuite()
+            if suite is None:
+                LOG.warning("No tests configured for this source: %s", source)
+            else:
+                unittest.TextTestRunner(verbosity=2).run(suite)
+        else:
+            LOG.info("Skipping Tests for source: %s", source)
 
         LOG.info('***** Finished with %s *****', source)
 
