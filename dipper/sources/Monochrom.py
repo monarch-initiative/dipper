@@ -280,7 +280,7 @@ class Monochrom(Source):
                         # usually happens if it's a chromosome (SO:000340) because
                         # they don't actually have banding info
                         LOG.info("feature type '%s' is not chr band",
-                            self.global_tcid [region_type_id])
+                            self.globaltcid[region_type_id])
                 else:
                     LOG.info('staining type not found for: %s', rtype)
 
