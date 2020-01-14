@@ -134,7 +134,7 @@ class GeneOntology(Source):
             'url': GOGA + '/dictybase.gaf.gz',
             'columnns': gaf_columns
         },
-        '5052':  {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
+        '5052': {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
             'file': 'aspgd.gaf.gz',
             'url': GOGA + '/aspgd.gaf.gz',
             'columnns': gaf_columns
@@ -155,7 +155,7 @@ class GeneOntology(Source):
         'id-map': {  # 8.5GB mapping file takes hours to DL ... maps UniProt to Ensembl
             # replace w/ Ensembl rdf?
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
+            'url': FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
             # ftp://ftp.uniprot.org
             # /pub/databases/uniprot/current_release/knowledgebase/idmapping/README
             'columns': [
@@ -188,6 +188,12 @@ class GeneOntology(Source):
             'url': '/'.join((Source.DIPPERCACHE, 'go', 'gaf-eco-mapping.yaml')),
         }
     }
+
+    # a set of synomym curie prefixes we choose not to  propagate as uri
+    # this takes a quarter million warrnings out of the log files
+    wont_prefix = [
+        'zgc', 'wu', 'si', 'im', 'BcDNA', 'sb', 'anon-EST', 'EG', 'id', 'zmp',
+        'BEST', 'BG', 'hm', 'tRNA', 'NEST', 'xx']
 
     def __init__(self,
                  graph_type,
@@ -351,7 +357,8 @@ class GeneOntology(Source):
                         if syn[:10] == 'UniProtKB:':
                             model.addTriple(
                                 gene_id, self.globaltt['has gene product'], syn)
-                        elif re.fullmatch(graph.curie_regexp, syn) is not None:
+                        elif re.fullmatch(graph.curie_regexp, syn) is not None and\
+                                syn.split(':')[0] not in self.wont_prefix:
                             LOG.warning(
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
