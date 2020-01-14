@@ -116,7 +116,7 @@ class NCBIGene(OMIMSource):
             graph_type,
             are_bnodes_skolemized,
             data_release_version=None,
-            tax_ids=None,
+            tax_ids=None,  # =['9606', '1009', '7955'],  # still gets to None via tests
             gene_ids=None
     ):
         super().__init__(
@@ -133,16 +133,21 @@ class NCBIGene(OMIMSource):
             # file_handle=None
         )
 
+        # if (tax_ids is None or tax_ids == '') and \
+        #        self.ARGV['taxon'] is not None and self.ARGV['taxon'] != '':
+        #    LOG.error('Pythons Argument is Lost at %s', self.ARGV['taxon'])
+        #    self.tax_ids = [str(t) for t in args.taxon.split(',') if t.isdigit()]
+        #else:
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
         self.id_filter = 'taxids'   # 'geneids
 
         # Defaults
         if self.tax_ids is None:
-            LOG.info('No taxon recived. fallback to defaults')
-            self.tax_ids = ['9606', '10090', '7955']
-
-        self.tax_ids = [str(x) for x in self.tax_ids]
+            LOG.info('No taxon recived.")  # fallback to defaults')
+            # self.tax_ids = ['9606', '10090', '7955']
+        else:
+            self.tax_ids = [str(x) for x in self.tax_ids]
 
         LOG.info("Filtering on the following taxa: %s", self.tax_ids)
 
@@ -158,6 +163,8 @@ class NCBIGene(OMIMSource):
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
+        #
+        self.command_args()
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
@@ -211,6 +218,7 @@ class NCBIGene(OMIMSource):
 
         col = self.files[src_key]['columns']
         LOG.info('Begin reading & parsing')
+
         with gzip.open(gene_info, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip comment char

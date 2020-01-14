@@ -37,7 +37,10 @@ pipeline {
         DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
-        DIPPER = 'venv/bin/python dipper-etl.py'
+        DIPPER = 'venv/bin/python dipper-etl.py --skip_tests '
+        DIPPER = "$DIPPER --data_release_version $DATA_RELEASE_VERSION"
+        # DIPPER = "$DIPPER --sources $SOURCE "
+
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
 
@@ -89,7 +92,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=omim
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION -q --skip_tests
+                                    $DIPPER --sources $SOURCE -q
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
@@ -104,7 +107,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=ncbigene
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION \
+                                    $DIPPER --sources $SOURCE \
                                         --taxon $COMMON_TAXON,10116,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685,559292
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
@@ -120,7 +123,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=omia
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                                    $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
@@ -135,7 +138,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=hgnc
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                                    $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
@@ -150,7 +153,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=kegg
-                                    $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                                    $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                 '''
                             }
@@ -173,7 +176,7 @@ pipeline {
                                         SOURCE=genereviews
                                         cd .. && mkdir -p raw/genereviews/books
                                         cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
-                                        $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                                        $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                                     '''
                                 }
@@ -226,7 +229,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=stringdb
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON,10116 --version 11.0
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116 --version 11.0
                             scp ./out/string.ttl ./out/string_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -242,7 +245,7 @@ pipeline {
                         sh '''
                             SOURCE=panther
                             mkdir -p raw/panther
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION  --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,8364,9615 --dest_fmt nt
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,8364,9615 --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -257,7 +260,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=animalqtldb
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -272,7 +275,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --limit 20 --taxon $COMMON_TAXON,10116 # --version bgee_v13_2
+                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 # --version bgee_v13_2
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
@@ -290,7 +293,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=flybase
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -305,7 +308,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=biogrid
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -343,7 +346,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=coriell
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -358,7 +361,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ctd
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -373,7 +376,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ensembl
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon $COMMON_TAXON
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -388,7 +391,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=eom
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -403,7 +406,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=go
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --taxon \
+                            $DIPPER --sources $SOURCE --taxon \
                                 $COMMON_TAXON,10116,4896,5052,559292,5782,9031,9615,9823,9913
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
@@ -419,7 +422,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=gwascatalog
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --skip_tests
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -434,7 +437,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=hpoa
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -449,7 +452,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=impc
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -464,7 +467,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mgi-slim
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/mgi_slim.ttl ./out/mgi_slim_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -479,7 +482,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mgi
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --skip_tests
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -494,7 +497,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mmrrc
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -517,7 +520,7 @@ pipeline {
                                 SOURCE=monarch
                                 cd .. && mkdir -p raw/monarch
                                 cp -r data-boutique-b/OMIA-disease-phenotype ./raw/monarch/
-                                $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --skip_tests
+                                $DIPPER --sources $SOURCE
                                 scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                             '''
                         }
@@ -533,7 +536,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=monochrom
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -548,7 +551,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mpd
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --skip_tests
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -563,7 +566,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=orphanet
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -578,7 +581,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=reactome
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -593,7 +596,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=wormbase
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION --dest_fmt nt
+                            $DIPPER --sources $SOURCE --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -608,7 +611,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=zfinslim
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -623,7 +626,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=zfin
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -638,7 +641,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=rgd
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -668,7 +671,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=mychem
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -683,7 +686,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ucscbands
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
