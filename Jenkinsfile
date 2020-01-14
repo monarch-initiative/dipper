@@ -39,7 +39,7 @@ pipeline {
         MONARCH_DATA_FS = 'monarch-ttl-prod'
         DIPPER = 'venv/bin/python dipper-etl.py --skip_tests '
         DIPPER = "$DIPPER --data_release_version $DATA_RELEASE_VERSION"
-        # DIPPER = "$DIPPER --sources $SOURCE "
+        // DIPPER = "$DIPPER --sources $SOURCE "
 
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
