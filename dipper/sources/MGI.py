@@ -204,6 +204,9 @@ class MGI(PostgreSQLSource):
         pg_iri = ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
                           cxn['database']))
         self.dataset.set_ingest_source(pg_iri)
+        self.dataset.set_ingest_source_file_version_retrieved_on(
+            pg_iri,
+            datetime.today().strftime('%Y-%m-%d'))
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
