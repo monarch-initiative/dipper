@@ -219,7 +219,8 @@
 'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
-# proteins
+# proteins (and protein/macromolecular complexes)
+'ComplexPortal': 'https://www.ebi.ac.uk/complexportal/complex/'                 # Manually curated, encyclopaedic resource of macromolecular complexes
 'EC': 'https://www.enzyme-database.org/query.php?ec='                           # Enzyme Commission (nomenclature)
 'HPRD': 'http://www.hprd.org/protein/'                                          # Human Protein Reference Database
 'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
