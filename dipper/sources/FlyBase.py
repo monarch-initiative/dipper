@@ -463,7 +463,7 @@ class FlyBase(PostgreSQLSource):
         species_map = self._species_to_ncbi_tax()
         src_key = 'allele_gene'
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        LOG.info("Getting list of transgenic alleles")
+        LOG.info("Getting list of transgenic alleles from %s", raw)
 
         col = self.files[src_key]['columns']
 

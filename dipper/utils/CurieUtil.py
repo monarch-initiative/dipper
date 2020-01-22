@@ -33,13 +33,13 @@ class CurieUtil(object):
         prefix = self.get_curie_prefix(uri)
         if prefix is not None:
             key = self.curie_map[prefix]
-            return '%s:%s' % (prefix, uri[len(key):len(uri)])
+            return f'{prefix}:{uri[len(key):len(uri)]}'
         return None
 
     def get_curie_prefix(self, uri):
         ''' Return the CURIE's prefix:'''
         for key, value in self.uri_map.items():
-            if uri.startswith(key):
+            if uri.startswith(key):  # no... need the longest match not the first match
                 return value
         return None
 
