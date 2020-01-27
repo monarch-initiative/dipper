@@ -483,7 +483,7 @@ class IMPC(Source):
                 # sometimes phenotype ids are missing.  (about 711 early 2020)
                 if mp_term_id is None or mp_term_id == '':
                     LOG.warning(
-                        "No phenotype id specified for row %d", reader.line_num )
+                        "No phenotype id specified for row %d", reader.line_num)
                     continue
                 # hard coded ECO code
                 eco_id = self.globaltt['mutant phenotype evidence']
@@ -568,7 +568,7 @@ class IMPC(Source):
 
         self.graph.addTriple(
             assertion_bnode,
-            self.resolve('is_assertion_supported_by_evidence'),  # "SEPIO:0000111"
+            self.globaltt['is_assertion_supported_by_evidence'],  # "SEPIO:0000111"
             evidence_line_bnode)
 
     def _add_study_provenance(
@@ -617,8 +617,13 @@ class IMPC(Source):
         study_parts = []
 
         # Add study parts
-        model.addIndividualToGraph(self.resolve(procedure_stable_id), procedure_name)
-        study_parts.append(self.resolve(procedure_stable_id))
+        if procedure_stable_id in self.localtt:
+            procedure_stable_id2 = self.localtt[procedure_stable_id]
+        else:
+            procedure_stable_id2 = self.resolve(procedure_stable_id)
+
+        model.addIndividualToGraph(procedure_stable_id2, procedure_name)
+        study_parts.append(procedure_stable_id2)
 
         study_parts.append(self.resolve(statistical_method))
         provenance_model.add_study_parts(study_bnode, study_parts)
@@ -626,39 +631,46 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
 
-        logging.info("Adding Provenance")
-        model.addIndividualToGraph(
-            self.resolve(parameter_stable_id), parameter_label)
-        provenance_model.add_study_measure(
-            study_bnode, self.resolve(parameter_stable_id))
+        logging.info("Adding Provenance for %s", project_fullname)
+        pram_id = self.resolve(parameter_stable_id)
+        model.addIndividualToGraph(pram_id, parameter_label)
+        provenance_model.add_study_measure(study_bnode, pram_id)
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
         model.addIndividualToGraph(colony_bnode, colony)
 
         # Add study agent
+        phenotyping_center_id = self.localtt[phenotyping_center]
         model.addIndividualToGraph(
-            self.resolve(phenotyping_center), phenotyping_center,
+            phenotyping_center_id,
+            phenotyping_center,
             self.globaltt['organization'])
 
         # self.graph
         model.addTriple(
-            study_bnode, self.globaltt['has_agent'], self.resolve(phenotyping_center))
+            study_bnode, self.globaltt['has_agent'],  phenotyping_center_id)
+
+        if pipeline_stable_id in self.localtt:
+            pipeline_stable_id2 = self.localtt[pipeline_stable_id]
+        else:
+            pipeline_stable_id2 = self.resolve(pipeline_stable_id)
 
         # add pipeline and project
+        model.addIndividualToGraph(pipeline_stable_id2, pipeline_name)
+        # self.graph
+        model.addTriple(study_bnode, self.globaltt['part_of'], pipeline_stable_id2)
+
+        if project_fullname in self.localtt:
+            project_fullname_id = self.localtt[project_fullname]
+        else:
+            project_fullname_id = self.resolve(project_fullname)
+
         model.addIndividualToGraph(
-            self.resolve(pipeline_stable_id), pipeline_name)
+            project_fullname_id, project_fullname, self.globaltt['project'])
 
         # self.graph
-        model.addTriple(
-            study_bnode, self.globaltt['part_of'], self.resolve(pipeline_stable_id))
-
-        model.addIndividualToGraph(
-            self.resolve(project_fullname), project_fullname, self.globaltt['project'])
-
-        # self.graph
-        model.addTriple(
-            study_bnode, self.globaltt['part_of'], self.resolve(project_fullname))
+        model.addTriple(study_bnode, self.globaltt['part_of'], project_fullname_id)
 
         return study_bnode
 
