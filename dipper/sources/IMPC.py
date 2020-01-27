@@ -617,8 +617,13 @@ class IMPC(Source):
         study_parts = []
 
         # Add study parts
-        model.addIndividualToGraph(self.resolve(procedure_stable_id), procedure_name)
-        study_parts.append(self.resolve(procedure_stable_id))
+        if procedure_stable_id in self.localtt:
+            procedure_stable_id2 = self.localtt[procedure_stable_id]
+        else:
+            procedure_stable_id2 = self.resolve(procedure_stable_id)
+
+        model.addIndividualToGraph(procedure_stable_id2, procedure_name)
+        study_parts.append(procedure_stable_id2)
 
         study_parts.append(self.resolve(statistical_method))
         provenance_model.add_study_parts(study_bnode, study_parts)
@@ -646,20 +651,26 @@ class IMPC(Source):
         model.addTriple(
             study_bnode, self.globaltt['has_agent'],  phenotyping_center_id)
 
+        if pipeline_stable_id in self.localtt:
+            pipeline_stable_id2 = self.localtt[pipeline_stable_id]
+        else:
+            pipeline_stable_id2 = self.resolve(pipeline_stable_id)
+
         # add pipeline and project
+        model.addIndividualToGraph(pipeline_stable_id2, pipeline_name)
+        # self.graph
+        model.addTriple(study_bnode, self.globaltt['part_of'], pipeline_stable_id2)
+
+        if project_fullname in self.localtt:
+            project_fullname_id = self.localtt[project_fullname]
+        else:
+            project_fullname_id = self.resolve(project_fullname)
+
         model.addIndividualToGraph(
-            self.resolve(pipeline_stable_id), pipeline_name)
+            project_fullname_id, project_fullname, self.globaltt['project'])
 
         # self.graph
-        model.addTriple(
-            study_bnode, self.globaltt['part_of'], self.resolve(pipeline_stable_id))
-
-        model.addIndividualToGraph(
-            self.resolve(project_fullname), project_fullname, self.globaltt['project'])
-
-        # self.graph
-        model.addTriple(
-            study_bnode, self.globaltt['part_of'], self.resolve(project_fullname))
+        model.addTriple(study_bnode, self.globaltt['part_of'], project_fullname_id)
 
         return study_bnode
 
