@@ -23,6 +23,7 @@
 "ClinVar"
 "ClinVarSubmitters"
 "ClinVarVariant"
+"ComplexPortal"
 "Coriell"
 "CoriellCollection"
 "CoriellFamily"
