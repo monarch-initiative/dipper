@@ -49,7 +49,7 @@ def main():
         'go': 'GeneOntology',
         'reactome': 'Reactome',
         'udp': 'UDP',
-        'mgi-slim': 'MGISlim',
+        'mgislim': 'MGISlim',
         'zfinslim': 'ZFINSlim',
         'bgee': 'Bgee',
         'mydrug': 'MyDrug',
