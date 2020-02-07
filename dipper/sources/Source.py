@@ -374,20 +374,21 @@ class Source:
             # attempt to fetch from a web cache
             remote_file = '/'.join((self.DIPPERCACHE, self.name, filesource['file']))
             local_file = '/'.join((self.rawdir, filesource['file']))
-            if self.fetch_from_url(remote_file, local_file, is_dl_forced):
+
+            cache_response = self.fetch_from_url(remote_file, local_file, is_dl_forced)
+
+            if cache_response:
                 LOG.info(
-                    "Found File '%s/%s' in DipperCache",
-                    self.name, filesource['file'])
+                    "Found File '%s/%s' in DipperCache", self.name, filesource['file'])
                 self.dataset.set_ingest_source(remote_file)
                 if remote_file in self.remote_file_timestamps:
-                    timestamp = Literal(self.remote_file_timestamps[remote_file],
-                                        datatype=XSD.dateTime)
+                    timestamp = Literal(
+                        self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
                         filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
-                    "File %s/%s absent from DipperCache",
-                    self.name, filesource['file'])
+                    "File %s/%s absent from DipperCache", self.name, filesource['file'])
 
                 if 'headers' in filesource:
                     headers = filesource['headers']
@@ -438,40 +439,38 @@ class Source:
                 rmt_check is not None and rmt_check):
             if headers is None:
                 headers = self._get_default_request_headers()
-
-            request = urllib.request.Request(remoteurl, headers=headers)
-            try:  # checking the response would be good ...
-                response = urllib.request.urlopen(request)
-                if localfile is not None:
-                    with open(localfile, 'wb') as binwrite:
-                        while True:
-                            chunk = response.read(CHUNK)
-                            if not chunk:
-                                break
-                            binwrite.write(chunk)
-
-                    LOG.info("Finished.  Wrote file to %s", localfile)
-                    if self.compare_local_remote_bytes(remoteurl, localfile, headers):
-                        LOG.debug("local file is same size as remote after download")
-                    else:
-                        raise Exception(
-                            "Error downloading file: "
-                            "local file size  != remote file size")
-
-                    fstat = os.stat(localfile)
-                    LOG.info("file size: %s", fstat[ST_SIZE])
-                    LOG.info(
-                        "file created: %s",
-                        time.asctime(time.localtime(fstat[ST_CTIME])))
-                    response.close()
-                else:
-                    LOG.error('Local filename is required')
-                    exit(-1)
-
+            try:
+                request = urllib.request.Request(remoteurl, headers=headers)
             except urllib.error.HTTPError as httpErr:
                 # raise Exception(httpErr.read())
                 LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
                 return False  # allows re try (e.g. not found in Cache)
+            response = urllib.request.urlopen(request)
+            if localfile is not None:
+                with open(localfile, 'wb') as binwrite:
+                    while True:
+                        chunk = response.read(CHUNK)
+                        if not chunk:
+                            break
+                        binwrite.write(chunk)
+
+                LOG.info("Finished.  Wrote file to %s", localfile)
+                if self.compare_local_remote_bytes(remoteurl, localfile, headers):
+                    LOG.debug("local file is same size as remote after download")
+                else:
+                    raise Exception(
+                        "Error downloading file: "
+                        "local file size  != remote file size")
+
+                fstat = os.stat(localfile)
+                LOG.info("file size: %s", fstat[ST_SIZE])
+                LOG.info(
+                    "file created: %s",
+                    time.asctime(time.localtime(fstat[ST_CTIME])))
+                response.close()
+            else:
+                LOG.error('Local filename is required')
+                exit(-1)
 
         else:
             LOG.info("Using existing file %s", localfile)
@@ -738,14 +737,14 @@ class Source:
         given f(x) and g(x)
         here: localtt & globaltt respectivly
         return g(f(x))|g(x)||f(x)|x in order of preference
-        returns x on fall through if finding a mapping
-        is not mandatory (by default finding is mandatory).
+        returns x|default on fall through
+        if finding a mapping is not mandatory (by default finding is mandatory).
 
         This may be specialized further from any mapping
         to a global mapping only; if need be.
 
-        :param word:  the srting to find as a key in translation tables
-        :param mandatory: boolean to cauae failure when no key exists
+        :param word:  the string to find as a key in translation tables
+        :param mandatory: boolean to cause failure when no key exists
         :param default: string to return if nothing is found (& not manandatory)
         :return
             value from global translation table,
@@ -763,7 +762,7 @@ class Source:
             if label in self.globaltt:
                 term_id = self.globaltt[label]
             else:
-                logging.info(
+                logging.info(  #
                     "Translated to '%s' but no global term_id for: '%s'", label, word)
                 term_id = label
         elif word in self.globaltt:
