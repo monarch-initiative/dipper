@@ -45,26 +45,28 @@ def get_properties_from_input(file, input_format):
     input_graph.parse(file, format=input_format)
 
     # collapse to single list
-    property_set = set()
+    property_set = list()
     for row in input_graph.predicates():
-        property_set.add(row)
+        property_set.append(row)
 
-    return property_set
+    return set(property_set)
 
 
 def make_property_graph(properties, args):
     graph = ConjunctiveGraph()
     output_graph = ConjunctiveGraph()
 
+    GH = 'https://raw.githubusercontent.com'
+    OBO = 'https://purl.obolibrary.org/obo'
     ontologies = [
-        'https://raw.githubusercontent.com/monarch-initiative/SEPIO-ontology/master/src/ontology/sepio.owl',
-        'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
-        'http://purl.obolibrary.org/obo/ro.owl',
-        'http://purl.obolibrary.org/obo/iao.owl',
-        'http://purl.obolibrary.org/obo/ero.owl',
-        'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
-        'http://purl.obolibrary.org/obo/pco.owl',
-        'http://purl.obolibrary.org/obo/xco.owl'
+        OBO + '/sepio.owl',
+        OBO + '/geno.owl',
+        OBO + '/iao.owl',
+        OBO + '/ero.owl',
+        OBO + '/pco.owl',
+        OBO + '/xco.owl',
+        OBO + '/ro.owl',
+        GH + '/jamesmalone/OBAN/master/ontology/oban_core.ttl',
     ]
 
     for ontology in ontologies:
