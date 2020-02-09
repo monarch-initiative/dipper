@@ -438,7 +438,7 @@ class GeneOntology(Source):
                         # sanity check/conversion on go curie prefix
                         (pfx, lclid) = itm.split(':')[-2:]  # last prefix wins
                         if pfx in self.localtt:
-                            pfx =  self.localtt[pfx]
+                            pfx = self.localtt[pfx]
                         itm = ':'.join((pfx, lclid))
 
                         # for worms and fish, they might give a RNAi or MORPH
