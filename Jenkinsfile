@@ -455,18 +455,18 @@ pipeline {
                         '''
                     }
                 }
-                stage("ETL MGI Slim") {
+                stage("ETL MGISlim") {
                     when {
                         anyOf {
                             expression { env.RUN_ALL != null }
-                            expression { env.MGI_SLIM != null }
+                            expression { env.MGISLIM != null }
                         }
                     }
                     steps {
                         sh '''
-                            SOURCE=mgi-slim
+                            SOURCE=mgislim
                             $DIPPER --sources $SOURCE
-                            scp ./out/mgi_slim.ttl ./out/mgi_slim_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                            scp ./out/mgislim.ttl ./out/mgislim_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
                 }
@@ -599,7 +599,7 @@ pipeline {
                         '''
                     }
                 }
-                stage("ETL ZFIN Slim") {
+                stage("ETL ZFINSlim") {
                     when {
                         anyOf {
                             expression { env.RUN_ALL != null }
