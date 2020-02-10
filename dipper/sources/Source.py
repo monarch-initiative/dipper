@@ -383,7 +383,7 @@ class Source:
                     timestamp = Literal(self.remote_file_timestamps[remote_file],
                                         datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
-                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
+                        remote_file, self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache",
