@@ -380,12 +380,14 @@ class Source:
             if cache_response:
                 LOG.info(
                     "Found File '%s/%s' in DipperCache", self.name, filesource['file'])
-                self.dataset.set_ingest_source(remote_file)
+                self.dataset.set_ingest_source(filesource['url'])
                 if remote_file in self.remote_file_timestamps:
-                    timestamp = Literal(
-                        self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
+                    # Here we assume that the timestamp of the cached file on
+                    # DipperCache is the date it was retrieved from the upstream source
+                    timestamp = Literal(self.remote_file_timestamps[remote_file],
+                                        datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
-                        remote_file, self.globaltt['retrieved_on'], timestamp)
+                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache", self.name, filesource['file'])
