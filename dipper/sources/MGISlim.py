@@ -25,7 +25,7 @@ class MGISlim(Source):
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
             data_release_version=data_release_version,
-            name='mgi_slim',
+            name='mgislim',
             ingest_description='Simplified Mouse Genome Informatics',
             ingest_url='http://www.mousemine.org/mousemine/service',
             ingest_logo="source-mgi.png",
