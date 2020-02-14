@@ -385,7 +385,7 @@ class Source:
                     # Here the timestamp on the file in DipperCache is a best effort
                     # representation of the earliest time the file
                     #  _could_ have been retrieved from source.
-                    # not necessarily when it _was_ retrieved
+                    # not necessarily when it _was_ retrieved (e.g not 11 years ago)
                     # which will be not-before the timestamp (modulo timezones).
                     timestamp = Literal(
                         self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
