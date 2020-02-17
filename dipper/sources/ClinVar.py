@@ -874,7 +874,9 @@ def parse():
                         break
 
                     if rcv_disease_db is None and has_medgen_id:
-                        rcv_disease_db = 'MedGen'  # RCV_TraitXRef.get('DB')
+                        # use UMLS prefix instead of MedGen
+                        # see https://github.com/monarch-initiative/dipper/issues/874
+                        rcv_disease_db = 'UMLS'  # RCV_TraitXRef.get('DB')
                     if rcv_disease_id is None and has_medgen_id:
                         rcv_disease_id = medgen_id
 

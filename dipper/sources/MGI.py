@@ -133,6 +133,13 @@ class MGI(PostgreSQLSource):
         'test_keys': '../../resources/mgi_test_keys.yaml'
     }
 
+    # For ambiguous/undefined taxa terms that will
+    # conflict with seq alt_type portion of local tt
+    unknown_taxa = [
+        'Not Applicable',
+        'Not Specified',
+    ]
+
     # for testing purposes, this is a list of internal db keys
     # to match and select only portions of the source
 
@@ -1284,6 +1291,7 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
         line_counter = 0
         geno = Genotype(graph)
+
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
         LOG.info("getting strains and adding their taxa")
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1315,6 +1323,9 @@ SELECT  r._relationship_key as rel_key,
                         else:
                             LOG.warning("defaulting to  genus 'Mus'")
                             sp = self.globaltt['Mus']
+                    elif species in MGI.unknown_taxa:
+                        LOG.warning("defaulting to genus 'Mus'")
+                        sp = self.globaltt['Mus']
 
                     model.addClassToGraph(sp, None)
                     geno.addTaxon(sp, strain_id)
@@ -1400,8 +1411,8 @@ SELECT  r._relationship_key as rel_key,
                     self.label_hash[marker_id] = symbol
                     # add the taxon  (default to Mus m.)
                     # latin_name is not always a proper binomial
-                    if latin_name == '"Not Applicable':  # localtt conflict
-                        latin_name = 'Mus musculus'
+                    if latin_name in MGI.unknown_taxa:  # localtt conflict
+                        latin_name = 'Mus'
                     taxon_id = self.resolve(
                         latin_name, default=self.globaltt['Mus musculus'])
                     geno.addTaxon(taxon_id, marker_id)
