@@ -10,7 +10,7 @@ VENV != python ./scripts/within_pip_env.py
 
 NP=4
 
-PYUTEST = @(echo $@ && [ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment or ERROR"
+PYUTEST = @(echo $@ && [ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment or ERROR"; exit 1
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 
 all: lint_error test tt_generated
@@ -87,7 +87,7 @@ test_omia-integration:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
 ###################################################################################
-###  checks on supporting artefacts
+###  checks on supporting artifacts
 
 test_translationtable:
 	@ echo  "lint curie_map yaml file"
