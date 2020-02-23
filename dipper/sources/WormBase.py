@@ -186,7 +186,10 @@ class WormBase(Source):
         self.get_files(is_dl_forced)
 
         # moved here from parse() to avoid broken calls from test
-        self.parse_gaf_eco('gaf-eco-mapping')
+        src_key = 'gaf-eco-mapping'
+        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
 
     def update_wsnum_in_files(self, vernum):
         """
@@ -251,12 +254,6 @@ class WormBase(Source):
         # self.process_gene_interaction(limit)
 
         LOG.info("Finished parsing.")
-
-    def parse_gaf_eco(self, src_key):
-        ''' split out for test '''
-        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
-        with open(yamlfile, 'r') as yfh:
-            self.gaf_eco = yaml.safe_load(yfh)
 
     def process_gene_ids(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_ids']['file']))
