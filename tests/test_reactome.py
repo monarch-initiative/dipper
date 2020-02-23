@@ -11,9 +11,13 @@ class ReactomeTestCase(unittest.TestCase):
     def setUp(self):
         self.test_util = TestUtils()
         self.test_set_1 = \
-            ('ENSBTAP00000013354', 'R-BTA-3000480',
+            ('ENSBTAP00000013354',
+             'R-BTA-3000480',
              'http://www.reactome.org/PathwayBrowser/#/R-BTA-3000480',
-             'Scavenging by Class A Receptors',	'IEA', 'Bos taurus')
+             'Scavenging by Class A Receptors',
+             'IEA',
+             'Bos taurus')
+        self.gaf_eco = {"IEA": "ECO:0000501"}
         return
 
     def tearDown(self):
@@ -21,19 +25,21 @@ class ReactomeTestCase(unittest.TestCase):
 
     def testEnsemblReactomeParser(self):
         '''
-        note this test does not fetch and parse files it needs
-        so they must pre exist for this to pass
+
         '''
         reactome = Reactome('rdf_graph', True)
         reactome.graph = RDFGraph(True)
         self.assertTrue(len(list(reactome.graph)) == 0)
-        reactome.parse_gaf_eco('gaf-eco-mapping')
+        # reactome.parse_gaf_eco('gaf-eco-mapping')
 
-        (gene, pathway_id, pathway_iri, pathway_label,
+        (gene,
+         pathway_id,
+         pathway_iri,
+         pathway_label,
          go_ecode, species_name) = self.test_set_1
         reactome._add_component_pathway_association(
-            'ENSEMBL:' + gene, 'REACT:' +  pathway_id, pathway_label,
-            reactome.gaf_eco[go_ecode])
+            'ENSEMBL:' + gene, 'REACT:' + pathway_id, pathway_label,
+            self.gaf_eco[go_ecode])
 
         triples = """
         ENSEMBL:ENSBTAP00000013354 RO:0002331 REACT:R-BTA-3000480 .
