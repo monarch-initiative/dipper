@@ -84,7 +84,9 @@ class Reactome(Source):
         Returns:
             :return None
         """
-        self.parse_gaf_eco('gaf-eco-mapping')
+        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
 
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
@@ -94,12 +96,6 @@ class Reactome(Source):
 
         self._parse_reactome_association_file(
             'chebi2pathway', limit, subject_prefix='CHEBI', object_prefix='REACT')
-
-    def parse_gaf_eco(self, src_key):
-        ''' split out to use in test '''
-        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
-        with open(yamlfile, 'r') as yfh:
-            self.gaf_eco = yaml.safe_load(yfh)
 
     def _parse_reactome_association_file(
             self, src_key, limit=None, subject_prefix=None, object_prefix=None):
