@@ -38,6 +38,7 @@ class WormBaseTestCase(unittest.TestCase):
     def setUp(self):
         self.wormbase = WormBase('rdf_graph', True)
         self.wormbase.graph = RDFGraph(True)
+        self.gaf_eco = {"IMP": "ECO:0000315"}
 
     def tearDown(self):
         self.wormbase = None
@@ -64,7 +65,7 @@ class WormBaseTestCase(unittest.TestCase):
             with self.subTest(gene_id=gene):
                 self.tearDownAndSetUp()
                 # reassigned raw directory fails to find files in original raw directory
-                self.wormbase.parse_gaf_eco('gaf-eco-mapping')
+                self.wormbase.gaf_eco = self.gaf_eco
                 self.wormbase.rawdir = RAW_PATH + '/' + gene
                 self.wormbase.version_num = 'test_version'
                 self.wormbase.parse()

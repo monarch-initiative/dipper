@@ -382,10 +382,13 @@ class Source:
                     "Found File '%s/%s' in DipperCache", self.name, filesource['file'])
                 self.dataset.set_ingest_source(filesource['url'])
                 if remote_file in self.remote_file_timestamps:
-                    # Here we assume that the timestamp of the cached file on
-                    # DipperCache is the date it was retrieved from the upstream source
-                    timestamp = Literal(self.remote_file_timestamps[remote_file],
-                                        datatype=XSD.dateTime)
+                    # Here the timestamp on the file in DipperCache is a best effort
+                    # representation of the earliest time the file
+                    #  _could_ have been retrieved from source.
+                    # not necessarily when it _was_ retrieved (e.g not 11 years ago)
+                    # which will be not-before the timestamp (modulo timezones).
+                    timestamp = Literal(
+                        self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
                         filesource['url'], self.globaltt['retrieved_on'], timestamp)
             else:

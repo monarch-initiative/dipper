@@ -137,7 +137,7 @@ class NCBIGene(OMIMSource):
         #        self.ARGV['taxon'] is not None and self.ARGV['taxon'] != '':
         #    LOG.error('Pythons Argument is Lost at %s', self.ARGV['taxon'])
         #    self.tax_ids = [str(t) for t in args.taxon.split(',') if t.isdigit()]
-        #else:
+        # else:
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
         self.id_filter = 'taxids'   # 'geneids
