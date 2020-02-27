@@ -84,7 +84,8 @@ class Reactome(Source):
         Returns:
             :return None
         """
-        yamlfile = '/'.join((self.rawdir, self.files['gaf-eco-mapping']['file']))
+        src_key = 'gaf-eco-mapping'
+        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(yamlfile, 'r') as yfh:
             self.gaf_eco = yaml.safe_load(yfh)
 
