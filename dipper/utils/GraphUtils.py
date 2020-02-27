@@ -63,7 +63,7 @@ class GraphUtils:
     def add_property_axioms(graph, properties):
         ontology_graph = ConjunctiveGraph()
         GH = 'https://raw.githubusercontent.com'
-        OBO = 'https://purl.obolibrary.org/obo'
+        OBO = 'http://purl.obolibrary.org/obo'
         ontologies = [
             OBO + '/sepio.owl',
             OBO + '/geno.owl',
