@@ -58,7 +58,7 @@ class OMIM(OMIMSource):
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url': OMIMFTP + '/morbidmap.txt',
-            'clean': OMIMURL + '/morbidmap.txt',
+            'clean': OMIMURL + 'morbidmap.txt',
             'columns': [  # expected
                 '# Phenotype',
                 'Gene Symbols',
