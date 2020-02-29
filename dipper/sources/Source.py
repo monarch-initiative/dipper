@@ -373,7 +373,7 @@ class Source:
             filesource = files[src_key]
 
             if 'clean' in filesource:
-                cleaned_file_iri = filesource['clean'] + filesource['file']
+                cleaned_file_iri = filesource['clean']
             else:
                 cleaned_file_iri = filesource['url']
 
