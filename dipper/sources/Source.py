@@ -371,6 +371,12 @@ class Source:
         for src_key in files:
             headers = None
             filesource = files[src_key]
+
+            if 'clean' in filesource:
+                cleaned_file_iri = filesource['clean']
+            else:
+                cleaned_file_iri = filesource['url']
+
             # attempt to fetch from a web cache
             remote_file = '/'.join((self.DIPPERCACHE, self.name, filesource['file']))
             local_file = '/'.join((self.rawdir, filesource['file']))
@@ -380,7 +386,8 @@ class Source:
             if cache_response:
                 LOG.info(
                     "Found File '%s/%s' in DipperCache", self.name, filesource['file'])
-                self.dataset.set_ingest_source(filesource['url'])
+                self.dataset.set_ingest_source(cleaned_file_iri)
+
                 if remote_file in self.remote_file_timestamps:
                     # Here the timestamp on the file in DipperCache is a best effort
                     # representation of the earliest time the file
@@ -390,7 +397,7 @@ class Source:
                     timestamp = Literal(
                         self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
-                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
+                        cleaned_file_iri, self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache", self.name, filesource['file'])
@@ -400,11 +407,9 @@ class Source:
                 LOG.info("Getting %s", src_key)
                 # if the key 'clean' exists in the sources `files` dict
                 # expose that instead of the longer url
-                if 'clean' in filesource and filesource['clean'] is not None:
-                    self.dataset.set_ingest_source(filesource['clean'])
-                else:
-                    self.dataset.set_ingest_source(filesource['url'])
-                    LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
+                self.dataset.set_ingest_source(cleaned_file_iri)
+
+                LOG.info('Fetching %s in %i seconds', cleaned_file_iri, delay)
 
                 time.sleep(delay)
 
@@ -417,12 +422,12 @@ class Source:
                 fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
                 self.dataset.graph.addTriple(
                     self.dataset.version_level_curie, self.globaltt["Source (dct)"],
-                    filesource['url'])
+                    cleaned_file_iri)
                 filedate = Literal(
                     datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
                     datatype=XSD.date)
                 self.dataset.graph.addTriple(
-                    filesource['url'], self.globaltt['retrieved_on'], filedate)
+                    cleaned_file_iri, self.globaltt['retrieved_on'], filedate)
 
     def fetch_from_url(
             self, remoteurl, localfile=None, is_dl_forced=False, headers=None):
@@ -446,11 +451,14 @@ class Source:
                 headers = self._get_default_request_headers()
             try:
                 request = urllib.request.Request(remoteurl, headers=headers)
+                response = urllib.request.urlopen(request)
             except urllib.error.HTTPError as httpErr:
                 # raise Exception(httpErr.read())
                 LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
                 return False  # allows re try (e.g. not found in Cache)
-            response = urllib.request.urlopen(request)
+            except urllib.error.URLError as urlErr:
+                LOG.error('URLError %s\n\tFor: %s', urlErr.read(), remoteurl)
+                return False
             if localfile is not None:
                 with open(localfile, 'wb') as binwrite:
                     while True:
