@@ -456,6 +456,9 @@ class Source:
                 # raise Exception(httpErr.read())
                 LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
                 return False  # allows re try (e.g. not found in Cache)
+            except urllib.error.URLError as urlErr:
+                LOG.error('URLError %s\n\tFor: %s', urlErr.read(), remoteurl)
+                return False
             if localfile is not None:
                 with open(localfile, 'wb') as binwrite:
                     while True:
