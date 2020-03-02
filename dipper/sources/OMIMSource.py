@@ -29,7 +29,7 @@ class OMIMSource(Source):
         'mimtitles': {
             'file': 'mimTitles.txt',
             'url': MONARCHIVE + '/mimTitles.txt',
-            'clean': OMIMURL,
+            'clean': OMIMURL + 'mimTitles.txt',
             'columns': [  # expected
                 'Prefix',
                 'MIM Number',
