@@ -252,8 +252,8 @@ class Panther(Source):
                 assoc.add_evidence(evidence_id)
 
                 # add genes to graph;  assume labels will be taken care of elsewhere
-                model.addClassToGraph(gene_a, None)
-                model.addClassToGraph(gene_b, None)
+                model.addType(gene_a, self.globaltt['gene'])
+                model.addType(gene_b, self.globaltt['gene'])
 
                 # might as well add the taxon info for completeness
                 graph.addTriple(
