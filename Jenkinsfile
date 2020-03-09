@@ -70,8 +70,8 @@ pipeline {
                         echo "Clean up previous runs"
                         rm -f ./out/*.ttl ./out/*.nt
                         echo "Anything remaining should not still be in './out'"
-                        ls -l ./out
                         rm -fr ./out
+                        rm -fr ./raw
                     '''
                 }
             }
