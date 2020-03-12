@@ -61,7 +61,7 @@
 'LPT': 'http://purl.obolibrary.org/obo/LPT_'                        # Livestock Phenotypic Trait Ontology
 'MA': 'http://purl.obolibrary.org/obo/MA_'                          # Mouse Anatomy Ontology
 'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/'                     # Human Medical Genetics vocabulary
-'MESH': 'http://purl.obolibrary.org/obo/MESH_'                      # Medical Subject Headings (medical diseases, phenotypes, and drugs)
+'MESH': 'http://id.nlm.nih.gov/mesh/'                               # Medical Subject Headings (medical diseases, phenotypes, and drugs)
 'MP': 'http://purl.obolibrary.org/obo/MP_'                          # Mammalian Phenotype Ontology
 'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'                    # Mammalian Pathology Ontology
 'NBO': 'http://purl.obolibrary.org/obo/NBO_'                        # NeuroBehavior Ontology
