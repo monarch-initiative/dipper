@@ -3,21 +3,21 @@
 #  Reduce the subject and object of RDF triples (ntriples format)
 #  down to their curie prefix (or literal object)
 #  Reduce predicates to the specific term identifier
-#  and the ontology namespace they are from. (curi prefix )
+#  and the ontology namespace they are from. (curie prefix )
 #  Express the subject and object as nodes with a directed edge
 #  labeled with the predicate in the graphviz dot format
 #  Include a tally of each combination of nodes and edge
 
 #  This may over generalize in some cases because I do not have
-#  a handy way to differentiate uri for subjects and objects
+#  a handy way to differentiate URI for subjects and objects
 #  which may belong to a "structural" ontology (t-box) as opposed to
-#  a data uri (a-box).
+#  a data URI (a-box).
 
 #  Post processing to augment predicate identifiers
 #  with their labels seems to improve usefulness.
 
 function usage(){
-    print "usage: ntriple2dot.awk prefix_baseurl.yaml rdf.nt > dot.gv"
+    print "usage: ntriple2dot.awk prefix_baseurl.yaml RDF.nt > dot.gv"
 }
 
 ##########################################################
@@ -68,7 +68,7 @@ function simplify(str){
     return str
 }
 
-# Replace IRI with CuriePrefix when possible
+# Replace URI with CuriePrefix when possible
 # Otherwise whinge and return a gv printable version of the original
 function contract(uri,  u){
     u = tokenize(uri)
@@ -83,7 +83,7 @@ function contract(uri,  u){
     #    # exit(1)  # while testing
     # }
 
-    # shorten till longest uri in curi map is found (or not)
+    # shorten till longest uri in curie map is found (or not)
     while(!(u in prefix) && index(u, SUBSEP)>0)
         u = detail(u)
 
@@ -121,8 +121,6 @@ function deoboify(curie,  a){
 BEGIN{
     # exceptions
     prefix["BNODE"]="BNODE"  # is a fixed point
-    prefix[tokenize("https://monarchinitiative.org/.well-known/genid")]="BNODE"
-    prefix[tokenize("https://archive.monarchinitiative.org/")]="MonarchArchive"
     ############################################################
     # not expected to be added to curie map
     # in HPOA
@@ -135,7 +133,7 @@ BEGIN{
     # https://raw.githubusercontent.com/monarch-initiative/dipper/master/dipper/curie_map.yaml
 
     # in mgi/impc
-    prefix[tokenize("https://www.mousephenotype.org/")]="IMPC"
+    prefix[tokenize("https://www.mousephenotype.org/")]="IMPC"  # TOO GENERAL
     # in IMPC (not httpS  --- hmm all three IRI exist)
     # note in curie_map IMPC is:
     # http://www.mousephenotype.org/data/genes/
@@ -145,36 +143,28 @@ BEGIN{
     # note in curie_map WormBase is
     # 'https://www.wormbase.org/get?name='
 
-    # various, transient?
-    prefix[tokenize("http://www.ncbi.nlm.nih.gov/gene/")]="NCBIGene"
-    prefix[tokenize("http://www.ncbi.nlm.nih.gov/genome/")]="NCBIGenome"
-    prefix[tokenize("http://www.ncbi.nlm.nih.gov/assembly?term=")]="NCBIAssembly"
-    # kegg
-    prefix[tokenize("http://www.genome.jp/kegg/pathway/map/")]="KEGG-img"
-    # in EOM
-    prefix[tokenize("https://elementsofmorphology.nih.gov/images/terms/")]="EOM_IMG"
-    # prefix[tokenize("http://elementsofmorphology.nih.gov/index.cgi?tid=")]="EOM"  # w/o httpS
+    # various, transient? (fewer now https or not is transparent)
+
 
     # playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier
     # and their IRI are unroutable, i.e in same machine (or local net)
     # this is motivated in part by not wanting to publish
-    # urls to our own servers which go nowhere.
-    # prefix["https://127.0.0.1/.well-known/genid"]="BNODE"  # exists, phase out
+    # URLs to our own servers which go nowhere.
     # prefix["http://0.0.0.0/.well-known/genid"]="BNODE"     # prefer
     # prefix["http://0.0.0.0/"]="LCL"                              # ID halfway house
 
     # LCL's obvious down side is zero options for global collisions
-    # best you can do is go the uuid which is ugly, or
-    # belive your obscure but readable string _is_ a special snowflake
+    # best you can do is go the UUID which is ugly, or
+    # believe your obscure but readable string _is_ a special snowflake
 }
 
 # main loop
 # parse and stash the curie yaml file (first file)
-# YAML format is tic delimited word (the curi prefix)
-# a colon, whitespace
-# then a tic delimited url
-# convert the base url to a path in a multi-dimensional array
+# YAML format is tic delimited word (the curie prefix)
+# a colon, white space
+# then a tic delimited URL
+# convert the base URL to a path in a multi-dimensional array
 # (FNR == NR) && /^'[fht]\+tp[^']*'.*/ { # loosing some?
 (FNR == NR) && /^'.*/ {
     split($0, arr, "'")
@@ -267,8 +257,8 @@ END{
     print "}"
 
     ######################################################
-    # dump a summary of significant numbers of unresolved-curi uri  to stderr
-    # FNR gives at least half the number ot URI attempted to resolve for %s
+    # dump a summary of significant numbers of unresolved-curie uri  to stderr
+    # FNR gives at least half the number of URI attempted to resolve for %s
     # FILENAME gives filename we know where they were generated
     # have warn[uri] = count
     toofew = 3
