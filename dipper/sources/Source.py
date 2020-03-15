@@ -45,13 +45,13 @@ class Source:
             graph_type='rdf_graph',     # or streamed_graph
             are_bnodes_skized=False,    # typically True
             data_release_version=None,
-            name=None,                  # identifier; make an IRI for nquads
+            name=None,                  # identifier; make an URI for nquads
             ingest_title=None,
             ingest_url=None,
             ingest_logo=None,     # this should be the name of file on 'MonarchLogoRepo'
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
-            data_rights=None,           # external page that points to their current lic
+            data_rights=None,           # their page that points to their current lic
             file_handle=None,
     ):
 
@@ -117,7 +117,7 @@ class Source:
 
         elif graph_type == 'streamed_graph':
             # need to expand on export formats
-            dest_file = open(out_pth + '/' + name + '.nt', 'w')    # where is the close?
+            dest_file = open(out_pth + '/' + name + '.nt', 'w')   # where is the close?
             self.graph = StreamedGraph(are_bnodes_skized, dest_file)
             # leave test files as turtle (better human readibility)
         else:
@@ -172,11 +172,11 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=True):
+    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=False):
         """
         This convenience method will write out all of the graphs
-        associated with the source.
-        Right now these are hardcoded to be a single "graph"
+            associated with the source.
+        Right now these are hardcoded to be a single main "graph"
         and a "src_dataset.ttl" and a "src_test.ttl"
         If you do not supply stream='stdout'
         it will default write these to files.
@@ -297,7 +297,7 @@ class Source:
             LOG.info("Local File does NOT exist as %s", local)
             return True
 
-        # get remote file details
+        # get remote file details (if possible)
         if headers is None:
             headers = self._get_default_request_headers()
 
