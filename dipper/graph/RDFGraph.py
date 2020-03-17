@@ -58,7 +58,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         if object_is_literal is True:
             if isinstance(obj, str):
-                obj = re.sub('[\t\n\r\f\v]+', ' ', obj)  # reduce any ws to a space
+                re.sub(r'[\t\n\r\f\v]+', ' ', obj)  # reduce any ws to a space
             if literal_type is not None and obj is not None and obj not in ("", " "):
                 literal_type_iri = self._getnode(literal_type)
 
