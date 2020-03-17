@@ -56,12 +56,16 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                 object_is_literal = True
 
         if object_is_literal is True:
-            if literal_type is not None and obj is not None:
+            if isinstance(obj, str):
+                obj = re.sub('[\t\n\r\f\v]+', ' ', obj)  # reduce any ws to a space
+            if literal_type is not None and obj is not None and obj != "" and obj != " ":
                 literal_type_iri = self._getnode(literal_type)
+
                 self.add(
                     (self._getnode(subject_id), self._getnode(predicate_id),
                      Literal(obj, datatype=literal_type_iri)))
             elif obj is not None:
+                # could attempt to infer a type here but there is no use case
                 self.add((
                     self._getnode(subject_id), self._getnode(predicate_id),
                     Literal(obj)))
@@ -71,6 +75,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                     subject_id, predicate_id)
                 # get a sense of where the None is comming from
                 # magic number here is "steps up the call stack"
+                # TODO there may be easier/ideomatic ways to do this now
                 for call in range(2, 0, -1):
                     LOG.warning(
                         '\t%sfrom: %s', '\t' * call, sys._getframe(call).f_code.co_name)
