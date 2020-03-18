@@ -326,7 +326,6 @@ class MGI(PostgreSQLSource):
         self.strain_to_genotype_map = {}
 
         self.wildtype_alleles = set()
-        self.tables = self.tables
 
         # also add the gene ids from the test_ids
         # in order to capture transgenes of the test set
