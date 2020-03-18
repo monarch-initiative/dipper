@@ -792,7 +792,7 @@ class Source:
         return term_id
 
     @staticmethod
-    def check_fileheader(expected, received):
+    def check_fileheader(expected, received, src_key=None):
         '''
         Compare file headers received versus file headers expected
         if the expected headers are a subset (proper or not)
@@ -806,8 +806,9 @@ class Source:
         exp = set(expected)
         got = set(received)
         if expected != received:
-            LOG.error(
-                '\nExpected header:\n %s\nRecieved header:\n %s', expected, received)
+            LOG.error('file resource: %s'
+                '\nExpected header:\n %s\nRecieved header:\n %s',
+                src_key, expected, received)
 
             # pass reordering and adding new columns (after protesting)
             # hard fail on missing expected columns (temper with mandatory cols?)
