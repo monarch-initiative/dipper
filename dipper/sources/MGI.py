@@ -518,7 +518,7 @@ SELECT  r._relationship_key as rel_key,
         LOG.info("getting genotypes and their backgrounds")
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -549,13 +549,13 @@ SELECT  r._relationship_key as rel_key,
                     if strain_id is None:
                         # some of the strains don't have public identifiers!
                         # so we make one up, and add it to the hash
-                        strain_id = self._makeInternalIdentifier('strain', strain_key)
+                        strain_id = self._make_internal_identifier(('strain', strain_key)
                         self.idhash['strain'].update({strain_key: strain_id})
                         model.addComment(strain_id, "strain_key:" + strain_key)
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.
                         # so add instances of each.
-                        strain_id = self._makeInternalIdentifier(
+                        strain_id = self._make_internal_identifier((
                             'strain', re.sub(r':', '', str(strain_id)))
                         strain_id += re.sub(r':', '', str(mgiid))
                         strain_id = re.sub(r'^_', '_:', strain_id)
@@ -615,7 +615,7 @@ SELECT  r._relationship_key as rel_key,
         col = self.tables[src_key]['columns']
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -658,7 +658,7 @@ SELECT  r._relationship_key as rel_key,
             genotype = geno_hash.get(gt)
             gvc = sorted(genotype.get('vslcs'))
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
-            model.addComment(gt, self._makeInternalIdentifier(
+            model.addComment(gt, self._make_internal_identifier((
                 'genotype', genotype.get('key')))
             geno.addGenotype(gt, label.strip())
 
@@ -689,7 +689,7 @@ SELECT  r._relationship_key as rel_key,
             "alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             # head -1 workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
             # tr '\t' '\n' | grep -n . | \
@@ -782,7 +782,7 @@ SELECT  r._relationship_key as rel_key,
         col_len = len(col)
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -828,7 +828,7 @@ SELECT  r._relationship_key as rel_key,
                             marker_key, symbol)
                         continue
 
-                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
+                iseqalt_id = self._make_internal_identifier(('seqalt', allele_key)
 
                 # for non-wild type alleles:
                 if iswildtype == '0':
@@ -858,7 +858,7 @@ SELECT  r._relationship_key as rel_key,
                     self.idhash['seqalt'][allele_key] = allele_id
                     model.addComment(
                         allele_id,
-                        self._makeInternalIdentifier('allele', allele_key))
+                        self._make_internal_identifier(('allele', allele_key))
                 elif marker_id is not None:
                     # marker_id will be none if the allele
                     # is not linked to a marker
@@ -933,7 +933,7 @@ SELECT  r._relationship_key as rel_key,
         geno_hash = {}
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -972,7 +972,7 @@ SELECT  r._relationship_key as rel_key,
 
                 # Need to map the allelestate to a zygosity term
                 zygosity_id = self.resolve(allelestate.strip())
-                ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key)
+                ivslc_id = self._make_internal_identifier(('vslc', allelepair_key)
 
                 geno_hash[genotype_id].add(ivslc_id)
                 # TODO: VSLC label likely needs processing similar to
@@ -1093,7 +1093,7 @@ SELECT  r._relationship_key as rel_key,
         LOG.info("getting mutation types for sequence alterations")
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -1104,7 +1104,7 @@ SELECT  r._relationship_key as rel_key,
 
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
+                    iseqalt_id = self._make_internal_identifier(('seqalt', allele_key)
 
                 if self.test_mode and int(allele_key) \
                         not in self.test_keys.get('allele'):
@@ -1164,7 +1164,7 @@ SELECT  r._relationship_key as rel_key,
         col = self.tables[src_key]['columns']
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip('\n').split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
 
             for line in reader:
@@ -1183,7 +1183,7 @@ SELECT  r._relationship_key as rel_key,
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
 
-                # iassoc_id = self._makeInternalIdentifier('annot', annot_key)
+                # iassoc_id = self._make_internal_identifier(('annot', annot_key)
                 # assoc_id = self.make_id(iassoc_id)
 
                 assoc_id = None
@@ -1375,7 +1375,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(filereader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in filereader:
                 accid = row[col.index('accid')]
@@ -1490,7 +1490,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 strain_key = row[col.index('_strain_key')].strip()
@@ -1559,7 +1559,7 @@ SELECT  r._relationship_key as rel_key,
         LOG.info("getting markers and assigning types")
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -1647,7 +1647,7 @@ SELECT  r._relationship_key as rel_key,
         col = self.tables[src_key]['columns']
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -1720,7 +1720,7 @@ SELECT  r._relationship_key as rel_key,
         col = self.tables[src_key]['columns']
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip('\n')
@@ -1767,7 +1767,7 @@ SELECT  r._relationship_key as rel_key,
         col = self.tables[src_key]['columns']
         with open('/'.join((self.rawdir, src_key)), 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -1849,7 +1849,7 @@ SELECT  r._relationship_key as rel_key,
 
         with open(raw, 'r') as reader:
             row = reader.readline().rstrip("\n").split('\t')
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for line in reader:
                 line = line.rstrip("\n")
@@ -2015,7 +2015,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in reader:
                 object_key = row[col.index('_object_key')].strip()
@@ -2049,7 +2049,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in reader:
                 marker_key = row[col.index('_marker_key')].strip()
@@ -2135,7 +2135,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in reader:
                 # rel_key  = row[col.index('rel_key')].strip()
@@ -2187,7 +2187,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in reader:
                 object_key = row[col.index('_object_key')].strip()
@@ -2251,7 +2251,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
-            if not self.check_fileheader(col, row):
+            if not self.check_fileheader(col, row, src_key):
                 pass
             for row in reader:
 
@@ -2265,11 +2265,11 @@ SELECT  r._relationship_key as rel_key,
 
                 strain_id = self.idhash['strain'].get(strain_key)
                 if strain_id is None:
-                    strain_id = self._makeInternalIdentifier(
+                    strain_id = self._make_internal_identifier((
                         'strain', strain_key)
                 genotype_id = self.idhash['genotype'].get(genotype_key)
                 if genotype_id is None:
-                    genotype_id = self._makeInternalIdentifier(
+                    genotype_id = self._make_internal_identifier((
                         'genotype', genotype_key)
 
                 if strain_id is not None and genotype_id is not None:
@@ -2290,7 +2290,7 @@ SELECT  r._relationship_key as rel_key,
                     break
 
     @staticmethod
-    def _makeInternalIdentifier(prefix, key):
+    def _make_internal_identifier((prefix, key):
         """
         This is a special MGI-to-MONARCH-ism.
         MGI tables have unique keys that we use here, but don't want to
