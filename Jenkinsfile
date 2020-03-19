@@ -28,16 +28,17 @@ pipeline {
             returnStdout: true
         ).trim()
 
-        DATA_RELEASE_VERSION = sh(
+        YYYYMM = sh(
             script: 'date +%Y%m',
             returnStdout: true
         ).trim()
 
-
+        MONARCHIVE = 'monarch-archive:/var/www/data/$YYYYMM/'
         DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
 
+
         MONARCH_DATA_FS = 'monarch-ttl-prod'
-        DIPPER = "venv/bin/python dipper-etl.py --skip_tests --data_release_version $DATA_RELEASE_VERSION"
+        DIPPER = "venv/bin/python dipper-etl.py --skip_tests --data_release_version $YYYYMM"
 
         // https://issues.jenkins-ci.org/browse/JENKINS-47881
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
@@ -72,6 +73,7 @@ pipeline {
                         echo "Anything remaining should not still be in './out'"
                         rm -fr ./out
                         rm -fr ./raw
+
                     '''
                 }
             }
@@ -654,7 +656,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=sgd
-                            $DIPPER --sources $SOURCE --data_release_version $DATA_RELEASE_VERSION
+                            $DIPPER --sources $SOURCE --data_release_version $YYYYMM
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
@@ -688,6 +690,14 @@ pipeline {
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
+                }
+            }
+            stage('Estatic'){
+                steps {
+                    sh '''
+                        # Move Data to Monarch Archive
+                        scripts/mdma.sh
+                    '''
                 }
             }
         }
