@@ -72,16 +72,14 @@ pipeline {
                         echo "Anything remaining should not still be in './out'"
                         rm -fr ./out
                         rm -fr ./raw
-
-
                     '''
                 }
             }
         }
-        stage ('Lint Jenkinsfile'){
+        stage("Validate Jenkinsfile"){
             steps{
                 sh '''
-                    curl-s -X POST -H $(curl "127.0.0.1/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)") -F "jenkinsfile=<Jenkinsfile" 127.0.0.1/pipeline-model-converter/validate
+                    curl -s -X POST -H $(curl "127.0.0.1/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)") -F "jenkinsfile=<Jenkinsfile" 127.0.0.1/pipeline-model-converter/validate
                 '''
             }
         }
@@ -201,9 +199,8 @@ pipeline {
                     steps {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
-                            sh """
+                            sh '''
                                 wget --quiet --timestamping http://release.geneontology.org/2019-10-07/bin/owltools
-
                                 chmod +x owltools
 
                                 java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
@@ -222,7 +219,7 @@ pipeline {
                                     ./monarch-merged.owl
 
                                 scp monarch-merged.owl $MONARCH_DATA_FS:/var/www/data/owl/
-                            """
+                            '''
                         }
                     }
                 }
@@ -699,15 +696,14 @@ pipeline {
                     }
                 }
             }
-            stage('Estatic'){
-                steps {
-                    sh '''
-                        # Move Data to Monarch Archive
-                        ./scripts/mdma.sh
-                    '''
-                }
+        }
+        stage('Estatic'){
+            steps {
+                sh '''
+                    # Move Data to Monarch Archive
+                    ./scripts/mdma.sh
+                '''
             }
-
         }
     }
 }
