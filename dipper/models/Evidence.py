@@ -133,6 +133,6 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line, self.globaltt['source'], source)
+        self.graph.addTriple(evidence_line, self.globaltt['Source'], source)
         self.model.addIndividualToGraph(source, label, src_type)
         return

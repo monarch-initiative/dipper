@@ -112,7 +112,7 @@ class Assoc:
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
                 # TODO assume that the source is a publication? use Reference class
-                self.graph.addTriple(self.assoc_id, self.globaltt['source'], src)
+                self.graph.addTriple(self.assoc_id, self.globaltt['Source'], src)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:

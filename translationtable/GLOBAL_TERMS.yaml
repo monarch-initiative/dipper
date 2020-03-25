@@ -60,7 +60,7 @@
 # "dublin core entities (metadata)": "dc:!!!",
 "comment": "dc:comment",
 "description": "dc:description",
-"source": "dc:source",
+"Source": "dc:source",
 "title (dce)": "dc:title",
 # "Data Catalog Vocabulary": "dcat:!!!"
 "distribution": "dcat:Distribution",
