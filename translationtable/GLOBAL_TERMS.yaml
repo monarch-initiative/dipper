@@ -562,7 +562,7 @@
 "has_evidence_line": "SEPIO:0000006",
 "has_supporting_evidence_line": "SEPIO:0000007",
 "has_provenance": "SEPIO:0000011",
-"proposition_asserted_in": "SEPIO:0000015",
+"is_asserted_in": "SEPIO:0000015",
 "has_agent": "SEPIO:0000017",
 "created_by": "SEPIO:0000018",
 # "x-created_at_location": "SEPIO:0000019",

@@ -1031,7 +1031,7 @@ def parse():
                     # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
                     write_spo(
                         monarch_assoc,
-                        GLOBALTT['proposition_asserted_in'],
+                        GLOBALTT['is_asserted_in'],
                         _assertion_id,
                         rcvtriples)
 
