@@ -23,19 +23,27 @@
     tar -czf ntriples_$YYYYMM.tgz ntriples/
     # rename; as 'out' makes no sense downstream. todo: change in dipper
     mv -u  out rdf
-    mv -u ntriples_$YYYYMM.tgz rdf/
+    mv -u ntriples/*.nt rdf/
     rm -fr ntriples/
     tar -czf rdf_$YYYYMM.tgz rdf
 
-    # move the yamal files along with the data they were applied to
+    # copy the yaml files along with the data they were applied to
     scp dipper/curie_map.yaml $MONARCHIVE/translationtable/
     scp translationtable/GLOBAL_TERMS.yaml $MONARCHIVE/translationtable/
+    # copy the compressed  files to archive
     scp rdf_$YYYYMM.tgz $MONARCHIVE/
-    scp -r ./rdf/* $MONARCHIVE/rdf/
+    scp ntriples_$YYYYMM.tgz $MONARCHIVE/
+
+    # move the uncompressed files over ...or maybe just decompress a copy there
+    # scp -r ./rdf/* $MONARCHIVE/rdf/
+
     # move the dir back for now
     mv -u rdf out
 
     # need a higher resolution than year-month in this case
-    git tag -a $DTSTMP -m "release candidate $DTSTMP"
-    git push origin --tag
+    # hold off  for now.
+    # git tag -a $DTSTMP -m "release candidate $DTSTMP"
+    # git push origin --tag
+    # Kent is suggesting adding commit hash to metadata which has the same effect
+    # without creating tag noise
 

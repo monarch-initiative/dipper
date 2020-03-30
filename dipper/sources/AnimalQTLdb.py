@@ -785,21 +785,20 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
-
         col = self.files[src_key]['columns']
 
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            header = next(filereader, None)
-            self.check_fileheader(col, header)
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            header = next(reader, None)
+            self.check_fileheader(col, header, src_key)
+            for row in reader:
                 # need to skip the last line
                 if len(row) != len(col):
-                    LOG.info("skipping line %d: %s", line_counter, '\t'.join(row))
+                    LOG.info("skipping line %d: %s", reader.line_num, '\t'.join(row))
                     continue
+                if limit is not None and reader.line_num > limit:
+                    break
                 vto_id = row[col.index('VT')].strip()
                 pto_id = row[col.index('LPT')].strip()
                 cmo_id = row[col.index('CMO')].strip()

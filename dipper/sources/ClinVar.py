@@ -976,7 +976,7 @@ def parse():
                     if rcv_review is not None:
                         write_spo(
                             monarch_assoc,
-                                  GLOBALTT['confidence_score'],
+                                  GLOBALTT['assertion_confidence_score'],
                             status_and_scores[rcv_review],
                             rcvtriples)
 
@@ -1031,7 +1031,7 @@ def parse():
                     # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
                     write_spo(
                         monarch_assoc,
-                        GLOBALTT['proposition_asserted_in'],
+                        GLOBALTT['is_asserted_in'],
                         _assertion_id,
                         rcvtriples)
 
@@ -1153,11 +1153,11 @@ def parse():
                             './Citation/ID[@Source="PubMed"]'):
                         scv_citation_id = SCV_Citation.text
                         #           TRIPLES
-                        # has_part -> evidence_has_supporting_reference
+                        # has_part -> has_supporting_reference
                         # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                         write_spo(
                             _evidence_id,
-                            GLOBALTT['evidence_has_supporting_reference'],
+                            GLOBALTT['has_supporting_reference'],
                             'PMID:' + scv_citation_id,
                             rcvtriples)
                         # <:monarch_assoc><dc:source><PMID:scv_citation_id>
@@ -1226,12 +1226,12 @@ def parse():
 
                                 for scv_citation_id in SCV_Citation.findall(
                                         './ID[@Source="PubMed"]'):
-                                    # evidence_has_supporting_reference
+                                    # has_supporting_reference
                                     # see also: SCV/ClinicalSignificance/Citation/ID
                                     # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                                     write_spo(
                                         _evidence_id,
-                                        GLOBALTT['evidence_has_supporting_reference'],
+                                        GLOBALTT['has_supporting_reference'],
                                         'PMID:' + scv_citation_id.text, rcvtriples)
                                     # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                                     write_spo(

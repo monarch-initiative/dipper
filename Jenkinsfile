@@ -646,7 +646,7 @@ pipeline {
                         sh '''
                             SOURCE=rgd
                             $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl @$MONARCH_DATA_DEST
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
                 }

@@ -564,7 +564,7 @@ class IMPC(Source):
             'International Mouse Phenotyping Consortium')
 
         self.graph.addTriple(
-            assoc_id, self.globaltt['proposition_asserted_in'], assertion_bnode)
+            assoc_id, self.globaltt['is_asserted_in'], assertion_bnode)
 
         self.graph.addTriple(
             assertion_bnode,

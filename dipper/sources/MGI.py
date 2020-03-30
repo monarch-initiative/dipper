@@ -1335,7 +1335,7 @@ SELECT  r._relationship_key as rel_key,
 
                 # add the ECO and citation information to the annot
                 model.addTriple(assoc_id, self.globaltt['has evidence'], evidence_id)
-                model.addTriple(assoc_id, self.globaltt['source'], jnumid)
+                model.addTriple(assoc_id, self.globaltt['Source'], jnumid)
 
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
