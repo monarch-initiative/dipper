@@ -901,7 +901,7 @@ class OMIM(OMIMSource):
                     omim_curie,
                     self.globaltt['contributes to condition'],
                     series_curie)
-            elif omimtype == 'disease':
+            elif omimtype == self.globaltt['phenotype']:
                 model.addSubClass(omim_curie, series_curie)
             else:
                 LOG.info('Unable to map type %s to phenotypic series', omimtype)
