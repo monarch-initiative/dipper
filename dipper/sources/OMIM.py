@@ -337,8 +337,7 @@ class OMIM(OMIMSource):
             # in this special case,
             # make it a disease by not declaring it as a gene/marker
             # ??? and if abbrev is None?
-            model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
-            # class_type=self.globaltt['disease or disorder'],
+            model.addClassToGraph(omim_curie, nodelabel, description=newlabel, class_type=self.globaltt['disease or disorder'])
 
         elif omimtype in [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
             omimtype = self.globaltt['gene']
@@ -347,6 +346,10 @@ class OMIM(OMIMSource):
             # omim is subclass_of gene (provide type term)
             model.addClassToGraph(
                 omim_curie, nodelabel, self.globaltt['gene'], newlabel)
+
+        elif omimtype == self.globaltt['phenotype']:
+            model.addClassToGraph(omim_curie, nodelabel, description=newlabel, class_type=self.globaltt['disease or disorder'])
+
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -909,7 +912,8 @@ class OMIM(OMIMSource):
                     omim_curie,
                     self.globaltt['contributes to condition'],
                     series_curie)
-            elif omimtype == self.globaltt['phenotype']:
+            elif omimtype in [
+                    self.globaltt['phenotype'], self.globaltt['heritable_phenotypic_marker']]:
                 model.addSubClass(omim_curie, series_curie)
             else:
                 LOG.info('Unable to map type %s to phenotypic series', omimtype)
