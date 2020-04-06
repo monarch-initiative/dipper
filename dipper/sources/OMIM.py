@@ -351,6 +351,14 @@ class OMIM(OMIMSource):
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
 
+        model.addSynonym(omim_curie, label)
+
+        # add the alternate labels and includes as synonyms
+        for label in other_labels:
+            model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
+            model.addSynonym(
+                omim_curie, label, model.globaltt['has_related_synonym'])
+
         # KS: commenting out, we will get disease descriptions
         # from MONDO, and gene descriptions from the mygene API
 
