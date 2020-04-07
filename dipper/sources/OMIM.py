@@ -332,8 +332,8 @@ class OMIM(OMIMSource):
         nodelabel = newlabel
         # this uses our cleaned-up label
         if omimtype == self.globaltt['heritable_phenotypic_marker']:
-            if abbrev is not None:
-                nodelabel = abbrev
+            #if abbrev is not None:
+            #    nodelabel = abbrev
             # in this special case,
             # make it a disease by not declaring it as a gene/marker
             # ??? and if abbrev is None?
@@ -913,7 +913,9 @@ class OMIM(OMIMSource):
                     self.globaltt['contributes to condition'],
                     series_curie)
             elif omimtype in [
-                    self.globaltt['phenotype'], self.globaltt['heritable_phenotypic_marker']]:
+                    self.globaltt['phenotype'],
+                    self.globaltt['heritable_phenotypic_marker']
+            ]:
                 model.addSubClass(omim_curie, series_curie)
             else:
                 LOG.info('Unable to map type %s to phenotypic series', omimtype)
