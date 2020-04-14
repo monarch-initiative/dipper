@@ -224,8 +224,8 @@ class AnimalQTLdb(Source):
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
-            'file': 'Equus_caballus.gene_info.gz',
             # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
+            'file': 'Equus_caballus.gene_info.gz',
             'url': Source.DIPPERCACHE + '/Equus_caballus.gene_info.gz',
             'columns': gene_info_columns,
         },
