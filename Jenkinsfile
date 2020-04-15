@@ -279,7 +279,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 # --version bgee_v13_2
+                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 --version bgee_v14_0
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
