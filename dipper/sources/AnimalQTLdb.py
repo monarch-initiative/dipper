@@ -219,23 +219,26 @@ class AnimalQTLdb(Source):
         # chicken  # "Gallus gallus"  # NCBITaxon:9031
         'Gallus_gallus_info': {
             'file': 'Gallus_gallus.gene_info.gz',
-            'url': Source.DIPPERCACHE + '/Gallus_gallus.gene_info.gz',
+            'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
             'columns': gene_info_columns,
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Equus_caballus.gene_info.gz',
             'url': Source.DIPPERCACHE + '/Equus_caballus.gene_info.gz',
             'columns': gene_info_columns,
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Ovis_aries.gene_info.gz',
             'url': Source.DIPPERCACHE + '/Ovis_aries.gene_info.gz',
             'columns': gene_info_columns,
         },
         # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
         'Oncorhynchus_mykiss_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Oncorhynchus_mykiss.gene_info.gz',
             'url': Source.DIPPERCACHE + '/Oncorhynchus_mykiss.gene_info.gz',
             'columns': gene_info_columns,

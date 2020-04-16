@@ -200,7 +200,7 @@ pipeline {
                         dir('./create-monarch-owl') {deleteDir()}
                         dir('./create-monarch-owl') {
                             sh '''
-                                wget --quiet --timestamping http://release.geneontology.org/2019-10-07/bin/owltools
+                                wget --quiet --timestamping http://current.geneontology.org/bin/owltools
                                 chmod +x owltools
 
                                 java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
@@ -279,7 +279,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 # --version bgee_v13_2
+                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 --version bgee_v14_0
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
