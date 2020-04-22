@@ -215,6 +215,7 @@ class BioGrid(Source):
         """
         locus_link_re = re.compile(r'locuslink\:(\d+)\|?')
         biogrid_re = re.compile(r'biogrid\:(\d+)\|?')
+        swiss_pro_re = re.compile(r'swiss\-prot\:(\S+)\|?')
 
         gene_curie = None
 
@@ -224,6 +225,9 @@ class BioGrid(Source):
         elif biogrid_re.search(interactor):
             gene_num = biogrid_re.search(interactor).groups()[0]
             gene_curie = 'BIOGRID:' + gene_num
+        elif swiss_pro_re.search(interactor):
+            gene_num = swiss_pro_re.search(interactor).groups()[0]
+            gene_curie = 'UniProtKB:' + gene_num
         else:
             logging.warning(
                 "Problem parsing gene from interactor_a {}".format(interactor))

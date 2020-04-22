@@ -25,6 +25,9 @@ class BioGridTestCase(SourceTestCase):
                                              'entrez gene/locuslink:3645446'))
         self.assertEqual('BIOGRID:4383875', self.source._interactor_to_gene_curie(
                                              'biogrid:4383875'))
+        self.assertEqual('UniProtKB:P0DTD2', self.source._interactor_to_gene_curie(
+                                             'uniprot/swiss-prot:P0DTD2'))
+
         self.assertEqual(None,  self.source._interactor_to_gene_curie('NOTAGENEID'))
 
 
