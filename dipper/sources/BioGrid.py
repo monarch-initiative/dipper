@@ -229,8 +229,8 @@ class BioGrid(Source):
             gene_num = swiss_pro_re.search(interactor).groups()[0]
             gene_curie = 'UniProtKB:' + gene_num
         else:
-            LOG.warning(
-                "Problem parsing gene from interactor_a {}".format(interactor))
+            LOG.warning("Problem parsing gene from interactor %s", interactor)
+
         return gene_curie
 
     def _get_identifiers(self, limit):
