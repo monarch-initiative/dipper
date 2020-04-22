@@ -1,9 +1,8 @@
 import os
 import logging
 import re
+from typing import Union, List
 
-from datetime import datetime
-from stat import ST_CTIME
 from zipfile import ZipFile
 
 from dipper.sources.Source import Source
@@ -27,7 +26,7 @@ class BioGrid(Source):
         'interactions': {
             'file': 'BIOGRID-ALL-LATEST.mitab.zip',
             'url': BGDL + '/BIOGRID-ALL-LATEST.mitab.zip'},
-        'identifiers':  {
+        'identifiers': {
             'file': 'BIOGRID-IDENTIFIERS-LATEST.tab.zip',
             'url': BGDL + '/BIOGRID-IDENTIFIERS-LATEST.tab.zip'}
     }
@@ -149,13 +148,19 @@ class BioGrid(Source):
 
                 # get the actual gene ids,
                 # typically formated like: gene/locuslink:351|BIOGRID:106848
-                gene_a_num = re.search(r'locuslink\:(\d+)\|?', interactor_a).groups()[0]
-                gene_b_num = re.search(r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
+                gene_a = self._interactor_to_gene_curie(interactor_a)
+                gene_b = self._interactor_to_gene_curie(interactor_b)
+
+                if gene_a is None or gene_b is None:
+                    continue
+
+                gene_a_num = gene_a.split(':')[1]
+                gene_b_num = gene_b.split(':')[1]
 
                 if self.test_mode:
                     graph = self.testgraph
                     # skip any genes that don't match our test set
-                    if (int(gene_a_num) not in self.test_ids) or\
+                    if (int(gene_a_num) not in self.test_ids) or \
                             (int(gene_b_num) not in self.test_ids):
                         continue
                 else:
@@ -166,9 +171,6 @@ class BioGrid(Source):
                         continue
                     else:
                         matchcounter += 1
-
-                gene_a = 'NCBIGene:'+gene_a_num
-                gene_b = 'NCBIGene:'+gene_b_num
 
                 # get the interaction type
                 # psi-mi:"MI:0407"(direct interaction)
@@ -204,6 +206,28 @@ class BioGrid(Source):
         myzip.close()
 
         return
+
+    def _interactor_to_gene_curie(self, interactor: str) -> Union[str, None]:
+        """Turn iteractor id like 'entrez gene/locuslink:3645446' or biogrid:12345
+        into a gene CURIE, like NCBIGene:3645446 or BIOGRID:12345
+
+        :return: gene curie, or None
+        """
+        locus_link_re = re.compile(r'locuslink\:(\d+)\|?')
+        biogrid_re = re.compile(r'biogrid\:(\d+)\|?')
+
+        gene_curie = None
+
+        if locus_link_re.search(interactor):
+            gene_num = locus_link_re.search(interactor).groups()[0]
+            gene_curie = 'NCBIGene:' + gene_num
+        elif biogrid_re.search(interactor):
+            gene_num = biogrid_re.search(interactor).groups()[0]
+            gene_curie = 'BIOGRID:' + gene_num
+        else:
+            logging.warning(
+                "Problem parsing gene from interactor_a {}".format(interactor))
+        return gene_curie
 
     def _get_identifiers(self, limit):
         """
@@ -258,7 +282,7 @@ class BioGrid(Source):
 
                 # for each one of these,
                 # create the node and add equivalent classes
-                biogrid_id = 'BIOGRID:'+biogrid_num
+                biogrid_id = 'BIOGRID:' + biogrid_num
                 prefix = self.localtt[id_type]
 
                 # TODO make these filters available as commandline options
