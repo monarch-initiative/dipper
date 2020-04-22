@@ -1,7 +1,7 @@
 import os
 import logging
 import re
-from typing import Union, List
+from typing import Union
 
 from zipfile import ZipFile
 
