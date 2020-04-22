@@ -1,7 +1,7 @@
 import os
 import logging
 import re
-from typing import Union
+from typing import Union, Optional
 
 from zipfile import ZipFile
 
@@ -207,7 +207,7 @@ class BioGrid(Source):
 
         return
 
-    def _interactor_to_gene_curie(self, interactor: str) -> Union[str, None]:
+    def _interactor_to_gene_curie(self, interactor: str) -> Optional[str]:
         """Turn iteractor id like 'entrez gene/locuslink:3645446' or biogrid:12345
         into a gene CURIE, like NCBIGene:3645446 or BIOGRID:12345
 
