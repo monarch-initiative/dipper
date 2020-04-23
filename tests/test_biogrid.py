@@ -20,11 +20,15 @@ class BioGridTestCase(SourceTestCase):
         self.source = None
         return
 
-    # @unittest.skip('Biogrid-specific tests not yet defined')
-    # def test_biogrid(self):
-    #    LOG.info("A BioGrid-specific test")
-    #
-    #    return
+    def test_interactor_to_gene_curie(self):
+        self.assertEqual('NCBIGene:3645446', self.source._interactor_to_gene_curie(
+                                             'entrez gene/locuslink:3645446'))
+        self.assertEqual('BIOGRID:4383875', self.source._interactor_to_gene_curie(
+                                             'biogrid:4383875'))
+        self.assertEqual('UniProtKB:P0DTD2', self.source._interactor_to_gene_curie(
+                                             'uniprot/swiss-prot:P0DTD2'))
+
+        self.assertEqual(None,  self.source._interactor_to_gene_curie('NOTAGENEID'))
 
 
 if __name__ == '__main__':
