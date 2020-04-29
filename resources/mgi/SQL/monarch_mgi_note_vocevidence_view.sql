@@ -1,23 +1,5 @@
 /*
-mgd=> \d+ mgi_note_vocevidence_view
-                                   View "mgd.mgi_note_vocevidence_view"
-      Column       |            Type             | Collation | Nullable | Default | Storage  | Description 
--------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _note_key         | integer                     |           |          |         | plain    | 
- _object_key       | integer                     |           |          |         | plain    | 
- _mgitype_key      | integer                     |           |          |         | plain    | 
- _notetype_key     | integer                     |           |          |         | plain    | 
- _createdby_key    | integer                     |           |          |         | plain    | 
- _modifiedby_key   | integer                     |           |          |         | plain    | 
- creation_date     | timestamp without time zone |           |          |         | plain    | 
- modification_date | timestamp without time zone |           |          |         | plain    | 
- notetype          | text                        |           |          |         | extended | 
- note              | text                        |           |          |         | extended | 
- sequencenum       | integer                     |           |          |         | plain    | 
- mgitype           | text                        |           |          |         | extended | 
- createdby         | text                        |           |          |         | extended | 
- modifiedby        | text                        |           |          |         | extended | 
-View definition:
+ View "mgd.mgi_note_vocevidence_view"
 */
 
  SELECT n._note_key,

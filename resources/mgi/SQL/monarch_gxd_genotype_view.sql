@@ -1,24 +1,5 @@
 /*
-mgd=> \d+ gxd_genotype_view
-                                       View "mgd.gxd_genotype_view"
-      Column       |            Type             | Collation | Nullable | Default | Storage  | Description 
--------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _genotype_key     | integer                     |           |          |         | plain    | 
- _strain_key       | integer                     |           |          |         | plain    | 
- isconditional     | smallint                    |           |          |         | plain    | 
- note              | text                        |           |          |         | extended | 
- _existsas_key     | integer                     |           |          |         | plain    | 
- _createdby_key    | integer                     |           |          |         | plain    | 
- _modifiedby_key   | integer                     |           |          |         | plain    | 
- creation_date     | timestamp without time zone |           |          |         | plain    | 
- modification_date | timestamp without time zone |           |          |         | plain    | 
- strain            | text                        |           |          |         | extended | 
- mgiid             | text                        |           |          |         | extended | 
- displayit         | text                        |           |          |         | extended | 
- createdby         | text                        |           |          |         | extended | 
- modifiedby        | text                        |           |          |         | extended | 
- existsas          | text                        |           |          |         | extended | 
-View definition:
+View "mgd.gxd_genotype_view"
 */
  SELECT g._genotype_key,
     g._strain_key,

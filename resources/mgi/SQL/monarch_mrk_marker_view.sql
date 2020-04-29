@@ -1,29 +1,5 @@
 /*
-mgd=> \d+ mrk_marker_view
-                                         View "mgd.mrk_marker_view"
-       Column       |            Type             | Collation | Nullable | Default | Storage  | Description 
---------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _marker_key        | integer                     |           |          |         | plain    | 
- _organism_key      | integer                     |           |          |         | plain    | 
- _marker_status_key | integer                     |           |          |         | plain    | 
- _marker_type_key   | integer                     |           |          |         | plain    | 
- symbol             | text                        |           |          |         | extended | 
- name               | text                        |           |          |         | extended | 
- chromosome         | text                        |           |          |         | extended | 
- cytogeneticoffset  | text                        |           |          |         | extended | 
- cmoffset           | double precision            |           |          |         | plain    | 
- _createdby_key     | integer                     |           |          |         | plain    | 
- _modifiedby_key    | integer                     |           |          |         | plain    | 
- creation_date      | timestamp without time zone |           |          |         | plain    | 
- modification_date  | timestamp without time zone |           |          |         | plain    | 
- organism           | text                        |           |          |         | extended | 
- commonname         | text                        |           |          |         | extended | 
- latinname          | text                        |           |          |         | extended | 
- status             | text                        |           |          |         | extended | 
- markertype         | text                        |           |          |         | extended | 
- createdby          | text                        |           |          |         | extended | 
- modifiedby         | text                        |           |          |         | extended | 
-View definition:
+View "mgd.mrk_marker_view"
 */
  SELECT m._marker_key,
     m._organism_key,

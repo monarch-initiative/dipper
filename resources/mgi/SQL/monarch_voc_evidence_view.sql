@@ -1,26 +1,5 @@
 /*
-mgd=> \d+ voc_evidence_view
-                                        View "mgd.voc_evidence_view"
-       Column       |            Type             | Collation | Nullable | Default | Storage  | Description 
---------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _annotevidence_key | integer                     |           |          |         | plain    | 
- _annot_key         | integer                     |           |          |         | plain    | 
- _evidenceterm_key  | integer                     |           |          |         | plain    | 
- _refs_key          | integer                     |           |          |         | plain    | 
- inferredfrom       | text                        |           |          |         | extended | 
- _createdby_key     | integer                     |           |          |         | plain    | 
- _modifiedby_key    | integer                     |           |          |         | plain    | 
- creation_date      | timestamp without time zone |           |          |         | plain    | 
- modification_date  | timestamp without time zone |           |          |         | plain    | 
- evidencecode       | text                        |           |          |         | extended | 
- evidenceseqnum     | integer                     |           |          |         | plain    | 
- jnumid             | text                        |           |          |         | extended | 
- jnum               | integer                     |           |          |         | plain    | 
- short_citation     | text                        |           |          |         | extended | 
- createdby          | text                        |           |          |         | extended | 
- modifiedby         | text                        |           |          |         | extended | 
-View definition:
-
+View "mgd.voc_evidence_view" 
 TEC: unused?
 
 */

@@ -1,22 +1,5 @@
 /*
-mgd=> \d+ prb_strain_genotype_view
-                                     View "mgd.prb_strain_genotype_view"
-       Column        |            Type             | Collation | Nullable | Default | Storage  | Description 
----------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _straingenotype_key | integer                     |           |          |         | plain    | 
- _strain_key         | integer                     |           |          |         | plain    | 
- _genotype_key       | integer                     |           |          |         | plain    | 
- _qualifier_key      | integer                     |           |          |         | plain    | 
- _createdby_key      | integer                     |           |          |         | plain    | 
- _modifiedby_key     | integer                     |           |          |         | plain    | 
- creation_date       | timestamp without time zone |           |          |         | plain    | 
- modification_date   | timestamp without time zone |           |          |         | plain    | 
- strain              | text                        |           |          |         | extended | 
- description         | text                        |           |          |         | extended | 
- mgiid               | text                        |           |          |         | extended | 
- qualifier           | text                        |           |          |         | extended | 
- modifiedby          | text                        |           |          |         | extended | 
-View definition:
+View "mgd.prb_strain_genotype_view"
 */
  SELECT s._straingenotype_key,
     s._strain_key,

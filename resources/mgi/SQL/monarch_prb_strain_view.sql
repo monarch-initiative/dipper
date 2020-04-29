@@ -1,24 +1,5 @@
 /*
-mgd=> \d+ prb_strain_view
-                                        View "mgd.prb_strain_view"
-      Column       |            Type             | Collation | Nullable | Default | Storage  | Description 
--------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _strain_key       | integer                     |           |          |         | plain    | 
- _species_key      | integer                     |           |          |         | plain    | 
- _straintype_key   | integer                     |           |          |         | plain    | 
- strain            | text                        |           |          |         | extended | 
- standard          | smallint                    |           |          |         | plain    | 
- private           | smallint                    |           |          |         | plain    | 
- geneticbackground | smallint                    |           |          |         | plain    | 
- _createdby_key    | integer                     |           |          |         | plain    | 
- _modifiedby_key   | integer                     |           |          |         | plain    | 
- creation_date     | timestamp without time zone |           |          |         | plain    | 
- modification_date | timestamp without time zone |           |          |         | plain    | 
- species           | text                        |           |          |         | extended | 
- straintype        | text                        |           |          |         | extended | 
- createdby         | text                        |           |          |         | extended | 
- modifiedby        | text                        |           |          |         | extended | 
-View definition:
+View "mgd.prb_strain_view"
 */
  SELECT s._strain_key,
     s._species_key,

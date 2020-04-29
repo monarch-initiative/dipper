@@ -1,29 +1,5 @@
 /*
-mgd=> \d+ gxd_allelepair_view
-                                        View "mgd.gxd_allelepair_view"
-        Column         |            Type             | Collation | Nullable | Default | Storage  | Description 
------------------------+-----------------------------+-----------+----------+---------+----------+-------------
- _allelepair_key       | integer                     |           |          |         | plain    | 
- _genotype_key         | integer                     |           |          |         | plain    | 
- _allele_key_1         | integer                     |           |          |         | plain    | 
- _allele_key_2         | integer                     |           |          |         | plain    | 
- _marker_key           | integer                     |           |          |         | plain    | 
- _mutantcellline_key_1 | integer                     |           |          |         | plain    | 
- _mutantcellline_key_2 | integer                     |           |          |         | plain    | 
- _pairstate_key        | integer                     |           |          |         | plain    | 
- _compound_key         | integer                     |           |          |         | plain    | 
- sequencenum           | integer                     |           |          |         | plain    | 
- _createdby_key        | integer                     |           |          |         | plain    | 
- _modifiedby_key       | integer                     |           |          |         | plain    | 
- creation_date         | timestamp without time zone |           |          |         | plain    | 
- modification_date     | timestamp without time zone |           |          |         | plain    | 
- symbol                | text                        |           |          |         | extended | 
- chromosome            | text                        |           |          |         | extended | 
- allele1               | text                        |           |          |         | extended | 
- allele2               | text                        |           |          |         | extended | 
- allelestate           | text                        |           |          |         | extended | 
- compound              | text                        |           |          |         | extended | 
-View definition:
+View "mgd.gxd_allelepair_view"
 */
  SELECT a._allelepair_key,
     a._genotype_key,
