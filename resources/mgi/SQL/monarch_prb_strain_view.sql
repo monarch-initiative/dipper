@@ -6,15 +6,13 @@ View "mgd.prb_strain_view"
     s._straintype_key,
     s.strain,
     s.standard,
-    s.private,
     s.geneticbackground,
     sp.term AS species,
     st.term AS straintype,
-   FROM prb_strain s,
-    voc_term sp,
-    voc_term st,
-  WHERE s._species_key = sp._term_key 
-    AND s._straintype_key = st._term_key 
+   FROM prb_strain s
+    join voc_term sp on s._species_key = sp._term_key 
+    join voc_term st on s._straintype_key = st._term_key 
+  WHERE s.private = 0
   ;
 
 

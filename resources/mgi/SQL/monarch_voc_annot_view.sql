@@ -8,7 +8,6 @@ View "mgd.voc_annot_view"
     t0.term,
     t0._logicaldb_key, -- voc_term_view
     t1.term as annottype_term
-
     a._mgitype_key,
     a._evidencevocab_key,
     a.name AS annottype
@@ -17,8 +16,5 @@ View "mgd.voc_annot_view"
     join voc_term_view t0 on v._term_key = t0._term_key 
     join voc_annottype a on v._annottype_key = a._annottype_key 
     join voc_term q on v._qualifier_key = q._term_key
-    join voc_term_view t1 on a._vocab_key = t1._term_key
-  WHERE 
-    AND 
-    AND 
+    join voc_term_view t1 on a._vocab_key = t1._term_key 
   ;

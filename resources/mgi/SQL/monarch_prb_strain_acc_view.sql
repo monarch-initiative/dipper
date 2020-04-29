@@ -11,8 +11,7 @@ View "mgd.prb_strain_acc_view":
     a.private,
     a.preferred,
     l.name AS logicaldb
-   FROM acc_accession a,
-    acc_logicaldb l
-  WHERE a._mgitype_key = 10 
-  AND a._logicaldb_key = l._logicaldb_key
+   FROM acc_accession a
+    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key
+  WHERE a._mgitype_key = 10  
   ;

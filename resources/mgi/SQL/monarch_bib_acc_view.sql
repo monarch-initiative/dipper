@@ -10,10 +10,6 @@ SELECT a._accession_key,
     a._mgitype_key,
     a.private,
     a.preferred,
-    a._createdby_key,
-    a._modifiedby_key,
-    a.creation_date,
-    a.modification_date,
     l.name AS logicaldb
   FROM acc_accession a,
     acc_logicaldb l

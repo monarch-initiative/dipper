@@ -8,15 +8,13 @@ View "mgd.mrk_acc_view"
     a._logicaldb_key,
     a._object_key,
     a._mgitype_key,
-    a.private,
-    a.preferred
 
     l.name AS logicaldb,
     m._organism_key
-   FROM acc_accession a,
-    acc_logicaldb l,
-    mrk_marker m
+   FROM acc_accession a
+    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key 
+    join mrk_marker m on a._object_key = m._marker_key
   WHERE a._mgitype_key = 2 
-    AND a._logicaldb_key = l._logicaldb_key 
-    AND a._object_key = m._marker_key
+  	AND a.private = 0
+  	and a.preferred = 1
  ;
