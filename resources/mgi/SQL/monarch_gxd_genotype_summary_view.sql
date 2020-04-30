@@ -3,8 +3,7 @@ View "mgd.gxd_genotype_summary_view"
 */
  SELECT a._accession_key,
     a.accid,
-    a._object_key,
-    a._mgitype_key,
+    at.name || ':' || a._object_key as mgi_internal,
     a.accid AS mgiid,
     s.strain AS subtype,
     (((s.strain || ' '::text) || a1.symbol) || ','::text) || a2.symbol AS description,
@@ -17,7 +16,8 @@ View "mgd.gxd_genotype_summary_view"
      JOIN all_allele a1 ON ap._allele_key_1 = a1._allele_key
      JOIN all_allele a2 ON ap._allele_key_2 = a2._allele_key
      JOIN acc_logicaldb l ON a._logicaldb_key = l._logicaldb_key
-  WHERE a._mgitype_key = 12 
+     join acc_mgitype at on a._mgitype_key =  at._mgitype_key
+    WHERE at.name = 'Genotype'
     AND a._logicaldb_key = 1 
     AND a.prefixpart = 'MGI:'::text 
     AND a.preferred = 1
@@ -26,8 +26,7 @@ View "mgd.gxd_genotype_summary_view"
 UNION
  SELECT a._accession_key,
     a.accid,
-    a._object_key,
-    a._mgitype_key,
+    at.name || ':' || a._object_key,
     a.accid AS mgiid,
     s.strain AS subtype,
     (s.strain || ' '::text) || a1.symbol AS description,
@@ -39,7 +38,8 @@ UNION
      JOIN gxd_allelepair ap ON g._genotype_key = ap._genotype_key AND ap._allele_key_2 IS NULL
      JOIN all_allele a1 ON ap._allele_key_1 = a1._allele_key
      JOIN acc_logicaldb l ON a._logicaldb_key = l._logicaldb_key
-  WHERE a._mgitype_key = 12 
+  	 join acc_mgitype at on a._mgitype_key =  at._mgitype_key
+  WHERE at.name = 'Genotype' 
     AND a._logicaldb_key = 1 
     AND a.prefixpart = 'MGI:'::text 
     AND a.preferred = 1 
@@ -48,8 +48,7 @@ UNION
 UNION
  SELECT a._accession_key,
     a.accid,
-    a._object_key,
-    a._mgitype_key,
+    at.name || ':' || a._object_key,
     a.accid AS mgiid,
     s.strain AS subtype,
     s.strain AS description,
@@ -59,7 +58,8 @@ UNION
      JOIN gxd_genotype g ON a._object_key = g._genotype_key
      JOIN prb_strain s ON g._strain_key = s._strain_key
      JOIN acc_logicaldb l ON a._logicaldb_key = l._logicaldb_key
-  WHERE a._mgitype_key = 12 
+     join acc_mgitype at on a._mgitype_key =  at._mgitype_key
+  WHERE at.name = 'Genotype'
     AND a._logicaldb_key = 1 
     AND a.prefixpart = 'MGI:'::text 
     AND a.preferred = 1 

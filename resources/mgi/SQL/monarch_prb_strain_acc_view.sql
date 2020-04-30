@@ -3,15 +3,12 @@ View "mgd.prb_strain_acc_view":
 */
  SELECT a._accession_key,
     a.accid,
-    a.prefixpart,
-    a.numericpart,
-    a._logicaldb_key,
-    a._object_key,
-    a._mgitype_key,
-    a.private,
-    a.preferred,
-    l.name AS logicaldb
+    'ComplexReigon:' || a._object_key as mgi_internal,
+    al.name AS logical_name
    FROM acc_accession a
-    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key
-  WHERE a._mgitype_key = 10  
+    join acc_logicaldb al on a._logicaldb_key = al._logicaldb_key
+    join mrk_types mt on a._mgitype_key = mt._mgitype_key
+  WHERE  mt.name = 'Complex/Cluster/Region' 
+    AND a.private = 0
+    AND a.preferred = 1
   ;

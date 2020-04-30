@@ -15,7 +15,8 @@ View "mgd.prb_strain_genotype_view"
     join gxd_genotype g on s._genotype_key = g._genotype_key 
     join prb_strain gs on g._strain_key = gs._strain_key 
     join voc_term t on s._qualifier_key = t._term_key 
-  WHERE a._mgitype_key = 12 
+    join acc_mgitype at on a._mgitype_key =  at._mgitype_key
+  WHERE at.name = 'Genotype'
     AND a._logicaldb_key = 1 
 
   ;
