@@ -1,5 +1,8 @@
 /*
-View "mgd.bib_acc_view"
+First derived from View "mgd.bib_acc_view"
+
+~ 15 seconds
+
 */
 SELECT a._accession_key,
     a.accid,

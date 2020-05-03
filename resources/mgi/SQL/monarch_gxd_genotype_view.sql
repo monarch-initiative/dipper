@@ -1,5 +1,7 @@
 /*
-View "mgd.gxd_genotype_view"
+First derived from View "mgd.gxd_genotype_view"
+
+~ 5 seconds
 */
  SELECT g._genotype_key,
     g._strain_key,

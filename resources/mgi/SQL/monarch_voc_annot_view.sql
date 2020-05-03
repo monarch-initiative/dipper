@@ -1,22 +1,29 @@
 /*
-View "mgd.voc_annot_view"
+First derived from View "mgd.voc_annot_view"
+
+~ 45 seconds
 */
+
  SELECT 
-    v._annot_key,
-    at.name as annot_type,
-    q.abbreviation AS qualifier,
-    t0.term annot_name,
-    t0._logicaldb_key, -- voc_term_view
-    t1.term as annottype_term,
-    ev.name as evidence,
-    a.name AS annottype
-   FROM voc_annot v,
-    join acc_type at on v._object_key = at._mgitype_key
-    join voc_term_view t0 on v._term_key = t0._term_key 
-    join voc_annottype a on v._annottype_key = a._annottype_key 
-    join voc_term q on v._qualifier_key = q._term_key
-    join voc_term_view t1 on a._vocab_key = t1._term_key 
-    join acc_mgitype at on a._mgitype_key =  at._mgitype_key
-    join voc_vocab ev on a._evidencevocab_key = ev._vocab_key
-  WHERE 
+ 	vav._annot_key,
+    -- vav._annottype_key,
+    at.name as mgi_type,  -- vav._mgitype_key,
+    vav._object_key as mgi_internal,  
+
+    --vav._term_key,
+    vav.term, -- voc_term_view._term_key/term,
+
+    --vav._qualifier_key,
+    vav.qualifier, -- voc_term._term_key/abbreviation ,
+
+    --vav._vocab_key,
+    vav.annottype, --a.name
+
+    --vav._evidencevocab_key,
+    aev.name as evidence_type
+
+FROM voc_annot_view vav
+	join acc_mgitype at on vav._mgitype_key = at._mgitype_key
+	join voc_vocab aev on vav._evidencevocab_key = aev._vocab_key
+
   ;

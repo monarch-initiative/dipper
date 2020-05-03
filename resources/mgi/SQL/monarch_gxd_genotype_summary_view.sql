@@ -1,5 +1,6 @@
 /*
-View "mgd.gxd_genotype_summary_view"
+First derived from  View "mgd.gxd_genotype_summary_view"
+
 */
  SELECT a._accession_key,
     a.accid,

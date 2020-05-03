@@ -1,5 +1,6 @@
 /*
-View "mgd.mrk_acc_view"
+First derived from View "mgd.mrk_acc_view"
+~ 30 seconds
 */
  SELECT a._accession_key,
     a.accid,

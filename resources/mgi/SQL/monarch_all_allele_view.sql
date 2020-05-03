@@ -1,5 +1,7 @@
 /*
- View "mgd.all_allele_view"
+First derived from  View "mgd.all_allele_view"
+
+ ~ 30 seconds
 */
 
  SELECT a._allele_key,

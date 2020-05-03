@@ -1,6 +1,7 @@
 /*
-View "mgd.all_summary_view"
+First derived from View "mgd.all_summary_view"
 
+  ~30 seconds
 */
 
  SELECT a._accession_key,
@@ -15,7 +16,7 @@ View "mgd.all_summary_view"
     t.term AS subtype,
     (al.symbol || ', '::text) || al.name AS description,
     al.symbol AS short_description
-   FROM acc_accession a,
+   FROM acc_accession a
     join acc_accession a2 on a._object_key = a2._object_key 
     join all_allele al on a._object_key = al._allele_key 
     join voc_term t on al._allele_type_key = t._term_key

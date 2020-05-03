@@ -1,5 +1,6 @@
 /*
-View "mgd.mgi_note_allele_view"
+First derived from View "mgd.mgi_note_allele_view"
+ ~ 35 seconds
 */
 
  SELECT n._note_key,
@@ -15,6 +16,6 @@ View "mgd.mgi_note_allele_view"
     join acc_mgitype m on n._mgitype_key = m._mgitype_key 
     join acc_mgitype at on t._mgitype_key =  at._mgitype_key
   WHERE at.name = 'Allele'
-    AND n.private = 0
+    AND t.private != 1
 
  ;

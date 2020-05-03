@@ -1,5 +1,8 @@
 /*
-View "mgd.gxd_allelepair_view"
+First derived from View "mgd.gxd_allelepair_view"
+
+ ~ 5 seconds
+
 */
  SELECT a._allelepair_key,
     a._genotype_key,

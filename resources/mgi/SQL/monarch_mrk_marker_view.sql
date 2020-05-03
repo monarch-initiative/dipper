@@ -1,5 +1,7 @@
 /*
-View "mgd.mrk_marker_view"
+First derived from View "mgd.mrk_marker_view"
+
+~10 seconds
 */
  SELECT m._marker_key,
     m.symbol,

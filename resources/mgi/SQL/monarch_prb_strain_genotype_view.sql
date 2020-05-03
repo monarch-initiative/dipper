@@ -1,5 +1,7 @@
 /*
-View "mgd.prb_strain_genotype_view"
+First derived from View "mgd.prb_strain_genotype_view"
+
+~ 5 seconds
 */
  SELECT s._straingenotype_key,
     s._strain_key,
@@ -8,7 +10,7 @@ View "mgd.prb_strain_genotype_view"
     ss.strain,
     gs.strain AS description,
     a.accid AS mgiid,
-    t.term AS qualifier,
+    t.term AS qualifier
    FROM prb_strain_genotype s
     join prb_strain ss on s._strain_key = ss._strain_key 
     join acc_accession a on s._genotype_key = a._object_key 
