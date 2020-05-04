@@ -3,22 +3,22 @@ First derived from View "mgd.gxd_genotype_view"
 
 ~ 5 seconds
 */
- SELECT g._genotype_key,
-    g._strain_key,
-    g.isconditional,
-    g.note,
-    g._existsas_key,
-    s.strain,
-    a.accid AS mgiid,
-    (('['::text || a.accid) || '] '::text) || s.strain AS displayit,
-    vt.term AS existsas
-   FROM gxd_genotype g
-    join prb_strain s on g._strain_key = s._strain_key
-    join acc_accession a on g._genotype_key = a._object_key 
-    join voc_term vt on g._existsas_key = vt._term_key
-    join acc_mgitype at on a._mgitype_key =  at._mgitype_key
-  WHERE at.name = 'Genotype'
-    AND a._logicaldb_key = 1 
-    AND a.prefixpart = 'MGI:'::text 
-    AND a.preferred = 1 
- ;
+
+ SELECT
+	ggv._genotype_key,
+    --ggv._strain_key,
+    ggv.isconditional,
+    ggv.note,
+    --ggv._existsas_key,
+    --g._createdby_key,
+    --g._modifiedby_key,
+    --g.creation_date,
+    --g.modification_date,
+    ggv.strain,
+    ggv.mgiid,
+    ggv.displayit,
+    --u1.login AS createdby,
+    --u2.login AS modifiedby,
+    ggv.existsas
+   FROM gxd_genotype_view ggv
+;
