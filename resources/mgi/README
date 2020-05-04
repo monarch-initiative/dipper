@@ -5,32 +5,40 @@ circa 2017 the files were fetched via the unbelivable simple expediant of:
    
     'select * from <table_n>;'
 
-as an incremental improvment Kent made the fields explicit:
+As an improvment Kent explicitly limited the queries to just the fields 
+the ingest uses which is was a good as it:
+    1) avoided moving unused data 
+    2) established an expected column order
+    3) allows some hope of knowing if a column is altered/deleted/
 
     'select f1,f2,f3... from <table_n>;'
 
-which helps.
+Although the queries provided an ordered series of column names the ingest still 
+ignored them and made unchecked bulk assignments as it always had.
 
-Early 2020 we made the python code use these explicit fiels and lost 200k RDF statments.
+Early 2020 we made the python code use these explicit fields
+However out pulling of opaque interger keys (database row ids) and hardcoding
+them into python code means we can't know if what we see returned makes the 
+same sense as when it was written as by convention columns preceeded with an 
+underscore are subject to the needs of the database administrators. Hence, 
+that it still works at all is a testament to the maturity and stability 
+of the MGI dataase.
 
-with our code explicitly doing exactly what we believed it to be implicitly doing the 
-discrepency is difficult to reconcile as good or bad. 
 
 Compounded by no one involved in writing the MGI ingest working for Monarch anymore
 and much of the "data" in the tables we pull being MGI-INTERNAL-database integers.
 
 It seems a good idea to reverse engineer and document what is currently there 
-and rewrite the queries to include zero mgi-internal-internal identifiers 
-(all of which have coulumn headers that begin with an underscore)
+and rewrite the queries to avoid mgi-internal-internal identifiers 
+(all of which have column headers that begin with an underscore)
 
 This can be done by followling the schema at 
 
 http://www.informatics.jax.org/schema_pg/index.html
    
-where we find ~400 tables-views and  ~1,900 columns 
+where we find ~400 tables&views and  ~1,900 columns 
 
 ... peice of cake
-
 
 
 The list of MGI/JAX's postgres views and tables that dipper fetches (circa 2020)
@@ -39,6 +47,17 @@ and then re processed in python.
 extract from the python dict  MGI.tables and put in text file 
 
     SQL/view_list
+
+
+logical views v.s. physical tables. 
+    
+Pro:  Views are the begining denormalizations of their physical tables
+Pro:  Views *could* be more a more stable interface as the query that creates them      
+        can be changed when the underlying change without changing the resulting view.
+
+Con: Views are not creates for our exact use cases, have both extra and missing data.
+Con: Views are not self documenting (e.g. in SchemaSpy) so integrating them takes time.
+  
 
 Unfortunatly MGI's SchemaSpy documentaion provides no explaination beyond column names 
 for database "views" so the explicit primary_key foreign_key constraints are obscured.  
@@ -121,15 +140,18 @@ self.idhash = {
         }
 ``` 
 
-Unfortunatly there is no way short of reading the 2,300 line python program to know how 
-these interact in their vaiant attempt to recreate a basic relational algerbra engine.
+Unfortunatly there is no way short of reading the 2,300 line python ingest to figure 
+out how these data structures interact in their valiant attempt to recreate 
+a basic relational algerbra engine.
 
 ... which I did manually as:  mgi_view_reverseing.gv
     
+
 ---------------------------------------------------------------------------------------
 
 next steps will be to rewrite the view queries to 
     - omit unused fields
+    - omit unused joins
     - replace opaque integer mgi-internal-identifiers with what they represent
     - filter the remaining (e.g. do not bother downloading "withdrawn")
 
@@ -138,9 +160,98 @@ Depending on how things are going;
  
 
 
+----------------------------------------------------------------------------------------
+# Create a set of queries to refine
+
+for v in SQL/orig_* ; do cp $v  SQL/monarch_${v#SQL/orig_}; done
 
 
 
+we can remove joins on the tables where we do not propagate fine a detail 
+such as which curator edited the record.
+
+Starting with alleles
+
+
+note: we should be monitoring "Allele Type" 
+there are more types in the db than in their schema doc
+
+mgd=> 
+
+select term 
+ from voc_term  
+ join voc_vocab on voc_term._vocab_key = voc_vocab._vocab_key 
+ where voc_vocab.name = 'Allele Type'
+order by 1
+
+               term               
+----------------------------------
+# Chemically and radiation induced
+# Chemically induced (ENU)
+# Chemically induced (other)
+# Endonuclease-mediated
+# Gene trapped
+# Not Applicable
+# Not Specified
+# Other
+# QTL
+# Radiation induced
+# Spontaneous
+# Targeted
+# Transgenic
+# Transposon induced
+
+these terms sould be added to mgi local translatation table yaml as needed. 
+
+
+
+select term 
+ from voc_term  
+ join voc_vocab on voc_term._vocab_key = voc_vocab._vocab_key 
+ where voc_vocab.name = 'Allele Transmission'
+order by 1;
+
+      term      
+----------------
+ Cell Line
+ Chimeric
+ Germline
+ Not Applicable
+ Not Specified
+
+
+select term 
+ from voc_term  
+ join voc_vocab on voc_term._vocab_key = voc_vocab._vocab_key 
+ where voc_vocab.name = 'Allele Status'      
+order by 1;
+    term     
+-------------
+ Approved
+ Autoload
+ Deleted
+ In Progress
+ Reserved
+
+
+time \
+psql -A -U llui  -h mgi-adhoc.jax.org -d mgd  -o Allele.tsv < SQL/monarch_all_summary_view.sql
+
+####################################################################################
+####################################################################################
+... later
+
+I wrote the queries to generate the modified views with their attendent secondary terms
+I also began merging the ones with common object keys. it is doable but not fun
+(or maintinable) to have queries spanning dozens of tables. 
+
+Even though targeted table queries may be more "efficent" from a db-query resource 
+perspective I think the best plan is to minimize the possibility of required maintaince 
+(when physical table schema changes) and use views (that MGI dbadmins maintain)
+wherever possible now that I have figured out where they go.
+
+There will still be some physical db exposure but typicaly single mostly stable fields 
+in a secondary table. e.g controled voabulary that typically just gets appended to.
 
 
 
