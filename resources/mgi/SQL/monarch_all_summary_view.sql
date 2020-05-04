@@ -1,31 +1,37 @@
 /*
 First derived from View "mgd.all_summary_view"
 
-  ~30 seconds
+  ~2 minutes
 */
 
- SELECT a._accession_key,
-    a.accid,
-    a.prefixpart,
-    a.numericpart,
-    a._logicaldb_key,
-    a._object_key,
-    a._mgitype_key,
-    a.preferred,
-    a2.accid AS mgiid,
-    t.term AS subtype,
-    (al.symbol || ', '::text) || al.name AS description,
-    al.symbol AS short_description
-   FROM acc_accession a
-    join acc_accession a2 on a._object_key = a2._object_key 
-    join all_allele al on a._object_key = al._allele_key 
-    join voc_term t on al._allele_type_key = t._term_key
-    join acc_mgitype at on a._mgitype_key  =  at._mgitype_key
-    WHERE at.name = 'Allele' 
-      AND a.private = 0 
-      AND a._mgitype_key = a2._mgitype_key
-      AND a2._logicaldb_key = 1 
-      AND a2.prefixpart = 'MGI:'::text 
-      AND a2.preferred = 1 
-;
+ SELECT
+	asv._accession_key,
+    asv.accid,
+    asv.prefixpart,
+    asv.numericpart,
 
+    --asv._logicaldb_key,
+    al.name AS logicaldb,
+
+    asv._object_key as mgi_internal,
+    --asv._mgitype_key,
+    at.name as mgi_type,
+
+    --a.private,
+    --a.preferred,
+    --a._createdby_key,
+    --a._modifiedby_key,
+    --a.creation_date,
+    --a.modification_date,
+
+    asv.mgiid,
+    asv.subtype,
+    asv.description,
+    asv.short_description
+FROM  all_summary_view asv
+  join acc_logicaldb al on asv._logicaldb_key = al._logicaldb_key
+  join acc_mgitype at on asv._mgitype_key = at._mgitype_key
+
+WHERE asv.private != 1
+  AND asv.preferred = 1
+;
