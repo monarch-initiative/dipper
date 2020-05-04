@@ -22,7 +22,8 @@ select
 
 from  mrk_summary_view msv
  join acc_mgitype at on msv._mgitype_key = at._mgitype_key
- join acc_logicaldb al on msv._logicaldb_key = al._logicaldb_key
+ join acc_logicaldb_view al on msv._logicaldb_key = al._logicaldb_key
 
 where msv.private != 1
+  and msv.preferred = 1
 ;
