@@ -1,22 +1,30 @@
 /*
 First derived from View "mgd.mrk_marker_view"
 
-~10 seconds
-*/
- SELECT m._marker_key,
-    m.symbol,
-    m.name,
-    m.chromosome,
-    m.cytogeneticoffset,
-    m.cmoffset,
-    s.commonname,
-    s.latinname,
-    mt.name AS markertype
+~2.5 minutes
 
-   FROM mrk_marker m 
-    join mgi_organism s on m._organism_key = s._organism_key 
-    join mrk_status ms on m._marker_status_key = ms._marker_status_key 
-    join mrk_types mt on m._marker_type_key = mt._marker_type_key
-    join mrk_current mc on m._marker_key = mc._current_key
- WHERE ms.status != 'withdrawn'
-  ;
+*/
+
+SELECT
+	mmv._marker_key,
+    --m._organism_key,
+    --m._marker_status_key,
+    --m._marker_type_key,
+    mmv.symbol,
+    mmv.name,
+    mmv.chromosome,
+    mmv.cytogeneticoffset,
+    mmv.cmoffset,
+    --m._createdby_key,
+    --m._modifiedby_key,
+    --m.creation_date,
+    --m.modification_date,
+    mmv.organism,
+    --mmv.commonname,
+    mmv.latinname,
+    mmv.status,
+    mmv.markertype
+    --u1.login AS createdby,
+    --u2.login AS modifiedby
+FROM mrk_marker_view mmv
+;
