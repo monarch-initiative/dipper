@@ -1,23 +1,28 @@
 /*
 First derived from View "mgd.bib_acc_view"
 
-~ 15 seconds
+~ 1 minute
 
 */
-SELECT a._accession_key,
-    a.accid,
-    a.prefixpart,
-    a.numericpart,
-    a._logicaldb_key,
-    a._object_key,
-    a._mgitype_key,
-    a.preferred,
-    l.name AS logicaldb
-  FROM acc_accession a 
-    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key
-    join acc_mgitype at on a._mgitype_key =  at._mgitype_key
-    WHERE at.name = 'Reference'
-      AND a.private = 0
+SELECT
+	bav._accession_key,
+    bav.accid,
+    bav.prefixpart,
+    bav.numericpart,
+    --bav._logicaldb_key,
+    bav._object_key as mgi_internal,
+    --bav._mgitype_key,
+    bat.name as mgi_type,
+    --a.preferred,
+    --a._createdby_key,
+    --a._modifiedby_key,
+    --a.creation_date,
+    --a.modification_date,
+    bav.logicaldb
 
+FROM bib_acc_view bav
+join acc_mgitype bat on bav._mgitype_key =  bat._mgitype_key
+
+WHERE bav.private != 1
+  AND bav.preferred = 1
 ;
-
