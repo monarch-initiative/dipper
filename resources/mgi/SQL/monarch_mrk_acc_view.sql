@@ -1,17 +1,32 @@
 /*
 First derived from View "mgd.mrk_acc_view"
-~ 30 seconds
+~ 2 minutes
 */
- SELECT a._accession_key,
-    a.accid,
-    at.name || ':' || a._object_key as mgi_internal,
-    l.name AS logicaldb,
-    m._organism_key
-   FROM acc_accession a
-    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key 
-    join mrk_marker m on a._object_key = m._marker_key
-    join acc_mgitype at on a._mgitype_key =  at._mgitype_key
-  WHERE at.name = 'Marker'
-  	AND a.private = 0
-  	and a.preferred = 1
- ;
+
+
+SELECT
+	mav._accession_key,
+    mav.accid,
+    mav.prefixpart,
+    mav.numericpart,
+    --a._logicaldb_key,
+    mav._object_key as mgi_internal,
+    --a._mgitype_key,
+    at.name as mgitype,
+    --a.private,
+    --a.preferred,
+    --a._createdby_key,
+    --a._modifiedby_key,
+    --a.creation_date,
+    --a.modification_date,
+    mav.logicaldb,
+    --m._organism_key
+    mov.latinname
+
+FROM mrk_acc_view mav
+join acc_mgitype at on mav._mgitype_key = at._mgitype_key
+join mgi_organism_view mov on mav._organism_key =  mov._organism_key
+
+WHERE mav.private !=1
+  AND mav.preferred = 1
+;
