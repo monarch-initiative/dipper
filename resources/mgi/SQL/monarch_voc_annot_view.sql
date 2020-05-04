@@ -1,13 +1,13 @@
 /*
 First derived from View "mgd.voc_annot_view"
 
-~ 45 seconds
+~ 45 seconds   -> killed in 11 minutes
 */
 
- SELECT 
+ SELECT
  	vav._annot_key,
     -- vav._annottype_key,
-    at.name as mgi_type,  -- vav._mgitype_key,
+    at.name as mgitype,  -- vav._mgitype_key,
     vav._object_key as mgi_internal,  
 
     --vav._term_key,
@@ -20,10 +20,9 @@ First derived from View "mgd.voc_annot_view"
     vav.annottype, --a.name
 
     --vav._evidencevocab_key,
-    aev.name as evidence_type
+    vvv.name as evidence
 
 FROM voc_annot_view vav
 	join acc_mgitype at on vav._mgitype_key = at._mgitype_key
-	join voc_vocab aev on vav._evidencevocab_key = aev._vocab_key
-
+	join voc_vocab_view vvv on vav._evidencevocab_key = vvv._vocab_key
   ;

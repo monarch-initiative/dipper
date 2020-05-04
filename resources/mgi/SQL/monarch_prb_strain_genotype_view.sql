@@ -1,8 +1,28 @@
 /*
 First derived from View "mgd.prb_strain_genotype_view"
 
-~ 5 seconds
+~ 5 seconds -> I can't wait this long (killed @ 16.5 minutes)
+
+todo re test as it may bave been  an issue on their side
 */
+SELECT
+	psgv._straingenotype_key,
+    --s._strain_key,
+    psgv._genotype_key as mgi_internal, -- mgitype -> 'Genotype'
+    --s._qualifier_key,
+    --s._createdby_key,
+    --s._modifiedby_key,
+    --s.creation_date,
+    --s.modification_date,
+    psgv.strain,
+    psgv.description,
+    psgv.mgiid,
+    psgv.qualifier
+    --u.login AS modifiedby
+   FROM prb_strain_genotype_view psgv
+;
+
+/*
  SELECT s._straingenotype_key,
     s._strain_key,
     s._genotype_key,
@@ -20,5 +40,5 @@ First derived from View "mgd.prb_strain_genotype_view"
     join acc_mgitype at on a._mgitype_key =  at._mgitype_key
   WHERE at.name = 'Genotype'
     AND a._logicaldb_key = 1 
-
-  ;
+;
+*/

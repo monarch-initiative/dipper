@@ -29,7 +29,7 @@ First derived from View "mgd.all_summary_view"
     asv.description,
     asv.short_description
 FROM  all_summary_view asv
-  join acc_logicaldb al on asv._logicaldb_key = al._logicaldb_key
+  join acc_logicaldb_view al on asv._logicaldb_key = al._logicaldb_key
   join acc_mgitype at on asv._mgitype_key = at._mgitype_key
 
 WHERE asv.private != 1
