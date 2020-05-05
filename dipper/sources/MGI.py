@@ -1492,7 +1492,7 @@ SELECT  r._relationship_key as rel_key,
             row = next(reader)
             if not self.check_fileheader(col, row, src_key):
                 pass
-            for line in reader:
+            for row in reader:
                 strain_key = row[col.index('_strain_key')].strip()
                 strain = row[col.index('strain')].strip()
                 species = row[col.index('species')].strip()

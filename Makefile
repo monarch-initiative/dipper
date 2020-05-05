@@ -137,18 +137,18 @@ clean_tt_generated:
 	rm translationtable/generated/curiemap_prefix.txt
 	rm /tmp/local_inverse.tab
 
-translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
-	@ cut -f1 -d ':' dipper/curie_map.yaml  | tr -d "'" | egrep -v "^$|^ *#" |\
+translationtable/generated/curiemap_prefix.txt : dipper/curie_map.yaml
+	@ cut -f1 -d ':' $<  | tr -d "'" | egrep -v "^$|^ *#" |\
 		grep .|sed 's|\(.*\)|"\1"|g' | LC_ALL=C sort -u > $@
 
-/tmp/local_inverse.tab: translationtable/[a-z_-]*.yaml
+/tmp/local_inverse.tab : translationtable/[a-z_-]*.yaml
 	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
 		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
 			print "\"" $$4 "\"\t\"" $$2 "\""}' \
 				$^ | LC_ALL=C sort -u > $@
 
-translationtable/generated/prefix_equivalents.yaml: \
+translationtable/generated/prefix_equivalents.yaml : \
 		translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
-	@ echo "---\n# prefix_equivalents.yaml" > $@;
-	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab|\
+	@ echo "---\n# prefix_equivalents.yaml" > $@ && \
+	LC_ALL=C join $< /tmp/local_inverse.tab | \
 	awk '{v=$$1;$$1="";print substr($$0,2) ": " v}' | sort -u >> $@

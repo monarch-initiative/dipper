@@ -1,0 +1,51 @@
+# ag "idhash." dipper/sources/MGI.py 
+315:        self.idhash = {
+540:                if self.idhash['genotype'].get(genotype_key) is None:
+543:                    self.idhash['genotype'][genotype_key] = mgiid
+550:                strain_id = self.idhash['strain'].get(strain_key)
+557:                        self.idhash['strain'].update({strain_key: strain_id})
+593:        Add the genotype internal id to mgiid mapping to the idhashmap.
+640:                self.idhash['genotype'][object_key] = mgiid
+672:        We also add the id to this source's global idhash for lookup later
+736:                    self.idhash['allele'][object_key] = mgiid
+752:        We assume that the MGI ids are available in the idhash,
+816:                allele_id = self.idhash['allele'].get(allele_key)
+828:                    marker_id = self.idhash['marker'].get(marker_key)
+854:                self.idhash['seqalt'][allele_key] = iseqalt_id
+862:                    self.idhash['seqalt'][allele_key] = allele_id
+902:                    strain_id = self.idhash['strain'].get(strain_key)
+966:                genotype_id = self.idhash['genotype'].get(genotype_key)
+974:                allele1_id = self.idhash['allele'].get(allele_key_1)
+975:                allele2_id = self.idhash['allele'].get(allele_key_2)
+1109:                iseqalt_id = self.idhash['seqalt'].get(allele_key)
+1129:                allele_id = self.idhash['allele'].get(allele_key)
+1147:        We add the internal annotation id to the idhashmap.
+1202:                    genotype_id = self.idhash['genotype'].get(object_key)
+1216:                    genotype_id = self.idhash['genotype'].get(object_key)
+1233:                    marker_id = self.idhash['marker'].get(object_key)
+1247:                    allele_id = self.idhash['allele'].get(object_key)
+1261:                    self.idhash['annot'][annot_key] = assoc_id
+1272:        We will only add the evidence if the annotation is in our idhash.
+1326:                self.idhash['notes'][annot_evidence_key] = annot_key
+1328:                assoc_id = self.idhash['annot'].get(annot_key)
+1399:                self.idhash['publication'][object_key] = accid
+1423:                jid = self.idhash['publication'].get(object_key)
+1508:                strain_id = self.idhash['strain'].get(strain_key)
+1581:                    marker_id = self.idhash['marker'].get(marker_key)
+1674:                    if self.idhash['marker'].get(object_key) is None:
+1676:                        self.idhash['marker'][object_key] = mgiid
+1748:                    self.idhash['marker'][object_key] = marker_id
+1795:                if object_key in self.idhash['marker']:
+1796:                    mgiid = self.idhash['marker'][object_key]
+1878:                    self.idhash['strain'][object_key] = mgiid
+1881:                elif object_key in self.idhash['strain']:
+2000:                annotkey = self.idhash['notes'].get(object_key)
+2001:                annot_id = self.idhash['annot'].get(annotkey)
+2054:                if marker_key in self.idhash['marker']:
+2055:                    gene_id = self.idhash['marker'][marker_key]
+2082:                    LOG.warning('marker key %s not in idhash', str(marker_key))
+2130:                seqalt_id = self.idhash['seqalt'].get(allele_key)
+2191:            allele_id = self.idhash['allele'].get(allele_key)
+2238:                strain_id = self.idhash['strain'].get(strain_key)
+2242:                genotype_id = self.idhash['genotype'].get(genotype_key)
+

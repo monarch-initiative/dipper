@@ -1,0 +1,59 @@
+digraph G { 
+node[shape=record];
+# rankdir="LR";
+
+all_summary_view[label="{allele |<f0> object_key}"];
+all_summary_view:f0 -> all_allele_view:f0;
+all_summary_view:f0 -> gxd_allelepair_view:f1;
+all_summary_view:f0 -> gxd_allelepair_view:f2;
+all_summary_view:f0 -> all_allele_mutation_view:f0;
+all_summary_view:f0 -> voc_annot_view:f1;
+all_summary_view:f0 -> mgi_note_allele_view:f0;
+
+mrk_summary_view[label="{marker |<f0> object_key}"];
+mrk_summary_view:f0 -> all_allele_view:f1;
+mrk_summary_view:f0 -> voc_annot_view:f1;
+mrk_summary_view:f0 -> mrk_marker_view:f0;
+mrk_summary_view:f0 -> mrk_acc_view:f0;
+mrk_summary_view:f0 -> mrk_location_cache:f0;
+
+bib_acc_view[label="{publication |<f0> object_key}"];
+bib_acc_view:f0 -> bib_acc_view:f0;
+
+prb_strain_acc_view[label="{strain |<f0> object_key | (bnode hardcode)}"];
+prb_strain_acc_view:f0 -> gxd_genotype_view:f0;
+prb_strain_acc_view:f0 -> all_allele_view:f2;
+prb_strain_acc_view:f0 -> prb_strain_view:f0;
+prb_strain_acc_view:f0 -> prb_strain_genotype_view:f0;
+
+gxd_genotype_summary_view[label="{genotype |<f0> object_key}"];
+gxd_genotype_summary_view:f0 -> gxd_allelepair_view:f0
+gxd_genotype_summary_view:f0 -> voc_annot_view:f1
+
+voc_annot_view[label="{annot |<f0> annot_key |<f1> object_key}"];
+voc_annot_view:f0 -> evidence_view:f1;
+voc_annot_view:f0 -> mgi_note_vocevidence_view ->  notes:object_key;
+
+evidence_view[label="{notes |<f0>annot_evidence_key |<f1> annot_key}"];
+evidence_view:f0 -> mgi_note_vocevidence_view:f0;
+
+
+all_allele_view[label="{seqalt |<f0> allele_key |<f1> object_key |<f2> strain_key}"];
+all_allele_view:f0 -> all_allele_mutation_view:f0;
+all_allele_view:f0 -> mgi_relationship_transgene_genes:f0
+
+
+gxd_allelepair_view[label="{gxd_allelepair_view |<f0> genotype_key |<f1> allele_key_1 |<f2> allele_key_2}"];
+all_allele_mutation_view[label="{all_allele_mutation_view |<f0> allele_key}"];
+mrk_marker_view[label="{mrk_marker_view |<f0> marker_key}"];
+mrk_acc_view[label="{mrk_acc_view |<f0> object_key}"];
+mrk_location_cache[label="{mrk_location_cache |<f0> marker_key}"];
+gxd_genotype_view[label="{gxd_genotype_view |<f0> strain_key}"];
+prb_strain_view[label="{prb_strain_view |<f0> strain_key}"];
+prb_strain_genotype_view[label="{prb_strain_genotype_view |<f0> strain_key}"];
+mgi_relationship_transgene_genes[label="{mgi_relationship_transgene_genes |<f0> allele_key}"];
+mgi_note_vocevidence_view[label="{mgi_note_vocevidence_view| <f0> object_key}"];
+mgi_note_allele_view[label="{mgi_note_allele_view |<f0> allele_key}"];
+#[label="{|<f0> }"];
+
+}

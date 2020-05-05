@@ -1,0 +1,122 @@
+all_allele_view  == all_allele a
+     LEFT JOIN mrk_marker m 		ON a._marker_key = m._marker_key
+     LEFT JOIN bib_citation_cache r ON a._refs_key = r._refs_key
+
+all_summary_view == acc_accession a
+    join acc_accession a2 on a._object_key = a2._object_key 
+    join all_allele al on a._object_key = al._allele_key 
+    join voc_term t on al._allele_type_key = t._term_key
+
+    -- AND a._mgitype_key = 11 
+    -- AND a.private = 0 
+    -- AND a2._logicaldb_key = 1 
+    -- AND a2._mgitype_key = 11 
+    -- AND a2.prefixpart = 'MGI:'::text 
+    -- AND a2.preferred = 1 
+
+bib_acc_view == acc_accession a 
+    join acc_logicaldb l on  a._logicaldb_key = l._logicaldb_key
+
+    -- AND a._mgitype_key = 1
+
+voc_evidence_view == voc_evidence e
+    join voc_term t on e._evidenceterm_key = t._term_key 
+    join bib_citation_cache c on e._refs_key = c._refs_key
+
+gxd_allelepair_view == gxd_allelepair a
+     JOIN mrk_marker m ON a._marker_key = m._marker_key
+     JOIN all_allele a1 ON a._allele_key_1 = a1._allele_key
+     JOIN voc_term t1 ON a._pairstate_key = t1._term_key
+     JOIN voc_term t2 ON a._compound_key = t2._term_key
+
+gxd_genotype_summary_view == acc_accession a
+     JOIN gxd_genotype g ON a._object_key = g._genotype_key
+     JOIN prb_strain s ON g._strain_key = s._strain_key
+     JOIN gxd_allelepair ap ON g._genotype_key = ap._genotype_key
+     JOIN all_allele a1 ON ap._allele_key_1 = a1._allele_key
+     JOIN all_allele a2 ON ap._allele_key_2 = a2._allele_key
+     JOIN acc_logicaldb l ON a._logicaldb_key = l._logicaldb_key
+
+    --AND a._logicaldb_key = l._logicaldb_key
+    --AND a._mgitype_key = 12 
+    --AND a._logicaldb_key = 1 
+    --AND a.prefixpart = 'MGI:'::text 
+    --AND a.preferred = 1 
+    -- UNIONS
+
+gxd_genotype_view == gxd_genotype g
+    join prb_strain s on g._strain_key = s._strain_key 
+    join acc_accession a on g._genotype_key = a._object_key
+    join voc_term vt on g._existsas_key = vt._term_key
+
+    --AND a._mgitype_key = 12 
+    --AND a._logicaldb_key = 1 
+    --AND a.prefixpart = 'MGI:'::text 
+    --AND a.preferred = 1 
+
+mgi_note_allele_view == mgi_note n
+    join mgi_notetype t on n._notetype_key = t._notetype_key 
+    join mgi_notechunk c on n._note_key = c._note_key 
+    join acc_mgitype m on n._mgitype_key = m._mgitype_key
+
+    --AND t._mgitype_key = 11
+
+mgi_note_vocevidence_view == mgi_note n
+    join mgi_notetype t on n._notetype_key = t._notetype_key
+    join mgi_notechunk c on n._note_key = c._note_key 
+    join acc_mgitype m on n._mgitype_key = m._mgitype_key
+
+    --AND t._mgitype_key = 25 
+
+mrk_acc_view == acc_accession a 
+    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key 
+    join mrk_marker m on a._object_key = m._marker_key
+
+    --AND a._mgitype_key = 2
+
+mrk_marker_view  ==  mrk_marker m 
+    join mgi_organism s on m._organism_key = s._organism_key
+    join mrk_status ms on m._marker_status_key = ms._marker_status_key 
+    join mrk_types mt on m._marker_type_key = mt._marker_type_key
+
+mrk_summary_view == cc_accession a
+    join acc_accession a2 on a._object_key = a2._object_key 
+    join mrk_marker m m._marker_key = a._object_key 
+    join mrk_types mt on m._marker_type_key = mt._marker_type_key 
+
+    -- AND a._mgitype_key = 2 
+    -- AND a.private = 0 
+    -- AND a2._logicaldb_key = 1 
+    -- AND a2._mgitype_key = 2 
+    -- AND a2.prefixpart = 'MGI:'::text 
+    -- AND a2.preferred = 1
+
+prb_strain_acc_view == acc_accession a
+    join acc_logicaldb l on a._logicaldb_key = l._logicaldb_key 
+
+    --AND a._mgitype_key = 10 
+
+prb_strain_genotype_view == prb_strain_genotype s
+    join prb_strain ss on s._strain_key = ss._strain_key 
+    join acc_accession a on s._genotype_key = a._object_key
+    join gxd_genotype g on s._genotype_key = g._genotype_key 
+    join prb_strain gs on g._strain_key = gs._strain_key
+    join voc_term t on s._qualifier_key = t._term_key 
+ 
+    -- AND a._mgitype_key = 12 
+    -- AND a._logicaldb_key = 1 
+
+prb_strain_view == prb_strain s
+    join voc_term sp on s._species_key = sp._term_key 
+    join voc_term st on s._straintype_key = st._term_key 
+
+voc_annot_view == voc_annot v
+    join voc_term_view t on v._term_key = t._term_key 
+    join voc_annottype a on v._annottype_key = a._annottype_key 
+    join voc_term q on v._qualifier_key = q._term_key
+
+
+----------------------
+-- tables not views
+-- mrk_location_cache 
+-- mgi_dbinfo

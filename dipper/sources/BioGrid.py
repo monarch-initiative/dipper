@@ -93,8 +93,7 @@ class BioGrid(Source):
             # assume that the first entry is the item
             fname = flist[0]
             # get the version from the filename
-            version = re.match(
-                r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
+            version = re.match(r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
         myzip.close()
 
         self.dataset.set_ingest_source_file_version_num(
@@ -294,11 +293,10 @@ class BioGrid(Source):
                 #                   WormBase,XenBase,ENSEMBL,miRBase'.split(',')
                 geneidtypefilters = 'NCBIGene,MGI,ENSEMBL,ZFIN,HGNC'.split(',')
                 # proteinidtypefilters='HPRD,Swiss-Prot,NCBIProtein'
-                if (speciesfilters is not None) \
-                        and (organism_label.strip() in speciesfilters):
+                if (speciesfilters is not None) and (
+                        organism_label.strip() in speciesfilters):
                     line_counter += 1
-                    if (geneidtypefilters is not None) \
-                            and (prefix in geneidtypefilters):
+                    if (geneidtypefilters is not None) and (prefix in geneidtypefilters):
                         mapped_id = ':'.join((prefix, id_num))
                         model.addEquivalentClass(biogrid_id, mapped_id)
                     # this symbol will only get attached to the biogrid class
