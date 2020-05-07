@@ -162,7 +162,6 @@ class MPD(Source):
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
 
     def _process_straininfo(self, limit):
-        # line_counter = 0  # TODO unused
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -178,6 +177,8 @@ class MPD(Source):
             reader = csv.reader(f, delimiter=',', quotechar='\"')
             self.check_header(self.files['straininfo']['file'], f.readline())
             for row in reader:
+                if not row:
+                    continue  # skip blank rows
                 (strain_name, vendor, stocknum, panel, mpd_strainid,
                  straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
@@ -226,6 +227,8 @@ class MPD(Source):
             self.check_header(
                 self.files['assay_metadata']['file'], f.readline())
             for row in reader:
+                if not row:
+                    continue  # skip blank lines
                 line_counter += 1
                 assay_id = int(row[0])
                 assay_label = row[4]
