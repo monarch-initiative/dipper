@@ -9,7 +9,6 @@
 "both": "sex_qualified_genotype"
 "no_data": "intrinsic_genotype"
 
-#
 "DTCC consortium": "http://www.criver.com/promo/dtcc"
 "European Mouse Disease Clinic": "http://www.eumodic.org/"
 "Helmholtz German Mouse Clinic": "https://www.mouseclinic.de/"
@@ -26,7 +25,6 @@
 "International Mouse Phenotyping Consortium": "http://www.mousephenotype.org/"
 "Infection and Immunity Immunophenotyping (3i) consortium": "http://www.immunophenotype.org/"
 "Institute of Molecular Genetics of the ASCR, v.v.i": "https://www.img.cas.cz/en/"
-
 
 # maybe better as part of curie_map ???
 "BCM": "https://www.bcm.edu/"
@@ -54,5 +52,3 @@
 "Wilcoxon rank sum test with continuity correction": "Mann-Whitney U-test"
 "effect_size": "effect size estimate"
 "percentage_change": "fold change"
-
-
