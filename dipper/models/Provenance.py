@@ -48,9 +48,9 @@ class Provenance:
                 measurement, self.globaltt['output_of'], study)
         return
 
-    def add_study_measure(self, study, measure):
+    def add_study_measure(self, study, measure, object_is_literal=None):
         self.graph.addTriple(
-            study, self.globaltt['measures_parameter'], measure)
+            study, self.globaltt['measures_parameter'], measure, object_is_literal)
         return
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
