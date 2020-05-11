@@ -61,7 +61,7 @@ class Ensembl(Source):
             'Gene name',
             'Gene description',
             'Gene type',
-            'NCBI gene (formerly Entrezgene) ID',  # (formerly 'NCBI gene ID')
+            'NCBI gene (formerly Entrezgene) ID',
             'Protein stable ID',
             'UniProtKB/Swiss-Prot ID',
             'HGNC ID',  # human only
