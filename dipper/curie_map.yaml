@@ -204,8 +204,8 @@
 'HGNC': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:'    # HUGO Gene Nomenclature Committee (Human)
 'IMPC': 'https://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
 'IMPC-pipe': 'https://www.mousephenotype.org/impress/PipelineInfo?id='         # <pipeline-key>
-'IMPC-proc': 'https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=' # <procedure-key>[&pipeID=<pipeline-key>]
-'IMPC-param': 'https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=' # <procedure-key>#<prarameter-key>
+'IMPC-proc': 'https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID='  # <procedure-key>[&pipeID=<pipeline-key>]
+'IMPC-param': 'https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID='  # <procedure-key>#<prarameter-key>
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
 'miRBase': 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='                 # microRNA nomenclature, sequences & annotation
