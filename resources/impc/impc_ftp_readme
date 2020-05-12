@@ -1,0 +1,63 @@
+This directory contains a set of purpose-built reports that are not intended for general use. For general-use reports,
+please see the "reports" directory.
+
+This directory contains a dump of all the genotype to phenotype
+associations using the Mammalian Phenotype (MP) ontology calculated
+from the statistical analysis (using the PhenStat R package).
+
+Please note that all associations are computed again for every release.
+
+There are 5 files:
+
+1) All legacy lines MP calls from the former EuroPhenome project in
+
+    EuroPhenome_genotype_phenotype.csv.gz
+
+
+2) All legacy lines MP calls from the Wellcome Trust Sanger Institute Mouse Genetics Programme in
+
+    MGP_genotype_phenotype.csv.gz
+
+
+3) All current IMPC lines MP calls
+
+    IMPC_genotype_phenotype.csv.gz
+
+4) All current 3I lines MP calls
+
+    3I_genotype_phenotype.csv.gz
+
+5) All current lines MP calls (Aggregate of files 1-4)
+
+    ALL_genotype_phenotype.csv.gz
+
+
+Each file contains the following columns:
+marker_symbol               Gene symbol
+marker_accession_id         Official MGI identifier
+phenotyping_center          Phenotyping center
+colony_id                   Mutant mouse colony identifier
+zygosity                    Zygosity
+sex                         Sex
+allele_symbol               Allele symbol
+allele_accession_id         Official MGI identifier (if defined)
+allele_name                 Official MGI name
+strain_accession_id         Official MGI identifier (if defined)
+strain_name                 Genetic background of the mutant mouse
+project_name                Short name of the phenotyping project
+project_fullname            Full name of the phenotyping project
+pipeline_name               IMPReSS phenotyping pipeline name
+pipeline_stable_id          IMPReSS phenotyping pipeline stable identifier
+procedure_name              IMPReSS phenotyping procedure name
+procedure_stable_id         IMPReSS phenotyping procedure stable identifier
+parameter_name              IMPReSS phenotyping parameter name
+parameter_stable_id         IMPReSS phenotyping parameter stable identifier
+top_level_mp_term_id        Mammalian Phenotype top level ontology identifier
+top_level_mp_term_name      Mammalian Phenotype top level ontoloty term name
+mp_term_id                  Mammalian Phenotype ontology identifier
+mp_term_name                Mammalian Phenotype ontology term name
+p_value                     Significant p-value from statistical analysis
+percentage_change           Normalized effect size (when appropriate)
+effect_size                 Associated effect size
+statistical_method          Statistical method used to analyse the data
+resource_name               IMPC, 3i, EuroPhenome or MGP

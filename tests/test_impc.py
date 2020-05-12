@@ -138,6 +138,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC('rdf_graph', True)
         impc.graph = RDFGraph(True)
+        impc._process_evidence('evidence')
         self.assertTrue(len(list(impc.graph)) == 0)
 
         (phenotyping_center, colony) = self.test_set_1[2:4]
@@ -163,10 +164,11 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         triples = """
 <https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
   BFO:0000051 OBO:STATO_0000076,
-      <https://www.mousephenotype.org/impress/protocol/175/15> ;
-  BFO:0000050  IMPRESS-procedure:15 ,
+      <https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=634> ;
+  BFO:0000050  IMPC-pipe:15 ,
       <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-  SEPIO:0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
+  SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=634#37571> ;
+                 #https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=561#19878
   SEPIO:0000017 <http://www.sanger.ac.uk/>  .
 
 <https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
@@ -178,13 +180,12 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
     rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
 
-<https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
+<https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=634#37571> a owl:NamedIndividual ;
     rdfs:label "Number of ribs right (X-ray)" .
 
-IMPRESS-procedure:15 a owl:NamedIndividual ;
+IMPC-pipe:15 a owl:NamedIndividual ;
     rdfs:label "MGP Select Pipeline" .
-
-<https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
+<https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=634> a owl:NamedIndividual ;
     rdfs:label "X-ray" .
 """
 

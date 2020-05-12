@@ -1,0 +1,982 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index, all" />
+    <meta http-equiv="Content-type" content="text/html;charset=utf-8" />
+    <link rel="icon" href="/impress/resources/favicon.ico" type="image/gif" sizes="16x16">
+    <link rel="stylesheet" type="text/css" href="/impress/resources/bootstrap/bootstrap-4.3.1.min.css">    
+    <link rel="stylesheet" type="text/css" href="/impress/resources/DataTables/datatables.min.css" />
+    <link rel="stylesheet" type="text/css" href="/impress/resources/DataTables/DataTables-1.10.16/css/dataTables.buttons.min.css" />
+    <link rel="stylesheet" type="text/css" href="/impress/resources/css/font-awesome/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="/impress/resources/css/styles.css"/>
+    <link rel="stylesheet" type="text/css" href="/impress/resources/css/screen.css?v=1.1.1"/> 
+    <link rel="stylesheet" type="text/css" href="https://www.mousephenotype.org/wp-content/themes/impc/cookie-consent/consent.css"></link>   
+    <script type="text/javascript" src="/impress/resources/DataTables/jQuery-3.2.1/jquery-3.2.1.min.js"></script>
+    <!--[if lt IE 8]>
+    <link href="resources/css/ie7.css" rel="stylesheet" type="text/css" />
+    <![endif]-->
+    <script type="text/javascript">
+        /*<![CDATA[*/
+            /*.*/ var pipelineList  = [["7","IMPC Pipeline","IMPC_001","The IMPC Pipeline is a core set of Procedures and Parameters to be collected by all phenotyping centers.","false"],["5","Aging ENU Screen Pipeline 1","HAROLD_001","Aging ENU Screen Pipeline 1","true"],["16","BCM Pipeline","BCM_001","","false"],["47","BCM interval pipeline","BCMIP_001","BCM interval pipeline","false"],["35","BCM late adult","BCMLA_001","Baylor late adult","false"],["44","CCP Pipeline","CCP_001","Czech Centre for Phenogenomics (CCP) Pipeline","false"],["19","DSS challenge","DSS_001","Mutant mice and wild-type controls (2 female and 2 males\/group) receive 1.5% dextran sodium sulphate (DSS) in drinking water for 7 days. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 10 mice are sacrificed and samples from the medial and distal gut are collected for histological analysis.  A pathology scoring system is used to assess the effect of the DSS in a blinded manner.","false"],["1","EUMODIC Pipeline 1","ESLIM_001","EUMODIC Pipeline 1","true"],["2","EUMODIC Pipeline 2","ESLIM_002","EUMODIC Pipeline 2","true"],["6","EUMODIC Pipeline 3","ESLIM_003","EUMODIC Pipeline 3","true"],["56","GMC Interval Pipeline","HMGUIP_001","Pipeline for GMC procedures between the early adult and late adult pipelines","false"],["3","GMC Pipeline","GMC_001","GMC Pipeline","true"],["43","GMC late adult (53 weeks)","HMGULA_001","Pipeline for GMC's late adult procedures","false"],["55","GMC late adult (70 weeks)","HMGULA_002","GMC late adult (70 weeks)","false"],["14","German Mouse Clinic","HMGU_001","German Mouse Clinic Pipeline for IMPC Project _ Rotarod as an additional center-specific Procedure","false"],["8","Harwell","HRWL_001","Harwell extra parameters","false"],["11","Harwell Ageing Screen","HAS_001","","false"],["38","Harwell interval pipeline","HRWLIP_001","Pipeline for Harwell procedures between the early adult and late adult pipelines","false"],["49","Harwell late adult","HRWLLA_001","Pipeline for Harwell Late adult procedures ","false"],["10","ICS","ICS_001","ICS's pipeline for extra procedures and parameters","false"],["52","ICS interval pipeline","ICSIP_001","ICS interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.","false"],["34","ICS late adult","ICSLA_001","ICS late adult","false"],["12","JAX Pipeline","JAX_001","","false"],["39","JAX interval pipeline","JAXIP_001","Pipeline for procedures between the early adult and late adult pipelines","false"],["50","Jax late adult","JAXLA_001","Pipeline for Jax late adult procedures","false"],["51","KMPC interval pipeline","KMPCIP_001","Pipeline for KMPC procedures between the early adult and late adult pipelines","false"],["36","KMPC late adult","KMPCLA_001","KMPC late adult","false"],["4","MGP Pipeline","M-G-P_001","MGP Pipeline","true"],["15","MGP Select Pipeline","MGP_001","","false"],["37","Nanjing late adult","NINGLA_001","Nanjing late adult","false"],["53","Riken interval pipeline","RBRCIP_001","Riken interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.","false"],["28","Riken late adult","RBRCLA_001","Pipeline for Riken's late adult procedures","false"],["17","Salmonella Challenge","SLM_001","Mutant mice and wild-type controls (8\/group) have blood collected from the tail (50 ul) at 6 weeks of age for peripheral blood leukocyte and haematology analysis. One week later mice are infected with Salmonella Typhimurium M525 strain containing TETc via the intravenous route. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 14-post infection half the mutants and wild type controls are sacrificed with spleen, liver and caecal contents collected. Bacterial counts in the organs are determined by serial plating and portion of the spleen and liver are formalin fixed and paraffin embedded. At day 28-post infection the remaining mutants are sacrificed and processed as above. In addition blood is collected by cardiac puncture and anti-TETc antibodies in the serum are determined by ELISA for total IgG, IgG1 and IgG2a.","false"],["45","TCP Interval Pipeline","TCPIP_001","","false"],["9","TCP Pipeline","TCP_001","Toronto Centre for Phenogenomics's (TCP) pipeline for extra parameters and procedures","false"],["33","TCP late adult","TCPLA_001","TCP late adult","false"],["18","Trichuris challenge","TRC_001","Mutant mice and wild-type controls (6 females\/group) are infected with Trichuris muris eggs by oral gavage. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are culled. At day 33 post challenge the mice are sacrificed with the caecum collected and assessed for the presence or absence of worms. In addition blood is collected by cardiac puncture and serum isolated for confirmation of productive infection.","false"],["46","UCD Interval Pipeline","UCDIP_001","","false"],["13","UCD Pipeline","UCD_001","","false"],["32","UCD late adult","UCDLA_001","UCD late adult","false"]];
+        /*]]>*/
+        var href = window.location.href,
+            rest,
+            sandbox = "http://sandbox.mousephenotype.org/impressapi/",
+            live = "https://api.mousephenotype.org/impress/";
+
+        var prefix;
+        if(href.indexOf("beta") > 0){
+            prefix = "beta";
+        } else if (href.indexOf("dev") > 0){
+            prefix = "dev";
+        } else{
+            prefix = "www";
+        }
+
+        href.indexOf("sandbox") > -1 ? rest = sandbox : rest = live;
+    </script>
+</head>
+    <head>
+        <title>Pipelines - IMPReSS</title>
+        <meta name="description" content="A complete list of Phenotyping pipelines, each with a schedule of Standard Operating Procedures (SOPs) within IMPReSS">
+        <meta property=og:title content="IMPReSS Pipelines | International Mouse Phenotyping Resource of Standardised Screens">
+        <meta property="og:description" content="A complete list of Phenotyping pipelines, each with a schedule of Standard Operating Procedures (SOPs) within IMPReSS">
+        <meta property="og:url" content="https://www.mousephenotype.org/impress/pipelines"/>
+        <meta name="twitter:description" content="A complete list of Phenotyping pipelines, each with a schedule of Standard Operating Procedures (SOPs) within IMPReSS">
+        <meta name="twitter:title" content="Pipelines - IMPReSS | International Mouse Phenotyping Resource of Standardised Screens">
+        
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://www.mousephenotype.org/wp-content/uploads/2019/06/impc-og-image.jpg">
+    <meta property="og:image:secure_url" content="https://www.mousephenotype.org/wp-content/uploads/2019/06/impc-og-image.jpg">
+    <meta  property="og:image:width" content="1080">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:site_name" content="IMPReSS | International Mouse Phenotyping Resource of Standardised Screens">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@impc">
+    <meta name="twitter:image" content="https://www.mousephenotype.org/wp-content/uploads/2019/06/impc-og-image.jpg">
+    <meta name="twitter:creator" content="@impc">
+
+        <link rel='canonical' href='https://www.mousephenotype.org/impress/pipelines'>
+        <script>         
+            var schema = {
+                            "@context": "http://schema.org/",
+                            "@type": "DataFeed",
+                            "name": "Mice Pipelines",
+                            "dataFeedElement": []
+                        }
+            schema["@id"] = location.href;
+            $.each(pipelineList, function(key, val){
+                schema.dataFeedElement[key] = {
+                    "@type": "DataFeedItem",
+                    "item": {
+                                "@type" : "Thing",
+                                "@id": "https://www.mousephenotype.org/impress/PipelineInfo?id=" + val[0],
+                                "name": val[1],
+                                "identifier" : val[0],
+                                "description" : val[3],
+                                "url" : "https://www.mousephenotype.org/impress/PipelineInfo?id=" + val[0]
+                            }
+                }
+            });
+            $(document).ready(function(){
+                $("#pipelineSchema").html(JSON.stringify(schema));                
+            });
+        </script>
+    </head>
+    <body class="pipelines">
+        <header>
+    <div class="header">
+        <div class="header__nav-top d-none d-lg-block">
+            <div class="container text-right">
+                <div class="row">
+                    <div class="col">
+                        <div class="menu-top-nav-container">
+                            <ul id="menu-top-nav" class="menu">
+                                <li id="menu-item-13" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-13">
+                                    <a href="https://www.mousephenotype.org/help/">Help</a>
+                                </li>
+                                <li id="menu-item-14" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14">
+                                    <a href="https://cloud.mousephenotype.org">IMPC Cloud</a>
+                                </li>
+                                <li id="menu-item-15" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-15">
+                                    <a href="https://www.mousephenotype.org/contact-us/">Contact us</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <a id="searchButton" class="header__search collapsed" href="/" data-toggle="collapse" data-target="#searchBar" aria-controls="searchBar" aria-expanded="false">
+                            Search
+                            <i id="search-icon-open" class="fal fa-search"></i>
+                            <i id="search-icon-close" class="fal fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header__nav">
+            <div class="container">
+                <div class="row">
+                    <div class="col-6 col-md-3 pt-3">
+                        <a href="/" class="header__logo-link active"><img class="header__logo" src="/impress/resources/images/IMPC_logo.svg"></a>
+                    </div>
+                    <div class="col-6 col-md-9 text-right">
+                        <div class="d-none d-lg-block">
+                            <div class="menu-main-nav-container">
+                                <ul id="menu-main-nav" class="menu">
+                                    <li id="menu-item-16" class="about-impc menu-item menu-item-type-post_type menu-item-object-page menu-item-16">
+                                        <a href="https://www.mousephenotype.org/about-impc/">About the IMPC</a>
+                                    </li>
+                                    <li id="menu-item-17" class="data menu-item menu-item-type-post_type menu-item-object-page menu-item-17">
+                                        <a href="https://www.mousephenotype.org/understand/the-data/" class="active">Data</a>
+                                    </li>
+                                    <li id="menu-item-18" class="human-diseases menu-item menu-item-type-post_type menu-item-object-page menu-item-18">
+                                        <a href="https://www.mousephenotype.org/human-diseases/">Human Diseases</a>
+                                    </li>
+                                    <li id="menu-item-7486" class="publications menu-item menu-item-type-post_type menu-item-object-page menu-item-7486">
+                                        <a href="https://www.mousephenotype.org/publications/">Publications</a>
+                                    </li>
+                                    <li id="menu-item-19" class="news menu-item menu-item-type-post_type menu-item-object-page menu-item-19">
+                                        <a href="https://www.mousephenotype.org/news/">News</a>
+                                    </li>
+                                    <li id="menu-item-983" class="blog menu-item menu-item-type-post_type menu-item-object-page menu-item-983">
+                                        <a href="https://www.mousephenotype.org/blog/">Blog</a>
+                                </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button class="navbar-toggler collapsed d-inline d-lg-none " type="button" data-toggle="collapse"
+                            data-target="#navbarToggleExternalContent " aria-controls="navbarToggleExternalContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="icon-bar top-bar"></span>
+                            <span class="icon-bar middle-bar"></span>
+                            <span class="icon-bar bottom-bar"></span>
+                        </button>
+                        <div class="collapse" id="searchBar">
+                            <form action="/">
+                                <div class="row search-pop no-gutters">
+                                    <div class="search-pop__input col col-9 text-left">
+                                        <input id="searchField" type="search" class="form-control" name="s" placeholder="Search documentation and news...">
+                                    </div>
+                                    <div class="col col-3 text-right search-submit">
+                                        <button type="submit">Search <i class="fal fa-search"></i></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <nav id="impressMenu" class="navbar navbar-expand-md bg-info">
+                <div class="container">
+                    <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#impressMenuCollapse" aria-controls="impressMenuCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <small>IMPReSS</small> <i class="fal fa-bars ml-1"></i>
+                    </button>
+                    <div class="collapse navbar-collapse" id="impressMenuCollapse">
+                        <ul class="navbar-nav ml-auto text-center">
+                            <li class="ontology nav-item">
+                                <a href="/impress" class="nav-link" title="IMPReSS Home">IMPR<span class="lc">e</span>SS</a>
+                            </li>
+                            <li id="pipe-nav" class="pipelines nav-item">
+                                <a href="/impress/pipelines" class="nav-link" title="Pipelines">Pipelines</a> 
+                            </li>
+                            <li class="ontology nav-item">
+                                <a href="/impress/ontologysearch" class="nav-link" title="Ontology Search">Ontology Search</a>
+                            </li>
+                            <li class="glossary nav-item">
+                                <a href="/impress/glossary" class="nav-link" title="Glossary of Terms">Glossary</a>    
+                            </li>
+                        </ul>
+                    </div>
+                </div>                
+            </nav>   
+        </div>
+        <div class="header__drop"></div>
+
+        <div class="mobile-nav collapse" id="navbarToggleExternalContent">
+            <button class="navbar-toggler collapsed d-inline d-lg-none active" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent " aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="icon-bar top-bar"></span>
+                <span class="icon-bar middle-bar"></span>
+                <span class="icon-bar bottom-bar"></span>
+            </button>
+            <p class="mobile-nav__search-text"><br></p>
+            <div class="mobile-nav__search mb-3">
+                <form action="/">
+                    <div class="row">
+                        <div class="col col-10 text-left">
+                            <input type="search" class="form-control" id="s" name="s" placeholder="Search documentation and news...">
+                        </div>
+                        <div class="col col-2 text-right">
+                            <button type="submit"> <i class="fal fa-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="row">
+                <div class="col-12">                   
+                </div>
+            </div>
+        </div>
+
+        <div class="about-menu sub-menu collapse" id="about-menu">
+            <div class="about-menu__inside">
+                <div class="container">
+                    
+                </div>
+            </div>
+            <div class="about-menu__drop"></div>
+        </div>
+
+        <div class="data-menu sub-menu collapse" id="data-menu">
+            <div class="data-menu__inside">
+                <div class="container">
+                    <div class="row justify-content-end">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="data-menu__drop"></div>
+        </div>
+
+        <div class="publications-menu sub-menu collapse" id="publications-menu">
+            <div class="publications-menu__inside">
+                <div class="container">
+                    <div class="row justify-content-end">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="publications-menu__drop"></div>
+        </div>
+
+        <div id="PipelinesDropdown" class="pipeline-menu collapse">
+            <div class="container dropdown-columns">
+                <div class="row no-gutters">
+                    <ul id="col0" class="col">
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+        <div class="click-guard"></div>
+        <main id="main" class="main" role="main">
+            <div class="container-fluid">
+                <div class="single-header">
+                    <img src="https://www.mousephenotype.org/wp-content/uploads/2018/12/defaultBanner-150x150.png" 
+                    srcset="https://www.mousephenotype.org/wp-content/uploads/2018/12/defaultBanner-300x62.png 300w,
+                    https://www.mousephenotype.org/wp-content/uploads/2018/12/defaultBanner-768x158.png 768w,
+                    https://www.mousephenotype.org/wp-content/uploads/2018/12/defaultBanner-1024x210.png 1024w,
+                    https://www.mousephenotype.org/wp-content/uploads/2018/12/defaultBanner.png 1440w"
+                    sizes="100%" class="d-none d-md-block"/>
+                    <div class="container pt-4">
+                        <h1 class="m-0 pt-3 pt-md-5 pb-5">Listing All Pipelines</h1>
+                    </div>
+                </div>
+                <div class="container single single--no-side">
+                    <div class="breadcrumbs-people px-5 d-none d-md-block">
+                        <div class="row">
+                            <div class="col-12">
+                                <aside>
+                                    <a href="/impress">Home</a> 
+                                    <span class="fal fa-angle-right"></span>
+                                    <p>Pipelines</p>
+                                </aside>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-over-shadow">
+                        <div class="col-12 white-bg px-0 px-md-5 pb-5">
+                            <div class="page-content pipeline-list">
+                                
+                                    <div id="pipline7" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=7" class="pipelineLink">IMPC Pipeline</a>
+                                            <span class="pipelinekey dark">IMPC_001</span>
+                                        </h3>
+                                        <p>The IMPC Pipeline is a core set of Procedures and Parameters to be collected by all phenotyping centers.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=7" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                
+                                    <div id="pipline16" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=16" class="pipelineLink">BCM Pipeline</a>
+                                            <span class="pipelinekey dark">BCM_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=16" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline47" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=47" class="pipelineLink">BCM interval pipeline</a>
+                                            <span class="pipelinekey dark">BCMIP_001</span>
+                                        </h3>
+                                        <p>BCM interval pipeline</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=47" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline35" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=35" class="pipelineLink">BCM late adult</a>
+                                            <span class="pipelinekey dark">BCMLA_001</span>
+                                        </h3>
+                                        <p>Baylor late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=35" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline44" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=44" class="pipelineLink">CCP Pipeline</a>
+                                            <span class="pipelinekey dark">CCP_001</span>
+                                        </h3>
+                                        <p>Czech Centre for Phenogenomics (CCP) Pipeline</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=44" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline19" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=19" class="pipelineLink">DSS challenge</a>
+                                            <span class="pipelinekey dark">DSS_001</span>
+                                        </h3>
+                                        <p>Mutant mice and wild-type controls (2 female and 2 males/group) receive 1.5% dextran sodium sulphate (DSS) in drinking water for 7 days. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 10 mice are sacrificed and samples from the medial and distal gut are collected for histological analysis.  A pathology scoring system is used to assess the effect of the DSS in a blinded manner.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=19" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                
+                                
+                                
+                                    <div id="pipline56" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=56" class="pipelineLink">GMC Interval Pipeline</a>
+                                            <span class="pipelinekey dark">HMGUIP_001</span>
+                                        </h3>
+                                        <p>Pipeline for GMC procedures between the early adult and late adult pipelines</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=56" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                
+                                    <div id="pipline43" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=43" class="pipelineLink">GMC late adult (53 weeks)</a>
+                                            <span class="pipelinekey dark">HMGULA_001</span>
+                                        </h3>
+                                        <p>Pipeline for GMC&#39;s late adult procedures</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=43" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline55" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=55" class="pipelineLink">GMC late adult (70 weeks)</a>
+                                            <span class="pipelinekey dark">HMGULA_002</span>
+                                        </h3>
+                                        <p>GMC late adult (70 weeks)</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=55" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline14" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=14" class="pipelineLink">German Mouse Clinic</a>
+                                            <span class="pipelinekey dark">HMGU_001</span>
+                                        </h3>
+                                        <p>German Mouse Clinic Pipeline for IMPC Project _ Rotarod as an additional center-specific Procedure</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=14" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline8" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=8" class="pipelineLink">Harwell</a>
+                                            <span class="pipelinekey dark">HRWL_001</span>
+                                        </h3>
+                                        <p>Harwell extra parameters</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=8" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline11" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=11" class="pipelineLink">Harwell Ageing Screen</a>
+                                            <span class="pipelinekey dark">HAS_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=11" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline38" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=38" class="pipelineLink">Harwell interval pipeline</a>
+                                            <span class="pipelinekey dark">HRWLIP_001</span>
+                                        </h3>
+                                        <p>Pipeline for Harwell procedures between the early adult and late adult pipelines</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=38" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline49" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=49" class="pipelineLink">Harwell late adult</a>
+                                            <span class="pipelinekey dark">HRWLLA_001</span>
+                                        </h3>
+                                        <p>Pipeline for Harwell Late adult procedures </p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=49" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline10" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=10" class="pipelineLink">ICS</a>
+                                            <span class="pipelinekey dark">ICS_001</span>
+                                        </h3>
+                                        <p>ICS&#39;s pipeline for extra procedures and parameters</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=10" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline52" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=52" class="pipelineLink">ICS interval pipeline</a>
+                                            <span class="pipelinekey dark">ICSIP_001</span>
+                                        </h3>
+                                        <p>ICS interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=52" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline34" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=34" class="pipelineLink">ICS late adult</a>
+                                            <span class="pipelinekey dark">ICSLA_001</span>
+                                        </h3>
+                                        <p>ICS late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=34" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline12" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=12" class="pipelineLink">JAX Pipeline</a>
+                                            <span class="pipelinekey dark">JAX_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=12" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline39" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=39" class="pipelineLink">JAX interval pipeline</a>
+                                            <span class="pipelinekey dark">JAXIP_001</span>
+                                        </h3>
+                                        <p>Pipeline for procedures between the early adult and late adult pipelines</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=39" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline50" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=50" class="pipelineLink">Jax late adult</a>
+                                            <span class="pipelinekey dark">JAXLA_001</span>
+                                        </h3>
+                                        <p>Pipeline for Jax late adult procedures</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=50" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline51" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=51" class="pipelineLink">KMPC interval pipeline</a>
+                                            <span class="pipelinekey dark">KMPCIP_001</span>
+                                        </h3>
+                                        <p>Pipeline for KMPC procedures between the early adult and late adult pipelines</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=51" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline36" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=36" class="pipelineLink">KMPC late adult</a>
+                                            <span class="pipelinekey dark">KMPCLA_001</span>
+                                        </h3>
+                                        <p>KMPC late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=36" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                
+                                    <div id="pipline15" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=15" class="pipelineLink">MGP Select Pipeline</a>
+                                            <span class="pipelinekey dark">MGP_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=15" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline37" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=37" class="pipelineLink">Nanjing late adult</a>
+                                            <span class="pipelinekey dark">NINGLA_001</span>
+                                        </h3>
+                                        <p>Nanjing late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=37" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline53" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=53" class="pipelineLink">Riken interval pipeline</a>
+                                            <span class="pipelinekey dark">RBRCIP_001</span>
+                                        </h3>
+                                        <p>Riken interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=53" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline28" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=28" class="pipelineLink">Riken late adult</a>
+                                            <span class="pipelinekey dark">RBRCLA_001</span>
+                                        </h3>
+                                        <p>Pipeline for Riken&#39;s late adult procedures</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=28" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline17" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=17" class="pipelineLink">Salmonella Challenge</a>
+                                            <span class="pipelinekey dark">SLM_001</span>
+                                        </h3>
+                                        <p>Mutant mice and wild-type controls (8/group) have blood collected from the tail (50 ul) at 6 weeks of age for peripheral blood leukocyte and haematology analysis. One week later mice are infected with Salmonella Typhimurium M525 strain containing TETc via the intravenous route. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 14-post infection half the mutants and wild type controls are sacrificed with spleen, liver and caecal contents collected. Bacterial counts in the organs are determined by serial plating and portion of the spleen and liver are formalin fixed and paraffin embedded. At day 28-post infection the remaining mutants are sacrificed and processed as above. In addition blood is collected by cardiac puncture and anti-TETc antibodies in the serum are determined by ELISA for total IgG, IgG1 and IgG2a.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=17" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline45" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=45" class="pipelineLink">TCP Interval Pipeline</a>
+                                            <span class="pipelinekey dark">TCPIP_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=45" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline9" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=9" class="pipelineLink">TCP Pipeline</a>
+                                            <span class="pipelinekey dark">TCP_001</span>
+                                        </h3>
+                                        <p>Toronto Centre for Phenogenomics&#39;s (TCP) pipeline for extra parameters and procedures</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=9" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline33" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=33" class="pipelineLink">TCP late adult</a>
+                                            <span class="pipelinekey dark">TCPLA_001</span>
+                                        </h3>
+                                        <p>TCP late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=33" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline18" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=18" class="pipelineLink">Trichuris challenge</a>
+                                            <span class="pipelinekey dark">TRC_001</span>
+                                        </h3>
+                                        <p>Mutant mice and wild-type controls (6 females/group) are infected with Trichuris muris eggs by oral gavage. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are culled. At day 33 post challenge the mice are sacrificed with the caecum collected and assessed for the presence or absence of worms. In addition blood is collected by cardiac puncture and serum isolated for confirmation of productive infection.</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=18" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline46" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=46" class="pipelineLink">UCD Interval Pipeline</a>
+                                            <span class="pipelinekey dark">UCDIP_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=46" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline13" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=13" class="pipelineLink">UCD Pipeline</a>
+                                            <span class="pipelinekey dark">UCD_001</span>
+                                        </h3>
+                                        <p></p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=13" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                
+                                    <div id="pipline32" class="pipline">
+                                        <h3 class="sop-title mb-2">
+                                            <a href="/impress/PipelineInfo?id=32" class="pipelineLink">UCD late adult</a>
+                                            <span class="pipelinekey dark">UCDLA_001</span>
+                                        </h3>
+                                        <p>UCD late adult</p>
+                                        <p class='mb-0 mt-2 links'>
+                                            <a href="/impress/PipelineInfo?id=32" class='mr-4'>View Pipeline</a>
+                                        </p>
+                                    </div>
+                                
+                                <div id="legacyPipelines">
+                                    <h2>Legacy Pipelines</h2>
+                                    
+                                    
+                                        <div id="pipline5" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=5" class="pipelineLink">Aging ENU Screen Pipeline 1</a>
+                                                <span class="pipelinekey dark">HAROLD_001</span>
+                                            </h3>
+                                            <p>Aging ENU Screen Pipeline 1</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=5" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                        <div id="pipline1" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=1" class="pipelineLink">EUMODIC Pipeline 1</a>
+                                                <span class="pipelinekey dark">ESLIM_001</span>
+                                            </h3>
+                                            <p>EUMODIC Pipeline 1</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=1" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                        <div id="pipline2" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=2" class="pipelineLink">EUMODIC Pipeline 2</a>
+                                                <span class="pipelinekey dark">ESLIM_002</span>
+                                            </h3>
+                                            <p>EUMODIC Pipeline 2</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=2" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                        <div id="pipline6" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=6" class="pipelineLink">EUMODIC Pipeline 3</a>
+                                                <span class="pipelinekey dark">ESLIM_003</span>
+                                            </h3>
+                                            <p>EUMODIC Pipeline 3</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=6" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                    
+                                        <div id="pipline3" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=3" class="pipelineLink">GMC Pipeline</a>
+                                                <span class="pipelinekey dark">GMC_001</span>
+                                            </h3>
+                                            <p>GMC Pipeline</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=3" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                        <div id="pipline4" class="pipline">
+                                            <h3 class="sop-title mb-2">
+                                                <a href="/impress/PipelineInfo?id=4" class="pipelineLink">MGP Pipeline</a>
+                                                <span class="pipelinekey dark">M-G-P_001</span>
+                                            </h3>
+                                            <p>MGP Pipeline</p>
+                                            <p class='mb-0 mt-2 links'>
+                                                <a href="/impress/PipelineInfo?id=4" class='mr-4'>View Pipeline</a>
+                                            </p>
+                                        </div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </div>
+                            </div>  
+                        </div>  
+                    </div>  
+                </div>                         
+            </div>
+            <a href="#main" class="btn btn-primary btn-to-top" title="Jump to top of the page"><i class="fal fa-chevron-up"></i></a>
+        </main>
+        <section id="bottom">
+    <div class="news-letter pt-5 pb-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md-8 offset-md-2 text-center">
+                    <h2>The IMPC Newsletter</h2>
+                    <p class="mt-4">
+                        Get highlights of the most important data releases,
+                        news and events, delivered straight to your email inbox</p>
+                    <a class="btn btn-mailing btn-primary" target="_blank" href="https://forms.office.com/Pages/ResponsePage.aspx?id=jYTJ3EdDnkKo2NytnQUzMV3vNFn2DMZLqTjqljGsCfNUMDg0Q09OQThJUkVaVUpONVpSTVVSVEZERy4u
+">Subscribe to newsletter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+
+                <div class="col-12 col-md-6 footer-text mb-3 mb-md-5 mb-md-0">
+                    <p><strong>&copy; 2019 IMPC International Mouse Phenotyping Consortium.</strong></p>
+                    <p><strong>All Rights Reserved.</strong></p>
+                    <p><strong><br>
+                            <a href="https://www.mousephenotype.org/about-impc/accessibility-cookies/">Accessibility
+                                &amp; Cookies</a></strong><br>
+                        <a href="https://www.mousephenotype.org/about-impc/terms-of-use/"><strong>Terms of
+                                use</strong></a></p>
+                </div>
+
+                <div class="col-6 col-md-3 footer-nav">
+                    <div class="menu-main-nav-container">
+                        <ul id="menu-main-nav-1" class="menu">
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-16"><a
+                                    href="https://www.mousephenotype.org/about-impc/">About the IMPC</a></li>
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2292"><a
+                                    href="https://www.mousephenotype.org/understand/">Data</a></li>
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18"><a
+                                    href="https://www.mousephenotype.org/human-diseases/">Human Diseases</a></li>
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-19"><a
+                                    href="https://www.mousephenotype.org/news/">News</a></li>
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-983"><a
+                                    href="https://www.mousephenotype.org/blog/">Blog</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 footer-nav">
+                    <div class="menu-top-nav-container">
+                        <ul id="menu-top-nav-1" class="menu">
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-13"><a
+                                    href="https://www.mousephenotype.org/help/">Help</a></li>
+                            <li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14">
+                                <a href="https://cloud.mousephenotype.org">IMPC Cloud</a></li>
+                            <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-15"><a
+                                    href="https://www.mousephenotype.org/contact-us/">Contact us</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 col-md-6">
+                    <ul class="footer__social">
+                        <li>
+                            <a href="https://twitter.com/impc" target="_blank" rel="noreferrer">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.instagram.com/mousephenotyping/" target="_blank" rel="noreferrer">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.youtube.com/channel/UCXp3DhDYbpJHu4MCX_wZKww" target="_blank" rel="noreferrer">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/InternationalMousePhenotypingConsortium" target="_blank" rel="noreferrer">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.reddit.com/user/MousePhenotyping" target="_blank" rel="noreferrer">
+                                <i class="fab fa-reddit"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-6 text-right">
+                    <h6><small>Access Data Release <span id="data-no">10.0</span> Data</small></h6>
+                    <div class="menu-footer-access-container">
+                        <ul id="menu-footer-access" class="menu">
+                            <li id="menu-item-1887"
+                                class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1887"><a
+                                href="https://www.mousephenotype.org/understand/accessing-the-data/batch-query/">
+                                Batch query</a></li>
+                            <li id="menu-item-1889"
+                                class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1889"><a
+                                href="https://www.mousephenotype.org/help/data-access/">
+                                Access via API</a></li>
+                            <li id="menu-item-1890"
+                                class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1890"><a
+                                href="https://www.mousephenotype.org/understand/accessing-the-data/access-via-ftp/">
+                                Access via FTP</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="application/ld+json" >
+        {
+            "@context": "http://schema.org/",
+            "@type":"Organization",
+            "name":"IMPC",
+            "legalName" : "International Mouse Phenotyping Consortium",
+            "url": "https://www.mousephenotype.org/",  
+            "logo": "https://www.mousephenotype.org/impress/resources/images/IMPC_logo.svg",  
+            "foundingDate": "2010",        
+            "contactPoint":{
+                "@type":"ContactPoint",
+                "contactType": "customer service",
+                "email":"mouse-helpdesk@ebi.ac.uk"
+            },
+            "sameAs": [ 
+                "https://www.facebook.com/InternationalMousePhenotypingConsortium/",
+                "https://twitter.com/impc",
+                "https://www.instagram.com/mousephenotyping/",
+                "https://www.youtube.com/channel/UCXp3DhDYbpJHu4MCX_wZKww",
+                "https://www.reddit.com/user/MousePhenotyping",
+                "https://en.wikipedia.org/wiki/International_Mouse_Phenotyping_Consortium"
+                
+            ]}
+        }
+    </script>
+</section>
+        <script id="pipelineSchema" type="application/ld+json"></script>
+            
+    <script type="text/javascript" src="/impress/resources/DataTables/datatables.min.js"></script>    
+    <script type="text/javascript" src="/impress/resources/DataTables/datatables.responsive.min.js"></script>
+    <script type="text/javascript" src="/impress/resources/DataTables/DataTables-1.10.16/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="/impress/resources/DataTables/DataTables-1.10.16/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="/impress/resources/bootstrap/bootstrap-popper.min.js"></script>
+    <script type="text/javascript" src="/impress/resources/bootstrap/bootstrap-4.3.1.min.js"></script>    
+    <script type="text/javascript" src="/impress/resources/js/js/imgMapResizer.js"></script>
+    <script type="text/javascript" src="/impress/resources/js/dataTable-functions.js?v=1.1.2"></script>
+    <script type="text/javascript" src="https://www.mousephenotype.org/wp-content/themes/impc/cookie-consent/consent.js"></script> 
+    <script type="text/javascript" src="/impress/resources/js/js.js"></script>
+    <script>$(document).ready(function(){
+        $.CCbanner({
+          "cookies": ["Analytics"],
+          "href": "https://www.mousephenotype.org/about-impc/accessibility-cookies/",
+          "gaTag": "UA-23433997-1"
+        });
+    });</script>
+
+    </body>
+</html>

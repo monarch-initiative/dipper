@@ -124,6 +124,24 @@
 "Viral insertion": "novel_sequence_insertion"  #  (no viral version)
 "wild type": "wild_type"
 
+# "Allele Type" (subtype)
+#####################
+# Chemically and radiation induced
+# Chemically induced (ENU)
+# Chemically induced (other)
+# Endonuclease-mediated
+# Gene trapped
+# Not Applicable
+# Not Specified
+# Other
+# QTL
+# Radiation induced
+# Spontaneous
+# Targeted
+# Transgenic
+# Transposon induced
+
+
 # taxon
 # @kshefchek - it's easier from an integration perspective to round up
 # to Mus musculus when applicable
