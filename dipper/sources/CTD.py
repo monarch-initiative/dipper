@@ -35,15 +35,17 @@ class CTD(Source):
     * gene-disease
 
     CTD curates relationships between genes and chemicals/diseases with
-    marker/mechanism and/or therapeutic. (observe strictly OR never AND)
-    Unfortunately, we cannot disambiguate between marker (gene expression) and
-    mechanism (causation) for these associations.  Therefore, we are left to
-    relate these simply by "marker".
+    'marker/mechanism'  or 'therapeutic'.  (observe strictly OR)
+    Unfortunately,
+    we cannot disambiguate between marker (gene expression) and
+    mechanism (causation) for these associations.
+    Therefore, we are left to relate these simply by "marker".
 
-    CTD also pulls in genes and pathway membership from KEGG and REACTOME.
-    We create groups of these following the pattern that the specific pathway
-    is a subclass of 'cellular process' (a go process), and the gene is
-    "involved in" that process.
+    # We DISCONTIUED at some point prior to 202005
+    # CTD also pulls in genes and pathway membership from KEGG and REACTOME.
+    # We create groups of these following the pattern that the specific pathway
+    # is a subclass of 'cellular process' (a go process), and the gene is
+    # "involved in" that process.
 
     For diseases, we preferentially use OMIM identifiers when they can be used
     uniquely over MESH.  Otherwise, we use MESH ids.
@@ -81,32 +83,33 @@ class CTD(Source):
         # },
         # 'gene_disease': {
         #    'file': 'CTD_genes_diseases.tsv.gz',
-        #    'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
+        #    'url': 'https://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
+        #    'columns': [
+        #         'GeneSymbol',
+        #         'GeneID',
+        #         'DiseaseName',
+        #         'DiseaseID',
+        #         'DirectEvidence',
+        #         'InferenceChemicalName',
+        #         'InferenceScore',
+        #         'OmimIDs PubMedIDs'
+        #    ]
         # }
-    }
-    api_fetch = {
-        'publications': {
-            'file': 'batchquery_curated_disease_references.tsv',
-            'url': 'http://ctdbase.org/tools/batchQuery.go?q',
-            'params': {
-                'inputType': 'reference',
-                'report': 'diseases_curated',
-                'format': 'tsv',
-                'action': 'Download'
-            },
-            'columns': [  # expected
-                'Input',
-                'DiseaseName',
-                'DiseaseID',
-                'DiseaseCategories',
-                'DirectEvidence',
-                'ChemicalName',
-                'ChemicalID',
-                'CasRN',
-                'GeneSymbol',
-                'GeneAcc'
-            ]
-        }
+        # 'chemicals': {
+        #    'file': 'CTD_chemicals.tsv.gz',
+        #    'url': 'https://ctdbase.org/reports/CTD_chemicals.tsv.gz',
+        #    'columns': [
+        #        'ChemicalName',
+        #        'ChemicalID',   # Mesh
+        #        'CasRN',
+        #        'Definition',
+        #        'ParentIDs',    # Mesh|...  (note: cycles in graph   ~250K edges)
+        #        'TreeNumbers',
+        #        'ParentTreeNumbers',
+        #        'Synonyms',
+        #        'DrugBankIDs'
+        #    ]
+        # }
     }
 
     def __init__(
@@ -153,32 +156,9 @@ class CTD(Source):
         Returns:
         :return None
         """
-        # typical download unless detectably stale
         self.get_files(is_dl_forced)
-
-        # check if there is a local  batch query association file, and download if it's
-        # dated later than the (???original intxn???) file
-
         src_key = 'chemical_disease_associations'
         assoc_file = '/'.join((self.rawdir, self.files[src_key]['file']))
-
-        src_key = 'publications'
-        disambig_file = '/'.join((self.rawdir, self.api_fetch[src_key]['file']))
-
-        if os.path.exists(disambig_file):
-            dfile_dt = os.stat(disambig_file)
-            afile_dt = os.stat(assoc_file)
-            if dfile_dt < afile_dt:
-                LOG.info('Batchquery file is older; Refreshing  %s', disambig_file)
-                self._fetch_disambiguating_assoc()  # api ferch
-            else:
-                LOG.info("Batchquery file is up to date")
-        else:
-            LOG.info('Batchquery file does not exist; Fetching  %s', disambig_file)
-            self._fetch_disambiguating_assoc()  # api ferch
-
-        # consider creating subsets of the files that
-        # only have direct annotations (not inferred)
 
     def parse(self, limit=None):
         """
@@ -205,14 +185,6 @@ class CTD(Source):
 
         # self._parse_ctd_file(limit, 'gene_pathway')
         # self._parse_ctd_file(limit, 'gene_disease')
-
-        src_key = 'publications'
-        file_path = '/'.join((self.rawdir, self.api_fetch[src_key]['file']))
-        if os.path.exists(file_path) is True:
-            self._parse_curated_chem_disease(file_path, limit)
-        else:
-            LOG.error('Batch Query file "%s" does not exist', file_path)
-        LOG.info("Done parsing files.")
 
     def _parse_ctd_file(self, limit, src_key):
         """
@@ -298,96 +270,6 @@ class CTD(Source):
 
         return
 
-    def _fetch_disambiguating_assoc(self):
-        """
-        For any of the items in the chemical-disease association file that have
-        ambiguous association types we fetch the disambiguated associations
-        using the batch query API, and store these in a file.
-
-        Elsewhere, we can loop through the file and create the appropriate associations.
-
-        :return:
-
-        """
-        src_key = 'chemical_disease_associations'
-        assoc_file = '/'.join((self.rawdir, self.files[src_key]['file']))
-        col = self.files[src_key]['columns']
-
-        all_pubs = set()
-        # first get all the unique publications
-        with gzip.open(assoc_file, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            # about ~30 lines of header
-            row = next(reader)
-            while row[0][0] == '#' and row[0] != '# Fields:':
-                row = next(reader)
-            row = next(reader)
-            row[0] = row[0][2:].strip()
-            if not self.check_fileheader(col, row):
-                pass
-
-            for row in reader:
-                if row[0][0] == '#':
-                    continue
-                self._check_list_len(row, len(col))
-
-                # chem_name = row[col.index('ChemicalName')]
-                # chem_id = row[col.index('ChemicalID')]      # MeSH identifier
-                # cas_rn = row[col.index('CasRN')]            # CAS Registry Number
-                # disease_name = row[col.index('DiseaseName')]
-                # disease_id = row[col.index('DiseaseID')]    # MeSH or OMIM identifier
-                direct_evidence = row[col.index('DirectEvidence')].strip()
-                # (note in 201910  no direct_evidence are pipe delimited)
-                # inferred_gene_symbol = row[col.index('InferenceGeneSymbol')]
-                # inference_score = row[col.index('InferenceScore')]
-                # omim_ids = row[col.index('OmimIDs')]                # '|'-delimited
-                pubmed_ids = row[col.index('PubMedIDs')]            # '|'-delimited
-
-                # direct_evidence_list = direct_evidence.split('|')  # no instances of
-
-                if direct_evidence not in ['marker/mechanism', 'therapeutic']:
-                    continue
-                    # 6338455 ''
-                    #   63384 marker/mechanism
-                    #   35124 therapeutic
-                    # out of 6436992 total (inc comments)  Oct. 2019
-
-                if pubmed_ids is not None and pubmed_ids != '':
-                    all_pubs.update(set(re.split(r'\|', pubmed_ids)))
-        sorted_pubs = sorted(list(all_pubs))
-        # write out for debuging
-        with open(self.rawdir + '/' + 'pub_list.txt', 'w') as pub_writer:
-            pub_writer.write('\n'.join(sorted_pubs))
-
-        src_key = 'publications'
-        disambig_file = '/'.join((self.rawdir, self.api_fetch[src_key]['file']))
-        url = self.api_fetch[src_key]['url']
-        col = self.api_fetch[src_key]['columns']
-        params = self.api_fetch[src_key]['params']
-
-        # now in batches of 4000, we fetch the curated chemical-disease associations
-        batch_size = 4000
-        start = 0
-        end = min((batch_size, len(all_pubs)))  # get them in batches of 4000
-
-        with open(disambig_file, 'wb') as dmbf:
-            while start < len(sorted_pubs):
-                params['inputTerms'] = '|'.join(sorted_pubs[start:end])
-                # fetch the data from url
-                LOG.info(
-                    'fetching %d (%d-%d)',  # refs: %s',  # too chatty
-                    len(re.split(r'\|', params['inputTerms'])),
-                    start, end  # , params['inputTerms']
-                )
-                data = urllib.parse.urlencode(params)
-                encoding = 'utf-8'
-                binary_data = data.encode(encoding)
-                req = urllib.request.Request(url, binary_data)
-                resp = urllib.request.urlopen(req)
-                dmbf.write(resp.read())
-                start = end
-                end = min((start + batch_size, len(sorted_pubs)))
-
     def _process_interactions(self, row):
         """
         Process row of CTD data from CTD_chemicals_diseases.tsv.gz
@@ -410,7 +292,6 @@ class CTD(Source):
             return
 
         evidence_pattern = re.compile(r'^therapeutic|marker\/mechanism$')
-        # dual_evidence = re.compile(r'^marker\/mechanism\|therapeutic$')
 
         # filter on those diseases that are mapped to omim ids in the test set
         intersect = list(
@@ -420,17 +301,10 @@ class CTD(Source):
             return
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
-        if re.match(evidence_pattern, direct_evidence):
-            rel_id = self.resolve(direct_evidence)
-            model.addClassToGraph(chem_id, chem_name)
-            model.addClassToGraph(disease_id, None)
-            self._make_association(chem_id, disease_id, rel_id, reference_list)
-        else:
-            # there's dual evidence, but haven't mapped the pubs
-            pass
-            # LOG.debug(
-            #   "Dual evidence for %s (%s) and %s (%s)",
-            #   chem_name, chem_id, disease_name, disease_id)
+        rel_id = self.resolve(direct_evidence)
+        model.addClassToGraph(chem_id, chem_name)
+        model.addClassToGraph(disease_id, None)
+        self._make_association(chem_id, disease_id, rel_id, reference_list)
 
     def _process_disease2gene(self, row):
         """
