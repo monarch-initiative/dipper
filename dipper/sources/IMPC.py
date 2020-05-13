@@ -61,18 +61,6 @@ class IMPC(Source):
     """
 
     files = {
-        # 'impc': {
-        #   'file': 'IMPC_genotype_phenotype.csv.gz',
-        #   'url': IMPCDL + '/IMPC_genotype_phenotype.csv.gz'},
-        # 'euro': {
-        #   'file': 'EuroPhenome_genotype_phenotype.csv.gz',
-        #   'url': IMPCDL + '/EuroPhenome_genotype_phenotype.csv.gz'},
-        # 'mgd': {
-        #   'file': 'MGP_genotype_phenotype.csv.gz',
-        #   'url': IMPCDL + '/MGP_genotype_phenotype.csv.gz'},
-        # '3i': {
-        #   'file': '3I_genotype_phenotype.csv.gz',
-        #   'url': IMPCDL + '/3I_genotype_phenotype.csv.gz'},
         'all': {
             'file': 'ALL_genotype_phenotype.csv.gz',
             'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz',
@@ -145,13 +133,6 @@ class IMPC(Source):
             LOG.warning("not configured with gene test ids.")
             self.gene_ids = []
 
-        # evidence type is either pipeline procedure and parameter
-        self.evidence_type = {
-            'pipeline': {},
-            'procedure': {},
-            'parameter': {}
-        }
-
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
         LOG.info("Verifying checksums...")
@@ -177,28 +158,9 @@ class IMPC(Source):
         if self.test_only:
             self.test_mode = True
 
-        src_key = 'evidence'
-        self._process_evidence(src_key, limit)
-        LOG.info("Finished parsing %s", self.files[src_key]['file'])
-
         src_key = 'all'
         self._process_data(src_key, limit)
         LOG.info("Finished parsing %s", self.files[src_key]['file'])
-
-    def _process_evidence(self, src_key, limit=None):
-        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        LOG.info("Processing Data from %s", raw)
-        col = self.files[src_key]['columns']
-        with open(raw, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter='\t')
-            row = next(reader)  # presumed header
-            if not self.check_fileheader(col, row):
-                pass
-            for row in reader:
-                etype = row[col.index('evidence')].strip()
-                stable = row[col.index('stable')].strip()
-                key = row[col.index('key')].strip()
-                self.evidence_type[etype][stable] = key
 
     def _process_data(self, src_key, limit=None):
 
@@ -646,32 +608,9 @@ class IMPC(Source):
         # List of nodes linked to study with has_part property
         study_parts = []
 
-        # there are a very few 'stable' mappings that do not quite exist (yet?)
-
-        try:
-            pipeline_key = self.evidence_type['pipeline'][pipeline_stable_id]
-            pipeline_curie = 'IMPC-pipe:' + pipeline_key
-        except KeyError:
-            pipeline_key = pipeline_curie = None
-
-        try:
-            procedure_key = self.evidence_type['procedure'][procedure_stable_id]
-            procedure_curie = 'IMPC-proc:' + procedure_key
-        except KeyError:
-            parameter_key = parameter_curie = procedure_key = procedure_curie = None
-
-        # if procedure_curie is not None and pipeline_key is not None:
-        #    procedure_curie = procedure_curie + "&pipeID=" + pipeline_key
-
-        try:
-            parameter_key = self.evidence_type['parameter'][parameter_stable_id]
-        except KeyError:
-            parameter_key = parameter_curie = None
-
-        if procedure_key is not None:
-            parameter_curie = 'IMPC-param:' + procedure_key
-            if parameter_key is not None:
-                parameter_curie = parameter_curie + '#' + parameter_key
+        pipeline_curie = 'IMPC-pipe:' + pipeline_stable_id
+        procedure_curie = 'IMPC-proc:' + procedure_stable_id
+        parameter_curie = 'IMPC-param:' + procedure_stable_id + '#' + parameter_stable_id
 
         # Add study parts
 
@@ -686,7 +625,8 @@ class IMPC(Source):
 
         logging.info("Adding Provenance for %s", project_fullname)
         model.addIndividualToGraph(parameter_curie, parameter_label)
-        provenance_model.add_study_measure(study_bnode, parameter_curie, object_is_literal=False)
+        provenance_model.add_study_measure(
+            study_bnode, parameter_curie, object_is_literal=False)
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
