@@ -1,15 +1,18 @@
 
 ## Orphanet XML
 
-To survey:
+To (re)survey:
 
-    xmlstarlet el -a  ../../raw/orphanet/en_product6.xml | sort -u > [orphanet6.xpath](https://github.com/monarch-initiative/dipper/blob/master/resources/orphanet/orphanet6.xpath)
+PREVREL=201811
+RELEASE=202005
 
-    xpath2dot.awk -v ORIENT="UD"  en_product6.xpath > en_product6.gv
+    xmlstarlet el -a  ../../raw/orphanet/en_product6.xml | sort -u > en_product6_$RELEASE.xpath
+    xpath2dot.awk -v ORIENT="UD"  en_product6_$RELEASE.xpath > en_product6_$RELEASE.gv
 
-    dot -Tpng en_product6.gv > en_product6.png
+    dot -Tpng en_product6_$RELEASE.gv > en_product6_$RELEASE.png
+    dot -Tsvg en_product6_$RELEASE.gv > en_product6_$RELEASE.svg
 
-    ![schema](https://github.com/monarch-initiative/dipper/blob/master/resources/orphanet/en_product6.png)
+    ![schema](https://github.com/monarch-initiative/dipper/blob/master/resources/orphanet/en_product6_$RELEASE.png)
 
 
 note: 2018 Fall, there is no `GeneList` element in the XML
@@ -64,8 +67,7 @@ fgrep  '<SourceOfValidation' en_product6.xml | fgrep "[PMID" | wc -l
 -------------------------------------------------------------------
 
 
-Orphanet's  ORPHA:nnn  like their internal gene identifiers,
-are too sub optimal to propagate
+Orphanet's  ORPHA:nnn  like their internal gene identifiers, are too sub optimal to propagate
 (not even obvious how to search for non-disease-orpha-numbers on their site)
 
 Idealy human gene's will be HGNC but no source covers all their genes
@@ -131,3 +133,93 @@ and make any other dbxrefs equivilent
 
 a WIP model of intent (incomplete)
 
+
+################################################################
+# 2020 May
+
+Their model is changed and expanded
+
+To see just how, I tried deltadot but it is to specific to our dipper output.
+So here I will look at it long hand.
+
+comm -23 en_product6_$PREVREL.xpath en_product6_$RELEASE.xpath > xp_dropped
+comm -13 en_product6_$PREVREL.xpath en_product6_$RELEASE.xpath > xp_added
+comm -12 en_product6_$PREVREL.xpath en_product6_$RELEASE.xpath > xp_continue 
+
+
+the path
+
+JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/DisorderGeneAssociation/Gene/OrphaNumber
+
+is dropped  which is fine, see previous discussion for why.
+
+An OrphaNumber field is now attached as:  JDBOR/DisorderList/Disorder/OrphaNumber
+which may be more appropiate, especially if it resolves at a relevent page there.
+
+16 paths are added, but some may just be moved ... no it does not seem that way
+as only  `Name` `lang` pairs are conserved.
+
+```
+echo "digraph G {" > orpha_update_$RELEASE.gv
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"red\"];"}' <(tr -d '@' <xp_dropped) >> orpha_update_$RELEASE.gv
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"blue\"];"}' <(tr -d '@' <xp_added) >> orpha_update_$RELEASE.gv
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"black\"];"}' <(tr -d '@' <xp_continue) >> orpha_update_$RELEASE.gv
+echo "}" >> orpha_update_$RELEASE.gv
+
+```
+xdot orpha_update_202005.gv
+
+not pretty, but it is helpful.
+
+added edges are 
+
+
+	Disorder	DisorderGroup (Name & @id)
+	Disorder	DisorderType (Name & id)
+	Disorder	ExpertLink (@lang)
+	Gene	    GeneType (Name & @id)
+
+	Locus	    GeneLocus
+	Locus	    LocusKey
+
+
+ExpertLink:
+The expert fields are all unique URI and look like:
+``` 
+http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&amp;Expert=99880
+```
+but  resolve to an error page saying:  
+
+```exec cExpIdData2 , 'en' SQL query failed```
+
+
+.../DisorderGroup/Name:
+   3163 Disorder
+    670 Subtype of disorder
+      6 Group of disorders
+
+
+.../DisorderType/Name:
+   2308 Disease
+    745 Malformation syndrome
+    506 Clinical subtype
+    141 Etiological subtype
+     92 Morphological anomaly
+     23 Histopathological subtype
+     10 Biological anomaly
+      6 Clinical syndrome
+      5 Clinical group
+      2 Particular clinical situation in a disease or syndrome
+      1 Category
+
+.../Gene/GeneType/Name:
+   7678 gene with protein product
+     84 Non-coding RNA
+     31 Disorder-associated locus
+
+.../Gene/LocusList/Locus/GeneLocus   
+    these are Cytogenic locations (think we should get these)
+
+/Gene/LocusList/Locus/LocusKey:
+  all but five are the number one and the rest are the number two.
+  no idea what it represents.
