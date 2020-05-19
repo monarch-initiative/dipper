@@ -30,6 +30,7 @@
 
 # Orpha stores variant-disease associations in the DisorderGeneAssociationType element
 # the second part after the pipe is not part of the dataset so these should go away
+
 # Here we store the mappings to be used when decomposing them (genos)
 
 # "Biomarker tested in|gene phenotype": "is marker for"
@@ -49,3 +50,38 @@
 # "Modifying germline mutation in|cell origin": "germline"
 # "Part of a fusion gene in|gene phenotype": "contributes to condition"
 # "Role in the phenotype of|gene phenotype": "contributes to condition"
+
+
+# xmlstarlet sel -t -m \
+# "JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/DisorderGeneAssociation" \
+# -v "./DisorderGeneAssociationType/Name" -o " | " \
+# -v "./Gene/GeneType/Name" -n  < en_product6.xml | sort -u
+
+"Biomarker tested in | gene with protein product": "is marker for"
+
+"Candidate gene tested in | Disorder-associated locus": "is marker for"
+"Candidate gene tested in | gene with protein product": "is marker for"
+"Candidate gene tested in | Non-coding RNA": "is marker for"
+
+"Disease-causing germline mutation(s) (gain of function) in | gene with protein product": "gain_of_function_variant"
+"Disease-causing germline mutation(s) (gain of function) in | Non-coding RNA": "gain_of_function_variant"
+
+"Disease-causing germline mutation(s) in | Disorder-associated locus": "causes condition"
+"Disease-causing germline mutation(s) in | gene with protein product": "causes condition"
+"Disease-causing germline mutation(s) in | Non-coding RNA": "causes condition"
+
+"Disease-causing germline mutation(s) (loss of function) in | gene with protein product": "loss_of_function_variant"
+
+"Disease-causing somatic mutation(s) in | gene with protein product": "causes condition"
+"Disease-causing somatic mutation(s) in | Non-coding RNA": "causes condition"
+
+"Major susceptibility factor in | gene with protein product": "contributes to condition"
+"Major susceptibility factor in | Non-coding RNA": "contributes to condition"
+
+"Modifying germline mutation in | gene with protein product": "contributes to condition"
+
+"Part of a fusion gene in | gene with protein product": "contributes to condition"
+
+"Role in the phenotype of | Disorder-associated locus": "contributes to condition"
+"Role in the phenotype of | gene with protein product": "contributes to condition"
+"Role in the phenotype of | Non-coding RNA": "contributes to condition"
