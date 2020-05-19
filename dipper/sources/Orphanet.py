@@ -89,22 +89,23 @@ class Orphanet(Source):
 
         for event, elem in ET.iterparse(xmlfile):
             if elem.tag == 'Disorder':
-                # get the element name and id, ignore element name
-                # id = elem.get('id') # some internal identifier
                 orphanumber = elem.find('OrphaNumber').text
                 disorder_curie = 'ORPHA:' + str(orphanumber)
 
-                if self.test_mode and \
+                if self.test_mode and\
                         disorder_curie not in self.all_test_ids['disease']:
                     continue
 
-                # Orphanet mappings are expected in Mondo
+                # Orphanet mappings are expected to be in Mondo
                 # these free-text disorder names become synonyms
                 disorder_label = elem.find('Name').text
                 model.addClassToGraph(disorder_curie, disorder_label)
 
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
+                if expected_genes == 0:
+                    LOG.info("%s has no genes.", disorder_curie)
+                    continue
                 # LOG.info(  # too chatty in the logs
                 #    'Expecting %s genes associated with disorder %s.',
                 #    expected_genes, disorder_curie)
@@ -113,9 +114,14 @@ class Orphanet(Source):
                     processed_genes += 1
                     gene = assoc.find('Gene')
 
+
                     # new as of 2020-May
-                    # todo SO mapping?
-                    # gene_type = gene.find('GeneType/Name').text
+                    # (on ORPHA association)  geno? type protein coding gene
+                    #   7678 gene with protein product
+                    #   84 Non-coding RNA
+                    #   31 Disorder-associated locus
+                    gene_type = gene.find('GeneType/Name').text
+
                     # todo monochrom mapping?
                     # gene_cyto = gene.find('LocusList/Locus/GeneLocus')
 
@@ -184,6 +190,8 @@ class Orphanet(Source):
                     #   45 Biomarker tested in
                     #   44 Modifying germline mutation in
                     rel_curie = self.resolve(dg_label)
+
+                    genotype_curie =  self.resolve(" | ".join((dg_label, gene_type)))
 
                     # use dg association status to issue an evidence code
                     # FIXME these codes mau be sub-optimal (there are only two)
