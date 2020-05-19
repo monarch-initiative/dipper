@@ -160,13 +160,14 @@ which may be more appropiate, especially if it resolves at a relevent page there
 as only  `Name` `lang` pairs are conserved.
 
 ```
-echo "digraph G {" > orpha_update_$RELEASE.gv
-awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"red\"];"}' <(tr -d '@' <xp_dropped) >> orpha_update_$RELEASE.gv
-awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"blue\"];"}' <(tr -d '@' <xp_added) >> orpha_update_$RELEASE.gv
-awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"black\"];"}' <(tr -d '@' <xp_continue) >> orpha_update_$RELEASE.gv
-echo "}" >> orpha_update_$RELEASE.gv
+echo "digraph G {" > orpha_update_$RELEASE.gv  
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"red\"];"}' <(tr -d '@' <xp_dropped) >> orpha_update_$RELEASE.gv  
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"blue\"];"}' <(tr -d '@' <xp_added) >> orpha_update_$RELEASE.gv  
+awk -F'/' '{print "\t" $(NF-1) " -> " $(NF) " [color=\"black\"];"}' <(tr -d '@' <xp_continue) >> orpha_update_$RELEASE.gv  
+echo "}" >> orpha_update_$RELEASE.gv  
 
 ```
+
 xdot orpha_update_202005.gv
 
 not pretty, but it is helpful.
@@ -183,7 +184,7 @@ added edges are
 	Locus	    LocusKey
 
 
-ExpertLink:
+.../Disorder/ExpertLink:
 The expert fields are all unique URI and look like:
 ``` 
 http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&amp;Expert=99880
@@ -193,13 +194,13 @@ but  resolve to an error page saying:
 ```exec cExpIdData2 , 'en' SQL query failed```
 
 
-.../DisorderGroup/Name:
+.../Disorder/DisorderGroup/Name:
    3163 Disorder
     670 Subtype of disorder
       6 Group of disorders
 
 
-.../DisorderType/Name:
+.../Disorder/DisorderType/Name:
    2308 Disease
     745 Malformation syndrome
     506 Clinical subtype
@@ -220,6 +221,132 @@ but  resolve to an error page saying:
 .../Gene/LocusList/Locus/GeneLocus   
     these are Cytogenic locations (think we should get these)
 
-/Gene/LocusList/Locus/LocusKey:
+.../Gene/LocusList/Locus/LocusKey:
   all but five are the number one and the rest are the number two.
-  no idea what it represents.
+  no idea what it represents.  
+hmmm Maybe they are the ORPHA's with zero associated genes; the count is right
+
+
+######################################################################
+
+
+In the past we conjoined the  .../DisorderGeneAssociationType/Name and 
+another field that was dropped in 2018.
+Now I think the new   .../Gene/GeneType/Name
+is the moral replacement of the the dropped field.
+From which we would derive geno-ish relationship types.
+
+```
+xmlstarlet sel -t -m "JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/DisorderGeneAssociation"  -v "./DisorderGeneAssociationType/Name" -o " | " -v "./Gene/GeneType/Name"  -o "\": \"\"" -n  < en_product6.xml | sort -u 
+Biomarker tested in | gene with protein product": ""
+Candidate gene tested in | Disorder-associated locus": ""
+Candidate gene tested in | gene with protein product": ""
+Candidate gene tested in | Non-coding RNA": ""
+Disease-causing germline mutation(s) (gain of function) in | gene with protein product": ""
+Disease-causing germline mutation(s) (gain of function) in | Non-coding RNA": ""
+Disease-causing germline mutation(s) in | Disorder-associated locus": ""
+Disease-causing germline mutation(s) in | gene with protein product": ""
+Disease-causing germline mutation(s) in | Non-coding RNA": ""
+Disease-causing germline mutation(s) (loss of function) in | gene with protein product": ""
+Disease-causing somatic mutation(s) in | gene with protein product": ""
+Disease-causing somatic mutation(s) in | Non-coding RNA": ""
+Major susceptibility factor in | gene with protein product": ""
+Major susceptibility factor in | Non-coding RNA": ""
+Modifying germline mutation in | gene with protein product": ""
+Part of a fusion gene in | gene with protein product": ""
+Role in the phenotype of | Disorder-associated locus": ""
+Role in the phenotype of | gene with protein product": ""
+Role in the phenotype of | Non-coding RNA": ""
+
+```
+
+
+
+########################################################################
+
+the unit tests are all broken.
+and they are all made up (delibertly make beleive) anyway
+which makes recreating them in their current form;  not my thing (tm)
+
+
+there are 3839 disorders (see head of xml file)
+
+this is not quick  ~ 45 minutes   gee ... 
+maybe I should read & parse it once instead of once per disorder.  
+
+
+```
+for i in $(seq 3839) ; do 
+  orpha=$(xmlstarlet sel -T -t -v JDBOR/DisorderList/Disorder[$i]/OrphaNumber en_product6.xml);\
+  xmlstarlet sel -t -m JDBOR/DisorderList/Disorder[$i] -c . en_product6.xml > frag &&\
+  xmlstarlet el -a frag | sort -u | shasum  > "disorder/Orpha_$orpha.sum"; 
+done
+```
+```
+for f in disorder/*.sum; do 
+  echo -e "${f%%.sum}\t$(cat $f)" >> orpha_sum.tab ; 
+done
+```
+```
+cut -f2 orpha_sum.tab |dist
+
+   3465 33fe70d00d14c7ebde1edde89fb7f8c0dbd2b19c  -
+    372 7eed9efcfac95d52a016989f5644c28a9a340286  -
+      1 f45733e01ca5fec6ec023557fa45aff0ffa91ab5  -
+      1 5d2a3df20c480e670b15a32cb2b765a32fac44b9  -
+```
+
+testing one or so of each of those types is where I am headed
+
+```
+grep 33fe70d00d14c7ebde1edde89fb7f8c0dbd2b19c orpha_sum.tab | sort -R | head -3
+disorder/Orpha_628  33fe70d00d14c7ebde1edde89fb7f8c0dbd2b19c  -
+```
+
+```
+grep 7eed9efcfac95d52a016989f5644c28a9a340286 orpha_sum.tab | sort -R | head -1
+disorder/Orpha_93333  7eed9efcfac95d52a016989f5644c28a9a340286  -
+```
+
+```
+grep f45733e01ca5fec6ec023557fa45aff0ffa91ab5 orpha_sum.tab | sort -R | head -1
+disorder/Orpha_99852  f45733e01ca5fec6ec023557fa45aff0ffa91ab5  -
+
+grep 5d2a3df20c480e670b15a32cb2b765a32fac44b9 orpha_sum.tab | sort -R | head -1
+disorder/Orpha_166035 5d2a3df20c480e670b15a32cb2b765a32fac44b9  -
+```
+
+
+```
+xmlstarlet sel -t -m JDBOR/DisorderList/Disorder[OrphaNumber="93333"] -c . en_product6.xml | 
+  xmlstarlet el -a | sort -u | ~/GitHub/xpath2dot/xpath2dot.awk  > 7eed9efcfac95d52a016989f5644c28a9a340286.gv
+
+xmlstarlet sel -t -m JDBOR/DisorderList/Disorder[OrphaNumber="628"] -c . en_product6.xml | 
+  xmlstarlet el -a | sort -u | ~/GitHub/xpath2dot/xpath2dot.awk  >33fe70d00d14c7ebde1edde89fb7f8c0dbd2b19c.gv
+
+```
+
+```
+diff  33fe70d00d14c7ebde1edde89fb7f8c0dbd2b19c.gv 7eed9efcfac95d52a016989f5644c28a9a340286.gv 
+
+5d4
+< Synonym [label = "{<Synonym> Synonym|lang}" shape = "record"];
+20d18
+< SynonymList -> Synonym [penwidth = "1", weight = "1"];
+```
+
+```
+cat <(head -3 en_product6.xml)  \
+<(for o in 628 93333 99852 166035 ; do \
+xmlstarlet sel -t -m JDBOR/DisorderList/Disorder[OrphaNumber="$o"] -c . en_product6.xml;done) \
+<(tail -2 en_product6.xml)  > orphatest.xml
+```
+
+
+and that is a test set   
+at the top of the file there is a count of Disorders in the llist that need to be changed to
+however many are in the file (four in this case)
+
+```
+sed -i 's|<DisorderList count="[0-9]*">|<DisorderList count="4">|' orphatest.xml
+```
