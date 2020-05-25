@@ -20,8 +20,8 @@ all: lint_error test tt_generated
 ###
 
 test: test_translationtable test_impc test_reactome test_clinvar test_wormbase \
-	test_rgd test_ctd test_string test_udp test_orphanet test_mgi test_gwascatalog \
-	test_dataset test_source_metadata # test_impc_fetch
+	test_rgd test_ctd test_string test_udp  test_mgi test_gwascatalog \
+	test_dataset test_source_metadata # test_orphanet test_impc_fetch
 
 test_dataset:
 	$(PYUTEST)
@@ -77,8 +77,8 @@ test_omim:
 test_biogrid:
 	$(PYUTEST)
 
-test_orphanet:
-	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
+# test_orphanet:
+#	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
 
 test_impc_fetch:
 	$(DIPPER_BIN) --sources impc --no_verify --fetch_only
