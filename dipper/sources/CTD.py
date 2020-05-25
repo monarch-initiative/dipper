@@ -463,55 +463,6 @@ class CTD(Source):
             id_list[i] = 'PMID:' + val
         return id_list
 
-    def _parse_curated_chem_disease(self, file_path, limit):
-        model = Model(self.graph)
-        src_key = 'publications'
-        col = self.api_fetch[src_key]['columns']
-
-        with open(file_path, 'r') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            row = next(reader)
-            row[0] = row[0][2:].strip()
-            if not self.check_fileheader(col, row):
-                pass
-
-            for row in reader:
-                # catch comment lines
-                if row[0][0] == '#':
-                    continue
-                self._check_list_len(row, len(col))
-
-                pub_id = row[col.index('Input')]
-                # disease_label = row[col.index('DiseaseName')]
-                disease_id = row[col.index('DiseaseID')]
-                # disease_cat = row[col.index('DiseaseCategories')]
-                evidence = row[col.index('DirectEvidence')]
-                chem_label = row[col.index('ChemicalName')]
-                chem_id = row[col.index('ChemicalID')]
-                # cas_rn = row[col.index('CasRN')]
-                # gene_symbol = row[col.index('GeneSymbol')]
-                # gene_acc = row[col.index('GeneAcc')]
-
-                if disease_id.strip() == '' or chem_id.strip() == '':
-                    continue
-
-                rel_id = self.resolve(evidence)
-                chem_id = 'MESH:' + chem_id
-                model.addClassToGraph(chem_id, chem_label)
-                model.addClassToGraph(disease_id, None)
-                if pub_id != '':
-                    pub_id = 'PMID:' + pub_id
-                    ref = Reference(
-                        self.graph, pub_id, ref_type=self.globaltt['journal article'])
-                    ref.addRefToGraph()
-                    pubids = [pub_id]
-                else:
-                    pubids = None
-                self._make_association(chem_id, disease_id, rel_id, pubids)
-
-                if not self.test_mode and limit is not None and \
-                        reader.line_num >= limit:
-                    break
 
     def getTestSuite(self):
         import unittest

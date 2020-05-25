@@ -1,0 +1,22 @@
+
+# paraphrasing MB's cmap fall 2018
+
+digraph "cmap_model"{
+
+    rankdir="LR";
+    Predicate [
+        label="{<Association> RO:has_phenotype|RO:allele_of|RO:contributes_to}"
+        shape="record"
+    ];
+
+    "MONARCH:123" -> "OBAN:Association"[label="rdf:type"];
+    "MONARCH:123" -> "BNODE:456" [label="OBAN:Subject"];
+    "MONARCH:123" -> "RO:predicate" [label="OBAN:predicate"];
+
+    "MONARCH:123" -> "ORPHA:123" [label="OBAN:Object"];
+    "MONARCH:123" -> "ECO:manual_assertion" [label="dc:evidence"];
+
+    "BNODE:456" -> "Predicate";
+    "Predicate" -> "ORPHA:123";
+    "BNODE:456" -> "ORPHA:456" [label="GENO:variant"];
+}
