@@ -254,6 +254,8 @@ pipeline {
                         '''
                     }
                 }
+                /**
+                    disable till we resolve automatic file fetching
                 stage("AnimalQTLdb") {
                     when {
                         anyOf {
@@ -269,6 +271,8 @@ pipeline {
                         '''
                     }
                 }
+                **/
+
                 stage("Bgee") {
                     when {
                         anyOf {
@@ -540,7 +544,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=monochrom
-                            $DIPPER --sources $SOURCE
+                            $DIPPER --sources $SOURCE --use_bnodes
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
