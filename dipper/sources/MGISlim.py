@@ -58,7 +58,6 @@ class MGISlim(Source):
                 "ontologyTerm.name", "evidence.publications.pubMedId",
                 "evidence.comments.type", "evidence.comments.description"
             )
-            query.add_sort_order("OntologyAnnotation.ontologyTerm.name", "ASC")
             query.add_constraint("subject.organism.taxonId", "=", self.txid, code="A")
             query.add_constraint("subject", "LOOKUP", fuzzy_gene, code="B")
             query.add_constraint(
