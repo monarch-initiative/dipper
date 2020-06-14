@@ -3,7 +3,6 @@
     see:  https://jenkins.io/doc/book/pipeline/development/
     curl -X POST -H $(curl "127.0.0.1/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)") -F "jenkinsfile=<Jenkinsfile" 127.0.0.1/pipeline-model-converter/validate
 
-
 **/
 
 pipeline {
@@ -13,7 +12,6 @@ pipeline {
     /*triggers {
          Run every Monday at 5pm
          cron('H 17 * * 1')
-
     }*/
 
     environment {
@@ -97,7 +95,7 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=omim
-                                    $DIPPER --sources $SOURCE -q
+                                    $DIPPER --sources $SOURCE --quiet
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                                 '''
                             }
@@ -202,7 +200,6 @@ pipeline {
                             sh '''
                                 wget --quiet --timestamping http://current.geneontology.org/bin/owltools
                                 chmod +x owltools
-
                                 java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
 
                                 # Hack to resolve https://github.com/monarch-initiative/monarch-ontology/issues/16
@@ -284,7 +281,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --limit 20 --taxon $COMMON_TAXON,10116 --version bgee_v14_0
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116 --version bgee_v14_0 --limit 20
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
@@ -665,7 +662,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=sgd
-                            $DIPPER --sources $SOURCE --data_release_version $YYYYMM
+                            $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
