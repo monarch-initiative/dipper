@@ -444,6 +444,7 @@ class Source:
         """
 
         response = None
+        result = False
         rmt_check = self.check_if_remote_is_newer(remoteurl, localfile, headers)
         if (is_dl_forced is True) or (localfile is None) or (
                 rmt_check is not None and rmt_check):
@@ -458,8 +459,8 @@ class Source:
                 return False  # allows re try (e.g. not found in Cache)
             except urllib.error.URLError as urlErr:
                 LOG.error('URLError %s\n\tFor: %s', urlErr, remoteurl)
-                return False
-            if localfile is not None:
+            result = response is not None
+            if localfile is not None and result:
                 with open(localfile, 'wb') as binwrite:
                     while True:
                         chunk = response.read(CHUNK)
@@ -487,7 +488,7 @@ class Source:
 
         else:
             LOG.info("Using existing file %s", localfile)
-        return True
+        return result
 
     # TODO: rephrase as mysql-dump-xml specific format
     def process_xml_table(self, elem, table_name, processing_function, limit):
@@ -806,8 +807,8 @@ class Source:
         exp = set(expected)
         got = set(received)
         if expected != received:
-            LOG.error('file resource: %s'
-                '\nExpected header:\n %s\nRecieved header:\n %s',
+            LOG.error(
+                'file resource: %s\nExpected header:\n %s\nRecieved header:\n %s',
                 src_key, expected, received)
 
             # pass reordering and adding new columns (after protesting)
