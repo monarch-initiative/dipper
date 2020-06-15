@@ -225,9 +225,13 @@ class OMIM(OMIMSource):
 
                 url = OMIMAPI + urllib.parse.urlencode(omimparams)
 
-                while(datetime.now() - then) < timedelta(seconds=5):
-                    time.sleep(1)
+                # slow down api calls
+                then += timedelta(seconds=4)
+                pause = then - datetime.now()
+                LOG.info("Naptime! %i", pause.seconds)
+                time.sleep(pause.seconds if pause.seconds > 0 else 0)
                 then = datetime.now()
+
                 try:
                     req = urllib.request.urlopen(url)
                 except HTTPError as err:  # URLError?
