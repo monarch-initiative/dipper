@@ -193,8 +193,7 @@ class ZFIN(Source):
             self.test_ids['disease'] = []
         else:
             self.test_ids['disease'] = self.all_test_ids['disease']
-
-        return
+        self.default_taxon_id = self.globaltt['Danio rerio']
 
     def fetch(self, is_dl_forced=False):
 
@@ -1237,6 +1236,7 @@ class ZFIN(Source):
         <gene id> a class
         <gene id> rdfs:label gene_symbol
         <gene id> equivalent class <ncbi_gene_id>
+        <gene id> in_taxon <ncbitaxon_curie>
         :param limit:
         :return:
 
@@ -1251,6 +1251,7 @@ class ZFIN(Source):
         line_counter = 0
         raw = '/'.join((self.rawdir, self.files['gene']['file']))
         geno = Genotype(graph)
+        taxon_id = self.default_taxon_id
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -1269,13 +1270,14 @@ class ZFIN(Source):
                 self.id_label_map[gene_id] = gene_symbol
 
                 if not self.test_mode and limit is not None and line_counter > limit:
-                    pass
-                else:
-                    geno.addGene(gene_id, gene_symbol)
-                    model.addEquivalentClass(gene_id, ncbi_gene_id)
+                    break
+
+                geno.addGene(gene_id, gene_symbol)
+                model.addEquivalentClass(gene_id, ncbi_gene_id)
+                geno.addTaxon(taxon_id, gene_id)
 
         LOG.info("Done with genes")
-        return
+
 
     def _process_features(self, limit=None):
         """
