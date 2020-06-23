@@ -204,8 +204,6 @@ class ZFIN(Source):
 
         self.get_orthology_sources_from_zebrafishmine()
 
-        return
-
     def scrub(self):
         """
         Perform various data-scrubbing on the raw data files prior to parsing.
@@ -221,7 +219,6 @@ class ZFIN(Source):
         pysed.replace(
             "\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
 
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -282,7 +279,6 @@ class ZFIN(Source):
         # self._process_uniprot_ids(limit)
 
         LOG.info("Finished parsing.")
-        return
 
     def process_fish(self, limit=None):
         """
@@ -524,8 +520,6 @@ class ZFIN(Source):
                                 else:
                                     r = self.globaltt['has_variant_part']
                                 geno.addParts(p, allele_id, r)
-
-        return
 
     def _process_genotype_features(self, limit=None):
         """
@@ -935,8 +929,6 @@ class ZFIN(Source):
 
         LOG.info("Done with genotypes")
 
-        return
-
     def _process_genotype_backgrounds(self, limit=None):
         """
         This table provides a mapping of genotypes to background genotypes
@@ -1000,7 +992,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with genotype backgrounds")
-        return
 
     def _process_wildtypes(self, limit=None):
         """
@@ -1057,7 +1048,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with wildtype genotypes")
-        return
 
     def _process_stages(self, limit=None):
         """
@@ -1095,7 +1085,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with stages")
-        return
 
     def _process_g2p(self, limit=None):
         """
@@ -1214,8 +1203,6 @@ class ZFIN(Source):
         LOG.info(
             "Phenotype-octuples: %d mapped", len(myset))
 
-        return
-
     def _process_genes(self, limit=None):
         """
         This table provides the ZFIN gene id, the SO type of the gene,
@@ -1330,7 +1317,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with features")
-        return
 
     def _process_feature_affected_genes(self, limit=None):
         """
@@ -1452,7 +1438,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with feature affected genes")
-        return
 
     def _process_gene_marker_relationships(self, limit=None):
         """
@@ -1584,7 +1569,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with gene marker relationships")
-        return
 
     @staticmethod
     def _make_transgene_part_id(construct_id, part_id, relationship):
@@ -1669,8 +1653,6 @@ class ZFIN(Source):
                 if not self.test_mode and limit is not None and reader.line_num  > limit:
                     break
 
-        return
-
     def _process_pub2pubmed(self, limit=None):
         """
         This will pull the zfin internal publication to pubmed mappings.
@@ -1716,8 +1698,6 @@ class ZFIN(Source):
                 ref.addRefToGraph()
                 if not self.test_mode and limit is not None and reader.line_num> limit:
                     break
-
-        return
 
     def _process_targeting_reagents(self, reagent_type, limit=None):
         """
@@ -1765,7 +1745,7 @@ class ZFIN(Source):
             LOG.error(
                 '%s is not an expected reagent type,\nKnown types are : %s ',
                 reagent_type, reagent_types)
-            return
+            return  # yuck
 
         raw = '/'.join((self.rawdir, self.files[reagent_type]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1849,7 +1829,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with Reagent type %s", reagent_type)
-        return
 
     def _process_pheno_enviro(self, limit=None):
         """
@@ -1977,8 +1956,6 @@ class ZFIN(Source):
 
         LOG.info("Done with environments")
 
-        return
-
     def _process_mappings(self, limit=None):
         """
         This function imports linkage mappings of various entities
@@ -2063,7 +2040,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with chromosome mappings")
-        return
 
     def _process_uniprot_ids(self, limit=None):
         """
@@ -2114,7 +2090,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with UniProt IDs")
-        return
 
     def _process_human_orthos(self, limit=None):
         """
@@ -2184,7 +2159,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with human orthos")
-        return
 
     def _process_gene_coordinates(self, limit=None):
         if self.test_mode:
@@ -2237,8 +2211,6 @@ class ZFIN(Source):
                     break
 
         LOG.info("Done with gene coordinates")
-
-        return
 
     def process_fish_disease_models(self, limit=None):
         if self.test_mode:
@@ -2315,8 +2287,6 @@ class ZFIN(Source):
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def _map_octuple_to_phenotype(
             self,
@@ -2602,8 +2572,6 @@ class ZFIN(Source):
                 ]
                 filewriter.writerow(stuff)
 
-        return
-
     def process_orthology_evidence(self, limit):
         if self.test_mode:
             graph = self.testgraph
@@ -2651,7 +2619,6 @@ class ZFIN(Source):
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-        return
 
     def get_orthology_evidence_code(self, abbrev):
         '''
