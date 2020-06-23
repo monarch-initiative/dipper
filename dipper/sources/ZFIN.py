@@ -83,7 +83,7 @@ class ZFIN(Source):
         #            'url': ZFDL + '/pheno_environment.txt'},
         'enviro': {
             'file': 'pheno_environment_fish.txt',
-            'url': ZFDL+'/pheno_environment_fish.txt'},
+            'url': ZFDL + '/pheno_environment_fish.txt'},
         'stage': {
             'file': 'stage_ontology.txt',
             'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
@@ -122,7 +122,7 @@ class ZFIN(Source):
             'url': ZFDL + '/features-affected-genes.txt'},
         'gene_marker_rel': {
             'file': 'gene_marker_relationship.txt',
-            'url': ZFDL+'/gene_marker_relationship.txt'},
+            'url': ZFDL + '/gene_marker_relationship.txt'},
         'crispr': {
             'file': 'CRISPR.txt',
             'url': ZFDL + '/CRISPR.txt'},
@@ -218,7 +218,6 @@ class ZFIN(Source):
         # 2017 May  see two lines with trailing baclslash in genbank.txt
         pysed.replace(
             "\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
-
 
     def parse(self, limit=None):
         if limit is not None:
@@ -319,7 +318,7 @@ class ZFIN(Source):
                  background_num, background_symbol, genotype_num,
                  genotype_name
                  # , empty
-                ) = row
+                 ) = row
 
                 # fish have the following components:
                 #  *  genotype, which is the intrinsic genotype;
@@ -355,17 +354,16 @@ class ZFIN(Source):
         # subtract out the intrinsic parts to just leave the extrinsic
         # to create the extrinsic genotypes.
 
-
         for fish_num in self.fish_parts:
             if self.test_mode and fish_num not in self.test_ids['fish']:
                 continue
 
-            fish_id = 'ZFIN:'+fish_num
+            fish_id = 'ZFIN:' + fish_num
             fish = self.fish_parts[fish_num]
 
             # get the intrinsic parts
             intrinsic_genotype_num = fish['intrinsic_genotype']
-            intrinsic_genotype_id = 'ZFIN:'+intrinsic_genotype_num
+            intrinsic_genotype_id = 'ZFIN:' + intrinsic_genotype_num
             intrinsic_genotype_label = self.id_label_map.get(
                 intrinsic_genotype_id)
             if intrinsic_genotype_num not in self.geno_alleles:
@@ -436,7 +434,7 @@ class ZFIN(Source):
                     list_of_targeted_genes += [targeted_gene_id]
                     # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
-                extrinsic_id = '_:'+re.sub(
+                extrinsic_id = '_:' + re.sub(
                     r':?_?', '', '-'.join(list_of_targeted_genes))
                 extrinsic_label = '; '.join(
                     str(self.id_label_map.get(l))
@@ -574,7 +572,7 @@ class ZFIN(Source):
                  gene_symbol, gene_num, zygosity, construct_name,
                  construct_num
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and genotype_num not in self.test_ids['genotype']:
                     continue
@@ -891,7 +889,7 @@ class ZFIN(Source):
 
             else:
                 background_num = re.sub(r'ZFIN:', '', gt)
-                background_id = '_:bkgd-'+background_num
+                background_id = '_:bkgd-' + background_num
                 background_label = 'unspecified background'
                 background_label_and_num = \
                     'unspecified background (' + background_num + ')'
@@ -1022,9 +1020,9 @@ class ZFIN(Source):
             for row in reader:
                 (fish_num, fish_name, fish_abbreviation, genotype_num
                  # , empty
-                ) = row
+                 ) = row
                 # ZDB-FISH-150901-10750	INDO	INDO	ZDB-GENO-980210-32
-                fish_id = 'ZFIN:'+fish_num
+                fish_id = 'ZFIN:' + fish_num
                 genotype_id = 'ZFIN:' + genotype_num.strip()
                 background_type = self.globaltt['genomic_background']
 
@@ -1074,7 +1072,7 @@ class ZFIN(Source):
             for row in reader:
                 (stage_id, stage_obo_id, stage_name, begin_hours, end_hours
                  # ,empty  # till next time
-                ) = row
+                 ) = row
 
                 # Add the stage as a class, and it's obo equivalent
                 stage_id = 'ZFIN:' + stage_id.strip()
@@ -1128,7 +1126,7 @@ class ZFIN(Source):
                  subterm2_id, subterm2_name, postcomp2_rel_id,
                  postcomp2_rel_name, superterm2_id, superterm2_name, pub_id,
                  env_id
-                ) = row
+                 ) = row
 
                 if self.test_mode and (
                         fish_num not in self.test_ids['fish'] or
@@ -1233,7 +1231,7 @@ class ZFIN(Source):
 
                 (gene_id, gene_so_id, gene_symbol, ncbi_gene_id
                  # , empty  # till next time
-                ) = row
+                 ) = row
 
                 if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
@@ -1251,7 +1249,6 @@ class ZFIN(Source):
                 geno.addTaxon(taxon_id, gene_id)
 
         LOG.info("Done with genes")
-
 
     def _process_features(self, limit=None):
         """
@@ -1286,7 +1283,7 @@ class ZFIN(Source):
                  construct_name, construct_so_id, talen_crispr_id,
                  talen_crispr_nam
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and (
                         genomic_feature_id not in self.test_ids['allele']):
@@ -1434,7 +1431,7 @@ class ZFIN(Source):
                     # TODO review this
                     pass
 
-                if not self.test_mode and limit is not None and reader.line_num> limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with feature affected genes")
@@ -1485,7 +1482,7 @@ class ZFIN(Source):
                 (gene_id, gene_so_id, gene_symbol, marker_id, marker_so_id,
                  marker_symbol, relationship
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and not (
                         gene_id in self.test_ids['gene'] or
@@ -1517,7 +1514,8 @@ class ZFIN(Source):
                             marker_id, marker_symbol, marker_so_id)
                         transgene_part_id = self._make_transgene_part_id(
                             marker_id, gene_id, relationship)
-                        transgene_part_label = 'Tg('+relationship+' '+gene_symbol+')'
+                        transgene_part_label = 'Tg(' + relationship + ' ' +\
+                            gene_symbol + ')'
                         model.addIndividualToGraph(
                             transgene_part_id, transgene_part_label,
                             self.globaltt['coding_transgene_feature'])
@@ -1575,7 +1573,7 @@ class ZFIN(Source):
         transgene_part_id = '-'.join((
             construct_id, part_id, re.sub(r'\W+', '-', relationship)))
         transgene_part_id = re.sub(r'ZFIN:', '', transgene_part_id)
-        transgene_part_id = '_:'+transgene_part_id
+        transgene_part_id = '_:' + transgene_part_id
 
         return transgene_part_id
 
@@ -1613,7 +1611,7 @@ class ZFIN(Source):
                         (pub_id, pubmed_id, authors, title,
                          journal, year, vol, pages
                          # , empty
-                        ) = row
+                         ) = row
                     except ValueError:
                         LOG.warning("Error parsing row %s: ", row)
 
@@ -1650,7 +1648,7 @@ class ZFIN(Source):
 
                 ref.addRefToGraph()
 
-                if not self.test_mode and limit is not None and reader.line_num  > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
     def _process_pub2pubmed(self, limit=None):
@@ -1679,7 +1677,7 @@ class ZFIN(Source):
             for row in reader:
                 (pub_id, pubmed_id
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and (
                         'ZFIN:' + pub_id not in self.test_ids['pub'] and
@@ -1696,7 +1694,7 @@ class ZFIN(Source):
                     model.addSameIndividual(pub_id, pubmed_id)
                 ref = Reference(graph, pub_id, rtype)
                 ref.addRefToGraph()
-                if not self.test_mode and limit is not None and reader.line_num> limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
     def _process_targeting_reagents(self, reagent_type, limit=None):
@@ -1740,7 +1738,7 @@ class ZFIN(Source):
         model = Model(graph)
         geno = Genotype(graph)
 
-        reagent_types = 'morph', 'talen', 'crispr'][
+        reagent_types = ['morph', 'talen', 'crispr']
         if reagent_type not in reagent_types:
             LOG.error(
                 '%s is not an expected reagent type,\nKnown types are : %s ',
@@ -1985,11 +1983,11 @@ class ZFIN(Source):
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in reader:1
+            for row in reader:
                 (zfin_num, symbol, so_id, panel_symbol,
                  chromosome, location, metric
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and zfin_num \
                         not in self.test_ids['gene'] + self.test_ids['allele']:
@@ -2071,7 +2069,7 @@ class ZFIN(Source):
             for row in reader:
                 (gene_id, gene_so_id, gene_symbol, uniprot_id
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
@@ -2129,7 +2127,7 @@ class ZFIN(Source):
                 (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name,
                  omim_id, gene_id, hgnc_id, evidence_code, pub_id
                  # , empty
-                ) = row
+                 ) = row
                 if self.test_mode and zfin_id not in self.test_ids['gene']:
                     continue
 
@@ -2147,7 +2145,7 @@ class ZFIN(Source):
                 # so we just use the default
 
                 if re.match(r'ZDB', pub_id):
-                    assoc.add_source('ZFIN:'+pub_id)
+                    assoc.add_source('ZFIN:' + pub_id)
 
                 eco_id = self.get_orthology_evidence_code(evidence_code)
                 if eco_id is not None:
@@ -2198,7 +2196,7 @@ class ZFIN(Source):
                 model.addClassToGraph(chrom_id, None)
                 # FIXME - remove this hardcoding
                 build_label = 'danRer10'
-                build_id = 'UCSC:'+build_label
+                build_id = 'UCSC:' + build_label
                 chrom_in_build = makeChromID(chrom, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chrom, build_id, build_label, chrom_id)
@@ -2241,7 +2239,7 @@ class ZFIN(Source):
                 (fish, environment, rel, disease_id, disease_label,
                  zfin_pub_id, pubmed_id, evidence_code
                  # , empty
-                ) = row
+                 ) = row
 
                 if self.test_mode and (
                         fish not in self.test_ids['fish'] and
@@ -2253,11 +2251,11 @@ class ZFIN(Source):
                     continue
 
                 # make effective genotype = fish+environment
-                fish_id = 'ZFIN:'+fish
+                fish_id = 'ZFIN:' + fish
                 fish_label = self.id_label_map.get(fish_id)
                 if fish_label is None:
                     fish_label = fish_id
-                environment_id = 'ZFIN:'+environment
+                environment_id = 'ZFIN:' + environment
                 environment_label = self.id_label_map.get(environment_id)
                 if environment_label is None:
                     environment_label = environment_id
@@ -2276,12 +2274,12 @@ class ZFIN(Source):
                 assoc.set_description(desc)
 
                 if zfin_pub_id != '':
-                    assoc.add_source('ZFIN:'+zfin_pub_id)
+                    assoc.add_source('ZFIN:' + zfin_pub_id)
 
                 # make the pubmed id, if it exists
                 if pubmed_id != '':
-                    pubmed_id = 'PMID:'+pubmed_id
-                    model.addSameIndividual('ZFIN:'+zfin_pub_id, pubmed_id)
+                    pubmed_id = 'PMID:' + pubmed_id
+                    model.addSameIndividual('ZFIN:' + zfin_pub_id, pubmed_id)
                     model.makeLeader(pubmed_id)
                 assoc.add_association_to_graph()
 
@@ -2593,10 +2591,10 @@ class ZFIN(Source):
                 if self.test_mode and (zfin_gene_num not in self.test_ids['gene']):
                     continue
 
-                zfin_gene_id = 'ZFIN:'+str(zfin_gene_num)
-                ortho_gene_id = 'NCBIGene:'+str(ortholog_ncbigene_num)
-                zfin_pub_id = 'ZFIN:'+zfin_pub_num
-                pubmed_id = 'PMID:'+str(pubmed_num)
+                zfin_gene_id = 'ZFIN:' + str(zfin_gene_num)
+                ortho_gene_id = 'NCBIGene:' + str(ortholog_ncbigene_num)
+                zfin_pub_id = 'ZFIN:' + zfin_pub_num
+                pubmed_id = 'PMID:' + str(pubmed_num)
                 if zfin_gene_num != '' and ortholog_ncbigene_num != '':
                     assoc = OrthologyAssoc(
                         graph, self.name, zfin_gene_id, ortho_gene_id)
@@ -2672,7 +2670,6 @@ class ZFIN(Source):
         targeted_gene_id = re.sub(r'(ZFIN)?:', '', targeted_gene_id)
         targeted_gene_id = '_:' + targeted_gene_id
         return targeted_gene_id
-
 
     # #### SOME OLD (COBLO?) CODE #####
 
