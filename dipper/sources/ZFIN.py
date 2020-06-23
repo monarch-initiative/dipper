@@ -315,8 +315,8 @@ class ZFIN(Source):
         allele_to_construct_hash = {}
 
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
 
                 (fish_num, fish_name, gene_num, gene_symbol, affector_num,
                  affector_symbol, construct_num, construct_symbol,
@@ -358,13 +358,12 @@ class ZFIN(Source):
         # given the components of a fish,
         # subtract out the intrinsic parts to just leave the extrinsic
         # to create the extrinsic genotypes.
-        line_counter = 0
+
 
         for fish_num in self.fish_parts:
             if self.test_mode and fish_num not in self.test_ids['fish']:
                 continue
 
-            line_counter += 1
             fish_id = 'ZFIN:'+fish_num
             fish = self.fish_parts[fish_num]
 
@@ -494,7 +493,7 @@ class ZFIN(Source):
             model.addSynonym(fish_id, fish['fish_label'])
             self.id_label_map[fish_id] = fish_label
 
-            if not self.test_mode and limit is not None and line_counter > limit:
+            if not self.test_mode and limit is not None and reader.line_num > limit:
                 break
 
             # ###finish iterating over fish
@@ -571,12 +570,10 @@ class ZFIN(Source):
         gvc_hash = {}
 
         LOG.info("Processing Genotypes")
-        line_counter = 0
         geno = Genotype(graph)
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
 
                 (genotype_num, genotype_name, genotype_unique_name, allele_num,
                  allele_name, allele_ab, allele_type, allele_disp_type,
@@ -701,7 +698,7 @@ class ZFIN(Source):
                         if other_allele is not None:
                             genoparts[gh].append(other_allele)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
                     # end loop through file
@@ -961,7 +958,6 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         LOG.info("Processing genotype backgrounds")
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['backgrounds']['file']))
         geno = Genotype(graph)
 
@@ -970,9 +966,8 @@ class ZFIN(Source):
         model.addClassToGraph(taxon_id, None)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 # Genotype_ID 	Genotype_Name 	Background 	Background_Name
                 (genotype_id, genotype_name, background_id, unused) = row
 
@@ -1001,7 +996,7 @@ class ZFIN(Source):
                 # Add background to the intrinsic genotype
                 geno.addGenomicBackgroundToGenotype(background_id, genotype_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with genotype backgrounds")
@@ -1029,13 +1024,11 @@ class ZFIN(Source):
             graph = self.graph
         # model = Model(graph)  # unused
         LOG.info("Processing wildtype genotypes")
-        line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['wild']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (fish_num, fish_name, fish_abbreviation, genotype_num
                  # , empty
                 ) = row
@@ -1060,7 +1053,7 @@ class ZFIN(Source):
                 # store these in a special hash to look up later
                 self.wildtype_genotypes += [genotype_id]
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with wildtype genotypes")
@@ -1084,12 +1077,11 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         LOG.info("Processing stages")
-        line_counter = 0
+
         raw = '/'.join((self.rawdir, self.files['stage']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (stage_id, stage_obo_id, stage_name, begin_hours, end_hours
                  # ,empty  # till next time
                 ) = row
@@ -1099,7 +1091,7 @@ class ZFIN(Source):
                 model.addClassToGraph(stage_id, stage_name)
                 model.addEquivalentClass(stage_id, stage_obo_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with stages")
@@ -1127,7 +1119,6 @@ class ZFIN(Source):
 
         """
         LOG.info("Processing G2P")
-        line_counter = 0
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -1139,10 +1130,8 @@ class ZFIN(Source):
         eco_id = self.globaltt['experimental phenotypic evidence']
         raw = '/'.join((self.rawdir, self.files['pheno']['file']))
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (fish_num, fish_name, start_stage_id, start_stage_name,
                  end_stage_id, end_stage_name, subterm1_id, subterm1_name,
                  postcomp1_rel_id, postcomp1_rel_name, superterm1_id,
@@ -1217,7 +1206,7 @@ class ZFIN(Source):
                     if pub_id != '':
                         graph.addTriple(pub_id, self.globaltt['mentions'], fish_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         self.mapped_zpids = mapped_zpids
@@ -1248,14 +1237,12 @@ class ZFIN(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['gene']['file']))
         geno = Genotype(graph)
         taxon_id = self.default_taxon_id
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
 
                 (gene_id, gene_so_id, gene_symbol, ncbi_gene_id
                  # , empty  # till next time
@@ -1269,7 +1256,7 @@ class ZFIN(Source):
 
                 self.id_label_map[gene_id] = gene_symbol
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
                 geno.addGene(gene_id, gene_symbol)
@@ -1301,13 +1288,11 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         LOG.info("Processing features")
-        line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['features']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (genomic_feature_id, feature_so_id,
                  genomic_feature_abbreviation, genomic_feature_name,
                  genomic_feature_type, mutagen, mutagee, construct_id,
@@ -1341,7 +1326,7 @@ class ZFIN(Source):
                     genomic_feature_id] = genomic_feature_abbreviation
                 self.id_label_map[construct_id] = construct_name
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with features")
@@ -1381,7 +1366,6 @@ class ZFIN(Source):
         # that case is when the relationship is != 'is allele of'
 
         LOG.info("Processing feature affected genes")
-        line_counter = 0
         raw = '/'.join(
             (self.rawdir, self.files['feature_affected_gene']['file']))
         if self.test_mode:
@@ -1391,9 +1375,8 @@ class ZFIN(Source):
         model = Model(graph)
         geno = Genotype(graph)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (genomic_feature_id, feature_so_id,
                  genomic_feature_abbreviation, gene_symbol, gene_id,
                  gene_so_id, genomic_feature_marker_relationship) = row[0:7]
@@ -1465,7 +1448,7 @@ class ZFIN(Source):
                     # TODO review this
                     pass
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num> limit:
                     break
 
         LOG.info("Done with feature affected genes")
@@ -1508,15 +1491,12 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         LOG.info("Processing gene marker relationships")
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['gene_marker_rel']['file']))
         geno = Genotype(graph)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (gene_id, gene_so_id, gene_symbol, marker_id, marker_so_id,
                  marker_symbol, relationship
                  # , empty
@@ -1600,7 +1580,7 @@ class ZFIN(Source):
                 # just in case we haven't seen it before
                 self.id_label_map[gene_id] = gene_symbol
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with gene marker relationships")
@@ -1632,7 +1612,6 @@ class ZFIN(Source):
 
         """
 
-        line_counter = 0
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -1640,9 +1619,8 @@ class ZFIN(Source):
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['pubs']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 try:
                     (pub_id, pubmed_id, authors, title,
                      journal, year, vol, pages) = row
@@ -1688,7 +1666,7 @@ class ZFIN(Source):
 
                 ref.addRefToGraph()
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num  > limit:
                     break
 
         return
@@ -1708,7 +1686,6 @@ class ZFIN(Source):
         :param limit:
         :return:
         """
-        line_counter = 0
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -1716,9 +1693,8 @@ class ZFIN(Source):
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['pub2pubmed']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (pub_id, pubmed_id
                  # , empty
                 ) = row
@@ -1738,7 +1714,7 @@ class ZFIN(Source):
                     model.addSameIndividual(pub_id, pubmed_id)
                 ref = Reference(graph, pub_id, rtype)
                 ref.addRefToGraph()
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num> limit:
                     break
 
         return
@@ -1781,34 +1757,53 @@ class ZFIN(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
         geno = Genotype(graph)
 
-        if reagent_type not in ['morph', 'talen', 'crispr']:
-            LOG.error("You didn't specify the right kind of file type.")
+        reagent_types = 'morph', 'talen', 'crispr'][
+        if reagent_type not in reagent_types:
+            LOG.error(
+                '%s is not an expected reagent type,\nKnown types are : %s ',
+                reagent_type, reagent_types)
             return
 
         raw = '/'.join((self.rawdir, self.files[reagent_type]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
 
                 if reagent_type in ['morph', 'crispr']:
                     try:
-                        (gene_num, gene_so_id, gene_symbol, reagent_num,
-                         reagent_so_id, reagent_symbol, reagent_sequence,
-                         publication, note) = row
+                        (gene_num,
+                         gene_so_id,
+                         gene_symbol,
+                         reagent_num,
+                         reagent_so_id,
+                         reagent_symbol,
+                         reagent_sequence,
+                         publication,
+                         note) = row
                     except ValueError:
                         # Catch lines without publication or note
-                        (gene_num, gene_so_id, gene_symbol, reagent_num,
-                         reagent_so_id, reagent_symbol, reagent_sequence,
+                        (gene_num,
+                         gene_so_id,
+                         gene_symbol,
+                         reagent_num,
+                         reagent_so_id,
+                         reagent_symbol,
+                         reagent_sequence,
                          publication) = row
                 elif reagent_type == 'talen':
-                    (gene_num, gene_so_id, gene_symbol, reagent_num,
-                     reagent_so_id, reagent_symbol, reagent_sequence,
-                     reagent_sequence2, publication, note) = row
+                    (gene_num,
+                     gene_so_id,
+                     gene_symbol,
+                     reagent_num,
+                     reagent_so_id,
+                     reagent_symbol,
+                     reagent_sequence,
+                     reagent_sequence2,
+                     publication,
+                     note) = row
                 else:
                     # should not get here
                     return
@@ -1823,8 +1818,8 @@ class ZFIN(Source):
                         gene_num not in self.test_ids['gene']):
                     continue
 
-                geno.addGeneTargetingReagent(reagent_id, reagent_symbol,
-                                             reagent_so_id, gene_id)
+                geno.addGeneTargetingReagent(
+                    reagent_id, reagent_symbol, reagent_so_id, gene_id)
                 # The reagent targeted gene is added
                 # in the pheno_environment processing function.
 
@@ -1850,7 +1845,7 @@ class ZFIN(Source):
                     if gene_id not in self.variant_loci_genes[reagent_id]:
                         self.variant_loci_genes[reagent_id] += [gene_id]
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with Reagent type %s", reagent_type)
@@ -1888,17 +1883,14 @@ class ZFIN(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         env_hash = {}
         envo = Environment(graph)
         # pp = pprint.PrettyPrinter(indent=4)
 
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 # (environment_num, condition_group,
                 #  condition, description, blank) = row
                 (environment_id,
@@ -1958,7 +1950,7 @@ class ZFIN(Source):
                 # envo.addEnvironmentalCondition(
                 #    env_component_id, env_component_label)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
                 # End of loop through pheno_env file
@@ -2004,7 +1996,6 @@ class ZFIN(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['mappings']['file']))
@@ -2016,10 +2007,8 @@ class ZFIN(Source):
         geno.addGenome(taxon_id, taxon_label)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:1
                 (zfin_num, symbol, so_id, panel_symbol,
                  chromosome, location, metric
                  # , empty
@@ -2070,7 +2059,7 @@ class ZFIN(Source):
                     LOG.error(
                         "There's a panel (%s) we don't have info for", panel_symbol)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with chromosome mappings")
@@ -2098,15 +2087,12 @@ class ZFIN(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['uniprot']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (gene_id, gene_so_id, gene_symbol, uniprot_id
                  # , empty
                 ) = row
@@ -2124,7 +2110,7 @@ class ZFIN(Source):
                 graph.addTriple(
                     gene_id, self.globaltt['has gene product'], uniprot_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with UniProt IDs")
@@ -2159,14 +2145,12 @@ class ZFIN(Source):
             graph = self.graph
 
         LOG.info("Processing human orthos")
-        line_counter = 0
         geno = Genotype(graph)
         # model = Model(graph)  # unused
         raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name,
                  omim_id, gene_id, hgnc_id, evidence_code, pub_id
                  # , empty
@@ -2196,7 +2180,7 @@ class ZFIN(Source):
 
                 assoc.add_association_to_graph()
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with human orthos")
@@ -2209,15 +2193,13 @@ class ZFIN(Source):
             graph = self.graph
 
         LOG.info("Processing human orthos")
-        line_counter = 0
         geno = Genotype(graph)
 
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['gene_coordinates']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 if re.match(r'^(\s|#|$)', ''.join(row)):
                     continue  # skip header
                 (chrom, source, ftype, start, end, score,
@@ -2251,7 +2233,7 @@ class ZFIN(Source):
                 feat.addFeatureEndLocation(end, chrom_in_build, strand)
                 feat.addFeatureToGraph(True, None, True)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with gene coordinates")
@@ -2265,16 +2247,14 @@ class ZFIN(Source):
             graph = self.graph
 
         LOG.info("Processing fish models")
-        line_counter = 0
         fish_taxon = self.globaltt['Danio rerio']
         geno = Genotype(graph)
         model = Model(graph)
         raw = '/'.join(
             (self.rawdir, self.files['fish_disease_models']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 if re.match(r'^(\s|#|$)', ''.join(row)):
                     continue  # skip header
                 # ZDB-FISH-150901-9014
@@ -2333,7 +2313,7 @@ class ZFIN(Source):
                     model.makeLeader(pubmed_id)
                 assoc.add_association_to_graph()
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         return
@@ -2410,14 +2390,12 @@ class ZFIN(Source):
         """
         zp_map = {}
         LOG.info("Loading ZP-to-EQ mappings")
-        line_counter = 0
         with open(file, 'r', encoding="utf-8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header_or_comment_re = re.compile('^iri|^#')
-            for row in filereader:
+            for row in reader:
                 if header_or_comment_re.match(row[0]):
                     continue
-                line_counter += 1
 
                 zp_id = row[0]
                 # id_map_zfin.tsv only contains data for abnormal phenotypes
@@ -2633,15 +2611,13 @@ class ZFIN(Source):
             graph = self.graph
 
         LOG.info("Processing orthology evidence")
-        line_counter = 0
 
         raw = '/'.join((self.rawdir, 'zmine_ortho_evidence.txt'))
 
         with open(raw, 'r', encoding="utf-8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 # no header on this file
-                line_counter += 1
                 (zfin_gene_num, zfin_gene_symbol, ortholog_gene_symbol,
                  ortholog_ncbigene_num, evidence_code, zfin_pub_num,
                  pubmed_num) = row
@@ -2673,7 +2649,7 @@ class ZFIN(Source):
                 # FIXME need to update with proper provenance model
                 # so the papers get attached with the relevant eco code
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
         return
 
