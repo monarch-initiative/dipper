@@ -145,13 +145,11 @@ class MMRRC(Source):
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             # First line is header not date/version info. This changed recently,
             # apparently as of Sep 2019. Also, 3rd line is no longer blank.
-            header = next(reader)
+            row = [x.strip() for x in next(reader)]  # messy messy
             col = self.files['catalog']['columns']
-            if col != header:
-                LOG.error(
-                    '%s\nExpected Headers:\t%s\nReceived Headers:\t%s\n',
-                    src_key, col, header)
-                LOG.info(set(col) - set(header))
+            strain_missing_allele = []  # to count the ones w/insufficent info
+            if not self.check_fileheader(col, row):
+                pass
 
             for row in reader:
                 strain_id = row[col.index('STRAIN/STOCK_ID')].strip()
@@ -291,11 +289,19 @@ class MMRRC(Source):
                             assoc.add_source(p)
                         assoc.add_association_to_graph()
                     else:
-                        LOG.info("Phenotypes and no allele for %s", strain_id)
+                        # too chatty here. report aggregate
+                        # LOG.info("Phenotypes and no allele for %s", strain_id)
+                        strain_missing_allele.append(strain_id)
 
                 if not self.test_mode and (
                         limit is not None and reader.line_num > limit):
                     break
+
+            # report misses
+            if strain_missing_allele:
+                LOG.info(
+                    "Phenotypes and no allele for %i strains",
+                    len(strain_missing_allele))
 
             # now that we've collected all of the variant information, build it
             # we don't know their zygosities
@@ -321,7 +327,7 @@ class MMRRC(Source):
                     # it's just anonymous variants in some gene
                     for gene in genes:
                         vl_id = '_:' + re.sub(r':', '', gene) + '-VL'
-                        vl_symbol = self.id_label_hash[gene]+'<?>'
+                        vl_symbol = self.id_label_hash[gene] + '<?>'
                         self.id_label_hash[vl_id] = vl_symbol
                         geno.addAllele(
                             vl_id, vl_symbol, self.globaltt['variant_locus'])
@@ -334,7 +340,7 @@ class MMRRC(Source):
                 vslc_list = []
                 for vl in vl_list:
                     # for unknown zygosity
-                    vslc_id = re.sub(r'^_', '', vl)+'U'
+                    vslc_id = re.sub(r'^_', '', vl) + 'U'
                     vslc_id = re.sub(r':', '', vslc_id)
                     vslc_id = '_:' + vslc_id
                     vslc_label = self.id_label_hash[vl] + '/?'
@@ -351,7 +357,7 @@ class MMRRC(Source):
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
                         gvc_id = re.sub(r'_|:', '', gvc_id)
-                        gvc_id = '_:'+gvc_id
+                        gvc_id = '_:' + gvc_id
                         gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
                         model.addIndividualToGraph(
                             gvc_id, gvc_label,

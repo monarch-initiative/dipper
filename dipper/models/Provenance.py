@@ -56,9 +56,10 @@ class Provenance:
                 object_category=blv.terms.EvidenceType.value)
         return
 
-    def add_study_measure(self, study, measure):
+    def add_study_measure(self, study, measure, object_is_literal=None):
         self.graph.addTriple(
-            study, self.globaltt['measures_parameter'], measure,
+            study, self.globaltt['measures_parameter'],
+            measure, object_is_literal,
             subject_category=blv.terms.EvidenceType.value,
             object_category=blv.terms.EvidenceType.value)
         return
@@ -83,7 +84,7 @@ class Provenance:
 
         if date is not None:
             self.graph.addTriple(
-                self.graph, assertion, self.globaltt['date_created'], date)
+                self.graph, assertion, self.globaltt['Date Created'], date)
 
         return
 

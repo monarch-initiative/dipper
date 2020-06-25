@@ -240,7 +240,8 @@ class FakeIngestClass(Source):
                        headers=None):
         copyfile(
             self.files.get('test_file').get('path_to_mock_download_file'), localfile)
-        return
+
+    # consider cleaning up testing artifact translationtable/someid.yaml
 
 
 class FakeIngestUsingPostgres(PostgreSQLSource):
@@ -285,4 +286,3 @@ class FakeIngestUsingPostgres(PostgreSQLSource):
                        headers=None):
         copyfile(
             self.files.get('test_file').get('path_to_mock_download_file'), localfile)
-        return

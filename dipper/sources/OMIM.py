@@ -2,8 +2,9 @@ import logging
 import re
 import json
 import urllib
+import time
 from urllib.error import HTTPError
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from dipper.sources.OMIMSource import OMIMSource
 from dipper.sources.Source import USER_AGENT
@@ -58,7 +59,7 @@ class OMIM(OMIMSource):
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url': OMIMFTP + '/morbidmap.txt',
-            'clean': OMIMURL,
+            'clean': OMIMURL + 'morbidmap.txt',
             'columns': [  # expected
                 '# Phenotype',
                 'Gene Symbols',
@@ -70,7 +71,7 @@ class OMIM(OMIMSource):
             'file': 'phenotypic_series_title_all.txt',
             'url': 'https://omim.org/phenotypicSeriesTitles/all?format=tsv',
             'headers': {'User-Agent': USER_AGENT},
-            'clean': OMIMURL,
+            'clean': OMIMURL + 'phenotypic_series_title_all.txt',
             'columns': [  # expected
                 "Phenotypic Series Title",
                 "Phenotypic Series number",
@@ -203,6 +204,7 @@ class OMIM(OMIMSource):
             else:
                 maxit = len(omimids)
 
+            then = datetime.now()
             while acc < maxit:
                 end = min((maxit, acc + groupsize))
                 # iterate through the omim ids list,
@@ -223,6 +225,13 @@ class OMIM(OMIMSource):
 
                 url = OMIMAPI + urllib.parse.urlencode(omimparams)
 
+                # slow down api calls
+                then += timedelta(seconds=4)
+                pause = then - datetime.now()
+                LOG.info("Naptime! %i", pause.seconds)
+                time.sleep(pause.seconds if pause.seconds > 0 else 0)
+                then = datetime.now()
+
                 try:
                     req = urllib.request.urlopen(url)
                 except HTTPError as err:  # URLError?
@@ -232,6 +241,11 @@ class OMIM(OMIMSource):
                         msg = "API Key not valid"
                         raise HTTPError(url, err.code, msg, err.hdrs, err.fp)
                     LOG.error("Failed with: %s", str(error_msg))
+                    # dump what we have to see how far we got.
+                    with open(
+                            './raw/omim/_' + date.today().isoformat() + '.json_partial',
+                            'w') as writer:
+                        json.dump(reponse_batches, writer)
                     break
 
                 resp = req.read().decode()
@@ -241,7 +255,8 @@ class OMIM(OMIMSource):
 
             # snag a copy of all the batches
 
-            with open('./raw/omim/_'+date.today().isoformat()+'.json', 'w') as writer:
+            with open(
+                    './raw/omim/_' + date.today().isoformat() + '.json', 'w') as writer:
                 json.dump(reponse_batches, writer)
 
         LOG.info(
@@ -924,12 +939,12 @@ class OMIM(OMIMSource):
                 model.addTriple(
                     omim_curie,
                     self.globaltt['contributes to condition'],
-                    series_curie,
-                    subject_category=blv.terms.Gene.value,
-                    object_category=blv.terms.Disease.value)
-            elif omimtype == 'disease':
-                model.addSubClass(omim_curie,
-                                  series_curie,
+                    series_curie)
+            elif omimtype in [
+                    self.globaltt['phenotype'],
+                    self.globaltt['heritable_phenotypic_marker']
+            ]:
+                model.addSubClass(omim_curie, series_curie,
                                   child_category=blv.terms.Disease.value,
                                   parent_category=blv.terms.Disease.value)
             else:
@@ -1084,7 +1099,7 @@ class OMIM(OMIMSource):
             omim_id_category = None
 
         return omim_id_category
-
+tax_curie
     # def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
     #        import unittest

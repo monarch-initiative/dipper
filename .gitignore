@@ -5,6 +5,7 @@ raw
 out
 owltools*
 conf.json
+translationtable/someid.yaml
 
 # dot files
 dot/

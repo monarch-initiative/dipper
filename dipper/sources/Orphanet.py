@@ -2,7 +2,6 @@ import logging
 import xml.etree.ElementTree as ET
 from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
@@ -17,8 +16,13 @@ class Orphanet(Source):
     """
 
     """
-    Some useful code:
-    xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
+    see: dipper/resources/orphanet/
+
+    for finding what you as most likely working on
+    xmlstarlet sel -t -c \
+    "JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/DisorderGeneAssociation" \
+        en_product6.xml
+
     """
 
     files = {
@@ -27,10 +31,8 @@ class Orphanet(Source):
             'url': 'http://www.orphadata.org/data/xml/en_product6.xml'}
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -50,16 +52,12 @@ class Orphanet(Source):
         else:
             self.test_ids = self.all_test_ids['disease']
 
-        return
-
     def fetch(self, is_dl_forced=False):
         """
         :param is_dl_forced:
         :return:
         """
         self.get_files(is_dl_forced)
-
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -74,76 +72,103 @@ class Orphanet(Source):
 
         LOG.info("Done parsing.")
 
-        return
-
     def _process_diseasegene(self, limit):
         """
         :param limit:
         :return:
         """
+        src_key = 'disease-gene'
+
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
 
         model = Model(graph)
 
-        myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
+        xmlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
-        for event, elem in ET.iterparse(myfile):
+        for event, elem in ET.iterparse(xmlfile):
             if elem.tag == 'Disorder':
-                # get the element name and id, ignore element name
-                # id = elem.get('id') # some internal identifier
-                disorder_num = elem.find('OrphaNumber').text
-                disorder_id = 'ORPHA:' + str(disorder_num)
+                orphanumber = elem.find('OrphaNumber').text
+                disorder_curie = 'ORPHA:' + str(orphanumber)
 
-                if self.test_mode and disorder_id not in self.all_test_ids['disease']:
+                if self.test_mode and\
+                        disorder_curie not in self.all_test_ids['disease']:
                     continue
-                disorder_label = elem.find('Name').text
 
-                # assuming that these are in the ontology (...any particular one?)
-                model.addClassToGraph(disorder_id, disorder_label,
+                # Orphanet mappings are expected to be in Mondo
+                # these free-text disorder names become synonyms
+                disorder_label = elem.find('Name').text
+                model.addClassToGraph(disorder_curie, disorder_label,
                                       class_category=blv.terms.Disease.value)
+
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
-                LOG.info(
-                    'Expecting %s genes associated with disorder %s.',
-                    expected_genes, disorder_id)
+                if expected_genes == 0:
+                    LOG.info("%s has no genes.", disorder_curie)
+                    continue
+                # LOG.info(  # too chatty in the logs
+                #    'Expecting %s genes associated with disorder %s.',
+                #    expected_genes, disorder_curie)
                 processed_genes = 0
                 for assoc in assoc_list.findall('DisorderGeneAssociation'):
                     processed_genes += 1
                     gene = assoc.find('Gene')
 
-                    # get gene's curie  HGNC or Ensembl ...
 
-                    lclid = gene.find('OrphaNumber').text
-                    gene_curie = 'ORPHA:' + lclid
-                    gene_set = {'ORPHA': lclid}
+                    # new as of 2020-May
+                    # (on ORPHA association)  geno? type protein coding gene
+                    #   7678 gene with protein product
+                    #   84 Non-coding RNA
+                    #   31 Disorder-associated locus
+                    gene_type = gene.find('GeneType/Name').text
+
+                    # todo monochrom mapping?
+                    # gene_cyto = gene.find('LocusList/Locus/GeneLocus')
+
+                    # get gene's curie as a map {'prefix': 'localid'}
+                    # circa 2020-May
+                    #   7787 HGNC
+                    #   7745 Ensembl
+                    #   7711 OMIM
+                    #   7709 SwissProt
+                    #   7578 Genatlas
+                    #   6523 Reactome
+                    #   1101 IUPHAR
+                    gene_clique = {}
+                    gene_curie = None
                     for gene_ref in gene.findall(
                             './ExternalReferenceList/ExternalReference'):
-                        gene_set[gene_ref.find('Source').text] = \
-                            gene_ref.find('Reference').text
-
-                    # set priority (clique leader if available) but default to OPRHA
-                    for pfx in ('HGNC', 'Ensembl', 'SwissProt'):
-                        if pfx in gene_set:
-                            if pfx in self.localtt:
-                                pfx = self.localtt[pfx]
-                            gene_curie = pfx + ':' + gene_set[pfx]
-                            gene_set.pop(pfx)
-                            model.addClassToGraph(gene_curie, None,
-                                                  class_category=blv.terms.Gene.value)
-                            break
-
-                    # TEC have reservations w.r.t aggerator links being gene classes
-                    for prefix in gene_set:
-                        lclid = gene_set[prefix]
+                        prefix = gene_ref.find('Source').text
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
+                        gene_clique[prefix] = gene_ref.find('Reference').text
 
-                        dbxref = prefix + ':' + lclid
+                    if len(gene_clique) == 0:
+                        LOG.error('No gene at all for %s', disorder_curie)
+                        break
 
+                    # gene representation to prefer
+                    for prefix in ('HGNC', 'ENSEMBL', 'SwissProt', 'OMIM'):
+                        if prefix in gene_clique:
+                            gene_curie = prefix + ':' + gene_clique[prefix]
+                            gene_clique.pop(prefix)
+                            model.addClassToGraph(gene_curie, None)
+                            break  # one shot
+
+                    if gene_curie is None:
+                        # settle for whatever
+                        LOG.warning("No prefered gene have\n\t%s", gene_clique)
+                        for prefix in gene_clique:
+                            gene_curie = prefix + ':' + gene_clique[prefix]
+                            gene_clique.pop(prefix)
+                            model.addClassToGraph(gene_curie, None)
+                            break  # one shot
+
+                    for prefix in gene_clique:
+                        lclid = gene_clique[prefix]
+                        dbxref = ':'.join((prefix, lclid))
                         if gene_curie != dbxref:
                             model.addClassToGraph(dbxref, None,
                                                   class_category=blv.terms.Gene.value)
@@ -151,41 +176,47 @@ class Orphanet(Source):
                                                      subject_category=blv.terms.Gene.value,
                                                      object_category=blv.terms.Gene.value)
 
-                    # TEC. would prefer this not happen here. let HGNC handle it
-                    # except there are some w/o explicit external links ...
-
-                    gene_symbol = gene.find('Symbol').text
-
                     syn_list = gene.find('./SynonymList')
-                    if int(syn_list.get('count')) > 0:
+                    if int(syn_list.get('count')) > 0 and gene_curie is not None:
                         for syn in syn_list.findall('./Synonym'):
-                            model.addSynonym(gene_curie, syn.text,
-                                             class_category=blv.terms.Gene.value)
+                            if syn is not None and syn.text != '':
+                                model.addSynonym(gene_curie, syn.text,
+                                                 class_category=blv.terms.Gene.value)
 
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
+                    # circa 2020-May
+                    #   4771 Disease-causing germline mutation(s) in
+                    #   1137 Disease-causing germline mutation(s) (loss of function) in
+                    #   576 Major susceptibility factor in
+                    #   359 Candidate gene tested in
+                    #   232 Role in the phenotype of
+                    #   232 Part of a fusion gene in
+                    #   211 Disease-causing germline mutation(s) (gain of function) in
+                    #   186 Disease-causing somatic mutation(s) in
+                    #   45 Biomarker tested in
+                    #   44 Modifying germline mutation in
+                    rel_curie = self.resolve(dg_label)
+
+                    genotype_curie =  self.resolve(" | ".join((dg_label, gene_type)))
 
                     # use dg association status to issue an evidence code
-                    # FIXME I think that these codes are sub-optimal
+                    # FIXME these codes mau be sub-optimal (there are only two)
+                    # maybe just attach a "pending" to the minority that need it.
                     eco_id = self.resolve(
                         assoc.find('DisorderGeneAssociationStatus/Name').text)
 
-                    rel_id = self.resolve(dg_label)
                     g2p_assoc = G2PAssoc(self.graph,
                                          self.name,
                                          gene_curie,
-                                         disorder_id,
-                                         rel_id,
+                                         disorder_curie,
+                                         rel_curie,
                                          phenotype_category=blv.terms.Disease.value)
+
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
 
                 elem.clear()  # empty the element
                 if int(expected_genes) != processed_genes:
                     LOG.warning(
-                        '% expected %s associated genes but we processed %i',
-                        disorder_id, expected_genes, processed_genes)
-
-            if self.test_mode and limit is not None and line_counter > limit:
-                return
-
-        return
+                        '%s expected %i associated genes but we processed %i',
+                        disorder_curie, int(expected_genes), processed_genes)

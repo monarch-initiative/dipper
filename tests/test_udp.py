@@ -88,7 +88,7 @@ class UDPTestCase(unittest.TestCase):
         mock_file = mock_open(mock=mock_data)
         udp._parse_patient_phenotypes(mock_file)
         triples = """
-        :patient_1 a foaf:Person ;
+        <https://monarchinitiative.org/MONARCH_patient_1> a foaf:Person ;
             rdfs:label "patient_1" ;
             biolink:category biolink:Case ;
             RO:0002200 DOID:4,
@@ -140,7 +140,7 @@ class UDPTestCase(unittest.TestCase):
         udp._parse_patient_variants(mock_file)
 
         triples = """
-        :patient_1 GENO:0000222 <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> .
+        <https://monarchinitiative.org/MONARCH_patient_1> GENO:0000222 <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> .
 
         <https://monarchinitiative.org/.well-known/genid/b41e8da0787b45e24c4f> a SO:0001059 ;
             rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;

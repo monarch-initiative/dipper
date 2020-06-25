@@ -8,9 +8,10 @@ from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
+from datetime import datetime
 
 LOG = logging.getLogger(__name__)
-ENS_URL = 'uswest.ensembl.org'    # 'www.ensembl.org'
+ENS_URL = 'www.ensembl.org'  # 'uswest.ensembl.org'
 
 
 class Ensembl(Source):
@@ -61,7 +62,7 @@ class Ensembl(Source):
             'Gene name',
             'Gene description',
             'Gene type',
-            'NCBI gene ID',
+            'NCBI gene (formerly Entrezgene) ID',
             'Protein stable ID',
             'UniProtKB/Swiss-Prot ID',
             'HGNC ID',  # human only
@@ -116,10 +117,22 @@ class Ensembl(Source):
             params = urllib.parse.urlencode(
                 {'query': self._build_biomart_gene_query(txid)})
             conn = http.client.HTTPConnection(ENS_URL)
-            conn.request("GET", '/biomart/martservice?' + params)
+            biomart_subdir = '/biomart/martservice?'
+            conn.request("GET", biomart_subdir + params)
             resp = conn.getresponse()
+            if resp.getcode() != 200:
+                LOG.error("Got non-200 response code (%i) while retrieving %s from %s",
+                          resp.getcode(), params, ENS_URL)
             with open(loc_file, 'wb') as bin_writer:
                 bin_writer.write(resp.read())
+
+            # I'm omitting the params here because they are several hundred characters
+            # long and also seem to get munged by the time they get to the UI
+            src_url = "http://" + ENS_URL + biomart_subdir
+            self.dataset.set_ingest_source(src_url)
+            self.dataset.set_ingest_source_file_version_retrieved_on(
+                src_url,
+                datetime.today().strftime('%Y-%m-%d'))
 
     def parse(self, limit=None):
         if limit is not None:

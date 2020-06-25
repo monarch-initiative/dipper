@@ -25,7 +25,7 @@
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ./dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
@@ -343,7 +343,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         # XRef[@DB="dbSNP"]/@ID
         for dbsnp in rcv_measure.findall('./XRef[@DB="dbSNP"]'):
             allele.dbsnps.append('dbSNP:' + dbsnp.get('ID'))
-            allele.synonyms.append('rs' +dbsnp.get('ID'))
+            allele.synonyms.append('rs' + dbsnp.get('ID'))
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
@@ -507,7 +507,7 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 is_affected = True
                 if not rcv.significance == GLOBALTT['pathogenic_for_condition'] \
                         and not rcv.significance == \
-                               GLOBALTT['likely_pathogenic_for_condition']:
+                        GLOBALTT['likely_pathogenic_for_condition']:
                     is_affected = False
                 else:
                     for condition in rcv.conditions:
@@ -853,7 +853,7 @@ def parse():
             if RCV_ClinicalSignificance is not None:
                 RCV_ReviewStatus = RCV_ClinicalSignificance.find('./ReviewStatus')
                 if RCV_ReviewStatus is not None:
-                     rcv_review = RCV_ReviewStatus.text.strip()
+                    rcv_review = RCV_ReviewStatus.text.strip()
 
             #######################################################################
             # Our Genotype/Subject is a sequence alteration / Variant
@@ -969,7 +969,9 @@ def parse():
                         break
 
                     if rcv_disease_db is None and has_medgen_id:
-                        rcv_disease_db = 'MedGen'  # RCV_TraitXRef.get('DB')
+                        # use UMLS prefix instead of MedGen
+                        # see https://github.com/monarch-initiative/dipper/issues/874
+                        rcv_disease_db = 'UMLS'  # RCV_TraitXRef.get('DB')
                     if rcv_disease_id is None and has_medgen_id:
                         rcv_disease_id = medgen_id
 
@@ -1068,10 +1070,10 @@ def parse():
                     # to this association to allow filtering of RCV by review status
                     if rcv_review is not None:
                         write_spo(
-                                  monarch_assoc,
-                                  GLOBALTT['confidence_score'],
-                                  status_and_scores[rcv_review],
-                                  rcvtriples)
+                            monarch_assoc,
+                                  GLOBALTT['assertion_confidence_score'],
+                            status_and_scores[rcv_review],
+                            rcvtriples)
 
                     ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')
                     scv_acc = ClinVarAccession.get('Acc')
@@ -1131,7 +1133,7 @@ def parse():
                     # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
                     write_spo(
                         monarch_assoc,
-                        GLOBALTT['proposition_asserted_in'],
+                        GLOBALTT['is_asserted_in'],
                         _assertion_id,
                         rcvtriples,
                         subject_category=blv.terms.Association.value,
@@ -1201,7 +1203,7 @@ def parse():
                             if scv_eval_date != "None":
                                 write_spo(
                                     _assertion_id,
-                                    GLOBALTT['date_created'],
+                                    GLOBALTT['Date Created'],
                                     scv_eval_date,
                                     rcvtriples,
                                     subject_category=blv.terms.InformationContentEntity.value)
@@ -1271,11 +1273,11 @@ def parse():
                             './Citation/ID[@Source="PubMed"]'):
                         scv_citation_id = SCV_Citation.text
                         #           TRIPLES
-                        # has_part -> evidence_has_supporting_reference
+                        # has_part -> has_supporting_reference
                         # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                         write_spo(
                             _evidence_id,
-                            GLOBALTT['evidence_has_supporting_reference'],
+                            GLOBALTT['has_supporting_reference'],
                             'PMID:' + scv_citation_id,
                             rcvtriples,
                             subject_category=blv.terms.EvidenceType.value,
@@ -1353,15 +1355,16 @@ def parse():
 
                                 for scv_citation_id in SCV_Citation.findall(
                                         './ID[@Source="PubMed"]'):
-                                    # evidence_has_supporting_reference
+                                    # has_supporting_reference
                                     # see also: SCV/ClinicalSignificance/Citation/ID
                                     # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                                     write_spo(
                                         _evidence_id,
-                                        GLOBALTT['evidence_has_supporting_reference'],
+                                        GLOBALTT['has_supporting_reference'],
                                         'PMID:' + scv_citation_id.text, rcvtriples,
                                         subject_category=blv.terms.EvidenceType.value,
                                         object_category=blv.terms.Publication.value)
+
                                     # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                                     write_spo(
                                         'PMID:' + scv_citation_id.text,
@@ -1436,7 +1439,7 @@ def parse():
                                 # <_evidence_id><SEPIO:0000011><_provenence_id>
                                 write_spo(
                                     _evidence_id,
-                                    GLOBALTT['has_evidence_item_output_from'],
+                                    GLOBALTT['has_supporting_activity'],
                                     _provenance_id,
                                     rcvtriples,
                                     subject_category=blv.terms.EvidenceType.value,

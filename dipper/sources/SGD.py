@@ -23,7 +23,25 @@ class SGD(Source):
     files = {
         'sgd_phenotype': {
             'file': 'phenotype_data.tab',
-            'url': SGD_BASE + 'phenotype_data.tab'},
+            'url': SGD_BASE + 'phenotype_data.tab',
+            'columns': [
+                'Feature Name',
+                'Feature Type',
+                'Gene Name',
+                'SGDID',
+                'Reference',
+                'Experiment Type',
+                'Mutant Type',
+                'Allele',
+                'Strain Background',
+                'Phenotype',
+                'Chemical',
+                'Condition',
+                'Details',
+                'Reporter'
+            ]
+
+        },
     }
 
     def __init__(self,

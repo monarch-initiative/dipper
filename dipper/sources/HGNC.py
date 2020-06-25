@@ -26,11 +26,11 @@ class HGNC(OMIMSource):
 
     """
 
-    EBIFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/'
+    EBIFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv'
     files = {
         'genes': {
             'file': 'hgnc_complete_set.txt',
-            'url': EBIFTP + 'new/tsv/hgnc_complete_set.txt',
+            'url': EBIFTP + '/hgnc_complete_set.txt',
             'columns': [
                 'hgnc_id',
                 'symbol',
@@ -87,11 +87,14 @@ class HGNC(OMIMSource):
         },
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None,
-                 tax_ids=None, gene_ids=None):
+    def __init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            data_release_version=None,
+            tax_ids=None,
+            gene_ids=None
+    ):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
@@ -138,24 +141,25 @@ class HGNC(OMIMSource):
         else:
             graph = self.graph
 
+        src_key = 'genes'
         geno = Genotype(graph)
         model = Model(graph)
 
-        raw = '/'.join((self.rawdir, self.files['genes']['file']))
-        col = self.files['genes']['columns']
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['columns']
         LOG.info("Processing HGNC genes")
 
         chr_pattern = re.compile(r'(\d+|X|Y|Z|W|MT)[pq$]')
         band_pattern = re.compile(r'([pq][A-H\d]?\d?(?:\.\d+)?)')
 
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
 
-            row = next(filereader)
+            row = next(reader)
             if not self.check_fileheader(col, row):
                 pass
 
-            for row in filereader:
+            for row in reader:
                 # To generate:
                 # head -1 hgnc_complete_set.txt.1 | tr '\t' '\n' |
                 # sed "s/\(.*\)/\1 = row[col.index(\'\1\')]/g"
@@ -303,7 +307,7 @@ class HGNC(OMIMSource):
                         feat.addSubsequenceOfFeature(chrom_id)
 
                 if not self.test_mode and limit is not None and \
-                        filereader.line_num > limit:
+                        reader.line_num > limit:
                     break
 
     def getTestSuite(self):

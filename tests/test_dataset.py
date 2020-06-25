@@ -55,7 +55,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.base_pav = 'http://purl.org/pav/'
         cls.base_rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
         cls.base_rdfs = 'http://www.w3.org/2000/01/rdf-schema#'
-        cls.base_schemaorg = 'http://schema.org/'
+        cls.base_schema = 'http://schema.org/'
         cls.base_void = 'http://rdfs.org/ns/void#'
         cls.base_owl = 'http://www.w3.org/2002/07/owl#'
         cls.base_logo_url = "https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/"
@@ -94,7 +94,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_description = URIRef(cls.base_dc + "description")
         cls.iri_publisher = URIRef(cls.base_dcterms + "Publisher")
         cls.iri_source = URIRef(cls.base_dcterms + "source")
-        cls.iri_logo = URIRef(cls.base_schemaorg + "logo")
+        cls.iri_logo = URIRef(cls.base_schema + "logo")
         cls.iri_mi_org = URIRef("https://monarchinitiative.org/")
         cls.iri_created = URIRef(cls.base_dcterms + "created")
         cls.iri_version = URIRef(cls.base_pav + "version")
@@ -275,7 +275,8 @@ class DatasetTestCase(unittest.TestCase):
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level created triple")
         self.assertEqual(triples[0][2],
-                         Literal(self.data_release_version, datatype=XSD.date),
+                         Literal(datetime.today().strftime("%Y%m%d"),
+                                 datatype=XSD.date),
                          "version level created triple has the wrong timestamp")
 
     def test_version_level_version_default(self):
@@ -370,7 +371,7 @@ class DatasetTestCase(unittest.TestCase):
             (self.distribution_level_IRI_ttl, self.iri_created, None)))
         self.assertTrue(len(triples) == 1,
                         "didn't get exactly 1 version level type created triple")
-        self.assertEqual(triples[0][2], Literal(self.data_release_version,
+        self.assertEqual(triples[0][2], Literal(datetime.today().strftime("%Y%m%d"),
                                                 datatype=XSD.date))
 
     def test_distribution_level_version(self):

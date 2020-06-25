@@ -19,7 +19,7 @@
 'owl': 'http://www.w3.org/2002/07/owl#'                             # Web Ontology Language
 'skos': 'https://www.w3.org/TR/skos-reference/#'                    # Simple Knowledge Organization System
 # 'Annotation': 'http://www.w3.org/ns/oa#Annotation'                # Web annotation
-'schemaorg': 'http://schema.org/'                                   # Schema.org "provides schemas for structured data on the Internet"
+'schema': 'http://schema.org/'                                      # Schema.org "provides schemas for structured data on the Internet"
 
 # dataset description
 'dcat': 'http://www.w3.org/ns/dcat#'                                # Data Catalog Vocabulary
@@ -63,7 +63,7 @@
 'LPT': 'http://purl.obolibrary.org/obo/LPT_'                        # Livestock Phenotypic Trait Ontology
 'MA': 'http://purl.obolibrary.org/obo/MA_'                          # Mouse Anatomy Ontology
 'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/'                     # Human Medical Genetics vocabulary
-'MESH': 'http://purl.obolibrary.org/obo/MESH_'                      # Medical Subject Headings (medical diseases, phenotypes, and drugs)
+'MESH': 'http://id.nlm.nih.gov/mesh/'                               # Medical Subject Headings (medical diseases, phenotypes, and drugs)
 'MP': 'http://purl.obolibrary.org/obo/MP_'                          # Mammalian Phenotype Ontology
 'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'                    # Mammalian Pathology Ontology
 'NBO': 'http://purl.obolibrary.org/obo/NBO_'                        # NeuroBehavior Ontology
@@ -146,7 +146,7 @@
 'MPD-strain': 'http://phenome.jax.org/db/q?rtn=strains/details&strainid='       # Mouse Phenome Database
 'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='  # Mouse Genetics
 'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='                  # link rot?
-'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'            # RIKEN BioResource Research Center
+'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no='                # RIKEN BioResource Research Center
 
 # organisms and genome builds
 #                                                                       # National Center for Biotechnology Information
@@ -172,6 +172,9 @@
 'rainbow_troutQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
 'sheepQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
 
+'BGD': 'http://bovinegenome.org/genepages/btau40/genes/'                # The Bovine Genome Database (no direct link)
+#                                                                       # 'http://128.206.116.13:8080/bovinemine/report.do?id='
+
 'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'                       # Clinical Variation in Human
 'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'      # ClinVar cooked variants
 'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'  # ClinVar raw variants
@@ -183,7 +186,7 @@
 
 # pathways
 'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'              # Kyoto Encyclopedia of Genes and Genomes (pathways)
-'KEGG-img': 'http://www.genome.jp/kegg/pathway/map/map'                 # Pathway Visualization
+'KEGG-img': 'http://www.genome.jp/kegg/pathway/map/'                    # Pathway Visualization
 'REACT': 'http://www.reactome.org/PathwayBrowser/#/'                    # Manually curated pathway database
 'SMPDB': 'http://smpdb.ca/view/'                                        # Small Molecule Pathway Database
 
@@ -201,7 +204,10 @@
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences
 # 'HGNC': 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id='        # *** pre drupal site
 'HGNC': 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:'    # HUGO Gene Nomenclature Committee (Human)
-'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
+'IMPC': 'https://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
+'IMPC-pipe': 'https://www.mousephenotype.org/impress/PipelineInfo?id='         # <pipeline-key>
+'IMPC-proc': 'https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID='  # <procedure-key>[&pipeID=<pipeline-key>]
+'IMPC-param': 'https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID='  # <procedure-key>#<prarameter-key>
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
 'miRBase': 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='                 # microRNA nomenclature, sequences & annotation
@@ -218,7 +224,8 @@
 'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
-# proteins
+# proteins (and protein/macromolecular complexes)
+'ComplexPortal': 'https://www.ebi.ac.uk/complexportal/complex/'                 # Manually curated, encyclopaedic resource of macromolecular complexes
 'EC': 'https://www.enzyme-database.org/query.php?ec='                           # Enzyme Commission (nomenclature)
 'HPRD': 'http://www.hprd.org/protein/'                                          # Human Protein Reference Database
 'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
@@ -227,11 +234,6 @@
 'SwissProt': 'http://identifiers.org/SwissProt:'                                # UniProt Knowledgebase UniProtKB  Manual
 'TrEMBL': 'http://purl.uniprot.org/uniprot/'                                    # UniProt Knowledgebase UniProtKB  Automated
 'UniProtKB': 'http://identifiers.org/uniprot/'                                  # UniProt Knowledgebase UniProtKB  Both
-
-#                                                           # International Mouse Phenotyping Resource of Standardised Screens
-'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'
-'IMPRESS-protocol': 'https://www.mousephenotype.org/impress/protocol/'
-'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
 
 #                                                                                   # may become "GtoPdb"
 'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='  # Omnibus pharmacological information portal

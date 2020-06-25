@@ -48,7 +48,7 @@ class Dataset:
      [summary level resource] - dct:description -> description (literal)
                                                 (use docstring from Source class)
      [summary level resource] - dcterms:source -> [source web page, e.g. omim.org]
-     [summary level resource] - schemaorg:logo -> [source logo IRI]
+     [summary level resource] - schema:logo -> [source logo IRI]
      [summary level resource] - dct:publisher -> monarchinitiative.org
         n.b: about summary level resource triples:
         -- HCLS spec says we "should" link to our logo and web page, but I'm not,
@@ -250,9 +250,7 @@ class Dataset:
                              True)
         self.model.addTriple(self.summary_level_curie, self.globaltt['Publisher'],
                              self.curie_map.get(""))
-        self.model.addTriple(self.summary_level_curie,
-                             "schemaorg:logo",
-                             self.ingest_logo)
+        self.model.addTriple(self.summary_level_curie, "schema:logo", self.ingest_logo)
         self.graph.addTriple(self.summary_level_curie, self.globaltt['identifier'],
                              self.summary_level_curie)
         if self.ingest_url is not None:
@@ -272,8 +270,9 @@ class Dataset:
         if self.ingest_description is not None:
             self.model.addDescription(self.version_level_curie,
                                       self.ingest_description)
-        self.graph.addTriple(self.version_level_curie, self.globaltt['created'],
-                             Literal(self.data_release_version, datatype=XSD.date))
+        self.graph.addTriple(self.version_level_curie, self.globaltt['Date Created'],
+                             Literal(datetime.today().strftime("%Y%m%d"),
+                                     datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['version'],
                              Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.version_level_curie, self.globaltt['creator'],
@@ -305,8 +304,9 @@ class Dataset:
                              self.globaltt['version'],
                              Literal(self.data_release_version, datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie,
-                             self.globaltt['created'],
-                             Literal(self.data_release_version, datatype=XSD.date))
+                             self.globaltt['Date Created'],
+                             Literal(datetime.today().strftime("%Y%m%d"),
+                                     datatype=XSD.date))
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['creator'],
                              self.curie_map.get(""))  # eval's to MI.org

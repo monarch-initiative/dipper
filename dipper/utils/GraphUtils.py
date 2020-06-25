@@ -53,26 +53,26 @@ class GraphUtils:
         :return: set, set of properties
         """
         # collapse to single list
-        property_set = set()
+        property_set = list()
         for row in graph.predicates():
-            property_set.add(row)
+            property_set.append(row)
 
-        return property_set
+        return set(property_set)
 
     @staticmethod
     def add_property_axioms(graph, properties):
         ontology_graph = ConjunctiveGraph()
         GH = 'https://raw.githubusercontent.com'
-        MI = '/monarch-initiative'
+        OBO = 'http://purl.obolibrary.org/obo'
         ontologies = [
-            GH + MI + '/SEPIO-ontology/master/src/ontology/sepio.owl',
-            GH + MI + '/GENO-ontology/develop/src/ontology/geno.owl',
-            GH + '/oborel/obo-relations/master/ro.owl',
-            'http://purl.obolibrary.org/obo/iao.owl',
-            'http://purl.obolibrary.org/obo/ero.owl',
+            OBO + '/sepio.owl',
+            OBO + '/geno.owl',
+            OBO + '/iao.owl',
+            OBO + '/ero.owl',
+            OBO + '/pco.owl',
+            OBO + '/xco.owl',
+            OBO + '/ro.owl',
             GH + '/jamesmalone/OBAN/master/ontology/oban_core.ttl',
-            'http://purl.obolibrary.org/obo/pco.owl',
-            'http://purl.obolibrary.org/obo/xco.owl'
         ]
 
         # random timeouts can waste hours. (too many redirects?)

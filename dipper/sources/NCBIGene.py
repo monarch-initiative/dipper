@@ -41,6 +41,7 @@ class NCBIGene(OMIMSource):
     we simply create a "mentions" relationship.
 
     """
+    # NCBIFTP = ftp://ftp.ncbi.nih.gov/gene/DATA/  (n.b. ftp v.s http below)
 
     files = {
         'gene_info': {
@@ -102,12 +103,21 @@ class NCBIGene(OMIMSource):
         'clique_leader': '../../resources/clique_leader.yaml'
     }
 
+    informal_species = {
+        'NCBITaxon:9913': 'cattle',
+        'NCBITaxon:9031': 'chicken',
+        'NCBITaxon:9823': 'pig',
+        'NCBITaxon:9940': 'sheep',
+        'NCBITaxon:9796': 'horse',
+        'NCBITaxon:8022': 'rainbow_trout',
+    }
+
     def __init__(
             self,
             graph_type,
             are_bnodes_skolemized,
             data_release_version=None,
-            tax_ids=None,
+            tax_ids=None,  # =['9606', '1009', '7955'],  # still gets to None via tests
             gene_ids=None
     ):
         super().__init__(
@@ -120,19 +130,25 @@ class NCBIGene(OMIMSource):
             ingest_logo='source-ncbi.png',
             # ingest_desc=None,
             license_url='https://creativecommons.org/publicdomain/mark/1.0/',
-            data_rights='https://www.ncbi.nlm.nih.gov/home/about/policies/'
+            data_rights='https://www.ncbi.nlm.nih.gov/home/about/policies/',
             # file_handle=None
         )
 
+        # if (tax_ids is None or tax_ids == '') and \
+        #        self.ARGV['taxon'] is not None and self.ARGV['taxon'] != '':
+        #    LOG.error('Pythons Argument is Lost at %s', self.ARGV['taxon'])
+        #    self.tax_ids = [str(t) for t in args.taxon.split(',') if t.isdigit()]
+        # else:
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
         self.id_filter = 'taxids'   # 'geneids
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
-
-        self.tax_ids = [str(x) for x in self.tax_ids]
+            LOG.info('No taxon recived.")  # fallback to defaults')
+            # self.tax_ids = ['9606', '10090', '7955']
+        else:
+            self.tax_ids = [str(x) for x in self.tax_ids]
 
         LOG.info("Filtering on the following taxa: %s", self.tax_ids)
 
@@ -148,6 +164,8 @@ class NCBIGene(OMIMSource):
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
+        #
+        self.command_args()
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
@@ -189,18 +207,20 @@ class NCBIGene(OMIMSource):
         line_counter = 0
         gene_info = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("FILE: %s", gene_info)
-        # Add taxa and genome classes for those in our filter
+        LOG.info('Add taxa and genome classes for those in our filter')
 
         band_regex = re.compile(r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$')
         for tax_num in self.tax_ids:
-            tax_id = ':'.join(('NCBITaxon', tax_num))
+            tax_curie = ':'.join(('NCBITaxon', tax_num))
             # tax label can get added elsewhere
-            geno.addGenome(tax_id, tax_num)
+            geno.addGenome(tax_curie, tax_num)
             # label added elsewhere
-            model.addClassToGraph(tax_id, None,
+            model.addClassToGraph(tax_curie, None,
                                   class_category=blv.terms.OrganismTaxon.value)
 
         col = self.files[src_key]['columns']
+        LOG.info('Begin reading & parsing')
+
         with gzip.open(gene_info, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip comment char
@@ -244,7 +264,7 @@ class NCBIGene(OMIMSource):
                     continue
                 if not self.test_mode and tax_num not in self.tax_ids:
                     continue
-                tax_id = ':'.join(('NCBITaxon', tax_num))
+                tax_curie = ':'.join(('NCBITaxon', tax_num))
                 gene_id = ':'.join(('NCBIGene', gene_num))
 
                 gene_type_id = self.resolve(gtype)
@@ -277,16 +297,23 @@ class NCBIGene(OMIMSource):
                     model.addSynonym(gene_id, name, class_category=blv.terms.Gene.value)
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
+                        syn = syn.strip()
+                        # unknown curies may occur here
+                        if syn[:12] == 'AnimalQTLdb:' and \
+                                tax_curie in self.informal_species:
+                            syn = self.informal_species[tax_curie] + 'QTL:' + syn[12:]
+                            LOG.info('AnimalQTLdb: CHANGED to: %s', syn)
                         model.addSynonym(
-                            gene_id, syn.strip(), model.globaltt['has_related_synonym'],
+                            gene_id, syn, model.globaltt['has_related_synonym'],
                             class_category=blv.terms.Gene.value)
                 if other_designations != '-':
                     for syn in other_designations.split('|'):
                         model.addSynonym(
                             gene_id, syn.strip(), model.globaltt['has_related_synonym'],
                             class_category=blv.terms.Gene.value)
+
                 if dbxrefs != '-':
-                    self._add_gene_equivalencies(dbxrefs, gene_id, tax_id)
+                    self._add_gene_equivalencies(dbxrefs, gene_id, tax_curie)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -335,7 +362,7 @@ class NCBIGene(OMIMSource):
                     # do this in a loop to allow PAR regions like X|Y
                     for chromosome in re.split(r'\|', chrom):
                         # assume that the chromosome label is added elsewhere
-                        geno.addChromosomeClass(chromosome, tax_id, None)
+                        geno.addChromosomeClass(chromosome, tax_curie, None)
                         mychrom = makeChromID(chromosome, tax_num, 'CHR')
                         # temporarily use taxnum for the disambiguating label
                         mychrom_syn = makeChromLabel(chromosome, tax_num)
@@ -376,7 +403,7 @@ class NCBIGene(OMIMSource):
                             graph.addTriple(
                                 gene_id, self.globaltt['is subsequence of'], mychrom)
 
-                geno.addTaxon(tax_id, gene_id)
+                geno.addTaxon(tax_curie, gene_id)
 
     def _add_gene_equivalencies(self, dbxrefs, gene_id, taxon):
         """
@@ -408,6 +435,9 @@ class NCBIGene(OMIMSource):
             # skip some of these for now based on curie prefix
             if prefix in filter_out:
                 continue
+
+            if prefix == 'AnimalQTLdb' and taxon in self.informal_species:
+                prefix = self.informal_species[taxon] + 'QTL'
 
             dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
             if dbxref_curie is not None:

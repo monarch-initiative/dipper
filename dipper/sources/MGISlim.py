@@ -26,7 +26,7 @@ class MGISlim(Source):
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
             data_release_version=data_release_version,
-            name='mgi_slim',
+            name='mgislim',
             ingest_description='Simplified Mouse Genome Informatics',
             ingest_url='http://www.mousemine.org/mousemine/service',
             ingest_logo="source-mgi.png",
@@ -59,7 +59,6 @@ class MGISlim(Source):
                 "ontologyTerm.name", "evidence.publications.pubMedId",
                 "evidence.comments.type", "evidence.comments.description"
             )
-            query.add_sort_order("OntologyAnnotation.ontologyTerm.name", "ASC")
             query.add_constraint("subject.organism.taxonId", "=", self.txid, code="A")
             query.add_constraint("subject", "LOOKUP", fuzzy_gene, code="B")
             query.add_constraint(

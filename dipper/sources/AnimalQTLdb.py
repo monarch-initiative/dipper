@@ -136,116 +136,121 @@ class AnimalQTLdb(Source):
             'file': 'QTL_Btau_4.6.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz',
             'curie': 'cattleQTL',
-            'columns': gff_columns
+            'columns': gff_columns,
         },
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt',
             'curie': 'cattleQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz',
             'curie': 'chickenQTL',
-            'columns': gff_columns
+            'columns': gff_columns,
         },
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt',
             'curie': 'chickenQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
         'pig_bp': {
             'file': 'QTL_SS_10.2.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz',
             'curie': 'pigQTL',
-            'columns': gff_columns
+            'columns': gff_columns,
         },
         'pig_cm': {
             'file': 'pig_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt',
             'curie': 'pigQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
         'sheep_bp': {
             'file': 'QTL_OAR_3.1.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz',
             'curie': 'sheepQTL',
-            'columns': gff_columns
+            'columns': gff_columns,
         },
         'sheep_cm': {
             'file': 'sheep_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt',
             'curie': 'sheepQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
         'horse_bp': {
             'file': 'QTL_EquCab2.0.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz',
             'curie': 'horseQTL',
-            'columns': gff_columns
+            'columns': gff_columns,
         },
         'horse_cm': {
             'file': 'horse_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt',
             'curie': 'horseQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt',
             'curie': 'rainbow_troutQTL',
-            'columns': qtl_columns
+            'columns': qtl_columns,
         },
 
         #                  Gene_info from NCBI
         # to reasure TEC that when we see an integer
         # it is a gene identifier from NCBI for the species
-        # misses will not block, but they will squawk, (the last three are homemade)
+        # misses will not block, but they will squawk,
+        # The last three are homemade, (in DipperCache)
 
         # pig  # "Sus scrofa"  # NCBITaxon:9823
         'Sus_scrofa_info': {
             'file': 'Sus_scrofa.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Sus_scrofa.gene_info.gz',
-            'columns': gene_info_columns
+            'columns': gene_info_columns,
         },
         # cattle  # "Bos taurus"      # NCBITaxon:9913
         'Bos_taurus_info': {
             'file': 'Bos_taurus.gene_info.gz',
             'url': GENEINFO + '/Mammalia/Bos_taurus.gene_info.gz',
-            'columns': gene_info_columns
+            'columns': gene_info_columns,
         },
         # chicken  # "Gallus gallus"  # NCBITaxon:9031
         'Gallus_gallus_info': {
             'file': 'Gallus_gallus.gene_info.gz',
             'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
-            'columns': gene_info_columns
+            'columns': gene_info_columns,
         },
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Equus_caballus.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Equus_caballus.gene_info.gz',
-            'columns': gene_info_columns
+            'url': Source.DIPPERCACHE + '/Equus_caballus.gene_info.gz',
+            'columns': gene_info_columns,
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Ovis_aries.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Ovis_aries.gene_info.gz',
-            'columns': gene_info_columns
+            'url': Source.DIPPERCACHE + '/Ovis_aries.gene_info.gz',
+            'columns': gene_info_columns,
         },
         # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
         'Oncorhynchus_mykiss_info': {
+            # This file isn't on NCBI's ftp site, so need to use the cached URL instead.
             'file': 'Oncorhynchus_mykiss.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Oncorhynchus_mykiss.gene_info.gz',
-            'columns': gene_info_columns
+            'url': Source.DIPPERCACHE + '/Oncorhynchus_mykiss.gene_info.gz',
+            'columns': gene_info_columns,
         },
         ########################################
         # TODO add rainbow_trout_bp when available
+
         'trait_mappings': {
-            'file': 'trait_mappings',
+            'file': 'trait_mappings.csv',
             'url': AQDL + '/export/trait_mappings.csv',
-            'columns': trait_mapping_columns
+            'columns': trait_mapping_columns,
         },
     }
 
@@ -285,8 +290,6 @@ class AnimalQTLdb(Source):
         if limit is not None:
             LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        LOG.info("Parsing files...")
-
         if self.test_only:
             self.test_mode = True
             graph = self.testgraph
@@ -295,6 +298,8 @@ class AnimalQTLdb(Source):
 
         trait_src_key = 'trait_mappings'
         traitmap = '/'.join((self.rawdir, self.files[trait_src_key]['file']))
+
+        LOG.info("Parsing trait mapping  file %s", traitmap)
         self._process_trait_mappings(traitmap, trait_src_key, limit)
 
         geno = Genotype(graph)
@@ -321,9 +326,10 @@ class AnimalQTLdb(Source):
                     if re.match('^#', row[0][0]):
                         continue
                     if len(row) != len(col):
-                        LOG.warning("Problem parsing in %s row %s\n"
-                                    "got %s cols but expected %s",
-                                    gene_info_file, row, len(row), len(col))
+                        LOG.warning(
+                            "Problem parsing in %s row %s\n"
+                            "got %s cols but expected %s",
+                            gene_info_file, row, len(row), len(col))
                     self.gene_info.append(row[col.index('GeneID')])
             LOG.info(
                 'Gene Info for %s has %i entries', common_name, len(self.gene_info))
@@ -382,27 +388,23 @@ class AnimalQTLdb(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         geno = Genotype(graph)
         model = Model(graph)
         eco_id = self.globaltt['quantitative trait analysis evidence']
-
         taxon_curie = 'NCBITaxon:' + txid
 
         LOG.info("Processing genetic location for %s from %s", taxon_curie, raw)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             # no header in these files, so no header checking
-
             col = self.files[src_key]['columns']
-
-            for row in filereader:
-                line_counter += 1
+            for row in reader:
 
                 if len(row) != len(self.qtl_columns):
-                    LOG.warning("Problem parsing in %s row %s\n"
-                                "got %s cols but expected %s",
-                                raw, row, len(row), len(col))
+                    LOG.warning(
+                        "Problem parsing %s line %i containing: \n%s\n"
+                        "got %i cols but expected %i",
+                        raw, reader.line_num, row, len(row), len(col))
                     continue
                 else:
                     qtl_id = row[col.index('qtl_id')].strip()
@@ -455,8 +457,8 @@ class AnimalQTLdb(Source):
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
-                build_id = 'MONARCH:'+common_name.strip()+'-linkage'
-                build_label = common_name+' genetic map'
+                build_id = 'MONARCH:' + common_name.strip() + '-linkage'
+                build_label = common_name + ' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_curie)
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
@@ -502,7 +504,7 @@ class AnimalQTLdb(Source):
                 dbsnp_id = None
                 if peak_mark != '' and peak_mark != '.' and \
                         re.match(r'rs', peak_mark.strip()):
-                    dbsnp_id = 'dbSNP:'+peak_mark.strip()
+                    dbsnp_id = 'dbSNP:' + peak_mark.strip()
 
                     model.addIndividualToGraph(
                         dbsnp_id, None,
@@ -557,7 +559,7 @@ class AnimalQTLdb(Source):
                 # Add publication
                 reference = None
                 if re.match(r'ISU.*', pubmed_id):
-                    pub_id = 'AQTLPub:'+pubmed_id.strip()
+                    pub_id = 'AQTLPub:' + pubmed_id.strip()
                     reference = Reference(graph, pub_id)
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
@@ -621,7 +623,7 @@ class AnimalQTLdb(Source):
                     assoc.add_association_to_graph()
 
                 # off by one - the following actually gives us (limit + 1) records
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with QTL genetic info")
@@ -797,21 +799,20 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
-
         col = self.files[src_key]['columns']
 
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            header = next(filereader, None)
-            self.check_fileheader(col, header)
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            header = next(reader, None)
+            self.check_fileheader(col, header, src_key)
+            for row in reader:
                 # need to skip the last line
                 if len(row) != len(col):
-                    LOG.info("skipping line %d: %s", line_counter, '\t'.join(row))
+                    LOG.info("skipping line %d: %s", reader.line_num, '\t'.join(row))
                     continue
+                if limit is not None and reader.line_num > limit:
+                    break
                 vto_id = row[col.index('VT')].strip()
                 pto_id = row[col.index('LPT')].strip()
                 cmo_id = row[col.index('CMO')].strip()

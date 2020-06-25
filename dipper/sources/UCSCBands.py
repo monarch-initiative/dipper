@@ -64,10 +64,30 @@ class UCSCBands(Source):
     '''
 
     HGGP = 'http://hgdownload.cse.ucsc.edu/goldenPath'
+
+    # From: ftp://hgdownload.soe.ucsc.edu/goldenPath/
+    #    currentGenomes/XXX/database/tableDescriptions.txt.gz
+    #
+    # cytoBandIdeo	table cytoBand\
+    # "Describes the positions of cytogenetic bands with a chromosome"
+    #   string chrom;    "Reference sequence chromosome or scaffold"\
+    #   uint   chromStart;  "Start position in genoSeq"\
+    #   uint   chromEnd;    "End position in genoSeq"\
+    #   string name;       "Name of cytogenetic band"\
+    #   string   gieStain; "Giemsa stain results"\
+
+    cytobandideo_columns = [
+        'chrom',
+        'chromStart',
+        'chromEnd',
+        'name',
+        'gieStain',
+    ]
+
     files = {
         # TODO accommodate multiple builds per species
         '9606': {
-            'file': 'hg19cytoBand.txt.gz',
+            'file': 'hg19_cytoBand.txt.gz',
             'url': HGGP + '/hg19/database/cytoBand.txt.gz',
             'build_num': 'hg19',
             'genome_label': 'Human',
@@ -77,72 +97,112 @@ class UCSCBands(Source):
                 "UCSC:hg18",
                 "UCSC:hg17",
                 "UCSC:hg16",
-                "UCSC:hg15",)
+                "UCSC:hg15",),
+            'columns': cytobandideo_columns,
         },
         '10090': {
-            'file': 'mm10cytoBand.txt.gz',
+            'file': 'mm10_cytoBandIdeo.txt.gz',
             'url': HGGP + '/mm10/database/cytoBandIdeo.txt.gz',
             'build_num': 'mm10',
             'genome_label': 'Mouse',
             'assembly': (
                 "UCSC:mm10",
-                "UCSC:mm9",)
+                "UCSC:mm9",),
+            'columns': cytobandideo_columns,
         },
         # Note that there are no bands,
         # arms or staining components for the species below at the moment
         '7955': {
-            'file': 'danRer10cytoBand.txt.gz',
-            'url': HGGP + '/danRer10/database/cytoBandIdeo.txt.gz',
-            'build_num': 'danRer10',
+            'file': 'danRer11_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/danRer11/database/cytoBandIdeo.txt.gz',
+            'build_num': 'danRer11',
             'genome_label': 'Zebrafish',
             'assembly': (
+                "UCSC:danRer11",
                 "UCSC:danRer10",
                 "UCSC:danRer7",
-                "UCSC:danRer6",)
+                "UCSC:danRer6",),
+            'columns': cytobandideo_columns,
         },
         '9913': {
-            'file': 'bosTau7cytoBand.txt.gz',
+            'file': 'bosTau7_cytoBandIdeo.txt.gz',
             'url': HGGP + '/bosTau7/database/cytoBandIdeo.txt.gz',
             'build_num': 'bosTau7',
             'genome_label': 'cow',
-            'assembly': ("UCSC:bosTau7",)
+            'assembly': ("UCSC:bosTau7",),
+            'columns': cytobandideo_columns,
         },
         '9031': {
-            'file': 'galGal4cytoBand.txt.gz',
-            'url': HGGP + '/galGal4/database/cytoBandIdeo.txt.gz',
-            'build_num': 'galGal4',
+            'file': 'galGal6_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/galGal6/database/cytoBandIdeo.txt.gz',
+            'build_num': 'galGal6',
             'genome_label': 'chicken',
-            'assembly': ("UCSC:galGal4",)
+            'assembly': ("UCSC:galGal4", "UCSC:galGal6",),
+            'columns': cytobandideo_columns,
         },
         '9823': {
-            'file': 'susScr3cytoBand.txt.gz',
-            'url': HGGP + '/susScr3/database/cytoBandIdeo.txt.gz',
-            'build_num': 'susScr3',
+            'file': 'susScr11_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/susScr11/database/cytoBandIdeo.txt.gz',
+            'build_num': 'susScr11',
             'genome_label': 'pig',
-            'assembly': ("UCSC:susScr3",)
+            'assembly': ("UCSC:susScr3", "UCSC:susScr11",),
+            'columns': cytobandideo_columns,
         },
         '9940': {
-            'file': 'oviAri3cytoBand.txt.gz',
-            'url': HGGP + '/oviAri3/database/cytoBandIdeo.txt.gz',
-            'build_num': 'oviAri3',
+            'file': 'oviAri4_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/oviAri4/database/cytoBandIdeo.txt.gz',
+            'build_num': 'oviAri4',
             'genome_label': 'sheep',
-            'assembly': ("UCSC:oviAri3",)
+            'assembly': ("UCSC:oviAri3", "UCSC:oviAri4",),
+            'columns': cytobandideo_columns,
         },
         '9796': {
-            'file': 'equCab2cytoBand.txt.gz',
+            'file': 'equCab2_cytoBandIdeo.txt.gz',
             'url': HGGP + '/equCab2/database/cytoBandIdeo.txt.gz',
             'build_num': 'equCab2',
             'genome_label': 'horse',
-            'assembly': ("UCSC:equCab2",)
+            'assembly': ("UCSC:equCab2", "UCSC:equCab3",),
+            'columns': cytobandideo_columns,
         },
-        # TODO rainbow trout, 8022, when available
+        # ## 2019 Nov
+        '9615': {
+            'file': 'canFam3_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/canFam3/database/cytoBandIdeo.txt.gz',
+            'build_num': 'canFam3',
+            'genome_label': 'dog',
+            'assembly': ("UCSC:canFam3",),
+            'columns': cytobandideo_columns,
+        },
+        '9685': {
+            'file': 'felCat9_cytoBandIdeo.txt.gz',
+            'url': HGGP + '/felCat9/database/cytoBandIdeo.txt.gz',
+            'build_num': 'felCat9',
+            'genome_label': 'cat',
+            'assembly': ("UCSC:felCat9",),
+            'columns': cytobandideo_columns,
+        },
+
+        # Builds available at UCSC and taxon
+        # currently well referenced in Monarch as of 2019-Nov
+
+        # dm6       Drosophila_melanogaster	NCBITaxon:7227
+        # rn6       Rattus_norvegicus	NCBITaxon:10116
+        # ce11      Caenorhabditis_elegans	NCBITaxon:6239
+        # panTro6   Pan_troglodytes	NCBITaxon:9598
+        # ornAna2   Ornithorhynchus_anatinus	NCBITaxon:9258  (platypus)
+        # monDom5   Monodelphis_domestica	NCBITaxon:13616   (opossum)
+        # fr2       Takifugu_rubripe	NCBITaxon:31033 (pufferfish)
+        # anoCar2   Anolis_carolinensis NCBITaxon:28377 (green anole)
+
+        # TODO rainbow trout, Oncorhynchus mykiss  NCHBTaxon:8022, when available
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None,
-                 tax_ids=None):
+    def __init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            data_release_version=None,
+            tax_ids=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -151,40 +211,40 @@ class UCSCBands(Source):
             ingest_title='UCSC Cytogenic Bands',
             ingest_url='http://hgdownload.cse.ucsc.edu',
             ingest_logo='source-ucscbands.png',
-            license_url='http://genome.ucsc.edu/license/'
-            # data_rights=None,
+            license_url=None,
+            data_rights='http://genome.ucsc.edu/license/',
             # file_handle=None
         )
 
         self.tax_ids = tax_ids
         self.species = ()
         # Defaults
-        if self.tax_ids is None:
-            # self.tax_ids = [9606, 10090, 7955]
+        if self.tax_ids is None or self.tax_ids == '':
             self.species = (
-                'Homo sapiens',       # 9606,
-                'Mus musculus',       # 10090,
-                'Danio rerio',        # 7955,
-                'Bos taurus',         # 9913,
-                'Gallus gallus',      # 9031,
-                'Sus scrofa',         # 9823,
-                'Ovis aries',         # 9940,
-                'Equus caballus'      # 9796
+                'Homo sapiens',             # NCBITaxon:9606,
+                'Mus musculus',             # NCBITaxon:10090,
+                'Danio rerio',              # NCBITaxon:7955,
+                'Bos taurus',               # NCBITaxon:9913,
+                'Gallus gallus',            # NCBITaxon:9031,
+                'Sus scrofa',               # NCBITaxon:9823,
+                'Ovis aries',               # NCBITaxon:9940,
+                'Equus caballus',           # NCBITaxon:9796,
+                'Canis lupus familiaris',   # NCBITaxon:9615,
+                'Felis catus',              # NCBITaxon:9685
+                # TODO add other species as defaults  ... still?
             )
-
-            self.tax_ids = (self.localtt[x] for x in self.species)
+            self.tax_ids = [self.localtt[x] for x in self.species]
         else:
-            self.species = (self.localtcid[x] for x in self.tax_ids)
+            self.species = [self.localtcid[x] for x in self.tax_ids]
 
-        # TODO add other species as defaults
-
+        # note:
+        # must map UCSC tags to their NCBI equivalent in the local translation table
         self._check_tax_ids()
 
         # data-source specific warnings
         # (will be removed when issues are cleared)
 
     def fetch(self, is_dl_forced=False):
-
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
@@ -192,32 +252,34 @@ class UCSCBands(Source):
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
-        LOG.info("Parsing files...")
+        LOG.info("Parsing files for %s", str(self.tax_ids))
 
         if self.test_only:
             self.test_mode = True
 
         for taxon in self.tax_ids:
-            self._get_chrbands(limit, taxon, 'UCSC:'+self.files[taxon]['build_num'])
+            LOG.info('\tParsing  cytoBandIdeo file for %s', taxon)
+            self._get_chrbands(limit, taxon, 'UCSC:' + self.files[taxon]['build_num'])
 
+        LOG.info('Creating genome build statments')
         self._create_genome_builds()
 
         # using the full graph as the test here
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
 
-    def _get_chrbands(self, limit, taxon, genome_id):
+    def _get_chrbands(self, limit, src_key, genome_id):
         """
         :param limit:
         :return:
 
         """
-
+        tax_num = src_key
         if limit is None:
             limit = sys.maxsize   # practical limit anyway
         model = Model(self.graph)
-        line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
+        line_num = 0
+        myfile = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("Processing Chr bands from FILE: %s", myfile)
         geno = Genotype(self.graph)
         monochrom = Monochrom(self.graph_type, self.are_bnodes_skized)
@@ -227,36 +289,46 @@ class UCSCBands(Source):
 
         mybands = {}
         # build the organism's genome from the taxon
-        genome_label = self.files[taxon]['genome_label']
-        taxon_id = 'NCBITaxon:' + taxon
+        genome_label = self.files[src_key]['genome_label']
+        taxon_curie = 'NCBITaxon:' + tax_num
+        species_name = self.globaltcid[taxon_curie]  # for logging
 
         # add the taxon as a class.  adding the class label elsewhere
-        model.addClassToGraph(taxon_id, None)
-        model.addSynonym(taxon_id, genome_label)
+        model.addClassToGraph(taxon_curie, None)
+        model.addSynonym(taxon_curie, genome_label)
 
-        geno.addGenome(taxon_id, genome_label, genome_id)
+        geno.addGenome(taxon_curie, genome_label, genome_id)
 
         # add the build and the taxon it's in
-        build_num = self.files[taxon]['build_num']
+        build_num = self.files[src_key]['build_num']
         build_id = 'UCSC:' + build_num
-        geno.addReferenceGenome(build_id, build_num, taxon_id)
+        geno.addReferenceGenome(build_id, build_num, taxon_curie)
+
+        # cat (at least)  also has  chr[BDAECF]... hex? must be a back cat.
+        if tax_num == self.localtt['Felis catus']:
+            placed_scaffold_regex = re.compile(r'(chr(?:[BDAECF]\d+|X|Y|Z|W|M|))$')
+        else:
+            placed_scaffold_regex = re.compile(r'(chr(?:\d+|X|Y|Z|W|M))$')
+        unlocalized_scaffold_regex = re.compile(r'_(\w+)_random')
+        unplaced_scaffold_regex = re.compile(r'chr(Un(?:_\w+)?)')
 
         # process the bands
-        col = ['scaffold', 'start', 'stop', 'band_num', 'rtype']
+        col = self.files[src_key]['columns']
+
         with gzip.open(myfile, 'rb') as binreader:
             for line in binreader:
-                line_counter += 1
+                line_num += 1
                 # skip comments
                 line = line.decode().strip()
-                if line[0] == '#' or line_counter > limit:
+                if line[0] == '#' or line_num > limit:
                     continue
                 # chr13	4500000	10000000	p12	stalk
                 row = line.split('\t')
-                scaffold = row[col.index('scaffold')]
-                start = row[col.index('start')]
-                stop = row[col.index('stop')]
-                band_num = row[col.index('band_num')].strip()
-                rtype = row[col.index('rtype')]
+                scaffold = row[col.index('chrom')].strip()
+                start = row[col.index('chromStart')]
+                stop = row[col.index('chromEnd')]
+                band_num = row[col.index('name')].strip()
+                rtype = row[col.index('gieStain')]
 
                 # NOTE some less-finished genomes have
                 # placed and unplaced scaffolds
@@ -272,22 +344,18 @@ class UCSCBands(Source):
                 # find out if the thing is a full on chromosome, or a scaffold:
                 # ex: unlocalized scaffold: chr10_KL568008v1_random
                 # ex: unplaced scaffold: chrUn_AABR07022428v1
-                placed_scaffold_pattern = r'(chr(?:\d+|X|Y|Z|W|M))'
-                unlocalized_scaffold_pattern = placed_scaffold_pattern+r'_(\w+)_random'
-                unplaced_scaffold_pattern = r'chr(Un(?:_\w+)?)'
 
-                mch = re.match(placed_scaffold_pattern + r'$', scaffold)
+                mch = placed_scaffold_regex.match(scaffold)
                 if mch is not None and len(mch.groups()) == 1:
                     # the chromosome is the first match of the pattern
                     chrom_num = mch.group(1)
                 else:
-                    # skip over anything that isn't a placed_scaffold
-                    # at the class level
-                    LOG.info("Found non-placed chromosome %s", scaffold)
+                    # skip over anything that isn't a placed_scaffold at the class level
+                    # LOG.info("Found non-placed chromosome %s", scaffold)
                     chrom_num = None
 
-                m_chr_unloc = re.match(unlocalized_scaffold_pattern, scaffold)
-                m_chr_unplaced = re.match(unplaced_scaffold_pattern, scaffold)
+                m_chr_unloc = unlocalized_scaffold_regex.match(scaffold)
+                m_chr_unplaced = unplaced_scaffold_regex.match(scaffold)
 
                 scaffold_num = None
                 if mch:
@@ -297,17 +365,17 @@ class UCSCBands(Source):
                     scaffold_num = chrom_num + '_' + m_chr_unloc.group(2)
                 elif m_chr_unplaced is not None and len(m_chr_unplaced.groups()) == 1:
                     scaffold_num = m_chr_unplaced.group(1)
-                else:
-                    LOG.error(
-                        "There's a chr pattern that we aren't matching: %s", scaffold)
+                # else:
+                #    LOG.error(
+                #        "There's a chr pattern that we aren't matching: %s", scaffold)
 
                 if chrom_num is not None:
                     # the chrom class (generic) id
-                    chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
+                    chrom_class_id = makeChromID(chrom_num, tax_num, 'CHR')
 
                     # first, add the chromosome class (in the taxon)
                     geno.addChromosomeClass(
-                        chrom_num, taxon_id, self.files[taxon]['genome_label'])
+                        chrom_num, taxon_curie, self.files[src_key]['genome_label'])
 
                     # then, add the chromosome instance (from the given build)
                     geno.addChromosomeInstance(
@@ -324,8 +392,7 @@ class UCSCBands(Source):
                             'parent': None,
                             'stain': None,
                             'type': self.globaltt['chromosome']}
-
-                if scaffold_num is not None:
+                elif scaffold_num is not None:
                     # this will put the coordinates of the scaffold
                     # in the scaffold-space and make sure that the scaffold
                     # is part of the correct parent.
@@ -341,9 +408,27 @@ class UCSCBands(Source):
                         'stain': None,
                         'type': self.globaltt['assembly_component'],
                         'synonym': scaffold}
+                else:
+                    LOG.info(
+                        '%s line %i DROPPED chromosome/scaffold  %s',
+                        species_name, line_num, scaffold)
 
                 parents = list()
-                if band_num is not None and band_num != '':
+
+                # see it new types have showed up
+                if rtype is not None and rtype not in [
+                        'gneg', 'gpos25', 'gpos33', 'gpos50', 'gpos66', 'gpos75',
+                        'gpos100', 'acen', 'gvar', 'stalk']:
+                    LOG.info(
+                        'Unknown gieStain type "%s" in %s at %i',
+                        rtype, src_key, line_num)
+                    self.globaltt[rtype]  # blow up
+
+                if rtype == 'acen':  # hacky, revisit if ontology improves
+                    rtype = self.localtt[rtype]
+
+                if band_num is not None and band_num != '' and \
+                        rtype is not None and rtype != '':
                     # add the specific band
                     mybands[chrom_num+band_num] = {
                         'min': start,
@@ -352,15 +437,12 @@ class UCSCBands(Source):
                         'ref': build_id,
                         'parent': None,
                         'stain': None,
-                        'type': None}
+                        'type': self.globaltt[rtype],
+                    }
 
                     # add the staining intensity of the band
-                    if re.match(r'g(neg|pos|var)', rtype):
-                        mybands[chrom_num+band_num]['stain'] = self.resolve(rtype)
-
                     # get the parent bands, and make them unique
-                    parents = list(
-                        monochrom.make_parent_bands(band_num, set()))
+                    parents = list(monochrom.make_parent_bands(band_num, set()))
                     # alphabetical sort will put them in smallest to biggest,
                     # so we reverse
                     parents.sort(reverse=True)
@@ -368,6 +450,7 @@ class UCSCBands(Source):
 
                     if len(parents) > 0:
                         mybands[chrom_num + band_num]['parent'] = chrom_num + parents[0]
+                    # else:   # band has no parents
 
                 # loop through the parents and add them to the dict
                 # add the parents to the graph, in hierarchical order
@@ -417,7 +500,7 @@ class UCSCBands(Source):
         # loop through the hash and add the bands to the graph
         for bnd in mybands.keys():
             myband = mybands.get(bnd)
-            band_class_id = makeChromID(bnd, taxon, 'CHR')
+            band_class_id = makeChromID(bnd, tax_num, 'CHR')
             band_class_label = makeChromLabel(bnd, genome_label)
             band_build_id = makeChromID(bnd, build_num, 'MONARCH')
             band_build_label = makeChromLabel(bnd, build_num)

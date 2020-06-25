@@ -10,7 +10,7 @@ VENV != python ./scripts/within_pip_env.py
 
 NP=4
 
-PYUTEST = @(echo $@ && [ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||echo "Not in python virtual enviroment or ERROR"
+PYUTEST = @(echo $@ && [ $(VENV) -eq 0 ] && $(TEST) tests/$@.py)||(echo "Not in python virtual enviroment or ERROR"; exit 1)
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 
 all: lint_error test tt_generated
@@ -20,8 +20,8 @@ all: lint_error test tt_generated
 ###
 
 test: test_translationtable test_impc test_reactome test_clinvar test_wormbase \
-	test_rgd test_ctd test_string test_udp test_orphanet test_mgi test_gwascatalog \
-	test_dataset test_source_metadata # test_impc_fetch
+	test_rgd test_ctd test_string test_udp  test_mgi test_gwascatalog \
+	test_dataset test_source_metadata # test_orphanet test_impc_fetch
 
 test_dataset:
 	$(PYUTEST)
@@ -77,8 +77,8 @@ test_omim:
 test_biogrid:
 	$(PYUTEST)
 
-test_orphanet:
-	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
+# test_orphanet:
+#	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
 
 test_impc_fetch:
 	$(DIPPER_BIN) --sources impc --no_verify --fetch_only
@@ -87,7 +87,7 @@ test_omia-integration:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
 ###################################################################################
-###  checks on supporting artefacts
+###  checks on supporting artifacts
 
 test_translationtable:
 	@ echo  "lint curie_map yaml file"
@@ -124,7 +124,7 @@ lint_warn:
 
 lint:
 	@ echo "Lint for everything"
-	@ [ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
+	@ ([ $(VENV) -eq 0 ] && /usr/bin/time -f"Linted in %Es" pylint  -j $(NP) ./dipper)||\
 		echo "Not in python virtual enviroment or other ERROR"
 	@ echo "----------------------------------------------------------------------"
 
@@ -137,18 +137,18 @@ clean_tt_generated:
 	rm translationtable/generated/curiemap_prefix.txt
 	rm /tmp/local_inverse.tab
 
-translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
-	@ cut -f1 -d ':' dipper/curie_map.yaml  | tr -d "'" | egrep -v "^$|^ *#" |\
+translationtable/generated/curiemap_prefix.txt : dipper/curie_map.yaml
+	@ cut -f1 -d ':' $<  | tr -d "'" | egrep -v "^$|^ *#" |\
 		grep .|sed 's|\(.*\)|"\1"|g' | LC_ALL=C sort -u > $@
 
-/tmp/local_inverse.tab: translationtable/[a-z_-]*.yaml
+/tmp/local_inverse.tab : translationtable/[a-z_-]*.yaml
 	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
 		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
 			print "\"" $$4 "\"\t\"" $$2 "\""}' \
 				$^ | LC_ALL=C sort -u > $@
 
-translationtable/generated/prefix_equivalents.yaml: \
+translationtable/generated/prefix_equivalents.yaml : \
 		translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
-	@ echo "---\n# prefix_equivalents.yaml" > $@;
-	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab|\
+	@ echo "---\n# prefix_equivalents.yaml" > $@ && \
+	LC_ALL=C join $< /tmp/local_inverse.tab | \
 	awk '{v=$$1;$$1="";print substr($$0,2) ": " v}' | sort -u >> $@

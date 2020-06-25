@@ -14,7 +14,9 @@
 # concludes with a space then count in parens
 #
 # For example:
-# NODE1 -> NODE2 [label="curie:term (42)"];
+# NODE1 -> NODE2 [label=<curie:term ! label (42)>];
+#
+# where the " ! label " is optional, but the lable _could_ have parens
 #
 # filter for edges in each file associate the count with the edge
 # if an edge is common between the files
@@ -28,8 +30,10 @@
 
 # associate the count with an edge
 function parse(str, arr){
-	split(str, a, "(")
-	arr[a[1]] = substr(a[2], 1, index(a[2], ")")-1)
+    # can't count on label being paren-free anymore
+    n = match($0, / [(][[:digit:]]*[)]>];$/)
+    if(n>0)
+        arr[substr($0,1,n)] = substr($0, n+2, length($0)-n-5)
 }
 
 # strip metadata from filename
@@ -37,33 +41,40 @@ function de_path_ext(pth){
 	split(pth, a, "/")
 	return substr(a[length(a)], 1, index(a[length(a)], ".")-1)
 }
+
 BEGIN { NOCOUNTS=0}
 
-# collect the edges
-NR==FNR && / -> / {
+# collect the edges from both files
+NR==FNR && /^[^ ]+ -> [^ ]+ / {
 	label1 = FILENAME;
 	parse($0, edge1)
 }
-NR!=FNR && / -> / {
+NR!=FNR && /^[^ ]+ -> [^ ]+ / {
 	label2 = FILENAME;
 	parse($0, edge2)
 }
 
 END{
 	for(e in edge1){
-		if(!(e in edge2)) edges[e "(" edge1[e] ")\", color=\"orange\"];"];
+		if(!(e in edge2)) edges[e "(" edge1[e] ")>, color=\"orange\"];"];
 		else {
-			# TODO flag losses?
+			# edge is in both graphs
 			if(NOCOUNTS)
-			    diff = ""
-			else
-			    diff = edge2[e] - edge1[e];
-			#if(diff < 0) diff = "<b>" diff "</b>";
-			edges[e "(" diff ")\", color=\"black\"];"]
+				edges[e "()>, color=\"black\"];"]
+			else {
+				diff = edge2[e] - edge1[e];
+				if(diff < 0)
+					# diff = "<font color=\"red\">" diff "</font>" #  breaks svg
+					edges[e "(" diff ")>, color=\"pink\"];"]
+				else
+					edges[e "(" diff ")>, color=\"black\"];"]
+			}
 			delete edge2[e]
 		}
 	}
-	for(e in edge2) edges[e "(" edge2[e] ")\", color=\"blue\"];"];
+	# only edges not in first file
+	for(e in edge2)
+		edges[e "(" edge2[e] ")>, color=\"blue\"];"];
 
 	print "digraph {"
 	print "rankdir=LR;"

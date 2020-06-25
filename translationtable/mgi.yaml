@@ -124,6 +124,24 @@
 "Viral insertion": "novel_sequence_insertion"  #  (no viral version)
 "wild type": "wild_type"
 
+# "Allele Type" (subtype)
+#####################
+# Chemically and radiation induced
+# Chemically induced (ENU)
+# Chemically induced (other)
+# Endonuclease-mediated
+# Gene trapped
+# Not Applicable
+# Not Specified
+# Other
+# QTL
+# Radiation induced
+# Spontaneous
+# Targeted
+# Transgenic
+# Transposon induced
+
+
 # taxon
 # @kshefchek - it's easier from an integration perspective to round up
 # to Mus musculus when applicable
@@ -191,7 +209,7 @@
 "M. spretus or M. m. domesticus": "Mus"   # '862507' -> SubGenus not Genus
 "M. m. molossinus (Anjo, Japan)": "Mus musculus molossinus"
 "M. m. castaneus or M. m. musculus": "Mus musculus"
-"laboratory mouse and M. m. castaneus and M. m. domesticus poschiavinus": "Mus musculus"
+"laboratory mouse and M. m. castaneus and M. m. domesticus poschiavinus": "Mus"
 "M. spretus (Spain)": "Mus spretus"
 "M. m. molossinus (Japan)": "Mus musculus molossinus"
 "M. lepidoides": "Mus lepidoides"
@@ -227,10 +245,10 @@
 "M. m. domesticus": "Mus musculus"
 "M. m. castaneus and laboratory mouse": "Mus musculus"
 "M. m. domesticus (Australia)": "Mus musculus"
-"laboratory mouse and M. m. domesticus and M. m. molossinus": "Mus musculus"
+"laboratory mouse and M. m. domesticus and M. m. molossinus": "Mus"
 "M. m. domesticus (brevirostris) (Morocco)": "Mus musculus"
 "Mus musculus/domesticus": "Mus musculus"
-"laboratory mouse and M. spretus and M. m. musculus": "Mus musculus"
+"laboratory mouse and M. spretus and M. m. musculus": "Mus"
 "M. m. molossinus": "Mus musculus molossinus"
 "M. hortulanus": "Mus spicilegus"  # synonymous with Mus spicilegus
 "M. dunni": "Mus terricolor"  # synonymous with Mus terricolor
@@ -265,7 +283,7 @@
 "M. saxicola": "Mus saxicola"
 "M. m. praetextus x M. m. musculus": "Mus musculus"
 "M. spretus and laboratory mouse": "Mus"   # '862507' -> SubGenus not Genus
-"laboratory mouse and M. m. castaneus and M. m. domesticus": "Mus musculus"
+"laboratory mouse and M. m. castaneus and M. m. domesticus": "Mus"
 "M. m. musculus (Bulgaria)": "Mus musculus"
 "M. booduga": "Mus booduga"
 "Not Specified and M. m. molossinus": "Mus musculus"
@@ -291,3 +309,27 @@
 "M. m. castaneus": "Mus musculus castaneus"
 "Wild and M. m. domesticus": "Mus setulosus"
 "M. m. molossinus (Nagoya)": "Mus musculus molossinus"
+"M. m. domesticus (Pennsylvania, USA)": "Mus musculus"
+"M. m. domesticus (Ohio, USA)": "Mus musculus"
+"M. m. domesticus (Maryland, USA)": "Mus musculus"
+"M. m. musculus (Nitra region, Slovakia)": "Mus musculus"
+"M. m. domesticus (California, USA)": "Mus musculus"
+"M. m. domesticus (Bavaria, Germany)": "Mus musculus"
+"M. m. musculus (Estonia)": "Mus musculus"
+"M. m. domesticus (Schweben, Hessen, Germany)": "Mus musculus"
+"M. m. domesticus (Scar, Sanday Island, Orkneys, Scotland)": "Mus musculus"
+"M. m. domesticus (Delaware, USA) and M. m. musculus (Prague)": "Mus musculus"
+"M. m. domesticus (Delaware, USA)": "Mus musculus"
+"M. m. domesticus and M. m. musculus": "Mus musculus"
+"M. m. castaneus and M. m. domesticus": "Mus musculus musculus x M. m. castaneus"
+"M. m. musculus (Senkvice, Slovak Republic>": "Mus musculus"
+"M. m. domesticus (Orcetto, Italy)": "Mus musculus"
+"M. m. domesticus (Lake Casitas, CA, USA)": "Mus musculus"
+"M. m. domesticus (Batumi, Adjara, Georgia)": "Mus musculus"
+"M. m. domesticus (Ann Arbor, MI, USA)": "Mus musculus"
+"laboratory mouse or M. m. castaneus": "Mus"
+"laboratory mouse and M. m. domesticus (Ohio, USA)": "Mus musculus"
+# more than two crosses; revert to Genus
+"laboratory mouse and M. m. musculus and M. spretus": "Mus"
+"M. m. castaneus and M. m. domesticus and M. m. molossinus": "Mus"
+"laboratory mouse and M. m. castaneus and M. m. domesticus and M. m. musculus (Prague)": "Mus"

@@ -10,7 +10,7 @@ BNODE:b8178a5acf773ae10c47 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_1750397",
         "b04d83bd71a9e5ed689f_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
-    OBO:SEPIO_0000021 "2018-10-31" ;
+    dcterms:created "2018-10-31" ;
     OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
     OBO:SEPIO_0000111 BNODE:bad61ae6d3fd1072019f ;
     dc:identifier "SCV000893958.1" .
@@ -19,7 +19,7 @@ BNODE:bb3add3eed5a29ba44e6 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_1750397",
         "bb8218e5dd5e028601ba_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
-    OBO:SEPIO_0000021 "2018-10-31" ;
+    dcterms:created "2018-10-31" ;
     OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
     OBO:SEPIO_0000111 BNODE:b1e75870cf421cc5377c ;
     dc:identifier "SCV000893958.1" .
@@ -32,7 +32,7 @@ BNODE:beff008b0bd23fd8ba1f a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_1750397",
         "b3135a4d36760903bbc8_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
-    OBO:SEPIO_0000021 "2018-10-31" ;
+    dcterms:created "2018-10-31" ;
     OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
     OBO:SEPIO_0000111 BNODE:bd4ef2b55470e2ff6b1c ;
     dc:identifier "SCV000893958.1" .

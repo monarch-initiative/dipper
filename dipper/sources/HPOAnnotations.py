@@ -20,7 +20,8 @@ LOG = logging.getLogger(__name__)
 
 # summer 2018 PR mentioned switching to the new format
 PNR = 'http://compbio.charite.de/jenkins/job/hpo.annotations.current'
-HPOADL2 = PNR + '/lastSuccessfulBuild/artifact/misc_2018'
+HPOADL2 = PNR + '/lastSuccessfulBuild/artifact/current'
+              # '/lastSuccessfulBuild/artifact/misc_2018'   dissapeared by 2020 03
 
 # Fall 2018 CM made a mondo version of common disease (but we decided to hold off now)
 GITAPI = "https://api.github.com/repos/monarch-initiative"
@@ -199,16 +200,11 @@ class HPOAnnotations(Source):
             row = next(reader)  # drop tracker url
             row = next(reader)  # drop release url
             row = next(reader)  # headers
-            row[0] = row[0][1:]  # uncomment
-            if col != row:
-                LOG.info(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t%s\n',
-                    src_key, col, row)
-                LOG.info(set(col) - set(row))
+            # row[0] = row[0][1:]  # uncomment;  but not allways needed ?!
+            if not self.check_fileheader(col, row):
+                pass
 
             for row in reader:
-                if row[0][0] == '#' or row[0] == 'DatabaseID':  # headers
-                    continue
                 row = [str(col).strip() for col in row]
 
                 disease_id = row[col.index('DatabaseID')]

@@ -3,6 +3,7 @@ import re
 import logging
 import gzip
 import io
+import yaml
 from ftplib import FTP
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
@@ -14,6 +15,26 @@ from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
+
+GAF20 = [
+    'DB',                               # required
+    'DB Object ID',                     # required
+    'DB Object Symbol',                 # required
+    'Qualifier',                        # optional (list?)
+    'GO ID',                            # required
+    'DB:Reference (|DB:Reference)',     # required (list?)
+    'Evidence Code',                    # required
+    'With (or) From',                   # optional (list?)
+    'Aspect',                           # required
+    'DB Object Name'                    # optional
+    'DB Object Synonym (|Synonym)',     # optional (list?)
+    'DB Object Type',                   # required
+    'Taxon(|taxon)',                    # required (pair?)
+    'Date',                             # required
+    'Assigned By',                      # required
+    'Annotation Extension',             # optional (list?)
+    'Gene Product Form ID'              # optional
+]
 
 
 class WormBase(Source):
@@ -50,28 +71,36 @@ class WormBase(Source):
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
             'url': wbprod + species +
-                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
         #   'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #   'url': wbdev + species +
         #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
-            'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
+            'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb',
+            'columns': GAF20
+        },
         'rnai_pheno': {
             'file': 'rnai_phenotypes.wb',
-            'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
+            'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'
+            # not gaf v2.0
+        },
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
-            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?'+
+            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?' +
                    'action=WpaXref'},
         'feature_loc': {
+            # species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS273.annotations.gff3.gz
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
             'url': wbprod + species +
-                   '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+                    '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
+            # pub/wormbase/releases/current-production-release/ONTOLOGY/rnai_phenotypes.WS273.wb
             'file': 'disease_association.wb',
-            'url': wbprod + '/ONTOLOGY/disease_association.WSNUMBER.wb'},
+            'url': wbprod + '/ONTOLOGY/disease_association.WSNUMBER.wb',
+            'columns': GAF20
+        },
         # 'genes_during_development': {
         #   'file': 'development_association.wb',
         #   'url wbdev+'/ONTOLOGY/development_association.WS249.wb'},
@@ -89,14 +118,18 @@ class WormBase(Source):
         'xrefs': {  # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
-                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
-        # 'letter': { # no longer exists 2016-11-18
-        #    'file': 'letter.WSNUMBER',
-        #    'url': wbprod + '/letter.WSNUMBER'},
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+        'letter': {
+            'file': 'letter',
+            'url': wbprod + '/letter.WSNUMBER'},
 
         'checksums': {
-            'file': 'CHECKSUMS',
-            'url':  wbprod + '/CHECKSUMS'}
+            'file': 'CHECKSUMS',  # note *every* file & release eveh' most recent at top
+            'url':  wbprod + '/CHECKSUMS'},
+        'gaf-eco-mapping': {
+            'file': 'gaf-eco-mapping.yaml',
+            'url': '/'.join((Source.DIPPERCACHE, 'wormbase', 'gaf-eco-mapping.yaml')),
+        }
     }
 
     def __init__(self,
@@ -119,7 +152,8 @@ class WormBase(Source):
         # update the dataset object with details about this resource
         # NO LICENSE for this resource
         self.version_num = None
-        return
+        # gaf evidence code mapping is built in parse(), after the file is fetched.
+        self.gaf_eco = {}
 
     def fetch(self, is_dl_forced=False):
 
@@ -151,7 +185,12 @@ class WormBase(Source):
 
         # fetch all the files
         self.get_files(is_dl_forced)
-        return
+
+        # moved here from parse() to avoid broken calls from test
+        src_key = 'gaf-eco-mapping'
+        yamlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
 
     def update_wsnum_in_files(self, vernum):
         """
@@ -174,7 +213,6 @@ class WormBase(Source):
         # also the letter file - keep this so we know the version number
         # self.files['checksums']['file'] = re.sub(
         #    r'WSNUMBER', self.version_num, self.files['checksums']['file'])
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -217,7 +255,6 @@ class WormBase(Source):
         # self.process_gene_interaction(limit)
 
         LOG.info("Finished parsing.")
-        return
 
     def process_gene_ids(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_ids']['file']))
@@ -261,8 +298,6 @@ class WormBase(Source):
 
                 if limit is not None and line_counter > limit:
                     break
-
-        return
 
     def process_gene_desc(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_desc']['file']))
@@ -312,8 +347,6 @@ class WormBase(Source):
                 if limit is not None and line_counter > limit:
                     break
 
-        return
-
     def process_allele_phenotype(self, limit=None):
         """
         This file compactly lists variant to phenotype associations,
@@ -326,32 +359,54 @@ class WormBase(Source):
         :return:
 
         """
-        raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
+        src_key = 'allele_pheno'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['columns']
 
         graph = self.graph
         model = Model(self.graph)
 
         LOG.info("Processing Allele phenotype associations")
-        line_counter = 0
         geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                if re.match(r'!', ''.join(row)):  # header
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            row = next(reader)
+            if row[0] != '!gaf-version: 2.0':
+                LOG.error('Not a vlaid gaf v2.0 formatted file: %s', raw)
+                # raise
+            for row in reader:
+                if row[0][0] == '!':
                     continue
-                line_counter += 1
-                (db, gene_num, gene_symbol, is_not, phenotype_id, ref,
-                 eco_symbol, with_or_from, aspect, gene_name, gene_synonym,
-                 gene_class, taxon, date, assigned_by, blank, blank2) = row
+                # db = row[col.index('DB')]
+                gene_num = row[col.index('DB Object ID')]
+                # gene_symbol = row[col.index('DB Object Symbol')]
+                is_not = row[col.index('Qualifier')]
+                phenotype_id = row[col.index('GO ID')]
+                ref = row[col.index('DB:Reference (|DB:Reference)')].strip()
+                eco_symbol = row[col.index('Evidence Code')]
+                with_or_from = row[col.index('With (or) From')]
+                # aspect = row[col.index('Aspect')]
+                # gene_name = row[col.index('DB Object Name')]
+                # gene_synonym = row[col.index('DB Object Synonym (|Synonym)')]
+                # gene_class = row[col.index('DB Object Type')]
+                # taxon = row[col.index('Taxon(|taxon)')]
+                # date = row[col.index('Date')]
+                # assigned_by = row[col.index('Assigned By')]
+                # blank = row[col.index('Annotation Extension')]
+                # blank2 = row[col.index('Gene Product Form ID')]
 
                 # TODO add NOT phenotypes
                 if is_not == 'NOT':
                     continue
 
                 eco_symbol = eco_symbol.strip()
-                eco_id = None
-                if eco_symbol.strip() != '':
-                    eco_id = self.resolve(eco_symbol)
+                eco_curie = None
+                if eco_symbol.strip() != '' and eco_symbol in self.gaf_eco:
+                    eco_curie = self.gaf_eco[eco_symbol]
+                else:
+                    LOG.warning(
+                        'Evidence code %s is not found in the (gaf) gaf_eco',
+                        eco_symbol)
 
                 # according to the GOA spec, persons are not allowed to be
                 # in the reference column, therefore they the variant and
@@ -371,7 +426,7 @@ class WormBase(Source):
                 if len(allele_list) == 0:
                     LOG.error(
                         "Missing alleles from phenotype assoc at line %d",
-                        line_counter)
+                        reader.line_num)
                     continue
                 else:
                     for allele in allele_list:
@@ -389,11 +444,11 @@ class WormBase(Source):
 
                             # Previous model - make a bnode reagent-targeted gene,
                             # & annotate that instead of the RNAi item directly
-                            #rnai_num = re.sub(r'WormBase:', '', allele_id)
-                            #rnai_id = allele_id
-                            #rtg_id = self.make_reagent_targeted_gene_id(
+                            # rnai_num = re.sub(r'WormBase:', '', allele_id)
+                            # rnai_id = allele_id
+                            # rtg_id = self.make_reagent_targeted_gene_id(
                             #    gene_num, rnai_num)
-                            #geno.addReagentTargetedGene(
+                            # geno.addReagentTargetedGene(
                             #    rnai_id, 'WormBase:' + gene_num, rtg_id)
                             # allele_id = rtg_id
 
@@ -422,10 +477,10 @@ class WormBase(Source):
                             # @kshefchek - removing this blank node
                             # in favor of simpler modeling, treat variant
                             # like an allele
-                            #vl_id = '_:'+'-'.join((gene_num, allele_num))
-                            #geno.addSequenceAlterationToVariantLocus(
+                            # vl_id = '_:'+'-'.join((gene_num, allele_num))
+                            # geno.addSequenceAlterationToVariantLocus(
                             #    allele_id, vl_id)
-                            #geno.addAlleleOfGene(vl_id, gene_id)
+                            # geno.addAlleleOfGene(vl_id, gene_id)
 
                             geno.addSequenceAlteration(allele_id, None)
                             geno.addAlleleOfGene(allele_id, gene_id)
@@ -436,8 +491,8 @@ class WormBase(Source):
                         assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id,
                                          entity_category=blv.terms.SequenceVariant.value)
 
-                        if eco_id is not None:
-                            assoc.add_evidence(eco_id)
+                        if eco_curie is not None:
+                            assoc.add_evidence(eco_curie)
 
                         if ref is not None and ref != '':
                             ref = re.sub(r'(WB:|WB_REF:)', 'WormBase:', ref)
@@ -455,10 +510,8 @@ class WormBase(Source):
 
                         # finish looping through all alleles
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def process_rnai_phenotypes(self, limit=None):
 
@@ -466,23 +519,29 @@ class WormBase(Source):
 
         graph = self.graph
         LOG.info("Processing RNAi phenotype associations")
-        line_counter = 0
         geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-                (gene_num, gene_alt_symbol, phenotype_label, phenotype_id,
-                 rnai_and_refs) = row
-# WBGene00001908	F17E9.9	locomotion variant	WBPhenotype:0000643	WBRNAi00025129|WBPaper00006395 WBRNAi00025631|WBPaper00006395
-# WBGene00001908	F17E9.9	avoids bacterial lawn	WBPhenotype:0000402	WBRNAi00095640|WBPaper00040984
-# WBGene00001908	F17E9.9	RAB-11 recycling endosome localization variant	WBPhenotype:0002107	WBRNAi00090830|WBPaper00041129
-
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
+                (
+                 gene_num,
+                 gene_alt_symbol,
+                 phenotype_label,
+                 phenotype_id,
+                 rnai_and_refs
+                ) = row
+                '''
+WBGene00001908	F17E9.9	locomotion variant	WBPhenotype:0000643	WBRNAi00025129|WBPaper00006395 WBRNAi00025631|WBPaper00006395
+WBGene00001908	F17E9.9	avoids bacterial lawn	WBPhenotype:0000402	WBRNAi00095640|WBPaper00040984
+WBGene00001908	F17E9.9	RAB-11 recycling endosome localization variant	WBPhenotype:0002107	WBRNAi00090830|WBPaper00041129
+                '''
                 gene_id = 'WormBase:'+gene_num
                 # refs = list()  # TODO unused
 
                 # the rnai_and_refs has this so that
-                # WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBPaper00025054
+                '''
+WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBPaper00025054
+                '''
                 # space delimited between RNAi sets;
                 # then each RNAi should have a paper
 
@@ -521,10 +580,8 @@ class WormBase(Source):
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph()
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def process_pub_xrefs(self, limit=None):
 
@@ -575,12 +632,9 @@ class WormBase(Source):
                 if limit is not None and line_counter > limit:
                     break
 
-        return
-
     def process_feature_loc(self, limit):
 
         raw = '/'.join((self.rawdir, self.files['feature_loc']['file']))
-
         graph = self.graph
         model = Model(graph)
         LOG.info("Processing Feature location and attributes")
@@ -598,11 +652,11 @@ class WormBase(Source):
                     continue
                 (chrom, db, feature_type_label, start, end, score, strand,
                  phase, attributes) = row
-
-# I	interpolated_pmap_position	gene	1	559768	.	.	.	ID=gmap:spe-13;gmap=spe-13;status=uncloned;Note=-21.3602 cM (+/- 1.84 cM)
-# I	WormBase	gene	3747	3909	.	-	.	ID=Gene:WBGene00023193;Name=WBGene00023193;interpolated_map_position=-21.9064;sequence_name=Y74C9A.6;biotype=snoRNA;Alias=Y74C9A.6
-# I	absolute_pmap_position	gene	4119	10230	.	.	.	ID=gmap:homt-1;gmap=homt-1;status=cloned;Note=-21.8252 cM (+/- 0.00 cM)
-
+                '''
+ I	interpolated_pmap_position	gene	1	559768	.	.	.	ID=gmap:spe-13;gmap=spe-13;status=uncloned;Note=-21.3602 cM (+/- 1.84 cM)
+ I	WormBase	gene	3747	3909	.	-	.	ID=Gene:WBGene00023193;Name=WBGene00023193;interpolated_map_position=-21.9064;sequence_name=Y74C9A.6;biotype=snoRNA;Alias=Y74C9A.6
+ I	absolute_pmap_position	gene	4119	10230	.	.	.	ID=gmap:homt-1;gmap=homt-1;status=cloned;Note=-21.8252 cM (+/- 0.00 cM)
+                '''
                 # dbs = re.split(
                 #   r' ', 'assembly_component expressed_sequence_match Coding_transcript Genomic_canonical Non_coding_transcript Orfeome Promoterome Pseudogene RNAi_primary RNAi_secondary Reference Transposon Transposon_CDS cDNA_for_RNAi miRanda ncRNA operon polyA_signal_sequence polyA_site snlRNA')
                 #
@@ -729,32 +783,48 @@ class WormBase(Source):
                     break
 
                 # RNAi reagents:
-# I	RNAi_primary	RNAi_reagent	4184	10232	.	+	.	Target=WBRNAi00001601 1 6049 +;laboratory=YK;history_name=SA:yk326e10
-# I	RNAi_primary	RNAi_reagent	4223	10147	.	+	.	Target=WBRNAi00033465 1 5925 +;laboratory=SV;history_name=MV_SV:mv_G_YK5052
-# I	RNAi_primary	RNAi_reagent	5693	9391	.	+	.	Target=WBRNAi00066135 1 3699 +;laboratory=CH
-
+                '''
+I	RNAi_primary	RNAi_reagent	4184	10232	.	+	.	Target=WBRNAi00001601 1 6049 +;laboratory=YK;history_name=SA:yk326e10
+I	RNAi_primary	RNAi_reagent	4223	10147	.	+	.	Target=WBRNAi00033465 1 5925 +;laboratory=SV;history_name=MV_SV:mv_G_YK5052
+I	RNAi_primary	RNAi_reagent	5693	9391	.	+	.	Target=WBRNAi00066135 1 3699 +;laboratory=CH
+                '''
                 # TODO TF bindiing sites and network:
-# I	TF_binding_site_region	TF_binding_site	1861	2048	.	+	.	Name=WBsf292777;tf_id=WBTranscriptionFactor000025;tf_name=DAF-16
-# I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=WBTranscriptionFactor000703;tf_name=DPL-1
-
-        return
-
+                '''
+I	TF_binding_site_region	TF_binding_site	1861	2048	.	+	.	Name=WBsf292777;tf_id=WBTranscriptionFactor000025;tf_name=DAF-16
+I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=WBTranscriptionFactor000703;tf_name=DPL-1
+                '''
     def process_disease_association(self, limit):
-
-        raw = '/'.join((self.rawdir, self.files['disease_assoc']['file']))
-
+        src_key = 'disease_assoc'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['columns']
         graph = self.graph
         LOG.info("Processing disease models")
-        line_counter = 0
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                if re.match(r'!', ''.join(row)):  # header
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            row = next(reader)
+            if row[0] != '!gaf-version: 2.0':
+                LOG.error('Not a vlaid gaf v2.0 formatted file: %s', raw)
+                # raise
+            for row in reader:
+                if row[0][0] == '!':
                     continue
-                line_counter += 1
-                (db, gene_num, gene_symbol, is_not, disease_id, ref,
-                 eco_symbol, with_or_from, aspect, gene_name, gene_synonym,
-                 gene_class, taxon, date, assigned_by, blank, blank2) = row
+                # db = row[col.index('DB')]
+                gene_num = row[col.index('DB Object ID')]
+                # gene_symbol = row[col.index('DB Object Symbol')]
+                is_not = row[col.index('Qualifier')]
+                disease_id = row[col.index('GO ID')]
+                ref = row[col.index('DB:Reference (|DB:Reference)')].strip()
+                eco_symbol = row[col.index('Evidence Code')]
+                # with_or_from = row[col.index('With (or) From')]
+                # aspect = row[col.index('Aspect')]
+                # gene_name = row[col.index('DB Object Name')]
+                # gene_synonym = row[col.index('DB Object Synonym (|Synonym)')]
+                # gene_class = row[col.index('DB Object Type')]
+                # taxon = row[col.index('Taxon(|taxon)')]
+                # date = row[col.index('Date')]
+                # assigned_by = row[col.index('Assigned By')]
+                # blank = row[col.index('Annotation Extension')]
+                # blank2 = row[col.index('Gene Product Form ID')]
 
                 # TODO add NOT phenotypes
                 if is_not == 'NOT':
@@ -770,9 +840,8 @@ class WormBase(Source):
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
-                assoc.add_evidence(self.resolve(eco_symbol))
+                assoc.add_evidence(self.gaf_eco[eco_symbol])
                 assoc.add_association_to_graph()
-
 
     def process_gene_interaction(self, limit):
         """
@@ -856,8 +925,6 @@ class WormBase(Source):
 
                 if limit is not None and line_counter > limit:
                     break
-
-        return
 
     @staticmethod
     def make_reagent_targeted_gene_id(gene_id, reagent_id):

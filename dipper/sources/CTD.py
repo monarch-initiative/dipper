@@ -24,6 +24,7 @@ class CTD(Source):
     describing cross-species chemical–gene/protein interactions and
     chemical– and gene–disease associations to illuminate molecular mechanisms
     underlying variable susceptibility and environmentally influenced diseases.
+    (updated monthly).
 
     Here, we fetch, parse, and convert data from CTD into triples,
     leveraging only the associations based on DIRECT evidence
@@ -34,15 +35,17 @@ class CTD(Source):
     * gene-disease
 
     CTD curates relationships between genes and chemicals/diseases with
-    marker/mechanism and/or therapeutic.
-    Unfortunately, we cannot disambiguate between marker (gene expression) and
-    mechanism (causation) for these associations.  Therefore, we are left to
-    relate these simply by "marker".
+    'marker/mechanism'  or 'therapeutic'.  (observe strictly OR)
+    Unfortunately,
+    we cannot disambiguate between marker (gene expression) and
+    mechanism (causation) for these associations.
+    Therefore, we are left to relate these simply by "marker".
 
-    CTD also pulls in genes and pathway membership from KEGG and REACTOME.
-    We create groups of these following the pattern that the specific pathway
-    is a subclass of 'cellular process' (a go process), and the gene is
-    "involved in" that process.
+    # We DISCONTIUED at some point prior to 202005
+    # CTD also pulls in genes and pathway membership from KEGG and REACTOME.
+    # We create groups of these following the pattern that the specific pathway
+    # is a subclass of 'cellular process' (a go process), and the gene is
+    # "involved in" that process.
 
     For diseases, we preferentially use OMIM identifiers when they can be used
     uniquely over MESH.  Otherwise, we use MESH ids.
@@ -57,27 +60,63 @@ class CTD(Source):
     """
 
     files = {
-        'chemical_disease_interactions': {
+        'chemical_disease_associations': {
             'file': 'CTD_chemicals_diseases.tsv.gz',
-            'url': 'http://ctdbase.org/reports/CTD_chemicals_diseases.tsv.gz'
+            'url': 'http://ctdbase.org/reports/CTD_chemicals_diseases.tsv.gz',
+            'columns': [  # expected
+                'ChemicalName',
+                'ChemicalID',       # MeSH identifier
+                'CasRN',            # CAS Registry Number, if available
+                'DiseaseName',
+                'DiseaseID',        # MeSH or OMIM identifier
+                'DirectEvidence',   # '|'-delimited list
+                'InferenceGeneSymbol',
+                'InferenceScore',
+                'OmimIDs',          # '|'-delimited list
+                'PubMedIDs'         # '|'-delimited list
+            ]
         },
-        #'gene_pathway': {
+
+        # 'gene_pathway': {
         #    'file': 'CTD_genes_pathways.tsv.gz',
         #    'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
-        #},
-        #'gene_disease': {
+        # },
+        # 'gene_disease': {
         #    'file': 'CTD_genes_diseases.tsv.gz',
-        #    'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
-        #}
-    }
-    static_files = {
-        'publications': {'file': 'CTD_curated_references.tsv'}
+        #    'url': 'https://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
+        #    'columns': [
+        #         'GeneSymbol',
+        #         'GeneID',
+        #         'DiseaseName',
+        #         'DiseaseID',
+        #         'DirectEvidence',
+        #         'InferenceChemicalName',
+        #         'InferenceScore',
+        #         'OmimIDs PubMedIDs'
+        #    ]
+        # }
+        # 'chemicals': {
+        #    'file': 'CTD_chemicals.tsv.gz',
+        #    'url': 'https://ctdbase.org/reports/CTD_chemicals.tsv.gz',
+        #    'columns': [
+        #        'ChemicalName',
+        #        'ChemicalID',   # Mesh
+        #        'CasRN',
+        #        'Definition',
+        #        'ParentIDs',    # Mesh|...  (note: cycles in graph   ~250K edges)
+        #        'TreeNumbers',
+        #        'ParentTreeNumbers',
+        #        'Synonyms',
+        #        'DrugBankIDs'
+        #    ]
+        # }
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -118,12 +157,8 @@ class CTD(Source):
         :return None
         """
         self.get_files(is_dl_forced)
-
-        self._fetch_disambiguating_assoc()
-
-        # consider creating subsets of the files that
-        # only have direct annotations (not inferred)
-        return
+        src_key = 'chemical_disease_associations'
+        assoc_file = '/'.join((self.rawdir, self.files[src_key]['file']))
 
     def parse(self, limit=None):
         """
@@ -138,13 +173,6 @@ class CTD(Source):
             LOG.info("Only parsing first %d rows", limit)
 
         LOG.info("Parsing files...")
-        # pub_map = dict()
-        # file_path = '/'.join((self.rawdir,
-        # self.static_files['publications']['file']))
-        # if os.path.exists(file_path) is True:
-        #     pub_map = self._parse_publication_file(
-        #         self.static_files['publications']['file']
-        #     )
 
         if self.test_only:
             self.test_mode = True
@@ -152,18 +180,13 @@ class CTD(Source):
         self.geno = Genotype(self.graph)
         self.pathway = Pathway(self.graph)
 
-        self._parse_ctd_file(
-            limit, self.files['chemical_disease_interactions'])
-        #self._parse_ctd_file(limit, self.files['gene_pathway'])
-        #self._parse_ctd_file(limit, self.files['gene_disease'])
+        src_key = 'chemical_disease_associations'
+        self._parse_ctd_file(limit, src_key)
 
-        self._parse_curated_chem_disease(limit)
+        # self._parse_ctd_file(limit, 'gene_pathway')
+        # self._parse_ctd_file(limit, 'gene_disease')
 
-        LOG.info("Done parsing files.")
-
-        return
-
-    def _parse_ctd_file(self, limit, file):
+    def _parse_ctd_file(self, limit, src_key):
         """
         Parses files in CTD.files dictionary
         Args:
@@ -176,7 +199,7 @@ class CTD(Source):
         row_count = 0
         version_pattern = re.compile(r'^# Report created: (.+)$')
         is_versioned = False
-        file_path = '/'.join((self.rawdir, file['file']))
+        file_path = '/'.join((self.rawdir, self.files[src_key]['file']))
         with gzip.open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -188,16 +211,15 @@ class CTD(Source):
                     if match:
                         version_date = re.sub(r'\s|:', '-', match.group(1))
                         self.dataset.set_ingest_source_file_version_date(
-                            file['url'],
-                            version_date)
+                            self.files[src_key]['url'], version_date)
                         is_versioned = True
                 elif re.match(r'^#', ' '.join(row)):
                     pass
                 else:
                     row_count += 1
-                    if file == self.files[
-                            'chemical_disease_interactions']['file']:
+                    if src_key == 'chemical_disease_associations':
                         self._process_interactions(row)
+
                     # elif file == self.files['gene_pathway']['file']:
                     #     self._process_pathway(row)
                     # elif file == self.files['gene_disease']['file']:
@@ -249,88 +271,6 @@ class CTD(Source):
 
         return
 
-    def _fetch_disambiguating_assoc(self):
-        """
-        For any of the items in the chemical-disease association file that have
-        ambiguous association types we fetch the disambiguated associations
-        using the batch query API, and store these in a file. Elsewhere, we can
-        loop through the file and create the appropriate associations.
-
-        :return:
-
-        """
-
-        disambig_file = '/'.join(
-            (self.rawdir, self.static_files['publications']['file']))
-        assoc_file = '/'.join(
-            (self.rawdir, self.files['chemical_disease_interactions']['file']))
-
-        # check if there is a local association file,
-        # and download if it's dated later than the original intxn file
-        if os.path.exists(disambig_file):
-            dfile_dt = os.stat(disambig_file)
-            afile_dt = os.stat(assoc_file)
-            if dfile_dt < afile_dt:
-                LOG.info(
-                    "Local file date before chem-disease assoc file. "
-                    " Downloading...")
-            else:
-                LOG.info(
-                    "Local file date after chem-disease assoc file. "
-                    " Skipping download.")
-                return
-
-        all_pubs = set()
-        dual_evidence = re.compile(r'^marker\/mechanism\|therapeutic$')
-        # first get all the unique publications
-        with gzip.open(assoc_file, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                if re.match(r'^#', ' '.join(row)):
-                    continue
-                self._check_list_len(row, 10)
-                (chem_name, chem_id, cas_rn, disease_name, disease_id,
-                 direct_evidence, inferred_gene_symbol, inference_score,
-                 omim_ids, pubmed_ids) = row
-                if direct_evidence == '' or not \
-                        re.match(dual_evidence, direct_evidence):
-                    continue
-                if pubmed_ids is not None and pubmed_ids != '':
-                    all_pubs.update(set(re.split(r'\|', pubmed_ids)))
-        sorted_pubs = sorted(list(all_pubs))
-
-        # now in batches of 4000, we fetch the chemical-disease associations
-        batch_size = 4000
-        params = {
-            'inputType': 'reference',
-            'report': 'diseases_curated',
-            'format': 'tsv',
-            'action': 'Download'
-        }
-
-        url = 'http://ctdbase.org/tools/batchQuery.go?q'
-        start = 0
-        end = min((batch_size, len(all_pubs)))  # get them in batches of 4000
-
-        with open(disambig_file, 'wb') as dmbf:
-            while start < len(sorted_pubs):
-                params['inputTerms'] = '|'.join(sorted_pubs[start:end])
-                # fetch the data from url
-                LOG.info(
-                    'fetching %d (%d-%d) refs: %s',
-                    len(re.split(r'\|', params['inputTerms'])),
-                    start, end, params['inputTerms'])
-                data = urllib.parse.urlencode(params)
-                encoding = 'utf-8'
-                binary_data = data.encode(encoding)
-                req = urllib.request.Request(url, binary_data)
-                resp = urllib.request.urlopen(req)
-                dmbf.write(resp.read())
-                start = end
-                end = min((start + batch_size, len(sorted_pubs)))
-
-        return
-
     def _process_interactions(self, row):
         """
         Process row of CTD data from CTD_chemicals_diseases.tsv.gz
@@ -353,7 +293,6 @@ class CTD(Source):
             return
 
         evidence_pattern = re.compile(r'^therapeutic|marker\/mechanism$')
-        # dual_evidence = re.compile(r'^marker\/mechanism\|therapeutic$')
 
         # filter on those diseases that are mapped to omim ids in the test set
         intersect = list(
@@ -363,22 +302,12 @@ class CTD(Source):
             return
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
-        if re.match(evidence_pattern, direct_evidence):
-            rel_id = self.resolve(direct_evidence)
-            model.addClassToGraph(chem_id, chem_name,
-                                  class_category=blv.terms.ChemicalSubstance.value)
-            model.addClassToGraph(disease_id, None,
-                                  class_category=blv.terms.Disease.value)
-            self._make_association(chem_id, disease_id, rel_id, reference_list,
-                                   )
-        else:
-            # there's dual evidence, but haven't mapped the pubs
-            pass
-            # LOG.debug(
-            #   "Dual evidence for %s (%s) and %s (%s)",
-            #   chem_name, chem_id, disease_name, disease_id)
-
-        return
+        rel_id = self.resolve(direct_evidence)
+        model.addClassToGraph(chem_id, chem_name,
+                              class_category=blv.terms.ChemicalSubstance.value)
+        model.addClassToGraph(disease_id, None,
+                              class_category=blv.terms.Disease.value)
+        self._make_association(chem_id, disease_id, rel_id, reference_list)
 
     def _process_disease2gene(self, row):
         """
@@ -492,10 +421,7 @@ class CTD(Source):
 
         self._make_association(gene_id, preferred_disease_id, rel_id, refs)
 
-        return
-
-    def _make_association(self, subject_id, object_id, rel_id, pubmed_ids,
-                          subject_category=None, object_category=None):
+    def _make_association(self, subject_id, object_id, rel_id, pubmed_ids):
         """
         Make a reified association given an array of pubmed identifiers.
 
@@ -524,7 +450,6 @@ class CTD(Source):
                 assoc.add_evidence(self.globaltt['traceable author statement'])
 
         assoc.add_association_to_graph()
-        return
 
     @staticmethod
     def _process_pubmed_ids(pubmed_ids):
@@ -544,45 +469,6 @@ class CTD(Source):
         for (i, val) in enumerate(id_list):
             id_list[i] = 'PMID:' + val
         return id_list
-
-    def _parse_curated_chem_disease(self, limit):
-        model = Model(self.graph)
-        line_counter = 0
-        file_path = '/'.join(
-            (self.rawdir, self.static_files['publications']['file']))
-        with open(file_path, 'r') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                # catch comment lines
-                if re.match(r'^#', ' '.join(row)):
-                    continue
-                line_counter += 1
-                self._check_list_len(row, 10)
-                (pub_id, disease_label, disease_id, disease_cat, evidence,
-                 chem_label, chem_id, cas_rn, gene_symbol, gene_acc) = row
-
-                if disease_id.strip() == '' or chem_id.strip() == '':
-                    continue
-
-                rel_id = self.resolve(evidence)
-                chem_id = 'MESH:' + chem_id
-                model.addClassToGraph(chem_id, chem_label)
-                model.addClassToGraph(disease_id, None)
-                if pub_id != '':
-                    pub_id = 'PMID:' + pub_id
-                    ref = Reference(
-                        self.graph, pub_id, ref_type=self.globaltt['journal article'])
-                    ref.addRefToGraph()
-                    pubids = [pub_id]
-                else:
-                    pubids = None
-                self._make_association(chem_id, disease_id, rel_id, pubids,
-                                       subject_category=blv.terms.ChemicalSubstance.value,
-                                       object_category=blv.terms.Disease.value)
-
-                if not self.test_mode and limit is not None and line_counter >= limit:
-                    break
-        return
 
     def getTestSuite(self):
         import unittest

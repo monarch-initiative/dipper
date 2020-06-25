@@ -29,6 +29,7 @@ UPCRKB = 'uniprot/current_release/knowledgebase/'
 # large entries in field 7 of ZFIN require this:
 csv.field_size_limit(sys.maxsize)
 
+
 class GeneOntology(Source):
     """
     This is the parser for the
@@ -129,11 +130,11 @@ class GeneOntology(Source):
             'columnns': gaf_columns
         },
         '5782': {  # Dictyostelium (slime mold genus)
-            'file': 'dictibase.gaf.gz',
+            'file': 'dictybase.gaf.gz',
             'url': GOGA + '/dictybase.gaf.gz',
             'columnns': gaf_columns
         },
-        '5052':  {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
+        '5052': {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
             'file': 'aspgd.gaf.gz',
             'url': GOGA + '/aspgd.gaf.gz',
             'columnns': gaf_columns
@@ -144,16 +145,17 @@ class GeneOntology(Source):
         #   'file': 'gene_association.goa_uniprot.gz',
         #   'url': FTPEBI + 'GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
 
-        'go-references': {
-            'file': 'GO.references',
-            # Quoth the header of this file: "This file is DEPRECATED.
-            # Please see go-refs.json relative to this location"
-            # (http://current.geneontology.org/metadata/go-refs.json)
-            'url': 'http://www.geneontology.org/doc/GO.references'
-        },
-        'id-map': {  # 5GB mapping file takes 6 hours to DL ... maps UniProt to Ensembl
+        # 'go-references': {  # does not seem to be used
+        #    'file': 'GO.references',
+        #   # Quoth the header of this file: "This file is DEPRECATED.
+        #    # Please see go-refs.json relative to this location"
+        #    # (http://current.geneontology.org/metadata/go-refs.json)
+        #    'url': 'http://www.geneontology.org/doc/GO.references'
+        # },
+        'id-map': {  # 8.5GB mapping file takes hours to DL ... maps UniProt to Ensembl
+            # replace w/ Ensembl rdf?
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
+            'url': FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
             # ftp://ftp.uniprot.org
             # /pub/databases/uniprot/current_release/knowledgebase/idmapping/README
             'columns': [
@@ -180,12 +182,18 @@ class GeneOntology(Source):
                 'Ensembl_PRO',
                 'Additional PubMed'
             ]
+        },
+        'gaf-eco-mapping': {
+            'file': 'gaf-eco-mapping.yaml',
+            'url': '/'.join((Source.DIPPERCACHE, 'go', 'gaf-eco-mapping.yaml')),
         }
     }
-    # consider moving the go-ref and id-map above to here in map_files
-    map_files = {
-        'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
-    }
+
+    # a set of synomym curie prefixes we choose not to  propagate as uri
+    # this takes a quarter million warrnings out of the log files
+    wont_prefix = [
+        'zgc', 'wu', 'si', 'im', 'BcDNA', 'sb', 'anon-EST', 'EG', 'id', 'zmp',
+        'BEST', 'BG', 'hm', 'tRNA', 'NEST', 'xx']
 
     def __init__(self,
                  graph_type,
@@ -233,12 +241,19 @@ class GeneOntology(Source):
 
         # build the id map for mapping uniprot ids to genes ... ONCE
         self.uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
-        self.eco_map = self.get_eco_map(self.map_files['eco_map'])
+
+        # gaf evidence code mapping is built in parse(), after the file is fetched.
+        self.gaf_eco = {}
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
+
+        yamlfile = '/'.join((self.rawdir, self.files['gaf-eco-mapping']['file']))
+        with open(yamlfile, 'r') as yfh:
+            self.gaf_eco = yaml.safe_load(yfh)
+
         if limit is not None:
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
@@ -248,11 +263,11 @@ class GeneOntology(Source):
 
         for txid_num in list(set(self.files).intersection(self.tax_ids)):
             gaffile = '/'.join((self.rawdir, self.files[txid_num]['file']))
-            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.eco_map)
+            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map)
 
         LOG.info("Finished parsing.")
 
-    def process_gaf(self, gaffile, limit, id_map=None, eco_map=None):
+    def process_gaf(self, gaffile, limit, id_map=None):
 
         if self.test_mode:
             graph = self.testgraph
@@ -346,7 +361,8 @@ class GeneOntology(Source):
                                 gene_id, self.globaltt['has gene product'], syn,
                                 subject_category=blv.terms.Gene.value,
                                 object_category=blv.terms.Gene.value)
-                        elif re.fullmatch(graph.curie_regexp, syn) is not None:
+                        elif re.fullmatch(graph.curie_regexp, syn) is not None and\
+                                syn.split(':')[0] not in self.wont_prefix:
                             LOG.warning(
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
@@ -367,7 +383,7 @@ class GeneOntology(Source):
                 assoc.set_object(go_id)
 
                 try:
-                    eco_id = eco_map[eco_symbol]
+                    eco_id = self.gaf_eco[eco_symbol]
                     assoc.add_evidence(eco_id)
                 except KeyError:
                     LOG.error("Evidence code (%s) not mapped", eco_symbol)
@@ -376,7 +392,7 @@ class GeneOntology(Source):
                 for ref in refs:
                     ref = ref.strip()
                     if ref != '':
-                        prefix = ref.split(':')[0]  # sidestep 'MGI:MGI:'
+                        prefix = ref.split(':')[-2]  # sidestep 'MGI:MGI:'
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
                         ref = ':'.join((prefix, ref.split(':')[-1]))
@@ -427,8 +443,11 @@ class GeneOntology(Source):
                             LOG.warning(
                                 "Skipping  %s from or with %s", uniprotid, itm)
                             continue
-                        itm = re.sub(r'MGI\:MGI\:', 'MGI:', itm)
-                        itm = re.sub(r'WB:', 'WormBase:', itm)
+                        # sanity check/conversion on go curie prefix
+                        (pfx, lclid) = itm.split(':')[-2:]  # last prefix wins
+                        if pfx in self.localtt:
+                            pfx = self.localtt[pfx]
+                        itm = ':'.join((pfx, lclid))
 
                         # for worms and fish, they might give a RNAi or MORPH
                         # in these cases make a reagent-targeted gene
@@ -453,7 +472,7 @@ class GeneOntology(Source):
                         for ref in refs:
                             ref = ref.strip()
                             if ref != '':
-                                prefix = ref.split(':')[0]
+                                prefix = ref.split(':')[-2]
                                 if prefix in self.localtt:
                                     prefix = self.localtt[prefix]
                                 ref = ':'.join((prefix, ref.split(':')[-1]))
@@ -472,7 +491,7 @@ class GeneOntology(Source):
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             LOG.info(
-                "Uniprot: %.2f%% of %i benefited from the 1/4 day id mapping download",
+                "Uniprot: %.2f%% of %i benefited from the mapping download",
                 uniprot_per, uniprot_tot)
 
     def get_uniprot_entrez_id_map(self):
@@ -482,7 +501,7 @@ class GeneOntology(Source):
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
         bigfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
-        # if processed smallfile exists and is newer than bigfile then use it instesd
+        # if processed smallfile exists and is newer than bigfile then use it instead
         if os.path.isfile(smallfile) and \
                 os.path.getctime(smallfile) > os.path.getctime(bigfile):
             LOG.info("Using the cheap mapping file %s", smallfile)

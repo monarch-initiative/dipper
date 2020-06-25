@@ -70,8 +70,8 @@ class MPD(Source):
     #   "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
 
     test_ids = [
-        'MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002",
-        "MPD:39", "MPD:2319"]
+        'MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002", "MPD:39",
+        "MPD:2319"]
 
     mgd_agent_id = "MPD:db/q?rtn=people/allinv"
     mgd_agent_label = "Mouse Phenotype Database"
@@ -107,12 +107,8 @@ class MPD(Source):
         # to store the mean value for each measure by strain+sex
         self.strain_scores_by_measure = {}
 
-        return
-
     def fetch(self, is_dl_forced=False):
-
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
         """
@@ -144,7 +140,6 @@ class MPD(Source):
         self._fill_provenance_graph(limit)
 
         LOG.info("Finished parsing.")
-        return
 
     def _process_ontology_mappings_file(self, limit):
         LOG.info("Processing ontology mappings...")
@@ -167,10 +162,7 @@ class MPD(Source):
                         self.assayhash[assay_id]['ont_terms'] = set()
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
 
-        return
-
     def _process_straininfo(self, limit):
-        # line_counter = 0  # TODO unused
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -186,6 +178,8 @@ class MPD(Source):
             reader = csv.reader(f, delimiter=',', quotechar='\"')
             self.check_header(self.files['straininfo']['file'], f.readline())
             for row in reader:
+                if not row:
+                    continue  # skip blank rows
                 (strain_name, vendor, stocknum, panel, mpd_strainid,
                  straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
@@ -216,7 +210,7 @@ class MPD(Source):
                                                 value)
                     elif vendor == 'Rbrc':
                         # reiken
-                        reiken_id = 'RBRC:'+re.sub(r'RBRC', '', stocknum)
+                        reiken_id = 'RBRC:' + stocknum
                         model.addSameIndividual(strain_id, reiken_id,
                                                 subject_category=
                                                 blv.terms.PopulationOfIndividualOrganisms.
@@ -243,8 +237,6 @@ class MPD(Source):
 
                 # TODO make the panels as a resource collection
 
-        return
-
     def _process_measurements_file(self, limit):
         line_counter = 0
 
@@ -257,6 +249,8 @@ class MPD(Source):
             self.check_header(
                 self.files['assay_metadata']['file'], f.readline())
             for row in reader:
+                if not row:
+                    continue  # skip blank lines
                 line_counter += 1
                 assay_id = int(row[0])
                 assay_label = row[4]
@@ -277,8 +271,6 @@ class MPD(Source):
 
             # end loop on measurement metadata
 
-        return
-
     def _process_strainmeans_file(self, limit):
         """
         This will store the entire set of strain means in a hash.
@@ -291,7 +283,6 @@ class MPD(Source):
 
         """
         LOG.info("Processing strain means ...")
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['strainmeans']['file']))
         with gzip.open(raw, 'rb') as f:
             f = io.TextIOWrapper(f)
@@ -303,14 +294,23 @@ class MPD(Source):
                 try:
                     # (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
                     #  cv, minval, maxval, logmean, logsd, zscore, logzscore)
-                    (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
-                     cv, minval, maxval, zscore
-                    ) = row
+                    (measnum,
+                     varname,
+                     strain,
+                     strainid,
+                     sex,
+                     mean,
+                     nmice,
+                     sd,
+                     sem,
+                     cv,
+                     minval,
+                     maxval,
+                     zscore
+                     ) = row
 
                 except ValueError:
-
                     continue
-                line_counter += 1
                 strain_num = int(strainid)
                 assay_num = int(measnum)
                 # assuming the zscore is across all the items
@@ -334,8 +334,6 @@ class MPD(Source):
             # end loop over strainmeans
         self.score_means_by_measure = score_means_by_measure
         self.strain_scores_by_measure = strain_scores_by_measure
-
-        return
 
     def _fill_provenance_graph(self, limit):
         LOG.info("Building graph ...")
@@ -406,8 +404,6 @@ class MPD(Source):
             scores_passing_threshold_with_ontologies_count)
         LOG.info(
             "Scores not passing threshold: %d", scores_not_passing_threshold_count)
-
-        return
 
     def _add_g2p_assoc(self, graph, strain_id, sex, assay_id, phenotypes, comment):
         """
@@ -482,8 +478,6 @@ class MPD(Source):
                 assoc_id = assoc.get_association_id()
                 model.addComment(assoc_id, comment)
                 model._addSexSpecificity(assoc_id, self.resolve(sex))
-
-        return
 
     def getTestSuite(self):
         import unittest

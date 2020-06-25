@@ -203,7 +203,7 @@ class Monochrom(Source):
                          class_category=blv.terms.OrganismTaxon.value)
 
         if genome_id is None:
-            genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node allways
+            genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node always
         geno.addGenome(taxon_id, genome_label, genome_id)
         model.addOWLPropertyClassRestriction(
             genome_id, self.globaltt['in taxon'], taxon_id,
@@ -248,7 +248,7 @@ class Monochrom(Source):
                     pass
                 else:
                     # let's skip over anything that isn't a placed_scaffold
-                    LOG.info("Skipping non-placed chromosome %s", chrom)
+                    # LOG.info("Skipping non-placed chromosome %s", chrom)  # chatty
                     continue
                 # the chrom class, taxon as the reference
                 cclassid = makeChromID(chrom, taxon, 'CHR')
@@ -288,9 +288,10 @@ class Monochrom(Source):
                                 property_value_category=
                                 blv.terms.GenomicSequenceLocalization.value)
                     else:
-                        # usually happens if it's a chromosome because
+                        # usually happens if it's a chromosome (SO:000340) because
                         # they don't actually have banding info
-                        LOG.info("feature type %s != chr band", region_type_id)
+                        LOG.info("feature type '%s' is not chr band",
+                            self.globaltcid[region_type_id])
                 else:
                     LOG.info('staining type not found for: %s', rtype)
 
@@ -437,7 +438,8 @@ def getChrPartTypeByNotation(notation, graph):
     # though UCSC does. We may need to adjust for that here
 
     if re.match(r'p$', notation):
-        rti = graph.globaltt['short_chromosome_arm']
+        #rti = graph.globaltt['short_chromosome_arm']  # GENO term reused as 'stalk'
+        rti = graph.globaltt['stalk']
     elif re.match(r'q$', notation):
         rti = graph.globaltt['long_chromosome_arm']
     elif re.match(r'[pq][A-H\d]$', notation):

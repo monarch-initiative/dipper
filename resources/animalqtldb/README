@@ -1,12 +1,17 @@
 
+the below is superceeded  as of 2019 Dec.
+the files are now generated in the ncbigene section of DipperCache Makefile
+
+
+#################################################################
 Note the gene_info file is over 400 Meg compressed
-it should not be fetched often or be allowed to slip into the dipper repo 
+it should not be fetched often or be allowed to slip into the dipper repo
 
 
 wget --timestamping ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz
 
 
-once the file is fetched, we can split off the species we are interested in 
+once the file is fetched, we can split off the species we are interested in
 
 zgrep "^9796[^0-9]" gene_info.gz | gzip > Equus_caballus.gene_info.gz
 zgrep "^9940[^0-9]" gene_info.gz | gzip > Ovis_aries.gene_info.gz
@@ -109,7 +114,7 @@ Full name from nomenclature authority:
             a nomenclature authority
 
 Nomenclature status:
-            when not '-', indicates the status of the name from the 
+            when not '-', indicates the status of the name from the
             nomenclature authority (O for official, I for interim)
 
 Other designations:
@@ -121,10 +126,10 @@ Modification date:
             the last date a gene record was updated, in YYYYMMDD format
 
 Feature type:
-            pipe-delimited set of annotated features and their classes or 
-            controlled vocabularies, displayed as feature_type:feature_class 
-            or feature_type:controlled_vocabulary, when appropriate; derived 
-            from select feature annotations on RefSeq(s) associated with the 
+            pipe-delimited set of annotated features and their classes or
+            controlled vocabularies, displayed as feature_type:feature_class
+            or feature_type:controlled_vocabulary, when appropriate; derived
+            from select feature annotations on RefSeq(s) associated with the
             GeneID
 
 ===========================================================================
