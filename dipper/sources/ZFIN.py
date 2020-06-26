@@ -5,7 +5,6 @@ import os
 import yaml
 
 from intermine.webservice import Service
-from dipper.utils import pysed
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
@@ -60,6 +59,9 @@ class ZFIN(Source):
     *  all affected genes within deficiencies
     *  complex hets being listed as gene<mutation1>/gene<mutation2>
     rather than gene<mutation1>/+; gene<mutation2>/+
+
+
+    see: resources/zfin/README for column extraction from downloads page
 
     """
 
@@ -405,10 +407,7 @@ class ZFIN(Source):
                          '../../tests/resources/zfin/zfin_test_ids.yaml')) as fhandle:
         test_ids = yaml.safe_load(fhandle)
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -449,44 +448,18 @@ class ZFIN(Source):
         self.default_taxon_id = self.globaltt['Danio rerio']
 
     def fetch(self, is_dl_forced=False):
-
-        # fetch all the files
-        # zfin versions are set by the date of download.
+        # fetch all the files; versions are set by the date of download.
         self.get_files(is_dl_forced)
-        self.scrub()
-
         self.get_orthology_sources_from_zebrafishmine()
-
-    def scrub(self):
-        """
-        Perform various data-scrubbing on the raw data files prior to parsing.
-        For this resource, this currently includes:
-        * remove oddities where there are "\" instead of empty strings
-        :return: None
-
-        """
-
-        # scrub file of the oddities
-        # where there are "\" instead of empty strings
-        # 2017 May  see two lines with trailing baclslash in genbank.txt
-        pysed.replace(
-            "\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
 
     def parse(self, limit=None):
         if limit is not None:
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
 
-        zp_file = '/'.join((self.rawdir, self.files['zpmap']['file']))
-        self.zp_map = self._load_zp_mappings(zp_file)
-
+        self.zp_map = self._load_zp_mappings('zpmap')
         if self.test_only:
             self.test_mode = True
-
-        # if self.test_mode:   # unused
-        #    graph = self.testgraph
-        # else:
-        #    graph = self.graph
 
         # basic information on classes and instances
         self._process_genes(limit)
@@ -495,8 +468,8 @@ class ZFIN(Source):
         self._process_pub2pubmed(limit)
 
         # The knockdown reagents
-        for t in ['morph', 'crispr', 'talen']:
-            self._process_targeting_reagents(t, limit)
+        for kdr in ['morph', 'crispr', 'talen']:
+            self._process_targeting_reagents(kdr, limit)
 
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
@@ -802,7 +775,7 @@ class ZFIN(Source):
 
         """
         raw = '/'.join((self.rawdir, self.files['geno']['file']))
-
+        LOG.info("Processing Genotypes from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -814,7 +787,6 @@ class ZFIN(Source):
         geno_hash = {}  # This is used to store the genotype partonomy
         gvc_hash = {}
 
-        LOG.info("Processing Genotypes")
         geno = Genotype(graph)
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1200,8 +1172,9 @@ class ZFIN(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        LOG.info("Processing genotype backgrounds")
         raw = '/'.join((self.rawdir, self.files['backgrounds']['file']))
+        LOG.info("Processing genotype backgrounds from file: %s" ,raw)
+
         geno = Genotype(graph)
 
         # Add the taxon as a class
@@ -1311,24 +1284,29 @@ class ZFIN(Source):
         :return:
 
         """
-
+        src_key = 'stage'
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
         LOG.info("Processing stages")
-
-        raw = '/'.join((self.rawdir, self.files['stage']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['column']
+        collen = len(col)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
-                (stage_id, stage_obo_id, stage_name, begin_hours, end_hours
-                 # ,empty  # till next time
-                 ) = row
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
+                stage_id = row[col.index('Stage ID')].strip()
+                stage_obo_id = row[col.index('Stage OBO ID')]
+                stage_name = row[col.index('Stage Name')]
+                # begin_hours = row[col.index('Begin Hours')]
+                # end_hours = row[col.index('End Hours')]
 
                 # Add the stage as a class, and it's obo equivalent
-                stage_id = 'ZFIN:' + stage_id.strip()
+                stage_id = 'ZFIN:' + stage_id
                 model.addClassToGraph(stage_id, stage_name)
                 model.addEquivalentClass(stage_id, stage_obo_id)
 
@@ -1468,23 +1446,27 @@ class ZFIN(Source):
         :return:
 
         """
-
+        src_key = 'gene'
         LOG.info("Processing genes")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['gene']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['column']
+        collen = len(col)
         geno = Genotype(graph)
         taxon_id = self.default_taxon_id
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
-
-                (gene_id, gene_so_id, gene_symbol, ncbi_gene_id
-                 # , empty  # till next time
-                 ) = row
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
+                gene_id = row[col.index('ZFIN ID')]
+                # gene_so_id = row[col.index('SO ID')]
+                gene_symbol = row[col.index('Symbol')]
+                ncbi_gene_id = row[col.index('NCBI Gene ID')]
 
                 if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
@@ -1846,16 +1828,20 @@ class ZFIN(Source):
         :return:
 
         """
-
+        src_key = 'pubs'
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['pubs']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        col = self.files[src_key]['file']
+        collen = len(col)
         with open(raw, 'r', encoding="latin-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
                 try:
                     (pub_id, pubmed_id, authors, title,
                      journal, year, vol, pages) = row
@@ -1950,7 +1936,7 @@ class ZFIN(Source):
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
-    def _process_targeting_reagents(self, reagent_type, limit=None):
+    def _process_targeting_reagents(self, src_key, limit=None):
         """
         This method processes the gene targeting knockdown reagents,
         such as morpholinos, talens, and crisprs.
@@ -1977,21 +1963,20 @@ class ZFIN(Source):
 
         <publication_id> is an individual
         <publication_id> mentions <morpholino_id>
-        :param reagent_type: should be one of: morph, talen, crispr
+        :param src_key: should be one of: morph, talen, crispr
         :param limit:
         :return:
-
         """
 
-        LOG.info("Processing Gene Targeting Reagents of type %s", reagent_type,)
-        raw = '/'.join((self.rawdir, self.files[reagent_type]['file']))
-        LOG.info( 'from file %s', raw)
+        LOG.info("Processing Gene Targeting Reagents of type %s", src_key,)
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info('from file %s', raw)
         reagent_types = ['morph', 'talen', 'crispr']
-        if reagent_type not in reagent_types:
+        if src_key not in reagent_types:
             LOG.error(
                 '%s is not an expected reagent type,\nKnown types are : %s ',
-                reagent_type, reagent_types)
-            return  # yuck
+                src_key, reagent_types)
+            return
 
         if self.test_mode:
             graph = self.testgraph
@@ -1999,47 +1984,45 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         geno = Genotype(graph)
-
+        col = self.files[src_key]['columns']
+        kol = [
+            'gene_num',
+            'gene_so_id',
+            'gene_symbol',
+            # here we are using common 'reagent_' names for columns in different files
+            'reagent_num',
+            'reagent_so_id',
+            'reagent_symbol',
+            'reagent_sequence',
+            'publication',
+            'note']
+        collen = len(col)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
+                    if row[0:9] != 'ZDB-Gene-':  # too messed up
+                        LOG.error('Cannot be valid: %s', row)
+                        continue
 
-                if reagent_type in ['morph', 'crispr']:
-                    try:
-                        (gene_num,
-                         gene_so_id,
-                         gene_symbol,
-                         reagent_num,
-                         reagent_so_id,
-                         reagent_symbol,
-                         reagent_sequence,
-                         publication,
-                         note) = row
-                    except ValueError:
-                        # Catch lines without publication or note
-                        LOG.warning('wonky line at %i', reader.line_num)
-                        (gene_num,
-                         gene_so_id,
-                         gene_symbol,
-                         reagent_num,
-                         reagent_so_id,
-                         reagent_symbol,
-                         reagent_sequence,
-                         publication) = row
-                elif reagent_type == 'talen':
-                    (gene_num,
-                     gene_so_id,
-                     gene_symbol,
-                     reagent_num,
-                     reagent_so_id,
-                     reagent_symbol,
-                     reagent_sequence,
-                     reagent_sequence2,
-                     publication,
-                     note) = row
-                else:
-                    # should not get here
-                    return
+                publication = note = ''
+                gene_num = row[col.index('Gene ID')]
+                # gene_so_id = row[col.index('Gene SO ID')]
+                # gene_symbol = row[col.index('Gene Symbol')]
+                reagent_num = row[kol.index('reagent_num')]
+                reagent_so_id = row[kol.index('reagent_so_id')]
+                reagent_symbol = row[kol.index('reagent_symbol')]
+                # reagent_sequence = row[kol.index('reagent_sequence')]
+                # if src_key == 'talen':
+                #    reagent_sequence2 = row[col.index('TALEN Target Sequence 2')]
+                try:
+                    publication = row[col.index('Publication(s)')]
+                    note = row[col.index('Note')]
+                except IndexError:
+                    LOG.error(
+                        'Row: %i is missing values\nExp:\t%s\nGot:\t%s',
+                        reader.line_num, col, row)
 
                 reagent_id = 'ZFIN:' + reagent_num.strip()
                 gene_id = 'ZFIN:' + gene_num.strip()
@@ -2081,7 +2064,7 @@ class ZFIN(Source):
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
-        LOG.info("Done with Reagent type %s", reagent_type)
+        LOG.info("Done with Reagent type %s", src_key)
 
     def _process_pheno_enviro(self, limit=None):
         """
@@ -2110,7 +2093,7 @@ class ZFIN(Source):
 
         """
 
-        LOG.info("Processing environments")
+
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -2120,6 +2103,8 @@ class ZFIN(Source):
         # pp = pprint.PrettyPrinter(indent=4)
 
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
+        LOG.info("Processing environments from file: %s" ,raw)
+
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -2220,15 +2205,14 @@ class ZFIN(Source):
         :return:
 
         """
-
-        LOG.info("Processing chromosome mappings")
+        raw = '/'.join((self.rawdir, self.files['mappings']['file']))
+        LOG.info("Processing chromosome mappings from file: %s" ,raw)
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
         geno = Genotype(graph)
-        raw = '/'.join((self.rawdir, self.files['mappings']['file']))
 
         taxon_num = '7955'
         taxon_id = 'NCBITaxon:' + taxon_num
@@ -2367,15 +2351,16 @@ class ZFIN(Source):
 
         """
 
+        raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
+        LOG.info("Processing human orthos from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
 
-        LOG.info("Processing human orthos")
         geno = Genotype(graph)
         # model = Model(graph)  # unused
-        raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
+
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -2603,7 +2588,7 @@ class ZFIN(Source):
 
         return zp_id
 
-    def _load_zp_mappings(self, file):
+    def _load_zp_mappings(self, src_key):
         """
         Given a file that defines the mapping between
         ZFIN-specific EQ definitions and the automatically derived ZP ids,
@@ -2611,55 +2596,44 @@ class ZFIN(Source):
         :return:
         dict zp_map with
         """
+        #  'zpmap'
+        zp_file = '/'.join((self.rawdir, self.files[src_key]['file']))
         zp_map = {}
-        LOG.info("Loading ZP-to-EQ mappings")
-        with open(file, 'r', encoding="utf-8") as csvfile:
+        col = self.files[src_key]['columns']
+        kol = [
+            'zp_id',
+            'subterm1_id',
+            'post_composed_relationship_id_1',
+            'superterm1_id',
+            'quality_id',
+            'subterm2_id'
+            'post_composed_relationship_id_2',
+            'superterm2_id',
+            'modifier'
+        ]
+        # id_map_zfin.tsv only contains data for abnormal phenotypes
+        modifier = self.globaltt['abnormal']
+        LOG.info("Loading ZP-to-EQ mappings from %s", zp_file)
+        with open(zp_file, 'r', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header_or_comment_re = re.compile('^iri|^#')
+            row = next(reader)
+            if not self.check_fileheader(col, row):
+                pass
             for row in reader:
-                if header_or_comment_re.match(row[0]):
-                    continue
+                zp_id = row[col.index('iri')]
+                # the 'id' column is a hyphen separated list of 7 items.
+                val = row[col.index('id')].split('-')
+                val.append(modifier)
+                key = self._make_zpkey(val)
+                val.insert(0, zp_id)
+                zp_map[key] = dict(zip(kol, val))
 
-                zp_id = row[0]
-                # id_map_zfin.tsv only contains data for abnormal phenotypes
-                modifier = self.resolve("abnormal", False)
-                (subterm1_id, post_composed_relationship_id_1, superterm1_id,
-                 quality_id, subterm2_id, post_composed_relationship_id_2,
-                 superterm2_id) = row[1].split("-")
-
-                key = self._make_zpkey(
-                    subterm1_id, post_composed_relationship_id_1, superterm1_id,
-                    quality_id, subterm2_id, post_composed_relationship_id_2,
-                    superterm2_id,
-                    modifier)
-
-                zp_map[key] = {
-                    'zp_id': zp_id,
-                    'subterm1_id': subterm1_id,
-                    'post_composed_relationship_id_1': post_composed_relationship_id_1,
-                    'superterm1_id': superterm1_id,
-                    'quality_id': quality_id,
-                    'subterm2_id': subterm2_id,
-                    'post_composed_relationship_id_2': post_composed_relationship_id_2,
-                    'superterm2_id': superterm2_id,
-                    'modifier': modifier
-                }
         LOG.info("Loaded %s zp terms", zp_map.__len__())
 
         return zp_map
 
-    def _make_zpkey(
-            self,
-            subterm1_id, post_composed_relationship_id_1, superterm1_id,
-            quality_id, subterm2_id, post_composed_relationship_id_2,
-            superterm2_id,
-            modifier,
-            replace_empty_args_with_zeros=True):
+    def _make_zpkey(self, args_for_key, replace_empty_args_with_zeros=True):
         # empty args -> zero is the convention in Nico's file and elsewhere
-        args_for_key = [subterm1_id, post_composed_relationship_id_1,
-                        superterm1_id, quality_id, subterm2_id,
-                        post_composed_relationship_id_2, superterm2_id,
-                        modifier]
         if replace_empty_args_with_zeros:
             args_for_key = [element or '0' for element in args_for_key]
 
