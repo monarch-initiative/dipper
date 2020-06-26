@@ -1,0 +1,76 @@
+
+to get the lists of columns zfin uses.
+
+curl http://zfin.org/downloads | tidy > zfin_downloads.html
+
+haha. like that is going to fly.
+
+
+change the "<it>" tags to  "<em>" 
+as they are most likely meant to indicate 'italic'
+(yes... that is a made up html tag that has never existed)
+
+url http://zfin.org/downloads > downloads
+sed -i 's|<it>|<em>|g;s|</it>|</em>|g' downloads 
+
+tidy -i downloads > zfin_downloads.html
+...
+bunch of warnings ...
+maybe if the warnings can still pass as well formed
+xmlstarlet is not liking the html-character-entities (not '&#160;' either)
+
+tidy -asxml -i zfin_downloads.html | sed 's|&nbsp;| |g' > zfin_downloads.xml
+
+convert to xml so elements can be addressed without screen scraping the hidden bits.
+
+xmlstarlet el -a -u zfin_downloads.xml > zfin_downloads.xpath
+
+# note well that the last line in zfin_downloads.xpath list
+# 	html/@xmlns
+# namespace is critical to extracting anything else from this.
+# (and that you can not extract with xmlstarlet until after you have it)
+
+
+e.g. to isolate values the "...main/table" section  including the data we need:
+ 
+xmlstarlet sel -N n="http://www.w3.org/1999/xhtml" \
+	-t -v "n:html/n:body/n:main/n:table"  zfin_downloads.xml
+
+# the (76) download files available:
+
+xmlstarlet sel -N n="http://www.w3.org/1999/xhtml" \
+	-t -m "n:html/n:body/n:main/n:table//n:form" -v "@id" -n  zfin_downloads.xml \
+	> zfin_downloads.filenames
+
+# lifted from DipperCache, 
+# the (23) files we use are  now in `dipper_ingest.filenames`
+
+for f in $(cat dipper_ingest.filenames); do
+	echo $f
+	xmlstarlet sel -N n="http://www.w3.org/1999/xhtml" \
+	 -o"\t" -t -v \
+		"n:html/n:body/n:main/n:table/n:tr[n:td/n:form/@id=\"$f\"]//n:td[@class='download-header-row']/n:table/n:tr/n:td"	-n  zfin_downloads.xml
+done
+
+oh wonderful. 
+columns stanza are at the same depth & type as the file stanza and not nested within them.
+so when you find the file, you have not found its columns
+when you find columns they are between files
+
+this would be easier if I had to do hairy xpath more than once every few years
+
+
+for f in $(cat dipper_ingest.filenames); do
+	echo "'$f':"
+	xmlstarlet sel -N n="http://www.w3.org/1999/xhtml" -o "\t" -t \
+	 -m "n:html/n:body/n:main/n:table/n:tr[n:td/n:form/@id= \"$f\" ]" \
+	 -v ".//parent::n:tr//following::n:tr[1]/n:td/n:table/n:tr[last()]" \
+	 -n  zfin_downloads.xml
+done > dipper_ingest.column_names
+
+
+it would be nice to wrap them in quotes & commas but
+this is close enough for now.
+
+
+
