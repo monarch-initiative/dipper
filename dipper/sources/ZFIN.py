@@ -782,7 +782,7 @@ class ZFIN(Source):
             graph = self.graph
 
         model = Model(graph)
-        taxon_id = self.globaltt['Danio rerio']
+        taxon_id = self.default_taxon
 
         geno_hash = {}  # This is used to store the genotype partonomy
         gvc_hash = {}
@@ -1173,7 +1173,7 @@ class ZFIN(Source):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['backgrounds']['file']))
-        LOG.info("Processing genotype backgrounds from file: %s" ,raw)
+        LOG.info("Processing genotype backgrounds from file: %s", raw)
 
         geno = Genotype(graph)
 
@@ -1292,7 +1292,7 @@ class ZFIN(Source):
         model = Model(graph)
         LOG.info("Processing stages")
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        col = self.files[src_key]['column']
+        col = self.files[src_key]['columns']
         collen = len(col)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1336,78 +1336,109 @@ class ZFIN(Source):
         :return:
 
         """
-        LOG.info("Processing G2P")
+
+        src_key = 'pheno'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing G2P from file: %s", raw)
+
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
 
         mapped_zpids = list()
-
         model = Model(graph)
         eco_id = self.globaltt['experimental phenotypic evidence']
-        raw = '/'.join((self.rawdir, self.files['pheno']['file']))
+        col = self.files[src_key]['columns']
+        collen = len(col)
         with open(raw, 'r', encoding="utf8") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
-                (fish_num, fish_name, start_stage_id, start_stage_name,
-                 end_stage_id, end_stage_name, subterm1_id, subterm1_name,
-                 postcomp1_rel_id, postcomp1_rel_name, superterm1_id,
-                 superterm1_name, quality_id, quality_name, modifier,
-                 subterm2_id, subterm2_name, postcomp2_rel_id,
-                 postcomp2_rel_name, superterm2_id, superterm2_name, pub_id,
-                 env_id
-                 ) = row
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
+
+                fish_num = row[col.index('Fish ID')].strip()
+                # fish_name = row[col.index('Fish Name')]
+                start_stage_id = row[col.index('Start Stage ID')].strip()
+                # start_stage_name = row[col.index('Start Stage Name')]
+                end_stage_id = row[col.index('End Stage ID')].strip()
+                # end_stage_name = row[col.index('End Stage Name')]
+
+                subterm1_id = row[col.index(
+                    'Affected Structure or Process 1 subterm ID')]
+                subterm1_name = row[col.index(
+                    'Affected Structure or Process 1 subterm Name')]
+                postcomp1_rel_id = row[col.index('Post-composed Relationship ID')]
+                # postcomp1_rel_name = row[col.index('Post-composed Relationship Name')]
+                superterm1_id = row[col.index(
+                    'Affected Structure or Process 1 superterm ID')]
+                superterm1_name = row[col.index(
+                    'Affected Structure or Process 1 superterm')]
+                # 'Name'
+                quality_id = row[col.index('Phenotype Keyword ID')]
+                quality_name = row[col.index('Phenotype Keyword Name')]
+                modifier = row[col.index('Phenotype Tag')]
+                # 'Affected Structure or Process 2 superterm ID',
+                # 'Affected Structure or Process 2 superterm',
+                subterm2_id = row[col.index(
+                    'Affected Structure or Process 2 subterm ID')]
+                subterm2_name = row[col.index(
+                    'Affected Structure or Process 2 subterm name')]
+                postcomp2_rel_id = row[col.index('Post-composed Relationship (rel) ID')]
+                # postcomp2_rel_name = row[col.index(
+                #    'Post-composed Relationship (rel) Name')]
+                superterm2_id = row[col.index(
+                    'Affected Structure or Process 2 superterm')]
+                superterm2_name = row[col.index('name')]
+                pub_id = row[col.index('Publication ID')].strip()
+                env_id = row[col.index('Environment ID')].strip()
 
                 if self.test_mode and (
                         fish_num not in self.test_ids['fish'] or
                         env_id not in self.test_ids['environment']):
                     continue
-                fish_id = 'ZFIN:' + fish_num.strip()
-                env_id = 'ZFIN:' + env_id.strip()
+
+                fish_curie = ':'.join(('ZFIN', fish_num))
+                env_curie = ':'.join(('ZFIN', env_id))
 
                 # ########### PHENOTYPES ##########
                 phenotype_id = self._map_octuple_to_phenotype(
                     subterm1_id, postcomp1_rel_id, superterm1_id, quality_id,
-                    subterm2_id, postcomp2_rel_id, superterm2_id,
-                    modifier)
+                    subterm2_id, postcomp2_rel_id, superterm2_id, modifier)
 
                 if phenotype_id is not None:
                     mapped_zpids.append([
-                        subterm1_id, postcomp1_rel_id, superterm1_id,
-                        quality_id, subterm2_id, postcomp2_rel_id,
-                        superterm2_id,
-                        modifier])
+                        subterm1_id, postcomp1_rel_id, superterm1_id, quality_id,
+                        subterm2_id, postcomp2_rel_id, superterm2_id, modifier])
 
                 if pub_id != '':
-                    pub_id = 'ZFIN:' + pub_id.strip()
+                    pub_id = ':'.join(('ZFIN', pub_id))
                     ref = Reference(graph, pub_id)
                     ref.addRefToGraph()
 
-                if not re.match(r'^normal', modifier):
+                if modifier[:6] != 'normal':
                     if phenotype_id is None:
                         continue
                     if start_stage_id != '':
-                        start_stage_id = 'ZFIN:' + start_stage_id.strip()
+                        start_stage_id = ':'.join(('ZFIN', start_stage_id))
                     if end_stage_id != '':
-                        end_stage_id = 'ZFIN:' + end_stage_id.strip()
+                        end_stage_id = ':'.join(('ZFIN', end_stage_id))
 
                     # add association
-                    assoc = G2PAssoc(graph, self.name, fish_id, phenotype_id)
+                    assoc = G2PAssoc(graph, self.name, fish_curie, phenotype_id)
 
                     # only add the environment if there's components to it
-                    if env_id in self.environment_hash \
-                            and len(self.environment_hash.get(env_id)) > 0:
-                        assoc.set_environment(env_id)
+                    if env_curie in self.environment_hash and len(
+                            self.environment_hash.get(env_curie)) > 0:
+                        assoc.set_environment(env_curie)
                     assoc.set_stage(start_stage_id, end_stage_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
                     assoc.add_association_to_graph()
                     assoc_id = assoc.get_association_id()
-                    if env_id not in self.environment_hash \
-                            or len(self.environment_hash.get(env_id)) > 0:
-                        model.addComment(
-                            assoc_id, 'Legacy environment id ' + env_id)
+                    if env_curie not in self.environment_hash or len(
+                            self.environment_hash.get(env_curie)) > 0:
+                        model.addComment(assoc_id, 'Legacy environment id ' + env_curie)
                 else:
                     # TODO add normal phenotypes as associations #134 when
                     # https://github.com/sba1/bio-ontology-zp/issues/9
@@ -1422,15 +1453,14 @@ class ZFIN(Source):
                     c = '+'.join(clist)
                     c = ' '.join(("Normal phenotype observed:", c, "(" + pub_id + ")"))
                     if pub_id != '':
-                        graph.addTriple(pub_id, self.globaltt['mentions'], fish_id)
+                        graph.addTriple(pub_id, self.globaltt['mentions'], fish_curie)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         self.mapped_zpids = mapped_zpids
         myset = set([','.join(x) for x in mapped_zpids])
-        LOG.info(
-            "Phenotype-octuples: %d mapped", len(myset))
+        LOG.info("Phenotype-octuples: %d mapped", len(myset))
 
     def _process_genes(self, limit=None):
         """
@@ -1447,14 +1477,15 @@ class ZFIN(Source):
 
         """
         src_key = 'gene'
-        LOG.info("Processing genes")
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing genes from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        col = self.files[src_key]['column']
+
+        col = self.files[src_key]['columns']
         collen = len(col)
         geno = Genotype(graph)
         taxon_id = self.default_taxon_id
@@ -1501,49 +1532,58 @@ class ZFIN(Source):
         :return:
 
         """
+        src_key = 'features'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing features from filr: %s", raw)
+
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        LOG.info("Processing features")
         geno = Genotype(graph)
-        raw = '/'.join((self.rawdir, self.files['features']['file']))
+        col = self.files[src_key]['columns']
+        collen = len(col)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
-                (genomic_feature_id, feature_so_id,
-                 genomic_feature_abbreviation, genomic_feature_name,
-                 genomic_feature_type, mutagen, mutagee, construct_id,
-                 construct_name, construct_so_id, talen_crispr_id,
-                 talen_crispr_nam
-                 # , empty
-                 ) = row
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
+
+                genomic_feature_id = row[col.index('Genomic Feature ID')].strip()
+                feature_so_id = row[col.index('Feature SO ID')]
+                genomic_feature_abbreviation = row[col.index(
+                    'Genomic Feature Abbreviation')]
+                genomic_feature_name = row[col.index('Genomic Feature Name')]
+                # genomic_feature_type = row[col.index('Genomic Feature Type')]
+                # mutagen = row[col.index('Mutagen')]
+                # mutagee = row[col.index('Mutagee')]
+                construct_id = row[col.index('Construct ID')].strip()
+                construct_name = row[col.index('Construct name')]
+                construct_so_id = row[col.index('Construct SO ID')]
+                # talen_crispr_id = row[col.index('TALEN/CRISPR ID')]
+                # talen_crispr_name = row[col.index('TALEN/CRISPR Name')]
 
                 if self.test_mode and (
                         genomic_feature_id not in self.test_ids['allele']):
                     continue
 
-                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
+                genomfeat_curie = ':'.join(('ZFIN', genomic_feature_id))
                 model.addIndividualToGraph(
-                    genomic_feature_id, genomic_feature_name, feature_so_id)
+                    genomfeat_curie, genomic_feature_name, feature_so_id)
 
                 model.addSynonym(
-                    genomic_feature_id, genomic_feature_abbreviation)
+                    genomfeat_curie, genomic_feature_abbreviation)
                 if construct_id is not None and construct_id != '':
-                    construct_id = 'ZFIN:' + construct_id.strip()
-                    geno.addConstruct(
-                        construct_id, construct_name, construct_so_id)
-                    geno.addSequenceDerivesFrom(
-                        genomic_feature_id, construct_id)
+                    construct_curie = ':'.join(('ZFIN', construct_id))
+                    geno.addConstruct(construct_curie, construct_name, construct_so_id)
+                    geno.addSequenceDerivesFrom(genomfeat_curie, construct_curie)
+                    self.id_label_map[construct_curie] = construct_name
 
                 # Note, we don't really care about how the variant was derived.
                 # so we skip that.
-
                 # add to the id-label map
-                self.id_label_map[
-                    genomic_feature_id] = genomic_feature_abbreviation
-                self.id_label_map[construct_id] = construct_name
+                self.id_label_map[genomfeat_curie] = genomic_feature_abbreviation
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -1583,78 +1623,90 @@ class ZFIN(Source):
         # for example, ZDB-ALT-021021-2 is a deficiency that affects 4 genes
         # that case is when the relationship is != 'is allele of'
 
-        LOG.info("Processing feature affected genes")
-        raw = '/'.join(
-            (self.rawdir, self.files['feature_affected_gene']['file']))
+        src_key = 'feature_affected_gene'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing feature affected genes from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
         geno = Genotype(graph)
+        col = self.files[src_key]['columns']
+        collen = len(col)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
-                (genomic_feature_id, feature_so_id,
-                 genomic_feature_abbreviation, gene_symbol, gene_id,
-                 gene_so_id, genomic_feature_marker_relationship) = row[0:7]
+                if len(row) != collen:
+                    LOG.warning('Row: %i has unexpected format', reader.line_num)
 
-                # Sequence alteration types present in file:
-                # SO:0000159 - deletion,
-                # SO:0000199 - translocation,
-                # SO:0000667 - insertion,
-                # SO:0001059 - sequence_alteration,
-                # SO:0001060 - sequence_variant,
-                # SO:0001218 - transgenic insertion,
-                # SO:1000005 - complex_substitution,
-                # SO:1000008 - point_mutation,
-                # SO:1000029 - chromosomal_deletion,
-                # SO:1000032 - indel
+                genomic_feature_id = row[col.index('Genomic Feature ID')].strip()
+                feature_so_id = row[col.index('Feature SO ID')]
+                genomic_feature_abbreviation = row[col.index(
+                    'Genomic Feature Abbreviation')].strip()
+                gene_symbol = row[col.index('Gene Symbol')]
+                gene_id = row[col.index('Gene ID')].strip()
+                gene_so_id = row[col.index('Gene SO ID')]
+                # note: there are ~27 more columns in this file
 
-                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
-                gene_id = 'ZFIN:' + gene_id.strip()
-
-                self.id_label_map[
-                    genomic_feature_id] = genomic_feature_abbreviation
-                self.id_label_map[gene_id] = gene_symbol
+                # alteration Seq types present in column 2 of the file (2020 Jun)
+                # cut -f2 raw/zfin/features-affected-genes.txt|sort|uniq -c|sort -nr
+                #  38087 SO:1000008  - point_mutation
+                #   6505 SO:0001218  - transgenic insertion
+                #   3433 SO:0001060  - sequence_variant
+                #   2364 SO:0000159  - sequence_alteration
+                #    833 SO:1000032  - indel
+                #    424 SO:0000667  - insertion
+                #    191 SO:1000005  - complex_substitution
+                #    118 SO:1000029  - chromosomal_deletion
+                #     95 SO:0001059  - deletion
+                #     43 SO:0000199  - translocation
+                # gene Seq types present in column 6 of the file:
+                # cut -f6 raw/zfin/features-affected-genes.txt|sort|uniq -c|sort -nr
+                #  51942 SO:0001217
+                #     65 SO:0001265
+                #     58 SO:0001641
+                #     22 SO:0000336
+                #      5 SO:0000165
+                #      1 SO:0005836
 
                 if self.test_mode and (
-                        re.sub(r'ZFIN:', '', gene_id) not in self.test_ids['gene'] and
-                        re.sub(r'ZFIN:', '', genomic_feature_id)
-                        not in self.test_ids['allele']):
+                        gene_id not in self.test_ids['gene'] and
+                        genomic_feature_id not in self.test_ids['allele']):
                     continue
 
-                geno.addGene(gene_id, gene_symbol, gene_so_id)
+                genomfeat_curie = ':'.join(('ZFIN', genomic_feature_id))
+                gene_curie = ':'.join(('ZFIN', gene_id))
+
+                self.id_label_map[genomfeat_curie] = genomic_feature_abbreviation
+                self.id_label_map[gene_curie] = gene_symbol
+
+                geno.addGene(gene_curie, gene_symbol, gene_so_id)
 
                 # add the gene to the list of things altered by this thing
-                if genomic_feature_id not in self.variant_loci_genes:
-                    self.variant_loci_genes[genomic_feature_id] = [gene_id]
-                else:
-                    if gene_id not in self.variant_loci_genes[genomic_feature_id]:
-                        self.variant_loci_genes[genomic_feature_id] += [gene_id]
+                if genomfeat_curie not in self.variant_loci_genes:
+                    self.variant_loci_genes[genomfeat_curie] = [gene_curie]
+                elif gene_curie not in self.variant_loci_genes[genomfeat_curie]:
+                    self.variant_loci_genes[genomfeat_curie] += [gene_curie]
 
-                sequence_alteration_type = feature_so_id
-                # Add the sequence alteration id, label, and type
+                # Add the sequence alteration id, label, and type(-as-curie)
                 geno.addSequenceAlteration(
-                    genomic_feature_id,
-                    genomic_feature_abbreviation,
-                    sequence_alteration_type)
+                    genomfeat_curie, genomic_feature_abbreviation, feature_so_id)
 
-                if sequence_alteration_type == 'is allele of':
+                if self.globaltcid[feature_so_id] == 'is allele of':
                     vl_label = geno.make_variant_locus_label(
                         gene_symbol, genomic_feature_abbreviation)
 
-                    vl_id = self._make_variant_locus_id(gene_id, genomic_feature_id)
+                    vl_id = self._make_variant_locus_id(gene_curie, genomfeat_curie)
 
                     self.id_label_map[vl_id] = vl_label
 
                     # create the variant locus,
                     # add it's parts and relationship to the gene
-                    geno.addSequenceAlterationToVariantLocus(
-                        genomic_feature_id, vl_id)
+                    geno.addSequenceAlterationToVariantLocus(genomic_feature_id, vl_id)
                     model.addIndividualToGraph(
                         vl_id, vl_label, self.globaltt['variant_locus'])
-                    geno.addAlleleOfGene(vl_id, gene_id)
+                    geno.addAlleleOfGene(vl_id, gene_curie)
 
                     # note that deficiencies or translocations
                     # that affect only one gene are considered alleles here
@@ -1829,37 +1881,38 @@ class ZFIN(Source):
 
         """
         src_key = 'pubs'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing Pubs info from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        col = self.files[src_key]['file']
+
+        col = self.files[src_key]['columns']
         collen = len(col)
         with open(raw, 'r', encoding="latin-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
                 if len(row) != collen:
                     LOG.warning('Row: %i has unexpected format', reader.line_num)
-                try:
-                    (pub_id, pubmed_id, authors, title,
-                     journal, year, vol, pages) = row
-                except ValueError:
-                    try:
-                        (pub_id, pubmed_id, authors, title,
-                         journal, year, vol, pages
-                         # , empty
-                         ) = row
-                    except ValueError:
-                        LOG.warning("Error parsing row %s: ", row)
 
+                pub_id = row[col.index('Publication ID')].strip()
+                pubmed_id = row[col.index(
+                    'pubMed ID (none or blank when not available)')]
+                authors = row[col.index('Authors')]
+                title = row[col.index('Title')]
+                journal = row[col.index('Journal')]
+                year = row[col.index('Year')]
+                vol = row[col.index('Volume')]
+                pages = row[col.index('Pages')]
+
+                pub_curie = ':'.join(('ZFIN', pub_id))
                 if self.test_mode and (
-                        'ZFIN:' + pub_id not in self.test_ids['pub'] and
+                        pub_curie not in self.test_ids['pub'] and
                         'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
 
-                pub_id = 'ZFIN:' + pub_id.strip()
                 # trim the author list for ease of reading
                 alist = re.split(r',', authors)
                 if len(alist) > 1:
@@ -1868,7 +1921,7 @@ class ZFIN(Source):
                     astring = authors
 
                 pub_label = '; '.join((astring, title, journal, year, vol, pages))
-                ref = Reference(graph, pub_id)
+                ref = Reference(graph, pub_curie)
                 ref.setShortCitation(pub_label)
                 ref.setYear(year)
                 ref.setTitle(title)
@@ -1882,7 +1935,7 @@ class ZFIN(Source):
                     rpm = Reference(graph, pubmed_id, self.globaltt['journal article'])
                     rpm.addRefToGraph()
 
-                    model.addSameIndividual(pub_id, pubmed_id)
+                    model.addSameIndividual(pub_curie, pubmed_id)
                     model.makeLeader(pubmed_id)
 
                 ref.addRefToGraph()
@@ -2092,7 +2145,9 @@ class ZFIN(Source):
         :return:
 
         """
-
+        src_key = 'enviro'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing environments from file: %s", raw)
 
         if self.test_mode:
             graph = self.testgraph
@@ -2102,20 +2157,23 @@ class ZFIN(Source):
         envo = Environment(graph)
         # pp = pprint.PrettyPrinter(indent=4)
 
-        raw = '/'.join((self.rawdir, self.files['enviro']['file']))
-        LOG.info("Processing environments from file: %s" ,raw)
-
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
+
                 # (environment_num, condition_group,
                 #  condition, description, blank) = row
                 (environment_id,
-                 zeco_term_name, zeco_term_id,
-                 chebi_term_name, chebi_term_id,
-                 zfa_term_name, zfa_term_id,
-                 altered_structure_name, altered_structure_id,
-                 ncbi_taxon_name, ncbi_taxon_id) = row
+                 zeco_term_name,
+                 zeco_term_id,
+                 chebi_term_name,
+                 chebi_term_id,
+                 zfa_term_name,
+                 fa_term_id,
+                 altered_structure_name,
+                 altered_structure_id,
+                 ncbi_taxon_name,
+                 ncbi_taxon_id) = row
 
                 environment_id = 'ZFIN:' + environment_id.strip()
                 if self.test_mode and \
@@ -2206,7 +2264,7 @@ class ZFIN(Source):
 
         """
         raw = '/'.join((self.rawdir, self.files['mappings']['file']))
-        LOG.info("Processing chromosome mappings from file: %s" ,raw)
+        LOG.info("Processing chromosome mappings from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -2528,14 +2586,8 @@ class ZFIN(Source):
 
     def _map_octuple_to_phenotype(
             self,
-            subterm1_id,
-            post_composed_relationship_id_1,
-            superterm1_id,
-            quality_id,
-            subterm2_id,
-            post_composed_relationship_id_2,
-            superterm2_id,
-            modifier):
+            subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id,
+            subterm2_id, post_composed_relationship_id_2, superterm2_id, modifier):
         """
         This will take the 8-part EQ-style annotation
         used in zp-mapping.txt and return the ZP id.
@@ -2559,12 +2611,9 @@ class ZFIN(Source):
         if modifier == mod_id:
             LOG.warning("no mapping for pato modifier " + modifier)
 
-        key = self._make_zpkey(subterm1_id,
-                               post_composed_relationship_id_1,
-                               superterm1_id, quality_id,
-                               subterm2_id,
-                               post_composed_relationship_id_2,
-                               superterm2_id, mod_id)
+        key = self._make_zpkey(
+            [subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id,
+             subterm2_id, post_composed_relationship_id_2, superterm2_id, mod_id])
 
         mapping = self.zp_map.get(key)
 
