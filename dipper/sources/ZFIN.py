@@ -184,6 +184,7 @@ class ZFIN(Source):
             'columns': [
                 'ZFIN ID',
                 'Symbol',
+                'SO_id',
                 'Panel Symbol',
                 'Chromosome',
                 'Location',
@@ -399,7 +400,8 @@ class ZFIN(Source):
             ]},
         'zmine_ortho_evidence': {
             'file': 'zmine_ortho_evidence.txt',
-            # url  see api call around line 3k
+            # yep it is odd; see: get_orthology_sources_from_zebrafishmine()
+            'url': 'http://0.0.0.0',
             'columns': [
                 'zfin_gene_num',
                 'zfin_gene_symbol',
@@ -1501,7 +1503,7 @@ class ZFIN(Source):
 
         self.mapped_zpids = mapped_zpids
         myset = set([','.join(x) for x in mapped_zpids])
-        LOG.info("Phenotype-octuples: %d mapped", len(myset))
+        LOG.info("Phenotype-octuples: %i mapped", len(myset))
 
     def _process_genes(self, limit=None):
         """
@@ -2111,7 +2113,7 @@ class ZFIN(Source):
             for row in reader:
                 if len(row) != collen:
                     LOG.warning('Row: %i has unexpected format', reader.line_num)
-                    if row[0:9] != 'ZDB-GENE-':  # too messed up (row overflow)
+                    if row[0][0:9] != 'ZDB-GENE-':  # too messed up (row overflow)
                         LOG.error('Cannot be valid: %s', row)
                         continue
 
@@ -2343,7 +2345,7 @@ class ZFIN(Source):
 
                 zfin_num = row[col.index('ZFIN ID')].strip()
                 # symbol = row[col.index('Symbol')]
-                # !!! so_id = row[col.index()] !!! Does not exist 2020 Jun!
+                # so_id = row[col.index('SO_id')]  # !!! Does not exist 2020 Jun!
                 panel_symbol = row[col.index('Panel Symbol')].strip()
                 chromosome = row[col.index('Chromosome')].strip()
                 # location = row[col.index('Location')]
@@ -2539,7 +2541,7 @@ class ZFIN(Source):
 
         src_key = 'gene_coordinates'
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        LOG.info("Processing human orthos from frle: %s", raw)
+        LOG.info("Processing human orthos from file: %s", raw)
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -2553,10 +2555,7 @@ class ZFIN(Source):
             row = next(reader)
             if row[0] != '##gff-version 3':
                 LOG.warning('expected "##gff-version 3"; got %s', row)
-            row = next(reader)
-            if row[0] != '':
-                LOG.warning('expected an empty line; got %s', row)
-
+            row = next(reader)  # blank line expected
             for row in reader:
                 if len(row) != collen:
                     LOG.warning('Row: %i has unexpected format', reader.line_num)
