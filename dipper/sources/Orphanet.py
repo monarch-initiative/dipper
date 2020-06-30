@@ -88,123 +88,122 @@ class Orphanet(Source):
         xmlfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
         for event, elem in ET.iterparse(xmlfile):
-            if elem.tag == 'Disorder':
-                orphanumber = elem.find('OrphaNumber').text
-                disorder_curie = 'ORPHA:' + str(orphanumber)
+            if elem.tag != 'Disorder':
+                continue
+            orphanumber = elem.find('OrphaCode').text
+            disorder_curie = 'ORPHA:' + str(orphanumber)
 
-                if self.test_mode and\
-                        disorder_curie not in self.all_test_ids['disease']:
-                    continue
+            if self.test_mode and disorder_curie not in self.all_test_ids['disease']:
+                continue
 
-                # Orphanet mappings are expected to be in Mondo
-                # these free-text disorder names become synonyms
-                disorder_label = elem.find('Name').text
-                model.addClassToGraph(disorder_curie, disorder_label)
+            # Orphanet mappings are expected to be in Mondo
+            # these free-text disorder names become synonyms
+            disorder_label = elem.find('Name').text
+            model.addClassToGraph(disorder_curie, disorder_label)
 
-                assoc_list = elem.find('DisorderGeneAssociationList')
-                expected_genes = assoc_list.get('count')
-                if expected_genes == 0:
-                    LOG.info("%s has no genes.", disorder_curie)
-                    continue
-                # LOG.info(  # too chatty in the logs
-                #    'Expecting %s genes associated with disorder %s.',
-                #    expected_genes, disorder_curie)
-                processed_genes = 0
-                for assoc in assoc_list.findall('DisorderGeneAssociation'):
-                    processed_genes += 1
-                    gene = assoc.find('Gene')
+            assoc_list = elem.find('DisorderGeneAssociationList')
+            expected_genes = assoc_list.get('count')
+            if expected_genes == 0:
+                LOG.info("%s has no genes.", disorder_curie)
+                continue
+            # LOG.info(  # too chatty in the logs
+            #    'Expecting %s genes associated with disorder %s.',
+            #    expected_genes, disorder_curie)
+            processed_genes = 0
+            for assoc in assoc_list.findall('DisorderGeneAssociation'):
+                processed_genes += 1
+                gene = assoc.find('Gene')
 
+                # new as of 2020-May
+                # (on ORPHA association)  geno? type protein coding gene
+                #   7678 gene with protein product
+                #   84 Non-coding RNA
+                #   31 Disorder-associated locus
+                # gene_type = gene.find('GeneType/Name').text
 
-                    # new as of 2020-May
-                    # (on ORPHA association)  geno? type protein coding gene
-                    #   7678 gene with protein product
-                    #   84 Non-coding RNA
-                    #   31 Disorder-associated locus
-                    gene_type = gene.find('GeneType/Name').text
+                # todo monochrom mapping?
+                # gene_cyto = gene.find('LocusList/Locus/GeneLocus')
 
-                    # todo monochrom mapping?
-                    # gene_cyto = gene.find('LocusList/Locus/GeneLocus')
+                # get gene's curie as a map {'prefix': 'localid'}
+                # circa 2020-May
+                #   7787 HGNC
+                #   7745 Ensembl
+                #   7711 OMIM
+                #   7709 SwissProt
+                #   7578 Genatlas
+                #   6523 Reactome
+                #   1101 IUPHAR
+                gene_clique = {}
+                gene_curie = None
+                for gene_ref in gene.findall(
+                        './ExternalReferenceList/ExternalReference'):
+                    prefix = gene_ref.find('Source').text
+                    if prefix in self.localtt:
+                        prefix = self.localtt[prefix]
+                    gene_clique[prefix] = gene_ref.find('Reference').text
 
-                    # get gene's curie as a map {'prefix': 'localid'}
-                    # circa 2020-May
-                    #   7787 HGNC
-                    #   7745 Ensembl
-                    #   7711 OMIM
-                    #   7709 SwissProt
-                    #   7578 Genatlas
-                    #   6523 Reactome
-                    #   1101 IUPHAR
-                    gene_clique = {}
-                    gene_curie = None
-                    for gene_ref in gene.findall(
-                            './ExternalReferenceList/ExternalReference'):
-                        prefix = gene_ref.find('Source').text
-                        if prefix in self.localtt:
-                            prefix = self.localtt[prefix]
-                        gene_clique[prefix] = gene_ref.find('Reference').text
+                if len(gene_clique) == 0:
+                    LOG.error('No gene at all for %s', disorder_curie)
+                    break
 
-                    if len(gene_clique) == 0:
-                        LOG.error('No gene at all for %s', disorder_curie)
-                        break
+                # gene representation to prefer
+                for prefix in ('HGNC', 'ENSEMBL', 'SwissProt', 'OMIM'):
+                    if prefix in gene_clique:
+                        gene_curie = prefix + ':' + gene_clique[prefix]
+                        gene_clique.pop(prefix)
+                        model.addClassToGraph(gene_curie, None)
+                        break  # one shot
 
-                    # gene representation to prefer
-                    for prefix in ('HGNC', 'ENSEMBL', 'SwissProt', 'OMIM'):
-                        if prefix in gene_clique:
-                            gene_curie = prefix + ':' + gene_clique[prefix]
-                            gene_clique.pop(prefix)
-                            model.addClassToGraph(gene_curie, None)
-                            break  # one shot
-
-                    if gene_curie is None:
-                        # settle for whatever
-                        LOG.warning("No prefered gene have\n\t%s", gene_clique)
-                        for prefix in gene_clique:
-                            gene_curie = prefix + ':' + gene_clique[prefix]
-                            gene_clique.pop(prefix)
-                            model.addClassToGraph(gene_curie, None)
-                            break  # one shot
-
+                if gene_curie is None:
+                    # settle for whatever
+                    LOG.warning("No prefered gene have\n\t%s", gene_clique)
                     for prefix in gene_clique:
-                        lclid = gene_clique[prefix]
-                        dbxref = ':'.join((prefix, lclid))
-                        if gene_curie != dbxref:
-                            model.addClassToGraph(dbxref, None)
-                            model.addEquivalentClass(gene_curie, dbxref)
+                        gene_curie = prefix + ':' + gene_clique[prefix]
+                        gene_clique.pop(prefix)
+                        model.addClassToGraph(gene_curie, None)
+                        break  # one shot
 
-                    syn_list = gene.find('./SynonymList')
-                    if int(syn_list.get('count')) > 0 and gene_curie is not None:
-                        for syn in syn_list.findall('./Synonym'):
-                            if syn is not None and syn.text != '':
-                                model.addSynonym(gene_curie, syn.text)
+                for prefix in gene_clique:
+                    lclid = gene_clique[prefix]
+                    dbxref = ':'.join((prefix, lclid))
+                    if gene_curie != dbxref:
+                        model.addClassToGraph(dbxref, None)
+                        model.addEquivalentClass(gene_curie, dbxref)
 
-                    dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
-                    # circa 2020-May
-                    #   4771 Disease-causing germline mutation(s) in
-                    #   1137 Disease-causing germline mutation(s) (loss of function) in
-                    #   576 Major susceptibility factor in
-                    #   359 Candidate gene tested in
-                    #   232 Role in the phenotype of
-                    #   232 Part of a fusion gene in
-                    #   211 Disease-causing germline mutation(s) (gain of function) in
-                    #   186 Disease-causing somatic mutation(s) in
-                    #   45 Biomarker tested in
-                    #   44 Modifying germline mutation in
-                    rel_curie = self.resolve(dg_label)
+                syn_list = gene.find('./SynonymList')
+                if int(syn_list.get('count')) > 0 and gene_curie is not None:
+                    for syn in syn_list.findall('./Synonym'):
+                        if syn is not None and syn.text != '':
+                            model.addSynonym(gene_curie, syn.text)
 
-                    genotype_curie =  self.resolve(" | ".join((dg_label, gene_type)))
+                dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
+                # circa 2020-May
+                #   4771 Disease-causing germline mutation(s) in
+                #   1137 Disease-causing germline mutation(s) (loss of function) in
+                #   576 Major susceptibility factor in
+                #   359 Candidate gene tested in
+                #   232 Role in the phenotype of
+                #   232 Part of a fusion gene in
+                #   211 Disease-causing germline mutation(s) (gain of function) in
+                #   186 Disease-causing somatic mutation(s) in
+                #   45 Biomarker tested in
+                #   44 Modifying germline mutation in
+                rel_curie = self.resolve(dg_label)
 
-                    # use dg association status to issue an evidence code
-                    # FIXME these codes mau be sub-optimal (there are only two)
-                    # maybe just attach a "pending" to the minority that need it.
-                    eco_id = self.resolve(
-                        assoc.find('DisorderGeneAssociationStatus/Name').text)
+                # genotype_curie = self.resolve(" | ".join((dg_label, gene_type)))
 
-                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, rel_curie)
-                    g2p_assoc.add_evidence(eco_id)
-                    g2p_assoc.add_association_to_graph()
+                # use dg association status to issue an evidence code
+                # FIXME these codes mau be sub-optimal (there are only two)
+                # maybe just attach a "pending" to the minority that need it.
+                eco_id = self.resolve(
+                    assoc.find('DisorderGeneAssociationStatus/Name').text)
 
-                elem.clear()  # empty the element
-                if int(expected_genes) != processed_genes:
-                    LOG.warning(
-                        '%s expected %i associated genes but we processed %i',
-                        disorder_curie, int(expected_genes), processed_genes)
+                g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, rel_curie)
+                g2p_assoc.add_evidence(eco_id)
+                g2p_assoc.add_association_to_graph()
+
+            elem.clear()  # empty the element
+            if int(expected_genes) != processed_genes:
+                LOG.warning(
+                    '%s expected %i associated genes but we processed %i',
+                    disorder_curie, int(expected_genes), processed_genes)
