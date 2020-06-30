@@ -193,7 +193,7 @@ class HGNC(OMIMSource):
                 # refseq_accession = row[col.index('refseq_accession')]
                 # ccds_id = row[col.index('ccds_id')]
                 # uniprot_ids = row[col.index('uniprot_ids')]
-                pubmed_ids = row[col.index('pubmed_id')].strip()  # pipe separated!
+                pubmed_ids = row[col.index('pubmed_id')].strip('"')  # pipe separated!
                 # mgd_id = row[col.index('mgd_id')]
                 # rgd_id = row[col.index('rgd_id')]
                 # lsdb = row[col.index('lsdb')]
