@@ -412,7 +412,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=go
-                            $DIPPER --sources $SOURCE --taxon \
+                            $DIPPER --sources $SOURCE --dest_fmt nt --taxon \
                                 $COMMON_TAXON,10116,4896,5052,559292,5782,9031,9615,9823,9913
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
