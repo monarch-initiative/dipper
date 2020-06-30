@@ -1,0 +1,4794 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<!-- Server: watson -->
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for HTML5 for Linux version 5.2.0" />
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content=
+  "width=device-width, initial-scale=1" />
+  <title>Downloads Archive: 2020.06.21</title>
+  <link rel="stylesheet" href=
+  "/dist/style.bundle.4638ab72c5dd0d6d485f.css" />
+  <!-- jquery is loaded via CDN here instead being part of the webpack bundle so that
+         === bootstrap 4 plays nicely with inline script tags. not sure if this is the best
+         === solution, but it's at least pretty noninvasive !-->
+
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+  crossorigin="anonymous">
+  </script>
+  <script src="/dist/vendor-common.bundle.9dc486b785010667fe9a.js">
+  </script>
+  <script src="/dist/zfin-common.bundle.11cd94e7f6bc513078d6.js">
+  </script>
+  <script>
+  <![CDATA[
+            
+            
+            !function (z, b, r, f, i, s, h) {
+                z.GoogleAnalyticsObject = i, z[i] = z[i] || function () {
+                    (z[i].q = z[i].q || []).push(arguments)
+                }, z[i].l = +new Date, s = b.createElement(r), h = b.getElementsByTagName(r)[0], s.src = f, h.parentNode.insertBefore(s, h)
+            }(this, document, "script", "//www.google-analytics.com/analytics.js", "ga");
+            ga('create', 'UA-2417927-1', {'cookieDomain': 'zfin.org'});
+            ga('send', 'pageview');
+            
+            
+            
+  ]]>
+  </script>
+</head>
+<body class="" data-spy="scroll" data-target=
+".data-page-nav-container">
+  <header>
+    <div class="mobile-only">
+      <a href="#" class="mobile-menu"></a>
+    </div>
+    <div class="logo">
+      <a href="/"><img alt="The Zebrafish Information Network" src=
+      "/images/zfinlogo_lg.gif" title=
+      "The Zebrafish Information Network" /></a>
+    </div>
+    <ul class="menu menu-collapse list-unstyled">
+      <li class="reference">
+        <span class="title">Research</span>
+        <div class="dropdown">
+          <div class="nav-column">
+            <span class="nav-column-header">Search</span>
+            <ul>
+              <li>
+                <a href="/action/marker/search">Genes / Clones</a>
+              </li>
+              <li>
+                <a href="/action/expression/search">Expression</a>
+              </li>
+              <li>
+                <a href="/action/fish/search">Mutants / Tg</a>
+              </li>
+              <li>
+                <a href="/action/antibody/search">Antibodies</a>
+              </li>
+              <li>
+                <a href="/action/ontology/search">Anatomy / GO /
+                Human Disease</a>
+              </li>
+              <li>
+                <a href=
+                "/action/publication/search">Publications</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Data Mining</span>
+            <ul>
+              <li>
+                <a href="/downloads">Downloads</a>
+              </li>
+              <li>
+                <a href="/schemaSpy/index.html">Data Model</a>
+              </li>
+              <li>
+                <a href="http://www.zebrafishmine.org" class=
+                "external" target="_blank" rel=
+                "noopener noreferrer">ZebrafishMine</a>
+              </li>
+              <li>
+                <a href="https://ensembl.org/biomart/martview"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">BioMart</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+      <li class="reference">
+        <span class="title">Genomics</span>
+        <div class="dropdown">
+          <div class="nav-column">
+            <span class="nav-column-header">BLAST</span>
+            <ul>
+              <li>
+                <a href="/action/blast/blast">ZFIN</a>
+              </li>
+              <li>
+                <a href=
+                "http://www.ensembl.org/Danio_rerio/blastview"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">Ensembl</a>
+              </li>
+              <li>
+                <a href=
+                "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&amp;BLAST_SPEC=OGP__7955__9557"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">NCBI</a>
+              </li>
+              <li>
+                <a href=
+                "https://genome.ucsc.edu/cgi-bin/hgBlat?command=start"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">UCSC</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Genome Browsers</span>
+            <ul>
+              <li>
+                <a href="/action/gbrowse/">ZFIN</a>
+              </li>
+              <li>
+                <a href="http://www.ensembl.org/Danio_rerio/"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">Ensembl</a>
+              </li>
+              <li>
+                <a href="http://vega.sanger.ac.uk/Danio_rerio/"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">Vega</a>
+              </li>
+              <li>
+                <a href=
+                "http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/zebrafish/"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">GRC</a>
+              </li>
+              <li>
+                <a href=
+                "http://genome.ucsc.edu/cgi-bin/hgGateway?hgsid=85282730&amp;clade=vertebrate&amp;org=Zebrafish&amp;db=0"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">UCSC</a>
+              </li>
+              <li>
+                <a href=
+                "https://www.ncbi.nlm.nih.gov/genome/gdv/?org=danio-rerio"
+                class="external" target="_blank" rel=
+                "noopener noreferrer">NCBI</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Resources</span>
+            <ul>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/Genomic+Resources+for+Zebrafish">
+                Zebrafish Genomics</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/Other+Databases">
+                Other Genome Databases</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+      <li class="reference">
+        <span class="title">Resources</span>
+        <div class="dropdown">
+          <div class="nav-column">
+            <span class="nav-column-header">General</span>
+            <ul>
+              <li>
+                <a href="/zf_info/zfbook/zfbk.html">The Zebrafish
+                Book</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/prot">Protocol
+                Wiki</a>
+              </li>
+              <li>
+                <a href="https://wiki.zfin.org/display/AB">Antibody
+                Wiki</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/Anatomy+Atlases+and+Resources">
+                Anatomy Atlases</a>
+              </li>
+              <li>
+                <a href="/zf_info/news/education.html">Resources
+                for Students and Educators</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Zebrafish
+            Programs</span>
+            <ul>
+              <li>
+                <a href="http://www.zf-health.org/" class=
+                "external" target="_blank" rel=
+                "noopener noreferrer">ZF-Health</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/Zebrafish+Programs#husbandry">
+                Husbandry Resources</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/Zebrafish+Programs">
+                More...</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Resource Centers</span>
+            <ul>
+              <li>
+                <a href="http://zebrafish.org" class="external"
+                target="_blank" rel="noopener noreferrer">Zebrafish
+                International Resource Center (ZIRC)</a>
+              </li>
+              <li>
+                <a href="http://www.zfish.cn/" class="external"
+                target="_blank" rel="noopener noreferrer">China
+                Zebrafish Resource Center (CZRC)</a>
+              </li>
+              <li>
+                <a href="https://www.ezrc.kit.edu/" class=
+                "external" target="_blank" rel=
+                "noopener noreferrer">European Zebrafish Resource
+                Center (EZRC)</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+      <li class="reference">
+        <span class="title">Community</span>
+        <div class="dropdown">
+          <div class="nav-column">
+            <span class="nav-column-header">Announcements</span>
+            <ul>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/news">News</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/meetings">Meetings</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/jobs/Zebrafish-Related+Job+Announcements">
+                Jobs</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Search</span>
+            <ul>
+              <li>
+                <a href="/action/profile/person/search">People</a>
+              </li>
+              <li>
+                <a href="/action/profile/lab/search">Labs</a>
+              </li>
+              <li>
+                <a href=
+                "/action/profile/company/search">Companies</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Societies</span>
+            <ul>
+              <li>
+                <a href="https://www.izfs.org" class="external"
+                target="_blank" rel=
+                "noopener noreferrer">International Zebrafish
+                Society (IZFS)</a>
+              </li>
+              <li>
+                <a href="https://www.zdmsociety.org" class=
+                "external" target="_blank" rel=
+                "noopener noreferrer">Zebrafish Disease Models
+                Society (ZDMS)</a>
+              </li>
+              <li>
+                <a href="https://genetics-gsa.org" class="external"
+                target="_blank" rel="noopener noreferrer">Genetics
+                Society of America (GSA)</a>
+              </li>
+              <li>
+                <a href="https://zhaonline.org" class="external"
+                target="_blank" rel="noopener noreferrer">Zebrafish
+                Husbandry Association</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+      <li class="reference">
+        <span class="title">Support</span>
+        <div class="dropdown">
+          <div class="nav-column">
+            <span class="nav-column-header">Nomenclature</span>
+            <ul class="list-unstyled">
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/ZFIN+Zebrafish+Nomenclature+Conventions">
+                Nomenclature Conventions</a>
+              </li>
+              <li>
+                <a href="/action/feature/line-designations">Line
+                Designations</a>
+              </li>
+              <li>
+                <a href="/action/feature/wildtype-list">Wild-Type
+                Lines</a>
+              </li>
+              <li>
+                <a href="/action/nomenclature/gene-name">Submit a
+                Proposed Gene Name</a>
+              </li>
+              <li>
+                <a href="/action/nomenclature/line-name">Submit a
+                Proposed Mutant/Tg Line Name</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Publications</span>
+            <ul>
+              <li>
+                <a href=
+                "/zf_info/author_guidelines.html">Guidelines for
+                Authors</a>
+              </li>
+              <li>
+                <a href="/action/zebrashare">Zebrashare</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/ZFIN+Database+Information">
+                Citing ZFIN</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">Using ZFIN</span>
+            <ul>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/ZFIN+Tips">Help
+                &amp; Tips</a>
+              </li>
+              <li>
+                <a href="/zf_info/glossary.html">Glossary</a>
+              </li>
+              <li>
+                <a href=
+                "http://wiki.zfin.org/display/general/ZFIN+Single+Box+Search+Help">
+                Single Box Search Help</a>
+              </li>
+              <li>
+                <a href="/action/submit-data">Submit Data</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/WARRANTY+AND+LIABILITY+DISCLAIMER%2C+OWNERSHIP%2C+AND+LIMITS+ON+USE">
+                Terms of Use</a>
+              </li>
+            </ul>
+          </div>
+          <div class="nav-column">
+            <span class="nav-column-header">About Us</span>
+            <ul>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/ZFIN+Database+Information">
+                About ZFIN</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/general/ZFIN+Contact+Information">
+                Contact Information</a>
+              </li>
+              <li>
+                <a href=
+                "/action/infrastructure/annual-stats-view">Statistics</a>
+              </li>
+              <li>
+                <a href=
+                "/zf_info/news/committees.html">Committees</a>
+              </li>
+              <li>
+                <a href=
+                "https://wiki.zfin.org/display/jobs/ZFIN+Jobs">Jobs
+                at ZFIN</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <div class="right">
+      <div class="search">
+        <form class="fs-autocomplete" method="get" action=
+        "/search">
+          <input placeholder="Search" name="q" autocomplete="off"
+          type="text" />
+        </form>
+      </div>
+      <ul class="menu list-unstyled">
+        <li class="no-border">
+          <a href="/action/login">Sign In</a>
+        </li>
+      </ul>
+    </div>
+  </header>
+  <main>
+    <table width="100%">
+      <tr>
+        <td>
+          <h2>ZFIN Data Reports from: 21 Jun 2020</h2>
+        </td>
+        <td align="right">
+          <a href=
+          "https://wiki.zfin.org/display/general/WARRANTY+AND+LIABILITY+DISCLAIMER%2C+OWNERSHIP%2C+AND+LIMITS+ON+USE">
+          Warranty Disclaimer and Copyright Notice</a>  
+        </td>
+      </tr>
+    </table>
+    <table width="75%">
+      <tr>
+        <td>
+          ZFIN data reports are updated every day of the week at
+          10:10pm PST with the exception of the externally hosted
+          files. The format for each file is described below. All
+          files use tab as the field delimiter. The 'Download File'
+          link will display the file in your browser. Click the
+          download button to save the file onto your local system
+          (includes timestamp and header info). If you choose to
+          link to a ZFIN data page from your web site, append the
+          ZFIN ID to the URL http://zfin.org/<br />
+          e.g. http://zfin.org/ZDB-GENE-980526-166<br />
+          for the 'shha' gene. Please direct questions or requests
+          for additional data to <a href=
+          "mailto:zfinadmn@zfin.org">ZFIN.</a>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold">
+          <a href="downloads/archive">View Archive Files</a>
+        </td>
+      </tr>
+    </table>
+    <table class="summary groupstripes" width="90%">
+      <tr>
+        <th width="200">Category</th>
+        <th width="500">Download File</th>
+        <th width="100">Download<br />
+        w Header</th>
+        <th width="50">Column Headers</th>
+        <th width="100" style="text-align: right">File Size</th>
+        <th width="100" style="text-align: right">Number of
+        Records</th>
+        <th width="10"></th>
+      </tr>
+      <tr class=" odd newgroup oddgroup" id="loopindex-1">
+        <td class="bold">Anatomical Ontologies</td>
+        <td>
+          <a href="downloads/anatomy_item.txt" id=
+          "anatomy_item.txt">Zebrafish Anatomy Term</a><br />
+        </td>
+        <td>
+          <form id="anatomy_item.txt" action="downloads/file/"
+          method="get" name="anatomy_item.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','anatomy_item.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-0">Show</a>
+        </td>
+        <td style="text-align: right">216 KB</td>
+        <td style="text-align: right">3,047</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-0">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>Anatomy ID</td>
+              <td>Anatomy Name</td>
+              <td>Start Stage ID</td>
+              <td>End Stage ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-2">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/anatomy_relationship.txt" id=
+          "anatomy_relationship.txt">Zebrafish Anatomy Term
+          Relationships</a><br />
+        </td>
+        <td>
+          <form id="anatomy_relationship.txt" action=
+          "downloads/file/" method="get" name=
+          "anatomy_relationship.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','anatomy_relationship.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-1">Show</a>
+        </td>
+        <td style="text-align: right">178 KB</td>
+        <td style="text-align: right">5,891</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-1">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>Parent Item ID</td>
+              <td>Child Item ID</td>
+              <td>Relationship Type ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-3">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/anatomy_synonyms.txt" id=
+          "anatomy_synonyms.txt">Zebrafish Anatomy Term
+          Synonyms</a><br />
+        </td>
+        <td>
+          <form id="anatomy_synonyms.txt" action="downloads/file/"
+          method="get" name="anatomy_synonyms.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','anatomy_synonyms.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-2">Show</a>
+        </td>
+        <td style="text-align: right">153 KB</td>
+        <td style="text-align: right">2,945</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-2">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>Anatomy OBO ID</td>
+              <td>Anatomy Name</td>
+              <td>Anatomy Synonym</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-4">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/staged_anatomy.other" id=
+          "staged_anatomy.other">Zebrafish Development Stage
+          Terms</a><br />
+        </td>
+        <td>
+          <form id="staged_anatomy.other" action="downloads/file/"
+          method="get" name="staged_anatomy.other">
+            <input value="other" onclick=
+            "downloadFile('2020.06.21','staged_anatomy.other')"
+            type="button" class="other" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-3">Show</a>
+        </td>
+        <td style="text-align: right">316 KB</td>
+        <td style="text-align: right">13,380</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-3">
+          <table>
+            <tr>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>Entire Staged Anatomy (tab indented)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-5">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/stage_ontology.txt" id=
+          "stage_ontology.txt">Zebrafish Stage Series</a><br />
+        </td>
+        <td>
+          <form id="stage_ontology.txt" action="downloads/file/"
+          method="get" name="stage_ontology.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','stage_ontology.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-4">Show</a>
+        </td>
+        <td style="text-align: right">2 KB</td>
+        <td style="text-align: right">45</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-4">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Stage ID</td>
+              <td>Stage OBO ID</td>
+              <td>Stage Name</td>
+              <td>Begin Hours</td>
+              <td>End Hours</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup evengroup" id="loopindex-6">
+        <td class="bold">Antibody Data</td>
+        <td>
+          <a href="downloads/antibodies.txt" id=
+          "antibodies.txt">Antibodies</a><br />
+        </td>
+        <td>
+          <form id="antibodies.txt" action="downloads/file/"
+          method="get" name="antibodies.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','antibodies.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-5">Show</a>
+        </td>
+        <td style="text-align: right">301 KB</td>
+        <td style="text-align: right">3,448</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-5">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>Antibody ID</td>
+              <td>Name</td>
+              <td>Clonal Type</td>
+              <td>Heavy Chain</td>
+              <td>Light Chain</td>
+              <td>Immunogen Organism</td>
+              <td>Host Organism</td>
+              <td>SO ID</td>
+              <td>AB Registry ID</td>
+              <td>Source</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-7">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/antibody_expressions_fish.txt" id=
+          "antibody_expressions_fish.txt">Antibody Expressions in
+          wild-type</a><br />
+        </td>
+        <td>
+          <form id="antibody_expressions_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "antibody_expressions_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','antibody_expressions_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-6">Show</a>
+        </td>
+        <td style="text-align: right">464 KB</td>
+        <td style="text-align: right">8,362</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-6">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Antibody ID</td>
+              <td>AnatomyStructure ID</td>
+              <td>AnatomyStructure Name</td>
+              <td>Substructure ID</td>
+              <td>Substructure Name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-8">
+        <td class="bold">Fish Data</td>
+        <td>
+          <a href="downloads/experiment_details.txt" id=
+          "experiment_details.txt">Experiment Details</a><br />
+        </td>
+        <td>
+          <form id="experiment_details.txt" action=
+          "downloads/file/" method="get" name=
+          "experiment_details.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','experiment_details.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-7">Show</a>
+        </td>
+        <td style="text-align: right">797 KB</td>
+        <td style="text-align: right">20,975</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-7">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>Experiment ID</td>
+              <td>ZECO Term ID</td>
+              <td>ZFA Term ID</td>
+              <td>GO Cellular Component Term ID</td>
+              <td>Chebi Term ID</td>
+              <td>NCBI Taxon Term ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-9">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/fish_components_fish.txt" id=
+          "fish_components_fish.txt">Fish Components</a><br />
+        </td>
+        <td>
+          <form id="fish_components_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "fish_components_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','fish_components_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-8">Show</a>
+        </td>
+        <td style="text-align: right">9 MB</td>
+        <td style="text-align: right">65,605</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-8">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Fish Name</td>
+              <td>Gene ID</td>
+              <td>Gene Symbol</td>
+              <td>Affector ID</td>
+              <td>Affector Symbol</td>
+              <td>Construct ID</td>
+              <td>Construct Symbol</td>
+              <td>Background ID</td>
+              <td>Background Name</td>
+              <td>Genotype ID</td>
+              <td>Genotype Name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-10">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genotype_backgrounds.txt" id=
+          "genotype_backgrounds.txt">Genotype Backgrounds</a><br />
+        </td>
+        <td>
+          <form id="genotype_backgrounds.txt" action=
+          "downloads/file/" method="get" name=
+          "genotype_backgrounds.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genotype_backgrounds.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-9">Show</a>
+        </td>
+        <td style="text-align: right">602 KB</td>
+        <td style="text-align: right">9,252</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-9">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>Genotype ID</td>
+              <td>Genotype Name</td>
+              <td>Background</td>
+              <td>Background Name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-11">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genotype_features.txt" id=
+          "genotype_features.txt">Genotype Features</a><br />
+        </td>
+        <td>
+          <form id="genotype_features.txt" action="downloads/file/"
+          method="get" name="genotype_features.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genotype_features.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-10">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">37,690</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-10">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+            </tr>
+            <tr>
+              <td>Genotype ID</td>
+              <td>Genotype Name</td>
+              <td>Genotye Unique Name</td>
+              <td>Allele ID</td>
+              <td>Allele Name</td>
+              <td>Allele Abbreviation</td>
+              <td>Allele Type</td>
+              <td>Allele Display Type</td>
+              <td>Gene or Construct Symbol</td>
+              <td>Corresponding ZFIN Gene ID/Construct ID</td>
+              <td>Allele Zygosity</td>
+              <td>Construct Name</td>
+              <td>Construct ZdbId</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-12">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genotype_features_missing_markers.txt"
+          id="genotype_features_missing_markers.txt">Genotype
+          Features (removed or displaced genes)</a><br />
+        </td>
+        <td>
+          <form id="genotype_features_missing_markers.txt" action=
+          "downloads/file/" method="get" name=
+          "genotype_features_missing_markers.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genotype_features_missing_markers.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-11">Show</a>
+        </td>
+        <td style="text-align: right">35 KB</td>
+        <td style="text-align: right">350</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-11">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Genotype ID</td>
+              <td>Genotype Name</td>
+              <td>Genotye Unique Name</td>
+              <td>Affected Genomic Region Symbol</td>
+              <td>Corresponding ZFIN Gene ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-13">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/innophenoconstructs.txt" id=
+          "innophenoconstructs.txt">Innocuous/Phenotypic Construct
+          Details</a><br />
+        </td>
+        <td>
+          <form id="innophenoconstructs.txt" action=
+          "downloads/file/" method="get" name=
+          "innophenoconstructs.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','innophenoconstructs.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-12">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">25,019</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-12">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Construct ID</td>
+              <td>Construct Name</td>
+              <td>Innocuous/Phenotypic</td>
+              <td>Feature ID</td>
+              <td>Feature Name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup evengroup" id="loopindex-14">
+        <td class="bold">Gene Expression</td>
+        <td>
+          <a href="downloads/wildtype-expression_fish.txt" id=
+          "wildtype-expression_fish.txt">Expression data for
+          wildtype fish</a><br />
+        </td>
+        <td>
+          <form id="wildtype-expression_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "wildtype-expression_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','wildtype-expression_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-13">Show</a>
+        </td>
+        <td style="text-align: right">36 MB</td>
+        <td style="text-align: right">211,295</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-13">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene Symbol</td>
+              <td>Fish Name</td>
+              <td>Super Structure ID</td>
+              <td>Super Structure Name</td>
+              <td>Sub Structure ID</td>
+              <td>Sub Structure Name</td>
+              <td>Start Stage</td>
+              <td>End Stage</td>
+              <td>Assay</td>
+              <td>Assay MMO ID</td>
+              <td>Publication ID</td>
+              <td>Probe ID</td>
+              <td>Antibody ID</td>
+              <td>Fish ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-15">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/xpat_environment_fish.txt" id=
+          "xpat_environment_fish.txt">Expression Environment
+          Description</a><br />
+        </td>
+        <td>
+          <form id="xpat_environment_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "xpat_environment_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','xpat_environment_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-14">Show</a>
+        </td>
+        <td style="text-align: right">828 KB</td>
+        <td style="text-align: right">12,047</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-14">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+            </tr>
+            <tr>
+              <td>Environment ID</td>
+              <td>ZECO Term Name</td>
+              <td>ZECO Term ID (ZECO:ID)</td>
+              <td>Chebi Term Name</td>
+              <td>Chebi Term ID (Chebi:ID)</td>
+              <td>ZFA Term Name</td>
+              <td>ZFA Term ID (ZFA:ID)</td>
+              <td>Affected Structure Subterm Name</td>
+              <td>Affected Structure Subterm ID (GO-CC:ID)</td>
+              <td>NCBI Taxon Name</td>
+              <td>NCBI Taxon ID (NCBI Taxon:ID)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-16">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/xpatfig_fish.txt" id=
+          "xpatfig_fish.txt">Expression Experiment-Figure</a><br />
+        </td>
+        <td>
+          <form id="xpatfig_fish.txt" action="downloads/file/"
+          method="get" name="xpatfig_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','xpatfig_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-15">Show</a>
+        </td>
+        <td style="text-align: right">18 MB</td>
+        <td style="text-align: right">407,290</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-15">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>Expression ID</td>
+              <td>Expression Result ID</td>
+              <td>Figure ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-17">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/xpat_stage_anatomy.txt" id=
+          "xpat_stage_anatomy.txt">Zebrafish Gene Expression by
+          Stage and Anatomy Term</a><br />
+        </td>
+        <td>
+          <form id="xpat_stage_anatomy.txt" action=
+          "downloads/file/" method="get" name=
+          "xpat_stage_anatomy.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','xpat_stage_anatomy.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-16">Show</a>
+        </td>
+        <td style="text-align: right">32 MB</td>
+        <td style="text-align: right">407,426</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-16">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td>Expression Result ID</td>
+              <td>Expression ID</td>
+              <td>Start Stage ID</td>
+              <td>End Stage ID</td>
+              <td>Anatomy Super Term ID</td>
+              <td>Anatomy Sub Term ID</td>
+              <td>Expression Found</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-18">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/abxpat_fish.txt" id=
+          "abxpat_fish.txt">ZFIN Antibody Expression Assay
+          Records</a><br />
+        </td>
+        <td>
+          <form id="abxpat_fish.txt" action="downloads/file/"
+          method="get" name="abxpat_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','abxpat_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-17">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">17,490</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-17">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>Antibody ID</td>
+              <td>Antibody Name</td>
+              <td>Gene ID (Optional)</td>
+              <td>Gene Symbol (Option)</td>
+              <td>Expression ID</td>
+              <td>Expression Type</td>
+              <td>Expression Type MMO ID</td>
+              <td>Publication ID</td>
+              <td>Fish ID</td>
+              <td>Environment ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-19">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/xpat_fish.txt" id="xpat_fish.txt">ZFIN
+          Genes with Expression Assay Records</a><br />
+        </td>
+        <td>
+          <form id="xpat_fish.txt" action="downloads/file/" method=
+          "get" name="xpat_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','xpat_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-18">Show</a>
+        </td>
+        <td style="text-align: right">18 MB</td>
+        <td style="text-align: right">133,022</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-18">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene Symbol</td>
+              <td>EST ID (Optional)</td>
+              <td>EST Symbol (Optional)</td>
+              <td>Expression Type</td>
+              <td>Expression Type MMO ID</td>
+              <td>Expression ID</td>
+              <td>Publication ID</td>
+              <td>Fish ID</td>
+              <td>Environment ID</td>
+              <td>Probe Quality (optional 0 - 5 rating)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-20">
+        <td class="bold">Genetic Marker Relationships</td>
+        <td>
+          <a href="downloads/gene_marker_relationship.txt" id=
+          "gene_marker_relationship.txt">Genetic Marker
+          Relationships</a><br />
+        </td>
+        <td>
+          <form id="gene_marker_relationship.txt" action=
+          "downloads/file/" method="get" name=
+          "gene_marker_relationship.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene_marker_relationship.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-19">Show</a>
+        </td>
+        <td style="text-align: right">12 MB</td>
+        <td style="text-align: right">115,529</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-19">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene SO ID</td>
+              <td>Gene Symbol</td>
+              <td>Marker ID</td>
+              <td>Marker SO ID</td>
+              <td>Marker Symbol</td>
+              <td>Relationship</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup evengroup" id="loopindex-21">
+        <td class="bold">Genetic Markers</td>
+        <td>
+          <a href="downloads/genetic_markers.txt" id=
+          "genetic_markers.txt">Genetic Marker</a><br />
+        </td>
+        <td>
+          <form id="genetic_markers.txt" action="downloads/file/"
+          method="get" name="genetic_markers.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genetic_markers.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-20">Show</a>
+        </td>
+        <td style="text-align: right">10 MB</td>
+        <td style="text-align: right">170,646</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-20">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Marker ID</td>
+              <td>Marker Symbol</td>
+              <td>Marker Name</td>
+              <td>Marker Type</td>
+              <td>SO ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-22">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/zdb_history.txt" id=
+          "zdb_history.txt">Previous ZFIN IDs</a><br />
+          (includes former and current ZFIN IDs for merged data)
+        </td>
+        <td>
+          <form id="zdb_history.txt" action="downloads/file/"
+          method="get" name="zdb_history.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','zdb_history.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-21">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">35,345</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-21">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>Former ZFIN ID</td>
+              <td>Current ZFIN ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-23">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/snpData.txt" id="snpData.txt">SNP
+          Data</a><br />
+        </td>
+        <td>
+          <form id="snpData.txt" action="downloads/file/" method=
+          "get" name="snpData.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','snpData.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-22">Show</a>
+        </td>
+        <td style="text-align: right">149 MB</td>
+        <td style="text-align: right">2,673,792</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-22">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>Marker ID</td>
+              <td>Marker Symbol</td>
+              <td>SNP rs accession number</td>
+              <td>Publication ZDB ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-24">
+        <td class="bold">Genomic Feature Data</td>
+        <td>
+          <a href="downloads/features.txt" id="features.txt">All
+          Genomic Features</a><br />
+        </td>
+        <td>
+          <form id="features.txt" action="downloads/file/" method=
+          "get" name="features.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','features.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-23">Show</a>
+        </td>
+        <td style="text-align: right">7 MB</td>
+        <td style="text-align: right">70,837</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-23">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+            </tr>
+            <tr>
+              <td>Genomic Feature ID</td>
+              <td>Feature SO ID</td>
+              <td>Genomic Feature Abbreviation</td>
+              <td>Genomic Feature Name</td>
+              <td>Genomic Feature Type</td>
+              <td>Mutagen</td>
+              <td>Mutagee</td>
+              <td>Construct ID</td>
+              <td>Construct name</td>
+              <td>Construct SO ID</td>
+              <td>TALEN/CRISPR ID</td>
+              <td>TALEN/CRISPR Name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-25">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/constructComponents.txt" id=
+          "constructComponents.txt">Construct Components</a><br />
+        </td>
+        <td>
+          <form id="constructComponents.txt" action=
+          "downloads/file/" method="get" name=
+          "constructComponents.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','constructComponents.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-24">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">12,939</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-24">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Construct ID</td>
+              <td>Construct Name</td>
+              <td>Construct Type</td>
+              <td>Component ID</td>
+              <td>Component Name</td>
+              <td>Component Type</td>
+              <td>Relationship</td>
+              <td>Construct SO ID</td>
+              <td>Component SO ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-26">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/CZRCfeature.txt" id=
+          "CZRCfeature.txt">Genomic Feature Data for CZRC</a><br />
+        </td>
+        <td>
+          <form id="CZRCfeature.txt" action="downloads/file/"
+          method="get" name="CZRCfeature.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','CZRCfeature.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-25">Show</a>
+        </td>
+        <td style="text-align: right">11 MB</td>
+        <td style="text-align: right">70,699</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-25">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+            </tr>
+            <tr>
+              <td>Genomic Feature ID</td>
+              <td>Genomic Feature Name</td>
+              <td>Affected Gene</td>
+              <td>Affected Gene ID</td>
+              <td>Synonyms</td>
+              <td>Genomic Feature Type</td>
+              <td>Protocol</td>
+              <td>Notes</td>
+              <td>Lab of Origin</td>
+              <td>Lab ID</td>
+              <td>Location</td>
+              <td>Construct Name</td>
+              <td>Construct ID</td>
+              <td>Downloaded Time</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-27">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/features-affected-genes.txt" id=
+          "features-affected-genes.txt">Genomic Features and their
+          affected genes</a><br />
+          (alleles, deficiencies, translocations)
+        </td>
+        <td>
+          <form id="features-affected-genes.txt" action=
+          "downloads/file/" method="get" name=
+          "features-affected-genes.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','features-affected-genes.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-26">Show</a>
+        </td>
+        <td style="text-align: right">7 MB</td>
+        <td style="text-align: right">52,086</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-26">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+              <td>24</td>
+              <td>25</td>
+              <td>26</td>
+              <td>27</td>
+              <td>28</td>
+              <td>29</td>
+              <td>30</td>
+              <td>31</td>
+              <td>32</td>
+              <td>33</td>
+            </tr>
+            <tr>
+              <td>Genomic Feature ID</td>
+              <td>Feature SO ID</td>
+              <td>Genomic Feature Abbreviation</td>
+              <td>Gene Symbol</td>
+              <td>Gene ID</td>
+              <td>Gene SO ID</td>
+              <td>Genomic Feature - Marker Relationship</td>
+              <td>Feature Type</td>
+              <td>DNA/cDNA Change SO ID</td>
+              <td>Reference Nucleotide</td>
+              <td>Mutant Nucleotide</td>
+              <td>Base Pairs Added</td>
+              <td>Base Pairs Removed</td>
+              <td>DNA/cDNA Change Position Start</td>
+              <td>DNA/cDNA Change Position End</td>
+              <td>DNA/cDNA Reference Sequence</td>
+              <td>DNA/cDNA Change Localization</td>
+              <td>DNA/cDNA Change Localization SO ID</td>
+              <td>DNA/cDNA Change Localization Exon</td>
+              <td>DNA/cDNA Change Localization Intron</td>
+              <td>Transcript Consequence</td>
+              <td>Transcript Consequence SO ID</td>
+              <td>Transcript Consequence Exon</td>
+              <td>Transcript Consequence Intron</td>
+              <td>Protein Consequence</td>
+              <td>Protein Consequence SO ID</td>
+              <td>Reference Amino Acid</td>
+              <td>Mutant Amino Acid</td>
+              <td>Amino Acids Added</td>
+              <td>Amino Acids Removed</td>
+              <td>Protein Consequence Position Start</td>
+              <td>Protein Consequence Position End</td>
+              <td>Protein Reference Sequence</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-28">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/tgInsertions.txt" id=
+          "tgInsertions.txt">Transgenic Insertions</a><br />
+        </td>
+        <td>
+          <form id="tgInsertions.txt" action="downloads/file/"
+          method="get" name="tgInsertions.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','tgInsertions.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-27">Show</a>
+        </td>
+        <td style="text-align: right">3 MB</td>
+        <td style="text-align: right">31,611</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-27">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td>Genomic Feature ID</td>
+              <td>Genomic Feature Abbreviation</td>
+              <td>Genomic Feature Name</td>
+              <td>Feature SO ID</td>
+              <td>Construct ID</td>
+              <td>Construct Name</td>
+              <td>Construct SO ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup evengroup" id="loopindex-29">
+        <td class="bold">Human Disease</td>
+        <td>
+          <a href="downloads/gene2DiseaseViaOrthology.txt" id=
+          "gene2DiseaseViaOrthology.txt">Gene to Disease via
+          Orthology</a><br />
+        </td>
+        <td>
+          <form id="gene2DiseaseViaOrthology.txt" action=
+          "downloads/file/" method="get" name=
+          "gene2DiseaseViaOrthology.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene2DiseaseViaOrthology.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-28">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">7,895</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-28">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>Zebrafish Gene ID</td>
+              <td>Zebrafish Gene Symbol</td>
+              <td>Human Ortholog Entrez Gene Id</td>
+              <td>Human Ortholog Symbol</td>
+              <td>DO Term Name</td>
+              <td>DO Term ID</td>
+              <td>OMIM Term Name</td>
+              <td>OMIM ID</td>
+              <td>Evidence Code</td>
+              <td>Publication</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-30">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/fish_model_disease.txt" id=
+          "fish_model_disease.txt">Human Disease/Models</a><br />
+        </td>
+        <td>
+          <form id="fish_model_disease.txt" action=
+          "downloads/file/" method="get" name=
+          "fish_model_disease.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','fish_model_disease.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-29">Show</a>
+        </td>
+        <td style="text-align: right">292 KB</td>
+        <td style="text-align: right">2,928</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-29">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>Fish ZDB ID</td>
+              <td>Environment ZDB ID</td>
+              <td>is_a_model</td>
+              <td>DO Term ID</td>
+              <td>DO Term Name</td>
+              <td>Publication ZDB ID</td>
+              <td>PubMed ID</td>
+              <td>Evidence Code</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup oddgroup" id="loopindex-31">
+        <td class="bold">Image Data</td>
+        <td>
+          <a href="downloads/ImageFigures.txt" id=
+          "ImageFigures.txt">Image-Figure translations</a><br />
+          <b>Note</b>: <em>Images are not provided due to copyright
+          restrictions</em>
+        </td>
+        <td>
+          <form id="ImageFigures.txt" action="downloads/file/"
+          method="get" name="ImageFigures.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','ImageFigures.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-30">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">121,017</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-30">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>Image ID</td>
+              <td>Figure ID</td>
+              <td>Image Preparation</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup evengroup" id="loopindex-32">
+        <td class="bold">Knockdown Reagent Data</td>
+        <td>
+          <a href="downloads/CRISPR.txt" id=
+          "CRISPR.txt">CRISPR</a><br />
+        </td>
+        <td>
+          <form id="CRISPR.txt" action="downloads/file/" method=
+          "get" name="CRISPR.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','CRISPR.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-31">Show</a>
+        </td>
+        <td style="text-align: right">705 KB</td>
+        <td style="text-align: right">5,458</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-31">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene SO ID</td>
+              <td>Gene Symbol</td>
+              <td>CRISPR ID</td>
+              <td>CRISPR SO ID</td>
+              <td>CRISPR Symbol</td>
+              <td>CRISPR Target Sequence</td>
+              <td>Publication(s)</td>
+              <td>Note</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-33">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/Morpholinos.txt" id=
+          "Morpholinos.txt">Morpholino</a><br />
+        </td>
+        <td>
+          <form id="Morpholinos.txt" action="downloads/file/"
+          method="get" name="Morpholinos.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','Morpholinos.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-32">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">10,334</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-32">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene SO ID</td>
+              <td>Gene Symbol</td>
+              <td>Morpholino ID</td>
+              <td>Morpholino SO ID</td>
+              <td>Morpholino Symbol</td>
+              <td>Morpholino Sequence</td>
+              <td>Publication(s)</td>
+              <td>Note</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-34">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/TALEN.txt" id=
+          "TALEN.txt">TALEN</a><br />
+        </td>
+        <td>
+          <form id="TALEN.txt" action="downloads/file/" method=
+          "get" name="TALEN.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','TALEN.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-33">Show</a>
+        </td>
+        <td style="text-align: right">98 KB</td>
+        <td style="text-align: right">714</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-33">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Gene SO ID</td>
+              <td>Gene Symbol</td>
+              <td>TALEN ID</td>
+              <td>TALEN SO ID</td>
+              <td>TALEN Symbol</td>
+              <td>TALEN Target Sequence 1</td>
+              <td>TALEN Target Sequence 2</td>
+              <td>Publication(s)</td>
+              <td>Note</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup oddgroup" id="loopindex-35">
+        <td class="bold">Mapping Data</td>
+        <td>
+          <a href="downloads/mappings.txt" id=
+          "mappings.txt">Mapping Data from the 6 Zebrafish Mapping
+          Panels</a><br />
+        </td>
+        <td>
+          <form id="mappings.txt" action="downloads/file/" method=
+          "get" name="mappings.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','mappings.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-34">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">36,500</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-34">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>Symbol</td>
+              <td>Panel Symbol</td>
+              <td>Chromosome</td>
+              <td>Location</td>
+              <td>Metric</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup evengroup" id="loopindex-36">
+        <td class="bold">Orthology Data</td>
+        <td>
+          <a href="downloads/fly_orthos.txt" id=
+          "fly_orthos.txt">Drosophila and Zebrafish
+          Orthology</a><br />
+        </td>
+        <td>
+          <form id="fly_orthos.txt" action="downloads/file/"
+          method="get" name="fly_orthos.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','fly_orthos.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-35">Show</a>
+        </td>
+        <td style="text-align: right">8 KB</td>
+        <td style="text-align: right">74</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-35">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>ZFIN Symbol</td>
+              <td>ZFIN Name</td>
+              <td>Fly Symbol</td>
+              <td>Fly Name</td>
+              <td>Flybase ID</td>
+              <td>Gene ID</td>
+              <td>Evidence</td>
+              <td>Pub ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-37">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/human_orthos.txt" id=
+          "human_orthos.txt">Human and Zebrafish
+          Orthology</a><br />
+        </td>
+        <td>
+          <form id="human_orthos.txt" action="downloads/file/"
+          method="get" name="human_orthos.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','human_orthos.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-36">Show</a>
+        </td>
+        <td style="text-align: right">5 MB</td>
+        <td style="text-align: right">40,691</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-36">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>ZFIN Symbol</td>
+              <td>ZFIN Name</td>
+              <td>Human Symbol</td>
+              <td>Human Name</td>
+              <td>OMIM ID</td>
+              <td>Gene ID</td>
+              <td>HGNC ID</td>
+              <td>Evidence</td>
+              <td>Pub ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-38">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/mouse_orthos.txt" id=
+          "mouse_orthos.txt">Mouse and Zebrafish
+          Orthology</a><br />
+        </td>
+        <td>
+          <form id="mouse_orthos.txt" action="downloads/file/"
+          method="get" name="mouse_orthos.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','mouse_orthos.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-37">Show</a>
+        </td>
+        <td style="text-align: right">3 MB</td>
+        <td style="text-align: right">29,358</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-37">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>ZFIN Symbol</td>
+              <td>ZFIN Name</td>
+              <td>Mouse Symbol</td>
+              <td>Mouse Name</td>
+              <td>MGI ID</td>
+              <td>Gene ID</td>
+              <td>Evidence</td>
+              <td>Pub ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-39">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/ortho.txt" id="ortho.txt">Phenotypic
+          Zebrafish genes with Human Orthology</a><br />
+        </td>
+        <td>
+          <form id="ortho.txt" action="downloads/file/" method=
+          "get" name="ortho.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','ortho.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-38">Show</a>
+        </td>
+        <td style="text-align: right">168 KB</td>
+        <td style="text-align: right">3,905</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-38">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>ZFIN Symbol</td>
+              <td>Entrez Zebrafish Gene ID</td>
+              <td>Human Gene Symbol</td>
+              <td>Entrez Human Gene ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-40">
+        <td class="bold">Phenotype Data</td>
+        <td>
+          <a href="downloads/ameliorated_phenotype_fish.txt" id=
+          "ameliorated_phenotype_fish.txt">Ameliorated
+          Phenotypes</a><br />
+        </td>
+        <td>
+          <form id="ameliorated_phenotype_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "ameliorated_phenotype_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','ameliorated_phenotype_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-39">Show</a>
+        </td>
+        <td style="text-align: right">955 KB</td>
+        <td style="text-align: right">4,029</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-39">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Fish Name</td>
+              <td>Start Stage ID</td>
+              <td>Start Stage Name</td>
+              <td>End Stage ID</td>
+              <td>End Stage Name</td>
+              <td>Affected Structure or Process 1 subterm ID</td>
+              <td>Affected Structure or Process 1 subterm Name</td>
+              <td>Post-composed Relationship ID</td>
+              <td>Post-composed Relationship Name</td>
+              <td>Affected Structure or Process 1 superterm ID</td>
+              <td>Affected Structure or Process 1 superterm
+              Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Tag</td>
+              <td>Affected Structure or Process 2 subterm ID</td>
+              <td>Affected Structure or Process 2 subterm name</td>
+              <td>Post-composed Relationship (rel) ID</td>
+              <td>Post-composed Relationship (rel) Name</td>
+              <td>Affected Structure or Process 2 superterm ID</td>
+              <td>Affected Structure or Process 2 superterm
+              name</td>
+              <td>Publication ID</td>
+              <td>Environment ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-41">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/antibody_labeling_phenotype.txt" id=
+          "antibody_labeling_phenotype.txt">Antibody Labeling
+          Phenotypes</a><br />
+        </td>
+        <td>
+          <form id="antibody_labeling_phenotype.txt" action=
+          "downloads/file/" method="get" name=
+          "antibody_labeling_phenotype.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','antibody_labeling_phenotype.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-40">Show</a>
+        </td>
+        <td style="text-align: right">816 KB</td>
+        <td style="text-align: right">2,551</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-40">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+              <td>24</td>
+            </tr>
+            <tr>
+              <td>Antibody Name</td>
+              <td>Antibody ID</td>
+              <td>SO Term</td>
+              <td>SO ID</td>
+              <td>RO Term</td>
+              <td>RO ID</td>
+              <td>Superstructure Name</td>
+              <td>Superstructure ID</td>
+              <td>Substructure Name</td>
+              <td>Substructure ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Tag</td>
+              <td>Start Stage Name</td>
+              <td>Start Stage ID</td>
+              <td>End Stage Name</td>
+              <td>End Stage ID</td>
+              <td>Assay</td>
+              <td>Assay MMO ID</td>
+              <td>Fish ID</td>
+              <td>Environment ID</td>
+              <td>Figure ID</td>
+              <td>Publication ID</td>
+              <td>PubMed ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-42">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/exacerbated_phenotype_fish.txt" id=
+          "exacerbated_phenotype_fish.txt">Exacerbated
+          Phenotypes</a><br />
+        </td>
+        <td>
+          <form id="exacerbated_phenotype_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "exacerbated_phenotype_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','exacerbated_phenotype_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-41">Show</a>
+        </td>
+        <td style="text-align: right">135 KB</td>
+        <td style="text-align: right">542</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-41">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Fish Name</td>
+              <td>Start Stage ID</td>
+              <td>Start Stage Name</td>
+              <td>End Stage ID</td>
+              <td>End Stage Name</td>
+              <td>Affected Structure or Process 1 subterm ID</td>
+              <td>Affected Structure or Process 1 subterm Name</td>
+              <td>Post-composed Relationship ID</td>
+              <td>Post-composed Relationship Name</td>
+              <td>Affected Structure or Process 1 superterm ID</td>
+              <td>Affected Structure or Process 1 superterm
+              Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Tag</td>
+              <td>Affected Structure or Process 2 subterm ID</td>
+              <td>Affected Structure or Process 2 subterm name</td>
+              <td>Post-composed Relationship (rel) ID</td>
+              <td>Post-composed Relationship (rel) Name</td>
+              <td>Affected Structure or Process 2 superterm ID</td>
+              <td>Affected Structure or Process 2 superterm
+              name</td>
+              <td>Publication ID</td>
+              <td>Environment ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-43">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/phenotype_fish.txt" id=
+          "phenotype_fish.txt">Fish with Phenotypes</a><br />
+        </td>
+        <td>
+          <form id="phenotype_fish.txt" action="downloads/file/"
+          method="get" name="phenotype_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','phenotype_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-42">Show</a>
+        </td>
+        <td style="text-align: right">34 MB</td>
+        <td style="text-align: right">154,109</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-42">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Fish Name</td>
+              <td>Start Stage ID</td>
+              <td>Start Stage Name</td>
+              <td>End Stage ID</td>
+              <td>End Stage Name</td>
+              <td>Affected Structure or Process 1 subterm ID</td>
+              <td>Affected Structure or Process 1 subterm Name</td>
+              <td>Post-composed Relationship ID</td>
+              <td>Post-composed Relationship Name</td>
+              <td>Affected Structure or Process 1 superterm ID</td>
+              <td>Affected Structure or Process 1 superterm
+              Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Tag</td>
+              <td>Affected Structure or Process 2 subterm ID</td>
+              <td>Affected Structure or Process 2 subterm name</td>
+              <td>Post-composed Relationship (rel) ID</td>
+              <td>Post-composed Relationship (rel) Name</td>
+              <td>Affected Structure or Process 2 superterm ID</td>
+              <td>Affected Structure or Process 2 superterm
+              name</td>
+              <td>Publication ID</td>
+              <td>Environment ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-44">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genofig_fish.txt" id=
+          "genofig_fish.txt">Fish-Figure relation</a><br />
+        </td>
+        <td>
+          <form id="genofig_fish.txt" action="downloads/file/"
+          method="get" name="genofig_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genofig_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-43">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">53,289</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-43">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Figure ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-45">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/gene_expression_phenotype.txt" id=
+          "gene_expression_phenotype.txt">Gene Expression
+          Phenotypes</a><br />
+        </td>
+        <td>
+          <form id="gene_expression_phenotype.txt" action=
+          "downloads/file/" method="get" name=
+          "gene_expression_phenotype.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene_expression_phenotype.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-44">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">22,543</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-44">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+              <td>24</td>
+              <td>25</td>
+            </tr>
+            <tr>
+              <td>Gene Symbol</td>
+              <td>Gene ID</td>
+              <td>RO Term</td>
+              <td>RO ID</td>
+              <td>Superstructure Name</td>
+              <td>Superstructure ID</td>
+              <td>Substructure Name</td>
+              <td>Substructure ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Tag</td>
+              <td>Start Stage Name</td>
+              <td>Start Stage ID</td>
+              <td>End Stage Name</td>
+              <td>End Stage ID</td>
+              <td>Assay</td>
+              <td>Assay MMO ID</td>
+              <td>Probe ID</td>
+              <td>Antibody Name</td>
+              <td>Antibody ID</td>
+              <td>Fish ID</td>
+              <td>Environment ID</td>
+              <td>Figure ID</td>
+              <td>Publication ID</td>
+              <td>PubMed ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-46">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/pheno_environment_fish.txt" id=
+          "pheno_environment_fish.txt">Phenotype Environment
+          Description</a><br />
+        </td>
+        <td>
+          <form id="pheno_environment_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "pheno_environment_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','pheno_environment_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-45">Show</a>
+        </td>
+        <td style="text-align: right">1002 KB</td>
+        <td style="text-align: right">14,528</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-45">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+            </tr>
+            <tr>
+              <td>Environment ID</td>
+              <td>ZECO Term Name</td>
+              <td>ZECO Term ID (ZECO:ID)</td>
+              <td>Chebi Term Name</td>
+              <td>Chebi Term ID (Chebi:ID)</td>
+              <td>ZFA Term Name</td>
+              <td>ZFA Term ID (ZFA:ID)</td>
+              <td>Affected Structure Subterm Name</td>
+              <td>Affected Structure Subterm ID (GO-CC:ID)</td>
+              <td>NCBI Taxon Name</td>
+              <td>NCBI Taxon ID (NCBI Taxon:ID)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-47">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/pheno_fish.txt" id=
+          "pheno_fish.txt">Phenotype for Zebrafish genes with Human
+          Orthology</a><br />
+        </td>
+        <td>
+          <form id="pheno_fish.txt" action="downloads/file/"
+          method="get" name="pheno_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','pheno_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-46">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">51,314</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-46">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+            </tr>
+            <tr>
+              <td>Gene ID</td>
+              <td>Entrez Zebrafish Gene ID</td>
+              <td>Entrez Human Gene ID</td>
+              <td>ZFIN Gene Symbol</td>
+              <td>Affected Structure or Process 1 subterm OBO
+              ID</td>
+              <td>Affected Structure or Process 1 subterm name</td>
+              <td>Post-Composed Relationship ID</td>
+              <td>Post-Composed Relationship Name</td>
+              <td>Affected Structure or Process 1 superterm OBO
+              ID</td>
+              <td>Affected Structure or Process 1 superterm
+              name</td>
+              <td>Phenotype Keyword OBO ID</td>
+              <td>Phenotype Quality</td>
+              <td>Phenotype Tag</td>
+              <td>Affected Structure or Process 2 subterm OBO
+              ID</td>
+              <td>Affected Structure or Process 2 subterm name</td>
+              <td>Post-Composed Relationship ID</td>
+              <td>Post-Composed Relationship Name</td>
+              <td>Affected Structure or Process 2 superterm OBO
+              ID</td>
+              <td>Affected Structure or Process 2 superterm
+              name</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-48">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/phenoGeneCleanData_fish.txt" id=
+          "phenoGeneCleanData_fish.txt">Phenotype of Zebrafish
+          Genes</a><br />
+        </td>
+        <td>
+          <form id="phenoGeneCleanData_fish.txt" action=
+          "downloads/file/" method="get" name=
+          "phenoGeneCleanData_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','phenoGeneCleanData_fish.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-47">Show</a>
+        </td>
+        <td style="text-align: right">29 MB</td>
+        <td style="text-align: right">121,527</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-47">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>11</td>
+              <td>12</td>
+              <td>13</td>
+              <td>14</td>
+              <td>15</td>
+              <td>16</td>
+              <td>17</td>
+              <td>18</td>
+              <td>19</td>
+              <td>20</td>
+              <td>21</td>
+              <td>22</td>
+              <td>23</td>
+              <td>24</td>
+              <td>25</td>
+            </tr>
+            <tr>
+              <td>ID</td>
+              <td>Gene Symbol</td>
+              <td>Gene ID</td>
+              <td>Affected Structure or Process 1 subterm ID</td>
+              <td>Affected Structure or Process 1 subterm Name</td>
+              <td>Post-composed Relationship ID</td>
+              <td>Post-composed Relationship Name</td>
+              <td>Affected Structure or Process 1 superterm ID</td>
+              <td>Affected Structure or Process 1 superterm
+              Name</td>
+              <td>Phenotype Keyword ID</td>
+              <td>Phenotype Keyword Name</td>
+              <td>Phenotype Tag</td>
+              <td>Affected Structure or Process 2 subterm ID</td>
+              <td>Affected Structure or Process 2 subterm name</td>
+              <td>Post-composed Relationship (rel) ID</td>
+              <td>Post-composed Relationship (rel) Name</td>
+              <td>Affected Structure or Process 2 superterm ID</td>
+              <td>Affected Structure or Process 2 superterm
+              name</td>
+              <td>Fish ID</td>
+              <td>Fish Display Name</td>
+              <td>Start Stage ID</td>
+              <td>End Stage ID</td>
+              <td>Fish Environment ID</td>
+              <td>Publication ID</td>
+              <td>Figure ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup evengroup" id="loopindex-49">
+        <td class="bold">Previous Names</td>
+        <td>
+          <a href="downloads/aliases.txt" id="aliases.txt">Previous
+          Names</a><br />
+        </td>
+        <td>
+          <form id="aliases.txt" action="downloads/file/" method=
+          "get" name="aliases.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','aliases.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-48">Show</a>
+        </td>
+        <td style="text-align: right">13 MB</td>
+        <td style="text-align: right">187,813</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-48">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Current ZFIN ID</td>
+              <td>Current Name</td>
+              <td>Current Symbol</td>
+              <td>Previous Name</td>
+              <td>SO ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-50">
+        <td class="bold">Publications</td>
+        <td>
+          <a href="downloads/fishPub.txt" id=
+          "fishPub.txt">Fish-Publication relation</a><br />
+        </td>
+        <td>
+          <form id="fishPub.txt" action="downloads/file/" method=
+          "get" name="fishPub.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','fishPub.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-49">Show</a>
+        </td>
+        <td style="text-align: right">4 MB</td>
+        <td style="text-align: right">114,975</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-49">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Publication ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-51">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/gene_publication.txt" id=
+          "gene_publication.txt">Gene-Publication
+          relation</a><br />
+        </td>
+        <td>
+          <form id="gene_publication.txt" action="downloads/file/"
+          method="get" name="gene_publication.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene_publication.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-50">Show</a>
+        </td>
+        <td style="text-align: right">31 MB</td>
+        <td style="text-align: right">568,220</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-50">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Gene Symbol</td>
+              <td>Gene ID</td>
+              <td>Publication ID</td>
+              <td>Publication Type</td>
+              <td>PubMed ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-52">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genoPub.txt" id=
+          "genoPub.txt">Genotype-Publication relation</a><br />
+        </td>
+        <td>
+          <form id="genoPub.txt" action="downloads/file/" method=
+          "get" name="genoPub.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genoPub.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-51">Show</a>
+        </td>
+        <td style="text-align: right">3 MB</td>
+        <td style="text-align: right">89,557</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-51">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>Publication ID</td>
+              <td>PubMed ID</td>
+              <td>Genotype ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-53">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/zfinpubs.txt" id="zfinpubs.txt">ZFIN
+          Bibliography</a><br />
+        </td>
+        <td>
+          <form id="zfinpubs.txt" action="downloads/file/" method=
+          "get" name="zfinpubs.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','zfinpubs.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-52">Show</a>
+        </td>
+        <td style="text-align: right">8 MB</td>
+        <td style="text-align: right">32,530</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-52">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>Publication ID</td>
+              <td>pubMed ID (none or blank when not available)</td>
+              <td>Authors</td>
+              <td>Title</td>
+              <td>Journal</td>
+              <td>Year</td>
+              <td>Volume</td>
+              <td>Pages</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-54">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/uniprot-zfinpub.txt" id=
+          "uniprot-zfinpub.txt">ZFIN Marker IDs / UniProtKB IDs to
+          ZFIN Pub IDs &amp; PubMed IDs</a><br />
+        </td>
+        <td>
+          <form id="uniprot-zfinpub.txt" action="downloads/file/"
+          method="get" name="uniprot-zfinpub.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','uniprot-zfinpub.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-53">Show</a>
+        </td>
+        <td style="text-align: right">7 MB</td>
+        <td style="text-align: right">103,039</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-53">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>ZFIN Marker ID</td>
+              <td>SO ID</td>
+              <td>UniProtKB ID</td>
+              <td>PubMed ID</td>
+              <td>ZFIN Annotation (GO/Phenotype/Expression)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-55">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/pub_to_pubmed_id_translation.txt" id=
+          "pub_to_pubmed_id_translation.txt">ZFIN Publication IDs:
+          ZFIN IDs to PubMed IDs</a><br />
+        </td>
+        <td>
+          <form id="pub_to_pubmed_id_translation.txt" action=
+          "downloads/file/" method="get" name=
+          "pub_to_pubmed_id_translation.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','pub_to_pubmed_id_translation.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-54">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">41,266</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-54">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>Publication ZFIN ID</td>
+              <td>PubMed ID (none or blank when not available)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup evengroup" id="loopindex-56">
+        <td class="bold">Sequence Coordinates</td>
+        <td>
+          <a href="downloads/E_drerio_backbone.gff3" id=
+          "E_drerio_backbone.gff3">Assembly: Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_drerio_backbone.gff3" action=
+          "downloads/file/" method="get" name=
+          "E_drerio_backbone.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_drerio_backbone.gff3')"
+            type="button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-55">Show</a>
+        </td>
+        <td style="text-align: right">158 MB</td>
+        <td style="text-align: right">1,152,227</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-55">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-57">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/E_full_zfin_clone.gff3" id=
+          "E_full_zfin_clone.gff3">Complete Assembly Clones:
+          Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_full_zfin_clone.gff3" action=
+          "downloads/file/" method="get" name=
+          "E_full_zfin_clone.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_full_zfin_clone.gff3')"
+            type="button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-56">Show</a>
+        </td>
+        <td style="text-align: right">4 MB</td>
+        <td style="text-align: right">51,655</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-56">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-58">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/zfin_tginsertion.gff3" id=
+          "zfin_tginsertion.gff3">Transgenic Insertion:
+          ENSEMBL</a><br />
+        </td>
+        <td>
+          <form id="zfin_tginsertion.gff3" action="downloads/file/"
+          method="get" name="zfin_tginsertion.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','zfin_tginsertion.gff3')"
+            type="button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-57">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">15,224</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-57">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-59">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/zfin_genes.gff3" id=
+          "zfin_genes.gff3">ZFIN Gene Models</a><br />
+        </td>
+        <td>
+          <form id="zfin_genes.gff3" action="downloads/file/"
+          method="get" name="zfin_genes.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','zfin_genes.gff3')" type=
+            "button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-58">Show</a>
+        </td>
+        <td style="text-align: right">59 MB</td>
+        <td style="text-align: right">595,826</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-58">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-60">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/E_antibody.gff3" id=
+          "E_antibody.gff3">ZFIN Genes with Antibodies:
+          Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_antibody.gff3" action="downloads/file/"
+          method="get" name="E_antibody.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_antibody.gff3')" type=
+            "button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-59">Show</a>
+        </td>
+        <td style="text-align: right">199 KB</td>
+        <td style="text-align: right">908</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-59">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-61">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/E_expression.gff3" id=
+          "E_expression.gff3">ZFIN Genes with Expression:
+          Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_expression.gff3" action="downloads/file/"
+          method="get" name="E_expression.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_expression.gff3')" type=
+            "button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-60">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">11,989</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-60">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even evengroup" id="loopindex-62">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/E_phenotype.gff3" id=
+          "E_phenotype.gff3">ZFIN Genes with Phenotype:
+          Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_phenotype.gff3" action="downloads/file/"
+          method="get" name="E_phenotype.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_phenotype.gff3')" type=
+            "button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-61">Show</a>
+        </td>
+        <td style="text-align: right">901 KB</td>
+        <td style="text-align: right">4,058</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-61">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd evengroup" id="loopindex-63">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/E_zfin_knockdown_reagents.gff3" id=
+          "E_zfin_knockdown_reagents.gff3">ZFIN Knockdown Reagents:
+          Ensembl</a><br />
+        </td>
+        <td>
+          <form id="E_zfin_knockdown_reagents.gff3" action=
+          "downloads/file/" method="get" name=
+          "E_zfin_knockdown_reagents.gff3">
+            <input value="gff3" onclick=
+            "downloadFile('2020.06.21','E_zfin_knockdown_reagents.gff3')"
+            type="button" class="gff3" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-62">Show</a>
+        </td>
+        <td style="text-align: right">3 MB</td>
+        <td style="text-align: right">22,985</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-62">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Chromosome</td>
+              <td>Source</td>
+              <td>Type</td>
+              <td>Start</td>
+              <td>End</td>
+              <td>Score</td>
+              <td>Strand</td>
+              <td>Phase</td>
+              <td>Attributes</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-64">
+        <td class="bold">Sequence Data</td>
+        <td>
+          <a href="downloads/transcripts.txt" id=
+          "transcripts.txt">Transcripts</a><br />
+        </td>
+        <td>
+          <form id="transcripts.txt" action="downloads/file/"
+          method="get" name="transcripts.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','transcripts.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-63">Show</a>
+        </td>
+        <td style="text-align: right">5 MB</td>
+        <td style="text-align: right">55,182</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-63">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Name</td>
+              <td>Gene ID</td>
+              <td>Clone ID</td>
+              <td>Transcript Type</td>
+              <td>Transcript Status</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-65">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/all_rna_accessions.txt" id=
+          "all_rna_accessions.txt">ZFIN Gene IDs indirectly and
+          directly associated with Sequence Accessions via cDNA
+          &amp; EST</a><br />
+        </td>
+        <td>
+          <form id="all_rna_accessions.txt" action=
+          "downloads/file/" method="get" name=
+          "all_rna_accessions.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','all_rna_accessions.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-64">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">129,431</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-64">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Gene Symbol</td>
+              <td>Sequence Accession</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-66">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/gene_seq.txt" id="gene_seq.txt">ZFIN
+          Gene IDs indirectly associated with Sequence Accessions
+          via cDNA &amp; EST</a><br />
+        </td>
+        <td>
+          <form id="gene_seq.txt" action="downloads/file/" method=
+          "get" name="gene_seq.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene_seq.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-65">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">41,504</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-65">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>Gene Symbol</td>
+              <td>Sequence Accession</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-67">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/ensembl_1_to_1.txt" id=
+          "ensembl_1_to_1.txt">ZFIN Marker associations to Ensembl
+          IDs</a><br />
+          (Only associations with 1:1 relationships between ZFIN
+          marker IDs and Ensembl IDs are stored in ZFIN. All
+          associations can be obtained using BioMart
+          http://www.ensembl.org/biomart/martview)
+        </td>
+        <td>
+          <form id="ensembl_1_to_1.txt" action="downloads/file/"
+          method="get" name="ensembl_1_to_1.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','ensembl_1_to_1.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-66">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">22,402</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-66">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>Gene SO ID</td>
+              <td>Symbol</td>
+              <td>Ensembl ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-68">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genbank.txt" id="genbank.txt">ZFIN
+          Marker associations to GenBank sequence data</a><br />
+        </td>
+        <td>
+          <form id="genbank.txt" action="downloads/file/" method=
+          "get" name="genbank.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genbank.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-67">Show</a>
+        </td>
+        <td style="text-align: right">6 MB</td>
+        <td style="text-align: right">144,590</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-67">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Name</td>
+              <td>GenBank ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-69">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/genpept.txt" id="genpept.txt">ZFIN
+          Marker associations to GenPept protein data</a><br />
+        </td>
+        <td>
+          <form id="genpept.txt" action="downloads/file/" method=
+          "get" name="genpept.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','genpept.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-68">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">42,744</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-68">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>Symbol</td>
+              <td>GenePept ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-70">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/interpro.txt" id="interpro.txt">ZFIN
+          Marker associations to InterPro protein data</a><br />
+        </td>
+        <td>
+          <form id="interpro.txt" action="downloads/file/" method=
+          "get" name="interpro.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','interpro.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-69">Show</a>
+        </td>
+        <td style="text-align: right">314 MB</td>
+        <td style="text-align: right">6,811,560</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-69">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Symbol</td>
+              <td>InterPro ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-71">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/gene.txt" id="gene.txt">ZFIN Marker
+          associations to NCBI Gene data</a><br />
+        </td>
+        <td>
+          <form id="gene.txt" action="downloads/file/" method="get"
+          name="gene.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','gene.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-70">Show</a>
+        </td>
+        <td style="text-align: right">1 MB</td>
+        <td style="text-align: right">23,212</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-70">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Symbol</td>
+              <td>NCBI Gene ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-72">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/refseq.txt" id="refseq.txt">ZFIN
+          Marker associations to RefSeq sequence data</a><br />
+        </td>
+        <td>
+          <form id="refseq.txt" action="downloads/file/" method=
+          "get" name="refseq.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','refseq.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-71">Show</a>
+        </td>
+        <td style="text-align: right">4 MB</td>
+        <td style="text-align: right">87,880</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-71">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Symbol</td>
+              <td>RefSeq ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd oddgroup" id="loopindex-73">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/vega.txt" id="vega.txt">ZFIN Marker
+          associations to Sanger Vega data</a><br />
+        </td>
+        <td>
+          <form id="vega.txt" action="downloads/file/" method="get"
+          name="vega.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','vega.txt')" type="button"
+            class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-72">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">38,875</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-72">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Symbol</td>
+              <td>Vega ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even oddgroup" id="loopindex-74">
+        <td class="bold"></td>
+        <td>
+          <a href="downloads/uniprot.txt" id="uniprot.txt">ZFIN
+          Marker associations to UniProt protein data</a><br />
+        </td>
+        <td>
+          <form id="uniprot.txt" action="downloads/file/" method=
+          "get" name="uniprot.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','uniprot.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-73">Show</a>
+        </td>
+        <td style="text-align: right">2 MB</td>
+        <td style="text-align: right">57,351</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-73">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>ZFIN ID</td>
+              <td>SO ID</td>
+              <td>Symbol</td>
+              <td>UniProt ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" odd newgroup evengroup" id="loopindex-75">
+        <td class="bold">Wildtype Lines</td>
+        <td>
+          <a href="downloads/wildtypes_fish.txt" id=
+          "wildtypes_fish.txt">Wildtype Lines</a><br />
+        </td>
+        <td>
+          <form id="wildtypes_fish.txt" action="downloads/file/"
+          method="get" name="wildtypes_fish.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','wildtypes_fish.txt')" type=
+            "button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-74">Show</a>
+        </td>
+        <td style="text-align: right">1 KB</td>
+        <td style="text-align: right">32</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-74">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>Fish ID</td>
+              <td>Fish Name</td>
+              <td>Fish Abbreviation</td>
+              <td>Genotype ID</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class=" even newgroup oddgroup" id="loopindex-76">
+        <td class="bold">ZFIN Identifiers</td>
+        <td>
+          <a href="downloads/identifiersForIntermine.txt" id=
+          "identifiersForIntermine.txt">ZFIN Identifiers</a><br />
+        </td>
+        <td>
+          <form id="identifiersForIntermine.txt" action=
+          "downloads/file/" method="get" name=
+          "identifiersForIntermine.txt">
+            <input value="tsv" onclick=
+            "downloadFile('2020.06.21','identifiersForIntermine.txt')"
+            type="button" class="tsv" />
+          </form>
+        </td>
+        <td>
+          <a href="#" class="header-toggle" data-toggle=
+          "#header-info-official-75">Show</a>
+        </td>
+        <td style="text-align: right">22 MB</td>
+        <td style="text-align: right">254,079</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="7" class="download-header-row" id=
+        "header-info-official-75">
+          <table>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>ID</td>
+              <td>Alternate Identifiers</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <h2>Externally Hosted Files:</h2>The 'File Name'-links point to
+    the latest version. To obtain previous versions you have to
+    check the archive of the external source.
+    <table class="summary groupstripes">
+      <tr>
+        <th width="200">Category</th>
+        <th width="500">Description</th>
+        <th>External Source</th>
+        <th width="200">File Name</th>
+        <th width="120">Update Frequency</th>
+        <th width="120">Format / Header</th>
+      </tr>
+      <tr>
+        <td class="bold">Gene Ontology Data</td>
+        <td>
+          <b>Gene Ontology (GO) Annotations of Zebrafish
+          Markers</b><br />
+          (<i>see also</i> <a href=
+          "http://www.geneontology.org/GO.format.gaf-2_0.shtml">GO
+          Annotation File format</a> at the Gene Ontology
+          Consortium)
+        </td>
+        <td>
+          <a href=
+          "http://www.geneontology.org/">geneontology.org</a>
+        </td>
+        <td>
+          <a href=
+          "ftp://ftp.geneontology.org/pub/go/gene-associations/gene_association.zfin.gz">
+          gene_association.zfin.gz</a>
+        </td>
+        <td>weekly</td>
+        <td>
+          <div style="font-size: 14px">
+            <span style="text-align:right" id=
+            "header-info-show-link"><a style=
+            "font-size:smaller; margin-right: 1em;" class=
+            "clickable showAll" onclick=
+            "jQuery('#header-info-show-link').hide(); jQuery('#header-info-hide-detail').show(); jQuery('#header-info').show();">
+            Show</a></span> <span style=
+            "text-align:right; display: none;" id=
+            "header-info-hide-detail"><a style=
+            "font-size:small; margin-right: 1em;" class=
+            "clickable hideAll" onclick=
+            "jQuery('#header-info').hide(); jQuery('#header-info-hide-detail').hide(); jQuery('#header-info-show-link').show();">
+            Hide</a></span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7">
+          <div style="font-size: smaller; display: none;" id=
+          "header-info" align="right">
+            <table class="summary1">
+              <tr>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Database Designation</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Marker ID</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Gene Symbol</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Qualifiers</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                GO<br />
+                Term ID</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Refer-<br />
+                ence ID</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                GO<br />
+                Evidence Code</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Inferred From</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Ontology: <span style="font-size: smaller"><br />
+                P=Biological Process<br />
+                F=Molecular Function<br />
+                C=Cellular Component</span></td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Marker Name</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Marker Synonyms<br />
+                (if any)</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Marker Type: <span style=
+                "font-size: smaller"><br />
+                gene<br />
+                transcript<br />
+                protein</span></td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Taxon</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Modification Date</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Assigned By</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Annotation Extension</td>
+                <td style=
+                "font-weight: bold; background-color: #91bdbd;">
+                Gene Product Form ID</td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="bold">Anatomical Ontologies</td>
+        <td>Zebrafish Anatomical Ontology in OBO Format</td>
+        <td>
+          <a href="http://www.obofoundry.org/">Obofoundry</a>
+        </td>
+        <td>
+          <a href=
+          "http://purl.obolibrary.org/obo/zfa.obo">zebrafish_anatomy.obo</a>
+        </td>
+        <td>monthly</td>
+        <td>OBO file format</td>
+      </tr>
+    </table>
+    <script type="text/javascript">
+    //<![CDATA[
+    function submitForm(fileName) {
+        var form = document.getElementById(fileName);
+        form.submit();
+    }
+
+    function downloadFile(date, fileName) {
+        //alert("Hello: " + fileName);
+
+
+        window.location = "downloads/file/" + fileName;
+
+
+
+    }
+
+    $(function () {
+        $(".header-toggle").click(function (evt) {
+            evt.preventDefault();
+            var $this = $(this);
+            $this.text($this.text() == "Show" ? "Hide" : "Show");
+            $($this.data("toggle")).slideToggle(200);
+        });
+    });
+    //]]>
+    </script>
+  </main>
+  <footer>
+    <div class="footer-row">
+      <div class="footer-contact">
+        <img src="/images/ZfinWordmarkWhite.gif" />
+        <div>
+          The Zebrafish Information Network
+        </div>
+        <div class="contact-info">
+          <div class="contact-icon"></div>
+          <div class="contact-details">
+            <address>
+              5291 University of Oregon<br />
+              Eugene, OR 97403-5291
+            </address>
+          </div>
+        </div><a href="mailto:zfinadmn@zfin.org">
+        <div class="contact-info">
+          <div class="contact-icon"></div>
+          <div class="contact-details">
+            zfinadmn@zfin.org
+          </div>
+        </div></a> <a href="https://twitter.com/ZFINmod">
+        <div class="contact-info">
+          <div class="contact-icon"></div>
+          <div class="contact-details">
+            @ZFINmod
+          </div>
+        </div></a>
+      </div>
+      <div class="footer-nav">
+        <div class="nav-column">
+          <div class="nav-column-header">
+            Search
+          </div>
+          <ul>
+            <li>
+              <a href="/action/marker/search">Genes / Clones</a>
+            </li>
+            <li>
+              <a href="/action/expression/search">Expression</a>
+            </li>
+            <li>
+              <a href="/action/fish/search">Mutants / Tg</a>
+            </li>
+            <li>
+              <a href="/action/antibody/search">Antibodies</a>
+            </li>
+            <li>
+              <a href="/action/ontology/search">Anatomy / GO /
+              Human Disease</a>
+            </li>
+            <li>
+              <a href="/action/publication/search">Publications</a>
+            </li>
+          </ul>
+        </div>
+        <div class="nav-column">
+          <div class="nav-column-header">
+            Data
+          </div>
+          <ul>
+            <li>
+              <a href="/downloads">Downloads</a>
+            </li>
+            <li>
+              <a href="/action/submit-data">Submit Data</a>
+            </li>
+          </ul>
+          <div class="nav-column-header">
+            Resources
+          </div>
+          <ul>
+            <li>
+              <a href="/zf_info/zfbook/zfbk.html">The Zebrafish
+              Book</a>
+            </li>
+            <li>
+              <a href="http://zebrafish.org">ZIRC</a>
+            </li>
+          </ul>
+          <div class="nav-column-header">
+            Genomics
+          </div>
+          <ul>
+            <li>
+              <a href="/action/blast/blast">BLAST</a>
+            </li>
+            <li>
+              <a href="/action/gbrowse/">Genome Browser</a>
+            </li>
+          </ul>
+        </div>
+        <div class="nav-column">
+          <div class="nav-column-header">
+            Community
+          </div>
+          <ul>
+            <li>
+              <a href="https://wiki.zfin.org/display/news">News</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/meetings">Meetings</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/jobs/Zebrafish-Related+Job+Announcements">
+              Jobs</a>
+            </li>
+            <li>
+              <a href="/action/profile/person/search">People</a>
+            </li>
+            <li>
+              <a href="/action/profile/lab/search">Labs</a>
+            </li>
+            <li>
+              <a href=
+              "/action/profile/company/search">Companies</a>
+            </li>
+          </ul>
+        </div>
+        <div class="nav-column">
+          <div class="nav-column-header">
+            Support
+          </div>
+          <ul>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/general/ZFIN+Tips">Help
+              &amp; Tips</a>
+            </li>
+            <li>
+              <a href="/zf_info/glossary.html">Glossary</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/general/ZFIN+Single+Box+Search+Help">
+              Single Box Search</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/general/ZFIN+Database+Information">
+              About ZFIN</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/general/ZFIN+Database+Information">
+              Citing ZFIN</a>
+            </li>
+            <li>
+              <a href=
+              "https://wiki.zfin.org/display/general/ZFIN+Contact+Information">
+              Contact Information</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-row copyright-row">
+      <div>
+        <a href="http://www.uoregon.edu/"><img src=
+        "/images/UOSignature-WHT.png" /></a> <a href=
+        "http://www.alliancegenome.org/"><img src=
+        "/images/AllianceLogoWhite.png" /></a>
+      </div>
+      <div class="nav-column right-align">
+        <div class="nowrap">
+          © 1994–2020 University of Oregon
+        </div>
+        <div>
+          <a href=
+          "https://wiki.zfin.org/display/general/WARRANTY+AND+LIABILITY+DISCLAIMER%2C+OWNERSHIP%2C+AND+LIMITS+ON+USE">
+          Terms of Use</a>
+        </div>
+        <div>
+          <small>ZFIN logo designed by Kari Pape</small>
+        </div>
+        <div style="max-width: 450px">
+          <small>Home page banner reprinted from Hearing Research,
+          341, Monroe, J.D. et al., Hearing sensitivity differs
+          between zebrafish lines used in auditory research,
+          220-231, Copyright (2016) with permission from
+          Elsevier</small>
+        </div>
+      </div>
+    </div>
+  </footer><button id="input-welcome-button" rel=
+  "#input-welcome-overlay">Your Input Welcome</button>
+  <div class="jq-modal" id="input-welcome-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        Your Input Welcome
+      </div>
+      <div class="popup-body" id="input-welcome-body">
+        <form id="input-welcome-form" name="input-welcome-form">
+          We welcome your input and comments. Please use this form
+          to recommend updates to the information in ZFIN. We
+          appreciate as much detail as possible and references as
+          appropriate. We will review your comments promptly.
+          <div id="input-welcome-form-controls">
+            <div id="input-welcome-validate">
+              Please check the highlighted fields and try again.
+            </div>
+            <div class="control">
+              <label for="input-welcome-name">Name:</label>
+              <input type="text" id="input-welcome-name" name=
+              "yiw-name" />
+            </div>
+            <div class="control">
+              <label for=
+              "input-welcome-institution">Institution:</label>
+              <input type="text" id="input-welcome-institution"
+              name="yiw-institution" />
+            </div>
+            <div class="control">
+              <label for="input-welcome-email">Email
+              address:</label> <input type="text" id=
+              "input-welcome-email" name="yiw-email" />
+            </div>
+            <div class="control" id="input-welcome-email2-ctrl">
+              <label for="input-welcome-email2">Please leave
+              blank:</label> <input type="text" id=
+              "input-welcome-email2" name="email" autocomplete=
+              "off" />
+            </div>
+            <div class="control">
+              <label for="input-welcome-subject">Subject:</label>
+              <input type="text" id="input-welcome-subject" name=
+              "yiw-subject" />
+            </div>
+            <div class="control">
+              <label for="input-welcome-comments">Comments:</label>
+              
+              <textarea id="input-welcome-comments" name=
+              "yiw-comments"></textarea>
+            </div>
+            <div class="control">
+              <button type="submit">Send your comments</button>
+            </div>
+          </div>
+        </form>
+        <div id="input-welcome-success-message">
+          Thank you for submitting comments. Your input has been
+          emailed to ZFIN curators who may contact you if
+          additional information is required.
+        </div>
+        <div id="input-welcome-error-message">
+          Oops. Something went wrong. Please try again later.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

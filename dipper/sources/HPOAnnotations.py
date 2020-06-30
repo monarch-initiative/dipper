@@ -21,7 +21,7 @@ LOG = logging.getLogger(__name__)
 # summer 2018 PR mentioned switching to the new format
 PNR = 'http://compbio.charite.de/jenkins/job/hpo.annotations.current'
 HPOADL2 = PNR + '/lastSuccessfulBuild/artifact/current'
-              # '/lastSuccessfulBuild/artifact/misc_2018'   dissapeared by 2020 03
+              # '/lastSuccessfulBuild/artifact/misc_2018'   disappeared by 2020 03
 
 # Fall 2018 CM made a mondo version of common disease (but we decided to hold off now)
 GITAPI = "https://api.github.com/repos/monarch-initiative"
@@ -61,7 +61,7 @@ class HPOAnnotations(Source):
             'file': 'phenotype.hpoa',
             'url':  HPOADL2 + '/phenotype.hpoa',
             'columns': [
-                'DatabaseID',
+                '#DatabaseID',
                 'DiseaseName',
                 'Qualifier',
                 'HPO_ID',
@@ -207,7 +207,7 @@ class HPOAnnotations(Source):
             for row in reader:
                 row = [str(col).strip() for col in row]
 
-                disease_id = row[col.index('DatabaseID')]
+                disease_id = row[col.index('#DatabaseID')]
                 # 98246 OMIM
                 # 68646 ORPHA
                 # 297 DECIPHER
