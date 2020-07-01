@@ -228,12 +228,10 @@ class GeneReviews(OMIMSource):
                     # but only if the omim id is not a gene
                     if omim_id in entries_that_are_phenotypes:
                         model.addClassToGraph(omim_id, None,
-                                              class_category=
-                                              blv.terms.PhenotypicFeature.value)
+                                              class_category=blv.terms.Disease.value)
                         model.addSubClass(omim_id, gr_id,
-                                          child_category=blv.terms.PhenotypicFeature.value,
-                                          parent_category=
-                                          blv.terms.InformationContentEntity.value)
+                                          child_category=blv.terms.Disease.value,
+                                          parent_category=blv.terms.Disease.value)
             # add this as a generic subclass  -- TEC: this is the job of inference
             model.addSubClass(gr_id, self.globaltt['disease'])
 

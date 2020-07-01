@@ -171,45 +171,46 @@ OBI:0000175 biolink:category biolink:EvidenceType .
         )
 
         triples = """
-<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
-  BFO:0000051 OBO:STATO_0000076,
-      <https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> ;
-  BFO:0000050  IMPC-pipe:MGP_001 ,
-      <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-  SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> ;
-  SEPIO:0000017 <http://www.sanger.ac.uk/>  .
-
 <https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
-    rdfs:label "MEFW" .
+    rdfs:label "MEFW" ;
+    biolink:category biolink:PopulationOfIndividualOrganisms .
+
+<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
+    BFO:0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project>,
+        IMPC-pipe:MGP_001 ;
+    BFO:0000051 STATO:0000076,
+        IMPC-proc:MGP_XRY_001 ;
+    SEPIO:0000017 <http://www.sanger.ac.uk/> ;
+    SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> ;
+    biolink:category biolink:EvidenceType,
+        biolink:InformationContentEntity .
+
+STATO:0000076 biolink:category biolink:EvidenceType .
 
 <http://www.sanger.ac.uk/> a foaf:organization ;
-    rdfs:label "WTSI" .
+    rdfs:label "WTSI" ;
+    biolink:category biolink:Provider .
 
 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
-    rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
+    rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" ;
+    biolink:category biolink:Provider .
 
 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> a owl:NamedIndividual ;
-    rdfs:label "Number of ribs right (X-ray)" .
+    rdfs:label "Number of ribs right (X-ray)" ;
+    biolink:category biolink:EvidenceType,
+        biolink:InformationContentEntity .
 
 IMPC-pipe:MGP_001 a owl:NamedIndividual ;
-    rdfs:label "MGP Select Pipeline" .
-<https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> a owl:NamedIndividual ;
-    rdfs:label "X-ray" .
-    
-OBO:STATO_0000076 biolink:category biolink:EvidenceType .
-<http://www.sanger.ac.uk/> biolink:category biolink:Provider .
-<http://www.sanger.ac.uk/science/data/mouse-genomes-project> biolink:category biolink:Provider .
-<https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> biolink:category biolink:PopulationOfIndividualOrganisms .
-<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> biolink:category biolink:EvidenceType .
-<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> biolink:category biolink:InformationContentEntity .
-<https://www.mousephenotype.org/impress/parameterontologies/1867/91> biolink:category biolink:EvidenceType .
-<https://www.mousephenotype.org/impress/parameterontologies/1867/91> biolink:category biolink:InformationContentEntity .
-<https://www.mousephenotype.org/impress/procedures/15> biolink:category biolink:EvidenceType .
-<https://www.mousephenotype.org/impress/protocol/175/15> biolink:category biolink:EvidenceType .
+    rdfs:label "MGP Select Pipeline" ;
+    biolink:category biolink:EvidenceType .
+
+IMPC-proc:MGP_XRY_001 a owl:NamedIndividual ;
+    rdfs:label "X-ray" ;
+    biolink:category biolink:EvidenceType .
 """
 
         # dbg
-        LOG.debug(
+        LOG.info(
             "Reference graph: %s",
             impc.graph.serialize(format="turtle").decode("utf-8")
         )

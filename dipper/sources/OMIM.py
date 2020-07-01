@@ -1088,18 +1088,17 @@ class OMIM(OMIMSource):
                 self.globaltt['has_affected_feature']
             ]:
                 omim_id_category = blv.terms.Gene.value
-            elif self.omim_type[entry_num] in [
-                self.globaltt['phenotype'],
-                self.globaltt['heritable_phenotypic_marker']
-            ]:
-                omim_id_category = blv.terms.PhenotypicFeature.value
+            elif self.omim_type[entry_num] == self.globaltt['phenotype']:
+                omim_id_category = blv.terms.Disease.value
+            elif self.omim_type[entry_num] == self.globaltt['heritable_phenotypic_marker']:
+                omim_id_category = blv.terms.GenomicEntity.value
             else:
                 omim_id_category = None
         else:
             omim_id_category = None
 
         return omim_id_category
-tax_curie
+
     # def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
     #        import unittest

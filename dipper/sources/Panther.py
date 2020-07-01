@@ -254,16 +254,23 @@ class Panther(Source):
                 assoc.add_evidence(evidence_id)
 
                 # add genes to graph;  assume labels will be taken care of elsewhere
-                model.addType(gene_a, self.globaltt['gene'])
-                model.addType(gene_b, self.globaltt['gene'])
+                model.addType(gene_a, self.globaltt['gene'],
+                              subject_category=blv.terms.Gene.value)
+                model.addType(gene_b, self.globaltt['gene'],
+                              subject_category=blv.terms.Gene.value)
 
                 # might as well add the taxon info for completeness
                 graph.addTriple(
-                    gene_a, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_a)
+                    gene_a, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_a,
+                    subject_category=blv.terms.Gene.value,
+                    object_category=blv.terms.OrganismTaxon.value)
                 graph.addTriple(
-                    gene_b, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_b)
+                    gene_b, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_b,
+                    subject_category=blv.terms.Gene.value,
+                    object_category=blv.terms.OrganismTaxon.value)
 
-                assoc.add_association_to_graph()
+                assoc.add_association_to_graph(subject_category=blv.terms.Gene.value,
+                                               object_category=blv.terms.Gene.value)
 
                 # note this is incomplete...
                 # it won't construct the full family hierarchy,
