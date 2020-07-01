@@ -155,7 +155,7 @@ class UDPTestCase(unittest.TestCase):
             biolink:category biolink:Genotype .
             
         NCBITaxon:9606 biolink:category biolink:OrganismTaxon .
-        :patient_1 biolink:category biolink:Case .
+        <https://monarchinitiative.org/MONARCH_patient_1> biolink:category biolink:Case .
         """
 
         self.assertTrue(self.test_util.test_graph_equality(triples, udp.graph))

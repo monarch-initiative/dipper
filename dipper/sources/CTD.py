@@ -421,7 +421,15 @@ class CTD(Source):
 
         self._make_association(gene_id, preferred_disease_id, rel_id, refs)
 
-    def _make_association(self, subject_id, object_id, rel_id, pubmed_ids):
+    def _make_association(
+            self,
+            subject_id,
+            object_id,
+            rel_id,
+            pubmed_ids,
+            subject_category=None,
+            object_category=None
+    ):
         """
         Make a reified association given an array of pubmed identifiers.
 
