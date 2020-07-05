@@ -7,7 +7,7 @@
 'MonarchArchive': 'https://archive.monarchinitiative.org/'          # Release RDF data
 'MonarchLogoRepo': 'https://github.com/monarch-initiative/monarch-ui/blob/master/public/img/sources/'    # Monarch's stash of logos for sources we ingest - this is used to set schemalogo in Dataset.py
 
-'biolink': 'http://w3id.org/biolink/vocab/'                         # Biolink model
+'biolink': 'https://w3id.org/biolink/vocab/'                         # Biolink model
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
