@@ -18,10 +18,8 @@ GWAS:kgp8851185 a OBO:SO_0000001,
 
 OBO:ECO_0000213 biolink:category biolink:EvidenceType .
 OBO:NCBITaxon_9606 biolink:category biolink:OrganismTaxon .
-<http://www.ebi.ac.uk/efo/EFO_0001357> biolink:category biolink:PhenotypicFeature .
 <http://www.ncbi.nlm.nih.gov/pubmed/24529757> biolink:category biolink:EvidenceType .
 <http://www.ncbi.nlm.nih.gov/pubmed/24529757> biolink:category biolink:Publication .
 <https://monarchinitiative.org/MONARCH_b795746ddae073f28409> biolink:category biolink:Association .
 <https://www.ebi.ac.uk/gwas/variants/kgp8851185> biolink:category biolink:GenomicSequenceLocalization .
-<https://www.ebi.ac.uk/gwas/variants/kgp8851185> biolink:category biolink:Genotype .
 <https://www.ebi.ac.uk/gwas/variants/kgp8851185> biolink:category biolink:SequenceVariant .

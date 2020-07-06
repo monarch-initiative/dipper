@@ -109,5 +109,4 @@ dbSNP:rs7020413 biolink:category biolink:SequenceVariant .
 <https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> biolink:category biolink:GenomicSequenceLocalization .
 <https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> biolink:category biolink:GenomicSequenceLocalization .
 <https://monarchinitiative.org/MONARCH_b464cf2c118cac01ef22> biolink:category biolink:Association .
-<https://monarchinitiative.org/haplotype_bb627b1f64039b0f751a> biolink:category biolink:Genotype .
 <https://monarchinitiative.org/haplotype_bb627b1f64039b0f751a> biolink:category biolink:SequenceVariant .

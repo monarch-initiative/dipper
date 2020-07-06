@@ -58,6 +58,8 @@ class StringTestFakeData(unittest.TestCase):
         # g1 <interacts with> g2
         triples = """
 ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
+ENSEMBL:ENSG00000001626  biolink:category biolink:Gene .
+ENSEMBL:ENSG00000004059 biolink:category biolink:Gene .
         """
 
         self.assertTrue(self.test_util.test_graph_equality(triples, string_db.graph))

@@ -52,7 +52,6 @@ OBO:ECO_0000213 biolink:category biolink:EvidenceType .
 OBO:NCBITaxon_9606 biolink:category biolink:OrganismTaxon .
 <http://www.ebi.ac.uk/efo/EFO_0000270> biolink:category biolink:PhenotypicFeature .
 <http://www.ebi.ac.uk/efo/EFO_0006995> biolink:category biolink:PhenotypicFeature .
-dbSNP:rs1491921 biolink:category biolink:Genotype .
 dbSNP:rs1491921 biolink:category biolink:SequenceVariant .
 <http://www.ncbi.nlm.nih.gov/pubmed/25918132> biolink:category biolink:EvidenceType .
 <http://www.ncbi.nlm.nih.gov/pubmed/25918132> biolink:category biolink:Publication .
