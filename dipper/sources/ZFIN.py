@@ -1661,11 +1661,11 @@ class ZFIN(Source):
                 genomfeat_curie = ':'.join(('ZFIN', genomic_feature_id))
                 model.addIndividualToGraph(
                     genomfeat_curie, genomic_feature_name, feature_so_id,
-                    class_category=blv.terms.GenomicSequenceLocalization.value)
+                    ind_category=blv.terms.GenomicSequenceLocalization.value)
 
                 model.addSynonym(
                     genomfeat_curie, genomic_feature_abbreviation,
-                    ind_category=blv.terms.GenomicSequenceLocalization.value)
+                    class_category=blv.terms.GenomicSequenceLocalization.value)
 
                 if construct_id is not None and construct_id != '':
                     construct_curie = ':'.join(('ZFIN', construct_id))

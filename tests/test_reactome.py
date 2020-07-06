@@ -4,6 +4,7 @@ import unittest
 from dipper.sources.Reactome import Reactome
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 
 class ReactomeTestCase(unittest.TestCase):
@@ -39,7 +40,7 @@ class ReactomeTestCase(unittest.TestCase):
          go_ecode, species_name) = self.test_set_1
         reactome._add_component_pathway_association(
             'ENSEMBL:' + gene, 'REACT:' + pathway_id, pathway_label,
-            self.gaf_eco[go_ecode])
+            self.gaf_eco[go_ecode], category=blv.terms.Gene.value)
 
         triples = """
         ENSEMBL:ENSBTAP00000013354 RO:0002331 REACT:R-BTA-3000480 .

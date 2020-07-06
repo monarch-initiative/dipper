@@ -24,8 +24,8 @@ class G2PAssoc(Assoc):
     """
 
     def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None,
-                 entity_category=blv.terms.Genotype.value,
-                 phenotype_category=blv.terms.PhenotypicFeature.value):
+                 entity_category=None,
+                 phenotype_category=None):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id

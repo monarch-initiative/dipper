@@ -82,13 +82,11 @@ class D2PAssoc(Assoc):
         # anticipating trouble with onsets ranges that look like curies
         if self.onset is not None and self.onset != '':
             self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset,
-                                 subject_category=self.disease_category,
                                  object_category=self.phenotype_category)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['frequency'], self.frequency,
-                subject_category=self.disease_category,
                 object_category=self.phenotype_category)
 
         return

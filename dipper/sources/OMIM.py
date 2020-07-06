@@ -963,30 +963,32 @@ class OMIM(OMIMSource):
         orpha_mappings = []
         if 'externalLinks' in entry:
             links = entry['externalLinks']
-            if 'orphanetDiseases' in links:
-                # triple semi-colon delimited list of
-                # double semi-colon delimited orphanet ID/disease pairs
-                # 2970;;566;;Prune belly syndrome
-                items = links['orphanetDiseases'].strip().split(';;;')
-                for item in items:
-                    orphdis = item.strip().split(';;')
-                    orpha_num = orphdis[0].strip()
-                    orpha_label = orphdis[2].strip()
-                    orpha_curie = 'ORPHA:' + orpha_num
-                    orpha_mappings.append(orpha_curie)
-                    model.addClassToGraph(orpha_curie, orpha_label,
-                                          class_category=blv.terms.Disease.value)
-                    model.addXref(omim_curie, orpha_curie,
-                                  class_category=blv.terms.Disease.value,
-                                  xref_category=blv.terms.Disease.value)
+            # KS - This appears to buggy (lot's of ORPHA:None)
+            # and we get them from MONDO anyway
+            #
+            # if 'orphanetDiseases' in links:
+            #    # triple semi-colon delimited list of
+            #    # double semi-colon delimited orphanet ID/disease pairs
+            #    # 2970;;566;;Prune belly syndrome
+            #    items = links['orphanetDiseases'].strip().split(';;;')
+            #    for item in items:
+            #        orphdis = item.strip().split(';;')
+            #        orpha_num = orphdis[0].strip()
+            #        orpha_label = orphdis[2].strip()
+            #        orpha_curie = 'ORPHA:' + orpha_num
+            #        orpha_mappings.append(orpha_curie)
+            #        model.addClassToGraph(orpha_curie, orpha_label,
+            #                              class_category=blv.terms.Disease.value)
+            #        model.addXref(omim_curie, orpha_curie,
+            #                      class_category=blv.terms.Disease.value,
+            #                      xref_category=blv.terms.Disease.value)
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
                 for umls in umls_mappings:
                     umls_curie = 'UMLS:' + umls
                     model.addClassToGraph(umls_curie, None)
-                    model.addXref(omim_curie, umls_curie,
-                                  class_category=blv.terms.Disease.value)
+                    model.addXref(omim_curie, umls_curie)
 
     def _get_mapped_gene_ids(self, entry, graph):
         gene_ids = []

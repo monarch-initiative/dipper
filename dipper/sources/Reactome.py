@@ -93,13 +93,21 @@ class Reactome(Source):
             LOG.info("Only parsing first %d rows", limit)
 
         self._parse_reactome_association_file(
-            'ensembl2pathway', limit, subject_prefix='ENSEMBL', object_prefix='REACT')
+            'ensembl2pathway', limit, subject_prefix='ENSEMBL',
+            object_prefix='REACT', category=blv.terms.Gene.value)
 
         self._parse_reactome_association_file(
-            'chebi2pathway', limit, subject_prefix='CHEBI', object_prefix='REACT')
+            'chebi2pathway', limit, subject_prefix='CHEBI',
+            object_prefix='REACT', category=blv.terms.ChemicalSubstance.value)
 
     def _parse_reactome_association_file(
-            self, src_key, limit=None, subject_prefix=None, object_prefix=None):
+            self,
+            src_key,
+            limit=None,
+            subject_prefix=None,
+            object_prefix=None,
+            category=None
+    ):
         """
         Parse ensembl gene to reactome pathway file
         :param file: file path (not handle)
@@ -122,6 +130,7 @@ class Reactome(Source):
                 gene_curie = ':'.join((subject_prefix, component))
                 pathway_curie = ':'.join((object_prefix, pathway_id))
 
+                eco_curie = None
                 if go_ecode in self.gaf_eco:
                     eco_curie = self.gaf_eco[go_ecode]
                 else:
@@ -129,18 +138,18 @@ class Reactome(Source):
                         'Evidence code %s not found in %s', go_ecode, str(self.gaf_eco))
 
                 self._add_component_pathway_association(
-                   gene_curie, pathway_curie, pathway_label, eco_curie)
+                   gene_curie, pathway_curie, pathway_label, eco_curie, category)
 
                 if limit is not None and reader.line_num >= limit:
                     break
 
     def _add_component_pathway_association(
-            self, gene_curie, pathway_curie, pathway_label, eco_curie):
+            self, gene_curie, pathway_curie, pathway_label, eco_curie, category=None):
 
         pathway = Pathway(self.graph)
         pathway.addPathway(pathway_curie, pathway_label)
         pathway.addComponentToPathway(gene_curie, pathway_curie,
-                                      component_category=blv.terms.Gene.value)
+                                      component_category=category)
 
         association = Assoc(self.graph, self.name,
                             subject_category=blv.terms.Gene.value,

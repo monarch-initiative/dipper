@@ -225,7 +225,7 @@ class HPOAnnotations(Source):
                 if row[col.index('Qualifier')] == 'NOT':
                     continue
 
-                pheno_id = row[col.index('HPO_ID')]
+                hpo_id = row[col.index('HPO_ID')]
                 publist = row[col.index('Reference')]
                 eco_id = self.resolve(row[col.index('Evidence')])
                 onset = row[col.index('Onset')]
@@ -236,12 +236,10 @@ class HPOAnnotations(Source):
                 # row[col.index('Biocuration')]  unused
 
                 # LOG.info(
-                #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
+                #    'adding <%s>-to-<%s> because <%s>', disease_id, hpo_id, eco_id)
 
                 model.addClassToGraph(disease_id,
                                       class_category=blv.terms.Disease.value)
-                model.addClassToGraph(pheno_id,
-                                      class_category=blv.terms.PhenotypicFeature.value)
                 model.addClassToGraph(eco_id,
                                       class_category=blv.terms.EvidenceType.value)
                 if onset is not None and onset != '':
@@ -249,12 +247,15 @@ class HPOAnnotations(Source):
                                           class_category=blv.terms.LifeStage.value)
 
                 if asp in ('P', 'M'):  # phenotype? abnormality or mortality
+                    model.addClassToGraph(hpo_id,
+                                          class_category=blv.terms.PhenotypicFeature.value)
                     assoc = D2PAssoc(  # default rel=self.globaltt['has phenotype']
-                        graph, self.name, disease_id, pheno_id,
+                        graph, self.name, disease_id, hpo_id,
                         onset, freq)
                 elif asp in ('I', 'C'):  # inheritance pattern or clinical course/onset
+                    model.addClassToGraph(hpo_id)
                     assoc = D2PAssoc(
-                        graph, self.name, disease_id, pheno_id,
+                        graph, self.name, disease_id, hpo_id,
                         rel=self.globaltt['has disposition'])
                 else:
                     LOG.error("Unknown aspect : %s at line %i", asp, reader.line_num)

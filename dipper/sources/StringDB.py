@@ -4,6 +4,8 @@ import gzip
 import pandas as pd
 from dipper.sources.Source import Source, USER_AGENT
 from dipper.sources.Ensembl import Ensembl
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
+
 
 LOG = logging.getLogger(__name__)
 
@@ -208,7 +210,9 @@ class StringDB(Source):
                 for gene1 in gene1_curies:
                     for gene2 in gene2_curies:
                         self.graph.addTriple(
-                            gene1, self.globaltt['interacts with'], gene2)
+                            gene1, self.globaltt['interacts with'], gene2,
+                            subject_category=blv.terms.Gene.value,
+                            object_category=blv.terms.Gene.value)
                 if limit is not None and index >= limit:
                     break
 
