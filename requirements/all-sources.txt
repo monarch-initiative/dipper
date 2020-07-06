@@ -5,5 +5,5 @@ beautifulsoup4
 intermine
 numpy
 pandas
-ontobio
+ontobio==1.18.1
 git+https://github.com/adrienverge/yamllint
