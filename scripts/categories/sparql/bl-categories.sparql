@@ -1,0 +1,13 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX meta: <https://w3id.org/biolink/biolinkml/meta/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX biolink: <https://w3id.org/biolink/vocab/>
+
+
+CONSTRUCT {
+    ?type biolink:category ?category .
+}
+WHERE {
+  ?category meta:class_uri ?class .
+  ?type (a|rdfs:subClassOf|owl:equivalentClass|owl:sameAs)* ?class .
+}
