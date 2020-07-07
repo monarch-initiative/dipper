@@ -42,4 +42,4 @@ be chunked to lessen the memory requirement, although robot reason is also
 memory intensive prohibiting this from running on most laptops.
 
 On monarch4 this runs in 40 minutes running make in parallel mode via
-```make -j 5```
+```make -j 4```

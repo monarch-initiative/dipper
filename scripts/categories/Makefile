@@ -115,7 +115,7 @@ $(QUERIES):
 	sed "s/{DATASET}/$(basename $(notdir $@)).nt/" sparql/infer-categories.sparql.tmpl > $@
 
 $(BL_SHIM): $(QUERIES) $(MONARCH_SOURCES) blshim/ rdf/class-category.ttl jena/bin/arq
-	JVM_ARGS="-Xmx50G" $(ARQ) \
+	JVM_ARGS="-Xmx60G" $(ARQ) \
 	  --namedgraph rdf/class-category.ttl \
 	  --namedgraph rdf/$(basename $(notdir $@)).nt \
 	  --query sparql/$(basename $(notdir $@)).rq \
