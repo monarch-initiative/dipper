@@ -255,7 +255,7 @@ class UDP(Source):
         self._add_variant_gene_relationship(patient_var_map, gene_coordinate_map)
 
         for patient in patient_var_map:
-            patient_curie = ':{0}'.format(patient)
+            patient_curie = 'MONARCH:{0}'.format(patient)
             # make intrinsic genotype for each patient
             intrinsic_geno_bnode = self.make_id(
                 "{0}-intrinsic-genotype".format(patient), "_")
@@ -602,7 +602,7 @@ class UDP(Source):
         reader = csv.reader(file, delimiter="\t")
         for row in reader:
             (patient_id, hpo_curie, present) = row
-            patient_curie = ':{0}'.format(patient_id)
+            patient_curie = 'MONARCH:{0}'.format(patient_id)
             if patient_id == 'Patient':  # skip header
                 line_counter += 1
                 continue

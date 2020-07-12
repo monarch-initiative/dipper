@@ -1,0 +1,146 @@
+# ag "idhash." dipper/sources/MGI.py
+
+           'allele': {}
+
+736:        idhash['allele'][object_key] = mgiid   # ~736
+
+
+816:                allele_id  = self.idhash['allele'].get(allele_key)
+974:                allele1_id = self.idhash['allele'].get(allele_key_1)
+975:                allele2_id = self.idhash['allele'].get(allele_key_2)
+
+                     # make sure it is a transgenic insertion   
+1129:                allele_id = self.idhash['allele'].get(allele_key)
+
+1247:               allele_id  = self.idhash['allele'].get(object_key)
+2191:               allele_id  = self.idhash['allele'].get(allele_key)
+
+            allele  ==  all_summary_view.object_key 
+    
+                becomes:   
+                    all_allele_view.allele_key
+                    gxd_allelepair_view.allele_key_1
+                    gxd_allelepair_view.allele_key_2
+                    all_allele_mutation_view.allele_key
+                    voc_annot_view.object_key
+                    mgi_note_allele_view.allele_key
+
+--------------------------------------------------------------------------------------
+            'marker': {}
+
+1674:    if self.idhash['marker'].get(object_key) is None:
+1676:       self.idhash['marker'][object_key] = mgiid
+1748:       self.idhash['marker'][object_key] = marker_id
+
+828:                marker_id = self.idhash['marker'].get(marker_key)
+1233:               marker_id = self.idhash['marker'].get(object_key)
+1581:               marker_id = self.idhash['marker'].get(marker_key)
+1796:                   mgiid = self.idhash['marker'][object_key]
+2055:                 gene_id = self.idhash['marker'][marker_key]
+
+
+            'marker' == mrk_summary_view.object_key & mrk_acc_view.object_key
+
+                together? become:
+                    all_allele_view.object_key
+                    voc_annot_view.object_key
+                    mrk_marker_view.marker_key    (marker_status_key != '2' ''withdrawn)
+                    mrk_acc_view.object_key
+                    mrk_location_cache.marker_key
+
+---------------------------------------------------------------------------------------
+            'publication': {},
+1399:                self.idhash['publication'][object_key] = accid
+1423:                jid = self.idhash['publication'].get(object_key)
+
+             bib_acc_view.object_key
+
+                ... becomes itself.   
+            self join used to equate 'J' & 'MGI' pub ids...
+
+---------------------------------------------------------------------------------------
+            'strain': {},
+
+
+1878:        self.idhash['strain'][object_key] = mgiid
+1881:        elif object_key in self.idhash['strain']: strain_id = 'JAX:' + accid
+
+             else where not exists ... blanknode    
+557:         self.idhash['strain'].update({strain_key: strain_id})
+
+
+550:                strain_id = self.idhash['strain'].get(strain_key)
+902:                strain_id = self.idhash['strain'].get(strain_key)
+1508:               strain_id = self.idhash['strain'].get(strain_key)
+
+2238:               strain_id = self.idhash['strain'].get(strain_key)
+            
+            prb_strain_acc_view.object_key  + hardcode + blanknodes
+
+                become:
+
+                    gxd_genotype_view.strain_key
+                    all_allele_view.strain_key
+                    prb_strain_view.strain_key
+                    prb_strain_genotype_view.strain_key
+
+---------------------------------------------------------------------------------------
+            'genotype': {}
+
+540:        if self.idhash['genotype'].get(genotype_key) is None:
+543:           self.idhash['genotype'][genotype_key] = mgiid
+
+640:        self.idhash['genotype'][object_key] = mgiid
+
+966:                genotype_id = self.idhash['genotype'].get(genotype_key)
+1202:               genotype_id = self.idhash['genotype'].get(object_key)
+1216:               genotype_id = self.idhash['genotype'].get(object_key)
+
+            gxd_genotype_summary_view.object_key + gxd_genotype_view.mgiid  (redundant?)
+    
+                becomes:
+                    
+                    gxd_allelepair_view.genotype_key
+                    voc_annot_view.object_key
+                    
+---------------------------------------------------------------------------------------
+            'annot': {},
+
+1261:       self.idhash['annot'][annot_key] = assoc_id  # (monarch_association)
+1328:                assoc_id = self.idhash['annot'].get(annot_key)
+2001:                annot_id = self.idhash['annot'].get(annotkey)
+
+            voc_annot_view.annot_key
+        
+                becomes:
+                    evidence_view.annot_key
+                    mgi_note_vocevidence_view.'notes[object_key]'
+
+---------------------------------------------------------------------------------------
+            'notes': {}
+
+1326:       self.idhash['notes'][annot_evidence_key] = annot_key
+2000:                annotkey = self.idhash['notes'].get(object_key)
+
+            evidence_view.annot_evidence_key
+
+                becomes:
+                    mgi_note_vocevidence_view.object_key
+                    
+---------------------------------------------------------------------------------------
+            'seqalt': {}
+
+854:        self.idhash['seqalt'][allele_key] = iseqalt_id
+
+1109:                iseqalt_id = self.idhash['seqalt'].get(allele_key)            
+2130:                seqalt_id = self.idhash['seqalt'].get(allele_key)
+
+
+            all_allele_view.allele_key
+
+                becomes:    
+
+                    all_allele_mutation_view.allele_key
+                    mgi_relationship_transgene_genes.allele_key
+
+

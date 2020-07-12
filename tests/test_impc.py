@@ -163,10 +163,10 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         triples = """
 <https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
   BFO:0000051 OBO:STATO_0000076,
-      <https://www.mousephenotype.org/impress/protocol/175/15> ;
-  BFO:0000050  IMPRESS-procedure:15 ,
+      <https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> ;
+  BFO:0000050  IMPC-pipe:MGP_001 ,
       <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-  SEPIO:0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
+  SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> ;
   SEPIO:0000017 <http://www.sanger.ac.uk/>  .
 
 <https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
@@ -178,13 +178,12 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
     rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
 
-<https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
+<https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> a owl:NamedIndividual ;
     rdfs:label "Number of ribs right (X-ray)" .
 
-IMPRESS-procedure:15 a owl:NamedIndividual ;
+IMPC-pipe:MGP_001 a owl:NamedIndividual ;
     rdfs:label "MGP Select Pipeline" .
-
-<https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
+<https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> a owl:NamedIndividual ;
     rdfs:label "X-ray" .
 """
 

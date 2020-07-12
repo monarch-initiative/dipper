@@ -1,0 +1,294 @@
+'genotype_features.txt':
+
+              Genotype ID
+              Genotype Name
+              Genotye Unique Name
+              Allele ID
+              Allele Name
+              Allele Abbreviation
+              Allele Type
+              Allele Display Type
+              Gene or Construct Symbol
+              Corresponding ZFIN Gene ID/Construct ID
+              Allele Zygosity
+              Construct Name
+              Construct ZdbId
+            
+'phenotype_fish.txt':
+
+              Fish ID
+              Fish Name
+              Start Stage ID
+              Start Stage Name
+              End Stage ID
+              End Stage Name
+              Affected Structure or Process 1 subterm ID
+              Affected Structure or Process 1 subterm Name
+              Post-composed Relationship ID
+              Post-composed Relationship Name
+              Affected Structure or Process 1 superterm ID
+              Affected Structure or Process 1 superterm
+              Name
+              Phenotype Keyword ID
+              Phenotype Keyword Name
+              Phenotype Tag
+              Affected Structure or Process 2 subterm ID
+              Affected Structure or Process 2 subterm name
+              Post-composed Relationship (rel) ID
+              Post-composed Relationship (rel) Name
+              Affected Structure or Process 2 superterm ID
+              Affected Structure or Process 2 superterm
+              name
+              Publication ID
+              Environment ID
+            
+'zfinpubs.txt':
+
+              Publication ID
+              pubMed ID (none or blank when not available)
+              Authors
+              Title
+              Journal
+              Year
+              Volume
+              Pages
+            
+'Morpholinos.txt':
+
+              Gene ID
+              Gene SO ID
+              Gene Symbol
+              Morpholino ID
+              Morpholino SO ID
+              Morpholino Symbol
+              Morpholino Sequence
+              Publication(s)
+              Note
+            
+'pheno_environment_fish.txt':
+
+              Environment ID
+              ZECO Term Name
+              ZECO Term ID (ZECO:ID)
+              Chebi Term Name
+              Chebi Term ID (Chebi:ID)
+              ZFA Term Name
+              ZFA Term ID (ZFA:ID)
+              Affected Structure Subterm Name
+              Affected Structure Subterm ID (GO-CC:ID)
+              NCBI Taxon Name
+              NCBI Taxon ID (NCBI Taxon:ID)
+            
+'stage_ontology.txt':
+
+              Stage ID
+              Stage OBO ID
+              Stage Name
+              Begin Hours
+              End Hours
+            
+'mappings.txt':
+
+              ZFIN ID
+              Symbol
+              Panel Symbol
+              Chromosome
+              Location
+              Metric
+            
+'genotype_backgrounds.txt':
+
+              Genotype ID
+              Genotype Name
+              Background
+              Background Name
+            
+'genbank.txt':
+
+              ZFIN ID
+              SO ID
+              Name
+              GenBank ID
+            
+'uniprot.txt':
+
+              ZFIN ID
+              SO ID
+              Symbol
+              UniProt ID
+            
+'gene.txt':
+
+              ZFIN ID
+              SO ID
+              Symbol
+              NCBI Gene ID
+            
+'human_orthos.txt':
+
+              ZFIN ID
+              ZFIN Symbol
+              ZFIN Name
+              Human Symbol
+              Human Name
+              OMIM ID
+              Gene ID
+              HGNC ID
+              Evidence
+              Pub ID
+            
+'features.txt':
+
+              Genomic Feature ID
+              Feature SO ID
+              Genomic Feature Abbreviation
+              Genomic Feature Name
+              Genomic Feature Type
+              Mutagen
+              Mutagee
+              Construct ID
+              Construct name
+              Construct SO ID
+              TALEN/CRISPR ID
+              TALEN/CRISPR Name
+            
+'features-affected-genes.txt':
+
+              Genomic Feature ID
+              Feature SO ID
+              Genomic Feature Abbreviation
+              Gene Symbol
+              Gene ID
+              Gene SO ID
+              Genomic Feature - Marker Relationship
+              Feature Type
+              DNA/cDNA Change SO ID
+              Reference Nucleotide
+              Mutant Nucleotide
+              Base Pairs Added
+              Base Pairs Removed
+              DNA/cDNA Change Position Start
+              DNA/cDNA Change Position End
+              DNA/cDNA Reference Sequence
+              DNA/cDNA Change Localization
+              DNA/cDNA Change Localization SO ID
+              DNA/cDNA Change Localization Exon
+              DNA/cDNA Change Localization Intron
+              Transcript Consequence
+              Transcript Consequence SO ID
+              Transcript Consequence Exon
+              Transcript Consequence Intron
+              Protein Consequence
+              Protein Consequence SO ID
+              Reference Amino Acid
+              Mutant Amino Acid
+              Amino Acids Added
+              Amino Acids Removed
+              Protein Consequence Position Start
+              Protein Consequence Position End
+              Protein Reference Sequence
+            
+'gene_marker_relationship.txt':
+
+              Gene ID
+              Gene SO ID
+              Gene Symbol
+              Marker ID
+              Marker SO ID
+              Marker Symbol
+              Relationship
+            
+'CRISPR.txt':
+
+              Gene ID
+              Gene SO ID
+              Gene Symbol
+              CRISPR ID
+              CRISPR SO ID
+              CRISPR Symbol
+              CRISPR Target Sequence
+              Publication(s)
+              Note
+            
+'TALEN.txt':
+
+              Gene ID
+              Gene SO ID
+              Gene Symbol
+              TALEN ID
+              TALEN SO ID
+              TALEN Symbol
+              TALEN Target Sequence 1
+              TALEN Target Sequence 2
+              Publication(s)
+              Note
+            
+'pub_to_pubmed_id_translation.txt':
+
+              Publication ZFIN ID
+              PubMed ID (none or blank when not available)
+            
+'E_zfin_gene_alias.gff3':
+'fish_model_disease.txt':
+
+              Fish ZDB ID
+              Environment ZDB ID
+              is_a_model
+              DO Term ID
+              DO Term Name
+              Publication ZDB ID
+              PubMed ID
+              Evidence Code
+            
+'fish_components_fish.txt':
+
+              Fish ID
+              Fish Name
+              Gene ID
+              Gene Symbol
+              Affector ID
+              Affector Symbol
+              Construct ID
+              Construct Symbol
+              Background ID
+              Background Name
+              Genotype ID
+              Genotype Name
+            
+'phenoGeneCleanData_fish.txt':
+
+              ID
+              Gene Symbol
+              Gene ID
+              Affected Structure or Process 1 subterm ID
+              Affected Structure or Process 1 subterm Name
+              Post-composed Relationship ID
+              Post-composed Relationship Name
+              Affected Structure or Process 1 superterm ID
+              Affected Structure or Process 1 superterm
+              Name
+              Phenotype Keyword ID
+              Phenotype Keyword Name
+              Phenotype Tag
+              Affected Structure or Process 2 subterm ID
+              Affected Structure or Process 2 subterm name
+              Post-composed Relationship (rel) ID
+              Post-composed Relationship (rel) Name
+              Affected Structure or Process 2 superterm ID
+              Affected Structure or Process 2 superterm
+              name
+              Fish ID
+              Fish Display Name
+              Start Stage ID
+              End Stage ID
+              Fish Environment ID
+              Publication ID
+              Figure ID
+            
+'wildtypes_fish.txt':
+
+              Fish ID
+              Fish Name
+              Fish Abbreviation
+              Genotype ID
+            

@@ -43,16 +43,59 @@ class MPD(Source):
     files = {
         'ontology_mappings': {
             'file': 'ontology_mappings.csv',
-            'url': MPDDL + '/ontology_mappings.csv'},
+            'url': MPDDL + '/ontology_mappings.csv',
+            'columns': [
+                'measnum',
+                'ont_term',
+                'descrip']},
         'straininfo': {
             'file': 'straininfo.csv',
-            'url': MPDDL + '/straininfo.csv'},
+            'url': MPDDL + '/straininfo.csv',
+            'columns': [
+                'strainname',
+                'vendor',
+                'stocknum',
+                'panel',
+                'mpd_strainid',
+                'straintype',
+                'n_proj',
+                'n_snp_datasets',
+                'mpd_shortname',
+                'url']},
         'assay_metadata': {
             'file': 'measurements.csv',
-            'url': MPDDL + '/measurements.csv'},
+            'url': MPDDL + '/measurements.csv',
+            'columns': [
+                'measnum',
+                'mpdsector',
+                'projsym',
+                'varname',
+                'descrip',
+                'units',
+                'method',
+                'intervention',
+                'paneldesc',
+                'datatype',
+                'sextested',
+                'nstrainstested',
+                'ageweeks']},
         'strainmeans': {
             'file': 'strainmeans.csv.gz',
-            'url': MPDDL + '/strainmeans.csv.gz'},
+            'url': MPDDL + '/strainmeans.csv.gz',
+            'columns': [
+                'measnum',
+                'varname',
+                'strain',
+                'strainid',
+                'sex',
+                'mean',
+                'nmice',
+                'sd',
+                'sem',
+                'cv',
+                'minval',
+                'maxval',
+                'zscore']},
         # 'mpd_datasets_metadata': { #TEC does not seem to be used
         #    'file': 'mpd_datasets_metadata.xml.gz',
         #    'url': MPDDL + '/mpd_datasets_metadata.xml.gz'},
@@ -76,10 +119,8 @@ class MPD(Source):
     mgd_agent_label = "Mouse Phenotype Database"
     mgd_agent_type = "foaf:organization"
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -123,14 +164,16 @@ class MPD(Source):
 
         LOG.info("Parsing files...")
 
-        self._process_straininfo(limit)
         # the following will provide us the hash-lookups
+        self._process_straininfo(limit)
         # These must be processed in a specific order
 
         # mapping between assays and ontology terms
         self._process_ontology_mappings_file(limit)
+
         # this is the metadata about the measurements
         self._process_measurements_file(limit)
+
         # get all the measurements per strain
         self._process_strainmeans_file(limit)
 
@@ -141,18 +184,23 @@ class MPD(Source):
         LOG.info("Finished parsing.")
 
     def _process_ontology_mappings_file(self, limit):
-        LOG.info("Processing ontology mappings...")
-        raw = '/'.join((self.rawdir, 'ontology_mappings.csv'))
 
-        with open(raw, 'r') as f:
-            reader = csv.reader(f)
-            # read the header row; skip
-            self.check_header(self.files['ontology_mappings']['file'], f.readline())
+        src_key = 'ontology_mappings'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing ontology mappings from file %s", raw)
+        col = self.files[src_key]['columns']
+
+        with open(raw, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            row = next(reader)
+            if self.check_fileheader(col, row):
+                pass
             for row in reader:
-                try:
-                    (assay_id, ont_term, descrip) = row
-                except ValueError:
-                    continue
+                if not row:
+                    continue  # skip blank rows
+                assay_id = row[col.index('measnum')]
+                ont_term = row[col.index('ont_term')]
+                # descrip = row[col.index('descrip')]
                 assay_id = int(assay_id)
                 if re.match(r'(MP|VT)', ont_term):
                     # add the mapping denovo
@@ -162,75 +210,99 @@ class MPD(Source):
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
 
     def _process_straininfo(self, limit):
-        # line_counter = 0  # TODO unused
+
+        src_key = 'straininfo'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info('Processing measurementsfrom file: %s', raw)
+
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-
-        LOG.info("Processing measurements ...")
-        raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
-
         tax_id = self.globaltt['Mus musculus']
+        col = self.files[src_key]['columns']
 
-        with open(raw, 'r') as f:
-            reader = csv.reader(f, delimiter=',', quotechar='\"')
-            self.check_header(self.files['straininfo']['file'], f.readline())
+        with open(raw, 'r') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            row = next(reader)
+            if self.check_fileheader(col, row):
+                pass
             for row in reader:
-                (strain_name, vendor, stocknum, panel, mpd_strainid,
-                 straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
+                if not row:
+                    continue  # skip blank rows
+                strain_name = row[col.index('strainname')]
+                vendor = row[col.index('vendor')]
+                stocknum = row[col.index('stocknum')]
+                panel = row[col.index('panel')]
+                mpd_strainid = str(row[col.index('mpd_strainid')])
+                # straintype = row[col.index('straintype')]
+                # n_proj = row[col.index('n_proj')]
+                # n_snp_datasets = row[col.index('n_snp_datasets')]
+                mpdshortname = row[col.index('mpd_shortname')].strip()
+                url = row[col.index('url')]  # new?
+
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
                 # create the strain as an instance of the taxon
-                if self.test_mode and \
-                        'MPD:' + str(mpd_strainid) not in self.test_ids:
+                if self.test_mode and 'MPD:' + mpd_strainid not in self.test_ids:
                     continue
-                strain_id = 'MPD-strain:' + str(mpd_strainid)
+                strain_id = 'MPD-strain:' + mpd_strainid
                 model.addIndividualToGraph(strain_id, strain_name, tax_id)
-                if mpdshortname.strip() != '':
-                    model.addSynonym(strain_id, mpdshortname.strip())
+                if mpdshortname != '':
+                    model.addSynonym(strain_id, mpdshortname)
                 self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
                 if stocknum != '':
                     if vendor == 'J':
-                        jax_id = 'JAX:'+stocknum
+                        jax_id = 'JAX:' + stocknum
                         model.addSameIndividual(strain_id, jax_id)
-                    elif vendor == 'Rbrc':
-                        # reiken
+                    elif vendor == 'Rbrc':  # reiken
                         reiken_id = 'RBRC:' + stocknum
                         model.addSameIndividual(strain_id, reiken_id)
                     else:
                         if url != '':
                             model.addXref(strain_id, url, True)
                         if vendor != '':
-                            model.addXref(
-                                strain_id, ':'.join((vendor, stocknum)),
-                                True)
+                            model.addXref(strain_id, ':'.join((vendor, stocknum)), True)
 
                 # add the panel information
                 if panel != '':
-                    desc = panel+' [panel]'
+                    desc = panel + ' [panel]'
                     model.addDescription(strain_id, desc)
 
                 # TODO make the panels as a resource collection
 
     def _process_measurements_file(self, limit):
-        line_counter = 0
 
-        LOG.info("Processing measurements ...")
-        raw = '/'.join((self.rawdir, 'measurements.csv'))
+        src_key = 'assay_metadata'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing measurements from file: %s", raw)
+        col = self.files[src_key]['columns']
 
-        with open(raw, 'r') as f:
-            reader = csv.reader(f)
-            # read the header row; skip
-            self.check_header(
-                self.files['assay_metadata']['file'], f.readline())
+        with open(raw, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            row = next(reader)
+            if self.check_fileheader(col, row):
+                pass
             for row in reader:
-                line_counter += 1
-                assay_id = int(row[0])
-                assay_label = row[4]
-                assay_units = row[5]
-                assay_type = row[6] if row[6] is not '' else None
+                if not row:
+                    continue  # skip blank lines
+                assay_id = int(row[col.index('measnum')])
+                # = row[col.index('mpdsector')]
+                # = row[col.index('projsym')]
+                # = row[col.index('varname')]
+                assay_label = row[col.index('descrip')]
+                assay_units = row[col.index('units')]
+                assay_type = row[col.index('method')].strip()
+                # = row[col.index('intervention')]
+                # = row[col.index('paneldesc')]
+                # = row[col.index('datatype')]
+                # = row[col.index('sextested')]
+                # = row[col.index('nstrainstested')]
+                # = row[col.index('ageweeks')]
+
+                if assay_type == '':
+                    assay_type = None
 
                 if assay_id not in self.assayhash:
                     self.assayhash[assay_id] = {}
@@ -257,35 +329,34 @@ class MPD(Source):
         :return:
 
         """
-        LOG.info("Processing strain means ...")
-        raw = '/'.join((self.rawdir, self.files['strainmeans']['file']))
-        with gzip.open(raw, 'rb') as f:
-            f = io.TextIOWrapper(f)
-            reader = csv.reader(f)
-            self.check_header(self.files['strainmeans']['file'], f.readline())
+        src_key = 'strainmeans'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing strain means from file: %s", raw)
+        col = self.files[src_key]['columns']
+
+        with gzip.open(raw, 'rb') as gzfile:
+            csvfile = io.TextIOWrapper(gzfile)
+            reader = csv.reader(csvfile)
+            row = next(reader)
             score_means_by_measure = {}
             strain_scores_by_measure = {}
             for row in reader:
-                try:
-                    # (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
-                    #  cv, minval, maxval, logmean, logsd, zscore, logzscore)
-                    (measnum,
-                     varname,
-                     strain,
-                     strainid,
-                     sex,
-                     mean,
-                     nmice,
-                     sd,
-                     sem,
-                     cv,
-                     minval,
-                     maxval,
-                     zscore
-                     ) = row
+                if not row:
+                    continue  # skip blank lines
+                measnum = row[col.index('measnum')]
+                # varname = row[col.index('varname')]
+                # strain = row[col.index('strain')]
+                strainid = row[col.index('strainid')]
+                sex = row[col.index('sex')]
+                mean = row[col.index('mean')]
+                # nmice = row[col.index('nmice')]
+                # sd = row[col.index('sd')]
+                # sem = row[col.index('sem')]
+                # cv = row[col.index('cv')]
+                # minval = row[col.index('minval')]
+                # maxval = row[col.index('maxval')]
+                zscore = row[col.index('zscore')]
 
-                except ValueError:
-                    continue
                 strain_num = int(strainid)
                 assay_num = int(measnum)
                 # assuming the zscore is across all the items
@@ -293,6 +364,7 @@ class MPD(Source):
                 # note: it seems that there is only ever 1 varname per measnum.
                 # note: some assays only tested one sex!
                 # we split this here by sex
+
                 if assay_num not in score_means_by_measure:
                     score_means_by_measure[assay_num] = {}
                 if sex not in score_means_by_measure[assay_num]:
@@ -327,13 +399,13 @@ class MPD(Source):
         # loop through all the strains,
         # and make G2P assoc for those with scores beyond threshold
         for strain_num in self.strain_scores_by_measure:
-            if self.test_mode and 'MPD:'+str(strain_num) not in self.test_ids:
+            if self.test_mode and 'MPD:' + str(strain_num) not in self.test_ids:
                 continue
-            strain_id = 'MPD-strain:'+str(strain_num)
+            strain_id = 'MPD-strain:' + str(strain_num)
             for sex in self.strain_scores_by_measure[strain_num]:
                 measures = self.strain_scores_by_measure[strain_num][sex]
                 for m in measures:
-                    assay_id = 'MPD-assay:'+str(m)
+                    assay_id = 'MPD-assay:' + str(m)
                     # TODO consider using the means
                     # instead of precomputed zscores
                     if 'zscore' in measures[m]:
@@ -350,13 +422,13 @@ class MPD(Source):
                                 assay_description = self.assayhash[m]['description']
                                 ont_term_ids = self.assayhash[m].get('ont_terms')
                                 comment = ' '.join((
-                                    assay_label, '(zscore='+str(zscore)+')'))
+                                    assay_label, '(zscore=' + str(zscore) + ')'))
                             except KeyError:
                                 assay_label = None
                                 assay_description = None
                                 ont_term_ids = None
                             if assay_label is not None:
-                                assay_label += ' ('+str(m)+')'
+                                assay_label += ' (' + str(m) + ')'
 
                             assay_type_id = self.globaltt['assay']
 
@@ -404,11 +476,11 @@ class MPD(Source):
         eco_id = self.globaltt['experimental phenotypic evidence']
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
-        genotype_id = '_:'+'-'.join((re.sub(r':', '', strain_id), 'genotype'))
+        genotype_id = '_:' + '-'.join((re.sub(r':', '', strain_id), 'genotype'))
         genotype_label = '[' + strain_label + ']'
 
-        sex_specific_genotype_id = '_:'+'-'.join((
-            re.sub(r':', '', strain_id), sex, 'genotype'))
+        sex_specific_genotype_id = '_:' + '-'.join(
+            (re.sub(r':', '', strain_id), sex, 'genotype'))
         if strain_label is not None:
             sex_specific_genotype_label = strain_label + ' (' + sex + ')'
         else:
@@ -422,14 +494,11 @@ class MPD(Source):
 
         # add the genotype to strain connection
         geno.addGenotype(
-            genotype_id, genotype_label,
-            self.globaltt['genomic_background'])
+            genotype_id, genotype_label, self.globaltt['genomic_background'])
         graph.addTriple(
             strain_id, self.globaltt['has_genotype'], genotype_id)
-
         geno.addGenotype(
-            sex_specific_genotype_id, sex_specific_genotype_label,
-            genotype_type)
+            sex_specific_genotype_id, sex_specific_genotype_label, genotype_type)
 
         # add the strain as the background for the genotype
         graph.addTriple(
@@ -452,17 +521,16 @@ class MPD(Source):
                 model._addSexSpecificity(assoc_id, self.resolve(sex))
 
     def getTestSuite(self):
-        import unittest
-        from tests.test_mpd import MPDTestCase
+        # import unittest
+        # from tests.test_mpd import MPDTestCase
+        # test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
+        # return test_suite
+        pass  # there is nothing there
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
-
-        return test_suite
-
-    @staticmethod
-    def normalise_units(units):
-        # todo:
-        return units
+    # @staticmethod
+    # def normalise_units(units):
+    #    # todo:
+    #    return units
 
     @staticmethod
     def build_measurement_description(row, localtt):
@@ -517,26 +585,3 @@ class MPD(Source):
     #     self.missing_assay_hash[missing_id].add(name_of_file_from_which_missing)
     #     # todo: remove the offending ids from the hash
     #     return
-    @staticmethod
-    def check_header(filename, header):
-        header = header.rstrip("\n")
-        header_map = {
-            'strainmeans.csv.gz':
-                'measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,'
-                'cv,minval,maxval,zscore',
-            'straininfo.csv':
-                'strainname,vendor,stocknum,panel,mpd_strainid,'
-                'straintype,n_proj,n_snp_datasets,mpd_shortname,url',
-            'measurements.csv':
-                'measnum,mpdsector,projsym,varname,descrip,units,'
-                'method,intervention,paneldesc,datatype,sextested,'
-                'nstrainstested,ageweeks',
-            'ontology_mappings.csv':
-                'measnum,ont_term,descrip'
-        }
-        if header != header_map[filename]:
-            raise ValueError(
-                "header in {} \n {}\n"
-                "does not match expected:\n {}"
-                .format(filename, header, header_map[filename])
-            )

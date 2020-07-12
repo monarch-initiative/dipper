@@ -483,7 +483,7 @@ class GeneOntology(Source):
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             LOG.info(
-                "Uniprot: %.2f%% of %i benefited from the 1/4 day id mapping download",
+                "Uniprot: %.2f%% of %i benefited from the mapping download",
                 uniprot_per, uniprot_tot)
 
     def get_uniprot_entrez_id_map(self):
@@ -493,7 +493,7 @@ class GeneOntology(Source):
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
         bigfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
-        # if processed smallfile exists and is newer than bigfile then use it instesd
+        # if processed smallfile exists and is newer than bigfile then use it instead
         if os.path.isfile(smallfile) and \
                 os.path.getctime(smallfile) > os.path.getctime(bigfile):
             LOG.info("Using the cheap mapping file %s", smallfile)

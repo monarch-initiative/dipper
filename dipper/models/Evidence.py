@@ -105,7 +105,7 @@ class Evidence:
     def add_supporting_publication(
             self, evidence_line, publication, label=None, pub_type=None):
         """
-        <evidence> <evidence_has_supporting_reference> <source>
+        <evidence> <has_supporting_reference> <source>
         <source> <rdf:type> <type>
         <source> <rdfs:label> "label"
         :param evidence_line: str curie
@@ -115,7 +115,7 @@ class Evidence:
         :return:
         """
         self.graph.addTriple(
-            evidence_line, self.globaltt['evidence_has_supporting_reference'], publication)
+            evidence_line, self.globaltt['has_supporting_reference'], publication)
         self.model.addIndividualToGraph(publication, label, pub_type)
         return
 
@@ -133,6 +133,6 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line, self.globaltt['source'], source)
+        self.graph.addTriple(evidence_line, self.globaltt['Source'], source)
         self.model.addIndividualToGraph(source, label, src_type)
         return

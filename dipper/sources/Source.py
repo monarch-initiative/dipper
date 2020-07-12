@@ -45,13 +45,13 @@ class Source:
             graph_type='rdf_graph',     # or streamed_graph
             are_bnodes_skized=False,    # typically True
             data_release_version=None,
-            name=None,                  # identifier; make an IRI for nquads
+            name=None,                  # identifier; make an URI for nquads
             ingest_title=None,
             ingest_url=None,
             ingest_logo=None,     # this should be the name of file on 'MonarchLogoRepo'
             ingest_description=None,
             license_url=None,           # only if it is _our_ lic
-            data_rights=None,           # external page that points to their current lic
+            data_rights=None,           # their page that points to their current lic
             file_handle=None,
     ):
 
@@ -117,7 +117,7 @@ class Source:
 
         elif graph_type == 'streamed_graph':
             # need to expand on export formats
-            dest_file = open(out_pth + '/' + name + '.nt', 'w')    # where is the close?
+            dest_file = open(out_pth + '/' + name + '.nt', 'w')   # where is the close?
             self.graph = StreamedGraph(are_bnodes_skized, dest_file)
             # leave test files as turtle (better human readibility)
         else:
@@ -172,11 +172,11 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=True):
+    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=False):
         """
         This convenience method will write out all of the graphs
-        associated with the source.
-        Right now these are hardcoded to be a single "graph"
+            associated with the source.
+        Right now these are hardcoded to be a single main "graph"
         and a "src_dataset.ttl" and a "src_test.ttl"
         If you do not supply stream='stdout'
         it will default write these to files.
@@ -297,7 +297,7 @@ class Source:
             LOG.info("Local File does NOT exist as %s", local)
             return True
 
-        # get remote file details
+        # get remote file details (if possible)
         if headers is None:
             headers = self._get_default_request_headers()
 
@@ -371,6 +371,12 @@ class Source:
         for src_key in files:
             headers = None
             filesource = files[src_key]
+
+            if 'clean' in filesource:
+                cleaned_file_iri = filesource['clean']
+            else:
+                cleaned_file_iri = filesource['url']
+
             # attempt to fetch from a web cache
             remote_file = '/'.join((self.DIPPERCACHE, self.name, filesource['file']))
             local_file = '/'.join((self.rawdir, filesource['file']))
@@ -380,7 +386,8 @@ class Source:
             if cache_response:
                 LOG.info(
                     "Found File '%s/%s' in DipperCache", self.name, filesource['file'])
-                self.dataset.set_ingest_source(filesource['url'])
+                self.dataset.set_ingest_source(cleaned_file_iri)
+
                 if remote_file in self.remote_file_timestamps:
                     # Here the timestamp on the file in DipperCache is a best effort
                     # representation of the earliest time the file
@@ -390,7 +397,7 @@ class Source:
                     timestamp = Literal(
                         self.remote_file_timestamps[remote_file], datatype=XSD.dateTime)
                     self.dataset.graph.addTriple(
-                        filesource['url'], self.globaltt['retrieved_on'], timestamp)
+                        cleaned_file_iri, self.globaltt['retrieved_on'], timestamp)
             else:
                 LOG.warning(
                     "File %s/%s absent from DipperCache", self.name, filesource['file'])
@@ -400,11 +407,9 @@ class Source:
                 LOG.info("Getting %s", src_key)
                 # if the key 'clean' exists in the sources `files` dict
                 # expose that instead of the longer url
-                if 'clean' in filesource and filesource['clean'] is not None:
-                    self.dataset.set_ingest_source(filesource['clean'])
-                else:
-                    self.dataset.set_ingest_source(filesource['url'])
-                    LOG.info('Fetching %s in %i seconds', filesource['url'], delay)
+                self.dataset.set_ingest_source(cleaned_file_iri)
+
+                LOG.info('Fetching %s in %i seconds', cleaned_file_iri, delay)
 
                 time.sleep(delay)
 
@@ -417,12 +422,12 @@ class Source:
                 fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
                 self.dataset.graph.addTriple(
                     self.dataset.version_level_curie, self.globaltt["Source (dct)"],
-                    filesource['url'])
+                    cleaned_file_iri)
                 filedate = Literal(
                     datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),
                     datatype=XSD.date)
                 self.dataset.graph.addTriple(
-                    filesource['url'], self.globaltt['retrieved_on'], filedate)
+                    cleaned_file_iri, self.globaltt['retrieved_on'], filedate)
 
     def fetch_from_url(
             self, remoteurl, localfile=None, is_dl_forced=False, headers=None):
@@ -439,6 +444,7 @@ class Source:
         """
 
         response = None
+        result = False
         rmt_check = self.check_if_remote_is_newer(remoteurl, localfile, headers)
         if (is_dl_forced is True) or (localfile is None) or (
                 rmt_check is not None and rmt_check):
@@ -446,12 +452,15 @@ class Source:
                 headers = self._get_default_request_headers()
             try:
                 request = urllib.request.Request(remoteurl, headers=headers)
+                response = urllib.request.urlopen(request)
             except urllib.error.HTTPError as httpErr:
                 # raise Exception(httpErr.read())
                 LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
                 return False  # allows re try (e.g. not found in Cache)
-            response = urllib.request.urlopen(request)
-            if localfile is not None:
+            except urllib.error.URLError as urlErr:
+                LOG.error('URLError %s\n\tFor: %s', urlErr, remoteurl)
+            result = response is not None
+            if localfile is not None and result:
                 with open(localfile, 'wb') as binwrite:
                     while True:
                         chunk = response.read(CHUNK)
@@ -479,7 +488,7 @@ class Source:
 
         else:
             LOG.info("Using existing file %s", localfile)
-        return True
+        return result
 
     # TODO: rephrase as mysql-dump-xml specific format
     def process_xml_table(self, elem, table_name, processing_function, limit):
@@ -784,7 +793,7 @@ class Source:
         return term_id
 
     @staticmethod
-    def check_fileheader(expected, received):
+    def check_fileheader(expected, received, src_key=None):
         '''
         Compare file headers received versus file headers expected
         if the expected headers are a subset (proper or not)
@@ -799,7 +808,8 @@ class Source:
         got = set(received)
         if expected != received:
             LOG.error(
-                '\nExpected header:\n %s\nRecieved header:\n %s', expected, received)
+                'file resource: %s\nExpected header:\n %s\nRecieved header:\n %s',
+                src_key, expected, received)
 
             # pass reordering and adding new columns (after protesting)
             # hard fail on missing expected columns (temper with mandatory cols?)

@@ -1,0 +1,282 @@
+[
+  [
+    "7",
+    "IMPC Pipeline",
+    "IMPC_001",
+    "The IMPC Pipeline is a core set of Procedures and Parameters to be collected by all phenotyping centers.",
+    "false"
+  ],
+  [
+    "5",
+    "Aging ENU Screen Pipeline 1",
+    "HAROLD_001",
+    "Aging ENU Screen Pipeline 1",
+    "true"
+  ],
+  [
+    "16",
+    "BCM Pipeline",
+    "BCM_001",
+    "",
+    "false"
+  ],
+  [
+    "47",
+    "BCM interval pipeline",
+    "BCMIP_001",
+    "BCM interval pipeline",
+    "false"
+  ],
+  [
+    "35",
+    "BCM late adult",
+    "BCMLA_001",
+    "Baylor late adult",
+    "false"
+  ],
+  [
+    "44",
+    "CCP Pipeline",
+    "CCP_001",
+    "Czech Centre for Phenogenomics (CCP) Pipeline",
+    "false"
+  ],
+  [
+    "19",
+    "DSS challenge",
+    "DSS_001",
+    "Mutant mice and wild-type controls (2 female and 2 males/group) receive 1.5% dextran sodium sulphate (DSS) in drinking water for 7 days. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 10 mice are sacrificed and samples from the medial and distal gut are collected for histological analysis.  A pathology scoring system is used to assess the effect of the DSS in a blinded manner.",
+    "false"
+  ],
+  [
+    "1",
+    "EUMODIC Pipeline 1",
+    "ESLIM_001",
+    "EUMODIC Pipeline 1",
+    "true"
+  ],
+  [
+    "2",
+    "EUMODIC Pipeline 2",
+    "ESLIM_002",
+    "EUMODIC Pipeline 2",
+    "true"
+  ],
+  [
+    "6",
+    "EUMODIC Pipeline 3",
+    "ESLIM_003",
+    "EUMODIC Pipeline 3",
+    "true"
+  ],
+  [
+    "56",
+    "GMC Interval Pipeline",
+    "HMGUIP_001",
+    "Pipeline for GMC procedures between the early adult and late adult pipelines",
+    "false"
+  ],
+  [
+    "3",
+    "GMC Pipeline",
+    "GMC_001",
+    "GMC Pipeline",
+    "true"
+  ],
+  [
+    "43",
+    "GMC late adult (53 weeks)",
+    "HMGULA_001",
+    "Pipeline for GMC's late adult procedures",
+    "false"
+  ],
+  [
+    "55",
+    "GMC late adult (70 weeks)",
+    "HMGULA_002",
+    "GMC late adult (70 weeks)",
+    "false"
+  ],
+  [
+    "14",
+    "German Mouse Clinic",
+    "HMGU_001",
+    "German Mouse Clinic Pipeline for IMPC Project _ Rotarod as an additional center-specific Procedure",
+    "false"
+  ],
+  [
+    "8",
+    "Harwell",
+    "HRWL_001",
+    "Harwell extra parameters",
+    "false"
+  ],
+  [
+    "11",
+    "Harwell Ageing Screen",
+    "HAS_001",
+    "",
+    "false"
+  ],
+  [
+    "38",
+    "Harwell interval pipeline",
+    "HRWLIP_001",
+    "Pipeline for Harwell procedures between the early adult and late adult pipelines",
+    "false"
+  ],
+  [
+    "49",
+    "Harwell late adult",
+    "HRWLLA_001",
+    "Pipeline for Harwell Late adult procedures ",
+    "false"
+  ],
+  [
+    "10",
+    "ICS",
+    "ICS_001",
+    "ICS's pipeline for extra procedures and parameters",
+    "false"
+  ],
+  [
+    "52",
+    "ICS interval pipeline",
+    "ICSIP_001",
+    "ICS interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.",
+    "false"
+  ],
+  [
+    "34",
+    "ICS late adult",
+    "ICSLA_001",
+    "ICS late adult",
+    "false"
+  ],
+  [
+    "12",
+    "JAX Pipeline",
+    "JAX_001",
+    "",
+    "false"
+  ],
+  [
+    "39",
+    "JAX interval pipeline",
+    "JAXIP_001",
+    "Pipeline for procedures between the early adult and late adult pipelines",
+    "false"
+  ],
+  [
+    "50",
+    "Jax late adult",
+    "JAXLA_001",
+    "Pipeline for Jax late adult procedures",
+    "false"
+  ],
+  [
+    "51",
+    "KMPC interval pipeline",
+    "KMPCIP_001",
+    "Pipeline for KMPC procedures between the early adult and late adult pipelines",
+    "false"
+  ],
+  [
+    "36",
+    "KMPC late adult",
+    "KMPCLA_001",
+    "KMPC late adult",
+    "false"
+  ],
+  [
+    "4",
+    "MGP Pipeline",
+    "M-G-P_001",
+    "MGP Pipeline",
+    "true"
+  ],
+  [
+    "15",
+    "MGP Select Pipeline",
+    "MGP_001",
+    "",
+    "false"
+  ],
+  [
+    "37",
+    "Nanjing late adult",
+    "NINGLA_001",
+    "Nanjing late adult",
+    "false"
+  ],
+  [
+    "53",
+    "Riken interval pipeline",
+    "RBRCIP_001",
+    "Riken interval pipeline: phenotyping performed between the early adult pipeline and late adult pipeline.",
+    "false"
+  ],
+  [
+    "28",
+    "Riken late adult",
+    "RBRCLA_001",
+    "Pipeline for Riken's late adult procedures",
+    "false"
+  ],
+  [
+    "17",
+    "Salmonella Challenge",
+    "SLM_001",
+    "Mutant mice and wild-type controls (8/group) have blood collected from the tail (50 ul) at 6 weeks of age for peripheral blood leukocyte and haematology analysis. One week later mice are infected with Salmonella Typhimurium M525 strain containing TETc via the intravenous route. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are sacrificed. At day 14-post infection half the mutants and wild type controls are sacrificed with spleen, liver and caecal contents collected. Bacterial counts in the organs are determined by serial plating and portion of the spleen and liver are formalin fixed and paraffin embedded. At day 28-post infection the remaining mutants are sacrificed and processed as above. In addition blood is collected by cardiac puncture and anti-TETc antibodies in the serum are determined by ELISA for total IgG, IgG1 and IgG2a.",
+    "false"
+  ],
+  [
+    "45",
+    "TCP Interval Pipeline",
+    "TCPIP_001",
+    "",
+    "false"
+  ],
+  [
+    "9",
+    "TCP Pipeline",
+    "TCP_001",
+    "Toronto Centre for Phenogenomics's (TCP) pipeline for extra parameters and procedures",
+    "false"
+  ],
+  [
+    "33",
+    "TCP late adult",
+    "TCPLA_001",
+    "TCP late adult",
+    "false"
+  ],
+  [
+    "18",
+    "Trichuris challenge",
+    "TRC_001",
+    "Mutant mice and wild-type controls (6 females/group) are infected with Trichuris muris eggs by oral gavage. Weights are recorded daily and any mice that have lost greater than 20% or that exhibit clinical signs are culled. At day 33 post challenge the mice are sacrificed with the caecum collected and assessed for the presence or absence of worms. In addition blood is collected by cardiac puncture and serum isolated for confirmation of productive infection.",
+    "false"
+  ],
+  [
+    "46",
+    "UCD Interval Pipeline",
+    "UCDIP_001",
+    "",
+    "false"
+  ],
+  [
+    "13",
+    "UCD Pipeline",
+    "UCD_001",
+    "",
+    "false"
+  ],
+  [
+    "32",
+    "UCD late adult",
+    "UCDLA_001",
+    "UCD late adult",
+    "false"
+  ]
+]

@@ -82,7 +82,8 @@ class HGNC(OMIMSource):
                 'intermediate_filament_db',
                 'rna_central_ids',
                 'lncipedia',
-                'gtrnadb'
+                'gtrnadb',
+                'agr'
             ],
         },
     }
@@ -117,7 +118,8 @@ class HGNC(OMIMSource):
             LOG.warning("not configured with gene test ids.")
         else:
             self.gene_ids = self.all_test_ids['gene']
-        self.hs_txid = self.globaltt['Homo sapiens']
+
+        self.taxon_curie = self.globaltt['Homo sapiens']
 
         # to help detect obsolete usages in other ingests (someday)
         self.withdrawn = {}
@@ -191,7 +193,7 @@ class HGNC(OMIMSource):
                 # refseq_accession = row[col.index('refseq_accession')]
                 # ccds_id = row[col.index('ccds_id')]
                 # uniprot_ids = row[col.index('uniprot_ids')]
-                pubmed_ids = row[col.index('pubmed_id')].strip()  # pipe separated!
+                pubmed_ids = row[col.index('pubmed_id')].strip('"')  # pipe separated!
                 # mgd_id = row[col.index('mgd_id')]
                 # rgd_id = row[col.index('rgd_id')]
                 # lsdb = row[col.index('lsdb')]
@@ -216,9 +218,10 @@ class HGNC(OMIMSource):
                 # rna_central_ids = row[col.index('rna_central_ids')]
                 # lncipedia = row[col.index('lncipedia')]
                 # gtrnadb = row[col.index('gtrnadb')]
+                # agr = row[col.index('agr')]
 
                 if status != 'Approved':
-                    self.withdrawn[hgnc_id]=symbol
+                    self.withdrawn[hgnc_id] = symbol
                     continue
 
                 if (self.test_mode and entrez_id != '' and
@@ -257,12 +260,17 @@ class HGNC(OMIMSource):
                             self.omim_type[omim_id] == self.globaltt['gene']:
                         model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id)
 
-                geno.addTaxon(self.hs_txid, hgnc_id)
+                geno.addTaxon(self.taxon_curie, hgnc_id)
 
                 # add pubs as "is about"
                 for pubmed_id in pubmed_ids.split('|'):
-                    graph.addTriple(
-                        'PMID:' + pubmed_id, self.globaltt['is_about'], hgnc_id)
+                    pmid = pubmed_id.strip()
+                    if pmid is not None and pmid != '':
+                        graph.addTriple(
+                            'PMID:' + pmid, self.globaltt['is_about'], hgnc_id)
+
+                # add the default taxon to the gene
+                graph.addTriple(hgnc_id, self.globaltt['in taxon'], self.taxon_curie)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
@@ -274,7 +282,7 @@ class HGNC(OMIMSource):
                 chr_match = chr_pattern.match(location)
                 if chr_match is not None and chr_match.groups():
                     chrom = chr_match.group(1)
-                    chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
+                    chrom_id = makeChromID(chrom, self.taxon_curie, 'CHR')
                     band_match = band_pattern.search(location)
                     feat = Feature(graph, hgnc_id, None, None)
                     if band_match is not None and band_match.groups():
@@ -283,7 +291,7 @@ class HGNC(OMIMSource):
                         # add the chr band as the parent to this gene
                         # as a feature but assume that the band is created
                         # as a class with properties elsewhere in Monochrom
-                        band_id = makeChromID(band, self.hs_txid, 'CHR')
+                        band_id = makeChromID(band, self.taxon_curie, 'CHR')
                         model.addClassToGraph(band_id, None)
                         feat.addSubsequenceOfFeature(band_id)
                     else:

@@ -27,6 +27,8 @@
 "PubMed": "PMID"
 "Reactome": "REACT"
 "TREMBL": "TrEMBL"
+"UNIPROT-ISOFORM": "UniProtKB"
+"UNIPROT_PRO": "UniProtKB"
 "VGNC:VGNC": "VGNC"
 "WB_REF": "WormBase"
 "WB": "WormBase"
