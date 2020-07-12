@@ -10,8 +10,9 @@ WGET = /usr/bin/wget --timestamping --no-verbose
 JENA = https://apache.osuosl.org/jena/binaries/apache-jena-3.15.0.tar.gz
 ROBOT_JAR = https://github.com/ontodev/robot/releases/latest/download/robot.jar
 
-BIOLINK_MODEL = https://raw.githubusercontent.com/biolink/biolink-model/master/biolink-model.ttl
+BIOLINK_MODEL = https://raw.githubusercontent.com/kshefchek/biolink-model/mappings-for-monarch/biolink-model.ttl
 MONARCH_OWL = http://purl.obolibrary.org/obo/upheno/monarch.owl
+MONARCH_OWL_MERGED = https://data.monarchinitiative.org/owl/monarch-merged.owl
 
 ROBOT := java -jar robot/robot.jar
 ARQ := jena/apache-jena-3.15.0/bin/arq
@@ -60,7 +61,7 @@ OUTPUT_RDF = $(foreach src, $(SOURCES), output/$(src).nt)
 
 .PHONY: all clean
 
-all: $(MONARCH_SOURCES) rdf/class-category.ttl $(QUERIES) $(BL_SHIM) $(OUTPUT_RDF)
+all: $(MONARCH_SOURCES) monarch-slim.owl rdf/class-category.ttl $(QUERIES) $(BL_SHIM) $(OUTPUT_RDF)
 
 robot/: ; mkdir $@
 
@@ -75,32 +76,31 @@ output/: ; mkdir $@
 robot/robot.jar: robot/
 	cd $< && $(WGET) $(ROBOT_JAR)
 
-monarch.owl:
-	$(WGET) $(MONARCH_OWL)
+monarch-merged.owl:
+	$(WGET) $(MONARCH_OWL_MERGED)
 
 biolink-model.ttl:
 	$(WGET) $(BIOLINK_MODEL)
 
-rdf/class-category.ttl: rdf/ robot/robot.jar monarch.owl biolink-model.ttl
+monarch-slim.owl: rdf/ robot/robot.jar monarch-merged.owl biolink-model.ttl
 	$(ROBOT) \
-	  merge \
-        --input monarch.owl \
-      remove \
-        --axioms "disjoint" \
-      remove \
-        --term owl:Nothing \
       reason \
+        --input monarch-merged.owl \
         --reasoner ELK \
       remove \
         --select anonymous \
         --signature false \
       filter \
         --axioms logical \
-      merge \
-        --input biolink-model.ttl \
-      query \
-        --query ./sparql/bl-categories.sparql \
-        rdf/class-category.ttl
+        --output monarch-slim.owl
+
+rdf/class-category.ttl: monarch-slim.owl
+	$(ARQ) \
+          --namedgraph biolink-model.ttl \
+          --namedgraph monarch-slim.owl \
+          --query sparql/bl-categories.sparql \
+          --quiet \
+          --results ttl > $@
 
 apache-jena-3.15.0.tar.gz:
 	$(WGET) $(JENA)
@@ -119,6 +119,7 @@ $(BL_SHIM): $(QUERIES) $(MONARCH_SOURCES) blshim/ rdf/class-category.ttl jena/bi
 	  --namedgraph rdf/class-category.ttl \
 	  --namedgraph rdf/$(basename $(notdir $@)).nt \
 	  --query sparql/$(basename $(notdir $@)).rq \
+	  --quiet \
 	  --results nt > $@
 
 $(OUTPUT_RDF): $(BL_SHIM) output/
@@ -133,5 +134,7 @@ clean:
 	  sparql/*.rq \
 	  output/ \
 	  monarch.owl \
+	  monarch-merged.owl \
+	  monarch-slim.owl \
 	  biolink-model.ttl \
 	  apache-jena-3.15.0.tar.gz
