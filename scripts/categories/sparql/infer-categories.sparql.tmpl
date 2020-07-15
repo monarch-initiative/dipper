@@ -16,6 +16,14 @@ WHERE {
   }
   UNION
   {
+    GRAPH :class-category.ttl { ?type biolink:category ?category }
+    GRAPH :{DATASET} {
+      ?obj a ?type .
+      ?sub owl:sameAs ?obj .
+    }
+  }
+  UNION
+  {
     GRAPH :class-category.ttl { ?sub biolink:category ?category }
     GRAPH :{DATASET} {
       ?sub ?p ?o

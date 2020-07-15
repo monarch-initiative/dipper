@@ -7,7 +7,7 @@ ARCHIVE ?= https://archive.monarchinitiative.org/beta
 
 WGET = /usr/bin/wget --timestamping --no-verbose
 
-JENA = https://apache.osuosl.org/jena/binaries/apache-jena-3.15.0.tar.gz
+JENA = http://archive.apache.org/dist/jena/binaries/apache-jena-3.15.0.tar.gz
 ROBOT_JAR = https://github.com/ontodev/robot/releases/latest/download/robot.jar
 
 BIOLINK_MODEL = https://raw.githubusercontent.com/kshefchek/biolink-model/mappings-for-monarch/biolink-model.ttl
@@ -59,9 +59,13 @@ BL_SHIM = $(foreach src, $(SOURCES), blshim/$(src).nt)
 QUERIES = $(foreach src, $(SOURCES), sparql/$(src).rq)
 OUTPUT_RDF = $(foreach src, $(SOURCES), output/$(src).nt)
 
-.PHONY: all clean
+.PHONY: all infer_categories clean
 
-all: $(MONARCH_SOURCES) monarch-slim.owl rdf/class-category.ttl $(QUERIES) $(BL_SHIM) $(OUTPUT_RDF)
+all: infer_categories qc
+
+infer_categories: $(MONARCH_SOURCES) monarch-slim.owl rdf/class-category.ttl $(QUERIES) $(BL_SHIM) $(OUTPUT_RDF)
+
+qc: infer_categories
 
 robot/: ; mkdir $@
 
