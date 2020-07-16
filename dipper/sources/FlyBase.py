@@ -299,12 +299,10 @@ class FlyBase(PostgreSQLSource):
                 if pheno_type == 'derived_pheno_class':
                     phenotype_curie = prefix + ':' + reference
                 elif pheno_type == 'derived_pheno_manifest':
-                    if prefix == 'GO':
-                        phenotype_curie = prefix + ':' + reference + 'PHENOTYPE'
-                        phenotype_label = term_labels[0] + ' phenotype'
-                        model.addClassToGraph(phenotype_curie, phenotype_label)
-                    else:
-                        phenotype_curie = 'OBO:' + prefix + reference + 'PHENOTYPE'
+                    # These are not proper FBcv phenotype terms
+                    # but rather anatomical entities, go terms, sometimes free text
+                    # skip parsing for now
+                    continue
                 else:
                     raise ValueError("Unexpected phenotype type: {}".
                                      format(pheno_type))
