@@ -250,11 +250,13 @@ class MMRRC(Source):
                         if lb_mp[-1:] == ']' and lb_mp[-12:-8] == '[MP:':
                             phenotype_ids.append(lb_mp[-11:-2])
 
-                # pubmed ids are comma delimited
+                # pubmed ids are comma delimited, with spaces between
+                # the curie prefix and local id, eg
+                # "PMID: 8356452, PMID: 8825288, PMID: 7865461"
                 pubmed_ids = []
                 if pubmed_nums != '':
                     for pm_num in re.split(',', pubmed_nums):
-                        pmid = pm_num.strip()
+                        pmid = pm_num.replace(' ', '')
                         pubmed_ids.append(pmid)
                         ref = Reference(graph, pmid, self.globaltt['journal article'],)
                         ref.addRefToGraph()
