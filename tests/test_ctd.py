@@ -49,23 +49,15 @@ class CTDTestCase(unittest.TestCase):
             
             MESH:D009538 a owl:Class ;
                 rdfs:label "Nicotine" ;
+                biolink:category biolink:ChemicalSubstance ;
                 RO:0002606 OMIM:188890 .
                 
-            PMID:12345 a IAO:0000013 ;
-                biolink:category biolink:Publication .
+            PMID:12345 a IAO:0000013 .
 
-            PMID:56789 a IAO:0000013 ;
-                biolink:category biolink:Publication .
+            PMID:56789 a IAO:0000013 .
 
-            OMIM:188890 a owl:Class .
-          
-            ECO:0000033 biolink:category biolink:EvidenceType .
-            PMID:12345 biolink:category biolink:EvidenceType .
-            PMID:56789 biolink:category biolink:EvidenceType .
-            OMIM:188890 biolink:category biolink:Disease .
-            MESH:D009538 biolink:category biolink:ChemicalSubstance .
-            
-            MONARCH:b6c289df47cb72653f79 biolink:category biolink:Association .
+            OMIM:188890 a owl:Class ;
+                biolink:category biolink:DiseaseOrPhenotypicFeature .
         """
         # test exact contents of graph
         self.assertTrue(self.test_util.test_graph_equality(

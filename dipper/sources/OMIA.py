@@ -299,11 +299,9 @@ class OMIA(OMIMSource):
         if self.test_mode and row['gb_species_id'] not in self.test_ids['taxon']:
             return
 
-        model.addClassToGraph(tax_id,
-                              class_category=blv.terms.OrganismTaxon.value)
+        model.addClassToGraph(tax_id)
         if com_name != '':
-            model.addSynonym(tax_id, com_name,
-                             class_category=blv.terms.OrganismTaxon.value)
+            model.addSynonym(tax_id, com_name)
             self.label_hash[tax_id] = com_name  # for lookup later
         else:
             self.label_hash[tax_id] = sci_name
@@ -326,10 +324,12 @@ class OMIA(OMIMSource):
         if species_label is not None:
             breed_label = breed_label + ' ('+species_label+')'
 
-        model.addIndividualToGraph(breed_id, breed_label, tax_id,
-                                   ind_category=
-                                   blv.terms.PopulationOfIndividualOrganisms.value,
-                                   ind_type_category=blv.terms.OrganismTaxon.value)
+        model.addIndividualToGraph(
+            breed_id,
+            breed_label,
+            tax_id,
+            ind_category=blv.terms.PopulationOfIndividualOrganisms.value
+        )
         self.label_hash[breed_id] = breed_label
 
     def _process_phene_row(self, row):
@@ -374,9 +374,13 @@ class OMIA(OMIMSource):
         if sp_phene_label is None and omia_label is not None \
                 and species_label is not None:
             sp_phene_label = ' '.join((omia_label, 'in', species_label))
-        model.addClassToGraph(sp_phene_id, sp_phene_label, omia_id, descr,
-                              class_category=blv.terms.PhenotypicFeature.value,
-                              class_type_category=blv.terms.Gene.value)
+        model.addClassToGraph(
+            sp_phene_id,
+            sp_phene_label,
+            omia_id,
+            descr,
+            class_category=blv.terms.PhenotypicFeature.value
+        )
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = sp_phene_id
         self.label_hash[sp_phene_id] = sp_phene_label
@@ -384,16 +388,21 @@ class OMIA(OMIMSource):
         # if they are populated, with a tag at the end.
         for item in ['clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
             if row[item] is not None and row[item] != '':
-                model.addDescription(sp_phene_id, row[item] + ' ['+item+']',
-                                     subject_category=blv.terms.PhenotypicFeature.value)
+                model.addDescription(
+                    sp_phene_id,
+                    row[item] + ' ['+item+']',
+                    subject_category=blv.terms.PhenotypicFeature.value
+                )
         # if row['symbol'] is not None:  # species-specific
         # CHECK ME - sometimes spaces or gene labels
         #     gu.addSynonym(g, sp_phene, row['symbol'])
 
         model.addOWLPropertyClassRestriction(
-            sp_phene_id, self.globaltt['in taxon'], species_id,
-            class_category=blv.terms.PhenotypicFeature.value,
-            property_value_category=blv.terms.OrganismTaxon.value)
+            sp_phene_id,
+            self.globaltt['in taxon'],
+            species_id,
+            class_category=blv.terms.PhenotypicFeature.value
+        )
 
         # add inheritance as an association
         inheritance_id = None
@@ -406,9 +415,8 @@ class OMIA(OMIMSource):
             assoc = D2PAssoc( # JR: not sure we should be using D2PAssoc for this
                 self.graph, self.name, sp_phene_id, inheritance_id,
                 rel=self.globaltt['has disposition'],
-                disease_category=blv.terms.PhenotypicFeature.value,
-                # no biolink item seems to fit inheritance_id:
-                phenotype_category=blv.terms.NamedThing.value)
+                disease_category=blv.terms.PhenotypicFeature.value
+            )
             assoc.add_association_to_graph()
 
         if row['characterised'] == 'Yes':
@@ -458,11 +466,8 @@ class OMIA(OMIMSource):
         if row['pubmed_id'] is not None:
             pmid = 'PMID:'+str(row['pubmed_id'])
             self.id_hash['article'][row['article_id']] = pmid
-            model.addSameIndividual(iarticle_id, pmid,
-                                    subject_category=blv.terms.Publication.value,
-                                    object_category=blv.terms.Publication.value)
-            model.addComment(pmid, iarticle_id.replace("_:", ''),
-                             subject_category=blv.terms.Publication.value)
+            model.addSameIndividual(iarticle_id, pmid)
+            model.addComment(pmid, iarticle_id.replace("_:", ''))
 
     def _process_omia_group_row(self, row):
         model = Model(self.graph)
@@ -517,10 +522,8 @@ class OMIA(OMIMSource):
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
         if row['gene_type'] is not None:
             gene_type_id = self.resolve(row['gene_type'])
-            model.addClassToGraph(gene_id, gene_label, gene_type_id,
-                                  class_category=blv.terms.Gene.value)
-        geno.addTaxon(tax_id, gene_id,
-                      genopart_category=blv.terms.Gene.value)
+            model.addClassToGraph(gene_id, gene_label, gene_type_id)
+        geno.addTaxon(tax_id, gene_id)
 
     def _process_article_breed_row(self, row):
 
@@ -536,10 +539,7 @@ class OMIA(OMIMSource):
 
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
-            self.graph.addTriple(article_id, self.globaltt['is_about'], breed_id,
-                                 subject_category=blv.terms.Publication.value,
-                                 object_category=
-                                 blv.terms.PopulationOfIndividualOrganisms.value)
+            self.graph.addTriple(article_id, self.globaltt['is_about'], breed_id)
         else:
             LOG.warning("Missing article key %s", str(row['article_id']))
 
@@ -561,9 +561,7 @@ class OMIA(OMIMSource):
             return
 
         # make a triple, where the article is about the phenotype
-        self.graph.addTriple(article_id, self.globaltt['is_about'], phenotype_id,
-                             subject_category=blv.terms.Publication.value,
-                             object_category=blv.terms.PhenotypicFeature.value)
+        self.graph.addTriple(article_id, self.globaltt['is_about'], phenotype_id)
 
     def _process_breed_phene_row(self, row):
         model = Model(self.graph)
@@ -584,9 +582,7 @@ class OMIA(OMIMSource):
         # FIXME we want a different relationship here
         # JR: probably shouldn't use G2PAssoc here
         assoc = G2PAssoc(
-            self.graph, self.name, breed_id, phene_id, self.globaltt['has phenotype'],
-            entity_category=blv.terms.PopulationOfIndividualOrganisms.value,
-            phenotype_category=blv.terms.PhenotypicFeature.value)
+            self.graph, self.name, breed_id, phene_id, self.globaltt['has phenotype'])
         assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
@@ -606,8 +602,8 @@ class OMIA(OMIMSource):
 
             for oid in omim_ids:
                 assoc = G2PAssoc(
-                    self.graph, self.name, breed_id, oid, self.globaltt['is model of'],
-                    entity_category=blv.terms.PopulationOfIndividualOrganisms.value)
+                    self.graph, self.name, breed_id, oid, self.globaltt['is model of']
+                )
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()
                 aid = assoc.get_association_id()
@@ -673,8 +669,7 @@ class OMIA(OMIMSource):
         geno.addAlleleOfGene(var, gene_id)
         geno.addAffectedLocus(var, gene_id)
         model.addBlankNodeAnnotation(var)
-        assoc = G2PAssoc(self.graph, self.name, var, phene_id,
-                         entity_category=blv.terms.SequenceVariant.value)
+        assoc = G2PAssoc(self.graph, self.name, var, phene_id)
         assoc.add_association_to_graph()
 
         # add the gene id to the set of annotated genes

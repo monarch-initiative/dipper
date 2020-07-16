@@ -8,7 +8,6 @@ from zipfile import ZipFile
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nicole'
 
@@ -197,9 +196,7 @@ class BioGrid(Source):
                 assoc = InteractionAssoc(graph, self.name, gene_a, gene_b, rel)
                 assoc.add_evidence(evidence)
                 assoc.add_source(pub_id)
-                assoc.add_association_to_graph(
-                    subject_category=blv.terms.Gene.value,
-                    object_category=blv.terms.Gene.value)
+                assoc.add_association_to_graph()
 
                 if not self.test_mode and (
                         limit is not None and line_counter > limit):
@@ -294,20 +291,19 @@ class BioGrid(Source):
                 # TODO make these filters available as commandline options
                 # geneidtypefilters='NCBIGene,OMIM,MGI,FlyBase,ZFIN,MGI,HGNC,
                 #                   WormBase,XenBase,ENSEMBL,miRBase'.split(',')
-                geneidtypefilters = 'NCBIGene,MGI,ENSEMBL,ZFIN,HGNC'.split(',')
+                geneidtypefilters = 'NCBIGene,MGI,ENSEMBL,ZFIN,HGNC,WormBase,XenBase,FlyBase'.split(',')
                 # proteinidtypefilters='HPRD,Swiss-Prot,NCBIProtein'
                 if (speciesfilters is not None) and (
                         organism_label.strip() in speciesfilters):
                     line_counter += 1
                     if (geneidtypefilters is not None) and (prefix in geneidtypefilters):
                         mapped_id = ':'.join((prefix, id_num))
-                        model.addEquivalentClass(biogrid_id, mapped_id,
-                                                 subject_category=blv.terms.Gene.value,
-                                                 object_category=blv.terms.Gene.value)
+                        model.addEquivalentClass(biogrid_id, mapped_id)
                     # this symbol will only get attached to the biogrid class
                     elif id_type == 'OFFICIAL_SYMBOL':
-                        model.addClassToGraph(biogrid_id, id_num,
-                                              class_category=blv.terms.Gene.value)
+                        model.addLabel(biogrid_id, id_num)
+                        model.addType(biogrid_id, self.globaltt['gene'])
+
                     # elif (id_type == 'SYNONYM'):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)

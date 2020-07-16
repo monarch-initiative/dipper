@@ -7,7 +7,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
+
 
 LOG = logging.getLogger(__name__)
 
@@ -250,11 +250,11 @@ class MMRRC(Source):
                         if lb_mp[-1:] == ']' and lb_mp[-12:-8] == '[MP:':
                             phenotype_ids.append(lb_mp[-11:-2])
 
-                # pubmed ids are space delimited
+                # pubmed ids are comma delimited
                 pubmed_ids = []
                 if pubmed_nums != '':
-                    for pm_num in re.split(r'\s+', pubmed_nums):
-                        pmid = 'PMID:' + pm_num.strip()
+                    for pm_num in re.split(',', pubmed_nums):
+                        pmid = pm_num.strip()
                         pubmed_ids.append(pmid)
                         ref = Reference(graph, pmid, self.globaltt['journal article'],)
                         ref.addRefToGraph()
@@ -262,8 +262,7 @@ class MMRRC(Source):
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001
                 # is a good example of 4 genotype parts
 
-                model.addClassToGraph(mouse_taxon, None,
-                                      class_category=blv.terms.OrganismTaxon.value)
+                model.addClassToGraph(mouse_taxon, None)
                 if research_areas == '':
                     research_areas = None
                 else:
@@ -272,19 +271,22 @@ class MMRRC(Source):
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
                 model.addIndividualToGraph(   # an inst of mouse??
-                    strain_id, strain_label, strain_type, research_areas,
-                    ind_category=blv.terms.PopulationOfIndividualOrganisms.value)
+                    strain_id, strain_label, strain_type, research_areas
+                )
                 model.makeLeader(strain_id)
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
                     # assume the phenotype label is in some ontology
-                    model.addClassToGraph(pid, None,
-                                          class_category=blv.terms.PhenotypicFeature.value)
+                    model.addClassToGraph(pid, None)
                     if mgi_allele_id is not None and mgi_allele_id != '':
                         assoc = G2PAssoc(
-                            graph, self.name, mgi_allele_id, pid,
-                            self.globaltt['has phenotype'])
+                            graph,
+                            self.name,
+                            mgi_allele_id,
+                            pid,
+                            self.globaltt['has phenotype']
+                        )
                         for p in pubmed_ids:
                             assoc.add_source(p)
                         assoc.add_association_to_graph()
@@ -305,10 +307,10 @@ class MMRRC(Source):
 
             # now that we've collected all of the variant information, build it
             # we don't know their zygosities
-            for s in self.strain_hash:
-                h = self.strain_hash.get(s)
-                variants = h['variants']
-                genes = h['genes']
+            for strain in self.strain_hash:
+                strain_obj = self.strain_hash.get(strain)
+                variants = strain_obj['variants']
+                genes = strain_obj['genes']
                 vl_set = set()
                 # make variant loci for each gene
                 if variants:
@@ -347,12 +349,18 @@ class MMRRC(Source):
                     self.id_label_hash[vslc_id] = vslc_label
                     vslc_list.append(vslc_id)
                     geno.addPartsToVSLC(
-                        vslc_id, vl, None, self.globaltt['indeterminate'],
-                        self.globaltt['has_variant_part'], None)
+                        vslc_id,
+                        vl,
+                        None,
+                        self.globaltt['indeterminate'],
+                        self.globaltt['has_variant_part'],
+                        None
+                    )
                     model.addIndividualToGraph(
-                        vslc_id, vslc_label,
-                        self.globaltt['variant single locus complement'],
-                        ind_category=blv.terms.SequenceVariant.value)
+                        vslc_id,
+                        vslc_label,
+                        self.globaltt['variant single locus complement']
+                    )
                 if vslc_list:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
@@ -360,13 +368,12 @@ class MMRRC(Source):
                         gvc_id = '_:' + gvc_id
                         gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
                         model.addIndividualToGraph(
-                            gvc_id, gvc_label,
-                            self.globaltt['genomic_variation_complement'],
-                            ind_category=blv.terms.GenomicEntity.value)
+                            gvc_id,
+                            gvc_label,
+                            self.globaltt['genomic_variation_complement']
+                        )
                         for vslc_id in vslc_list:
-                            geno.addVSLCtoParent(vslc_id, gvc_id,
-                                                 parent_category=
-                                                 blv.terms.GenomicEntity.value)
+                            geno.addVSLCtoParent(vslc_id, gvc_id)
                     else:
                         # the GVC == VSLC, so don't have to make an extra piece
                         gvc_id = vslc_list.pop()
@@ -375,26 +382,24 @@ class MMRRC(Source):
                     genotype_label = gvc_label + ' [n.s.]'
                     bkgd_id = re.sub(
                         r':', '', '-'.join((
-                            self.globaltt['unspecified_genomic_background'], s)))
+                            self.globaltt['unspecified_genomic_background'], strain)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
                     bkgd_id = '_:' + bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
                     geno.addGenomicBackground(
-                        bkgd_id, 'unspecified (' + s + ')',
+                        bkgd_id, 'unspecified (' + strain + ')',
                         self.globaltt['unspecified_genomic_background'],
-                        "A placeholder for the unspecified genetic background for " + s)
+                        "A placeholder for the unspecified genetic background for " + strain)
                     geno.addGenomicBackgroundToGenotype(
                         bkgd_id, genotype_id,
                         self.globaltt['unspecified_genomic_background'])
                     geno.addParts(
-                        gvc_id, genotype_id, self.globaltt['has_variant_part'],
-                        part_category=blv.terms.GenomicEntity.value,
-                        parent_category=blv.terms.Genotype.value)
+                        gvc_id, genotype_id, self.globaltt['has_variant_part']
+                    )
                     geno.addGenotype(genotype_id, genotype_label)
                     graph.addTriple(
-                        s, self.globaltt['has_genotype'], genotype_id,
-                        subject_category=blv.terms.PopulationOfIndividualOrganisms.value,
-                        object_category=blv.terms.Genotype.value)
+                        strain, self.globaltt['has_genotype'], genotype_id
+                    )
                 else:
                     # LOG.debug(
                     #   "Strain %s is not making a proper genotype.", s)

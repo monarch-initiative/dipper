@@ -1,4 +1,2 @@
 FlyBase:FBgn0028734 owl:equivalentClass NCBIGene:37528 .
-
-FlyBase:FBgn0028734 biolink:category biolink:Gene .
 NCBIGene:37528 biolink:category biolink:Gene .

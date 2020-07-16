@@ -6,7 +6,6 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 ZPCURATION = 'http://purl.obolibrary.org/obo/zp/'
@@ -148,14 +147,14 @@ class ZFINSlim(Source):
                     modifier)
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
-                model.makeLeader(gene_curie,
-                                 node_category=blv.terms.Gene.value)
+                model.makeLeader(gene_curie)
                 pub_curie = "ZFIN:{0}".format(pub_id)
                 if zp_id:
                     assoc = G2PAssoc(self.graph, self.name, gene_curie, zp_id)
                     if pub_id:
                         reference = Reference(
-                            self.graph, pub_curie, self.globaltt['document'])
+                            self.graph, pub_curie, self.globaltt['document']
+                        )
                         reference.addRefToGraph()
                         assoc.add_source(pub_curie)
 

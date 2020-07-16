@@ -39,8 +39,11 @@ class ReactomeTestCase(unittest.TestCase):
          pathway_label,
          go_ecode, species_name) = self.test_set_1
         reactome._add_component_pathway_association(
-            'ENSEMBL:' + gene, 'REACT:' + pathway_id, pathway_label,
-            self.gaf_eco[go_ecode], category=blv.terms.Gene.value)
+            'ENSEMBL:' + gene,
+            'REACT:' + pathway_id,
+            pathway_label,
+            self.gaf_eco[go_ecode]
+        )
 
         triples = """
         ENSEMBL:ENSBTAP00000013354 RO:0002331 REACT:R-BTA-3000480 .
@@ -55,11 +58,5 @@ class ReactomeTestCase(unittest.TestCase):
             rdfs:label "Scavenging by Class A Receptors" ;
             rdfs:subClassOf GO:0009987,
                 PW:0000001 .
-                
-        ECO:0000501 biolink:category biolink:EvidenceType .
-        REACT:R-BTA-3000480 biolink:category biolink:Pathway .
-        ENSEMBL:ENSBTAP00000013354 biolink:category biolink:Gene .
-        
-        MONARCH:b582c188b7ec20016206 biolink:category biolink:Association .
         """
         self.assertTrue(self.test_util.test_graph_equality(triples, reactome.graph))

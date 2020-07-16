@@ -423,8 +423,8 @@ class Coriell(Source):
                 cell_line_reagent_id = self.globaltt['cell line']
 
                 model.addIndividualToGraph(
-                    cell_line_id, line_label, cell_line_reagent_id,
-                    ind_category=blv.terms.CellLine.value)
+                    cell_line_id, line_label, cell_line_reagent_id
+                )
 
                 # add the equivalent id == dna_ref
                 dna_ref = row[col.index('dna_ref')].strip()
@@ -433,19 +433,13 @@ class Coriell(Source):
                     # some of the equivalent ids are not defined
                     # in the source data; so add them
                     model.addIndividualToGraph(
-                        equiv_cell_line, None, cell_line_reagent_id,
-                        ind_category=blv.terms.CellLine.value)
-                    model.addSameIndividual(cell_line_id, equiv_cell_line,
-                                            subject_category=blv.terms.CellLine.value,
-                                            object_category=blv.terms.CellLine.value)
+                        equiv_cell_line, None, cell_line_reagent_id
+                    )
+                    model.addSameIndividual(cell_line_id, equiv_cell_line)
 
                 # Cell line derives from patient
-                geno.addDerivesFrom(cell_line_id, patient_id,
-                                    child_category=blv.terms.CellLine.value,
-                                    parent_category=blv.terms.Case.value)
-                geno.addDerivesFrom(cell_line_id, cell_type,
-                                    child_category=blv.terms.CellLine.value,
-                                    parent_category=blv.terms.AnatomicalEntity.value)
+                geno.addDerivesFrom(cell_line_id, patient_id)
+                geno.addDerivesFrom(cell_line_id, cell_type)
 
                 # Cell line a member of repository
                 family.addMember(repository, cell_line_id)
@@ -453,8 +447,7 @@ class Coriell(Source):
                 cat_remark = row[col.index('cat_remark')].strip()
 
                 if cat_remark != '':
-                    model.addDescription(cell_line_id, cat_remark,
-                                         subject_category=blv.terms.CellLine.value)
+                    model.addDescription(cell_line_id, cat_remark)
 
                 # Cell age_at_sampling
                 # TODO add the age nodes when modeled properly in #78
@@ -504,14 +497,14 @@ class Coriell(Source):
 
                     # Add the family ID as a named individual
                     model.addIndividualToGraph(
-                        family_comp_id, family_label, self.globaltt['family'],
-                        ind_category=blv.terms.PopulationOfIndividualOrganisms.value)
+                        family_comp_id,
+                        family_label,
+                        self.globaltt['family'],
+                        ind_category=blv.terms.PopulationOfIndividualOrganisms.value
+                    )
 
                     # Add the patient as a member of the family
-                    family.addMemberOf(patient_id, family_comp_id,
-                                       member_category=blv.terms.Case.value,
-                                       group_category=
-                                       blv.terms.PopulationOfIndividualOrganisms.value)
+                    family.addMemberOf(patient_id, family_comp_id)
 
                 # #############    BUILD THE GENOTYPE   #############
 
@@ -573,16 +566,18 @@ class Coriell(Source):
                         karyotype_feature_label = \
                             'some karyotype alteration on chr' + str(chrom)
                         feat = Feature(
-                            graph, karyotype_feature_id, karyotype_feature_label,
-                            self.globaltt['sequence_alteration'],
-                            feature_category=blv.terms.GenomicSequenceLocalization.value)
+                            graph,
+                            karyotype_feature_id,
+                            karyotype_feature_label,
+                            self.globaltt['sequence_alteration']
+                        )
                         feat.addFeatureStartLocation(None, chr_id)
                         feat.addFeatureToGraph()
                         geno.addParts(
-                            karyotype_feature_id, karyotype_id,
-                            self.globaltt['has_variant_part'],
-                            part_category=blv.terms.GenomicSequenceLocalization.value,
-                            parent_category=blv.terms.GenomicSequenceLocalization.value)
+                            karyotype_feature_id,
+                            karyotype_id,
+                            self.globaltt['has_variant_part']
+                        )
 
                 gene = row[col.index('gene')].strip()
                 mutation = row[col.index('mutation')].strip()
@@ -620,9 +615,7 @@ class Coriell(Source):
                 if karyotype_id is not None \
                         and not self._is_normal_karyotype(karyotype) \
                         and gvc_id is not None and karyotype_id != gvc_id:
-                    geno.addParts(karyotype_id, gvc_id, karyo_rel,
-                                  part_category=blv.terms.GenomicSequenceLocalization.value,
-                                  parent_category=blv.terms.SequenceVariant.value)
+                    geno.addParts(karyotype_id, gvc_id, karyo_rel)
 
                 if variant_id.strip() != '':
                     # split the variants & add them as part of the genotype
@@ -661,9 +654,10 @@ class Coriell(Source):
                         # the alleles at all.
                         # so the vslcs are just a pot of them
                         model.addIndividualToGraph(
-                            vslc_id, vslc_label,
-                            self.globaltt['variant single locus complement'],
-                            ind_category=blv.terms.SequenceVariant.value)
+                            vslc_id,
+                            vslc_label,
+                            self.globaltt['variant single locus complement']
+                        )
                         for var in omim_map.get(omim):
                             # this is actually a sequence alt
                             allele1_id = 'OMIM:' + omim + '.' + var
@@ -672,17 +666,19 @@ class Coriell(Source):
                             # assume that the sa -> var_loc -> gene
                             # is taken care of in OMIM
                             geno.addPartsToVSLC(
-                                vslc_id, allele1_id, None,
+                                vslc_id,
+                                allele1_id,
+                                None,
                                 self.globaltt['indeterminate'],
-                                self.globaltt['has_variant_part'])
+                                self.globaltt['has_variant_part']
+                            )
 
                         if vslc_id != gvc_id:
                             geno.addVSLCtoParent(vslc_id, gvc_id)
 
                 if affected == 'unaffected':
                     # let's just say that this person is wildtype
-                    model.addType(patient_id, self.globaltt['wildtype'],
-                                  subject_category=blv.terms.Case.value)
+                    model.addType(patient_id, self.globaltt['wildtype'])
                 elif genotype_id is None:
                     # make an anonymous genotype id (aka blank node)
                     genotype_id = '_:geno' + catalog_id.strip()
@@ -690,9 +686,10 @@ class Coriell(Source):
                 # add the gvc
                 if gvc_id is not None:
                     model.addIndividualToGraph(
-                        gvc_id, gvc_label,
-                        self.globaltt['genomic_variation_complement'],
-                        ind_category=blv.terms.SequenceVariant.value)
+                        gvc_id,
+                        gvc_label,
+                        self.globaltt['genomic_variation_complement']
+                    )
 
                     # add the gvc to the genotype
                     if genotype_id is not None:
@@ -700,9 +697,7 @@ class Coriell(Source):
                             rel = self.globaltt['has_reference_part']
                         else:
                             rel = self.globaltt['has_variant_part']
-                        geno.addParts(gvc_id, genotype_id, rel,
-                                      part_category=blv.terms.SequenceVariant.value,
-                                      parent_category=blv.terms.Genotype.value)
+                        geno.addParts(gvc_id, genotype_id, rel)
 
                     if karyotype_id is not None \
                             and self._is_normal_karyotype(karyotype):
@@ -714,10 +709,10 @@ class Coriell(Source):
                             genotype_id = karyotype_id
                         else:
                             geno.addParts(
-                                karyotype_id, genotype_id,
-                                self.globaltt['has_reference_part'],
-                                part_category=blv.terms.GenomicSequenceLocalization.value,
-                                parent_category=blv.terms.Genotype.value)
+                                karyotype_id,
+                                genotype_id,
+                                self.globaltt['has_reference_part']
+                            )
                     else:
                         genotype_label = gvc_label
                         # use the catalog id as the background
@@ -728,15 +723,13 @@ class Coriell(Source):
                     geno.addGenotype(
                         genotype_id, genotype_label,
                         self.globaltt['intrinsic_genotype'])
-                    geno.addTaxon(taxon, genotype_id,
-                                  genopart_category=blv.terms.Genotype.value)
+                    geno.addTaxon(taxon, genotype_id)
                     # add that the patient has the genotype
                     # TODO check if the genotype belongs to
                     # the cell line or to the patient
                     graph.addTriple(
-                        patient_id, self.globaltt['has_genotype'], genotype_id,
-                        subject_category=blv.terms.Case.value,
-                        object_category=blv.terms.Genotype.value)
+                        patient_id, self.globaltt['has_genotype'], genotype_id
+                    )
                 else:
                     geno.addTaxon(taxon, patient_id)
 
@@ -758,16 +751,13 @@ class Coriell(Source):
                             if disease not in omim_map:
                                 disease_id = 'OMIM:' + disease.strip()
                                 # assume the label is taken care of in OMIM
-                                model.addClassToGraph(disease_id, None,
-                                                      class_category=blv.terms.Disease.value)
+                                model.addClassToGraph(disease_id, None)
 
                                 # add the association:
                                 #   the patient has the disease
                                 assoc = G2PAssoc(
-                                    graph, self.name,
-                                    patient_id, disease_id,
-                                    entity_category=blv.terms.Case.value,
-                                    phenotype_category=blv.terms.Disease.value)
+                                    graph, self.name, patient_id, disease_id
+                                )
                                 assoc.add_association_to_graph()
 
                                 # this line is a model of this disease
@@ -776,9 +766,8 @@ class Coriell(Source):
                                 graph.addTriple(
                                     cell_line_id,
                                     self.globaltt['is model of'],
-                                    disease_id,
-                                    subject_category=blv.terms.CellLine.value,
-                                    object_category=blv.terms.Disease.value)
+                                    disease_id
+                                )
                             else:
                                 LOG.info('drop gene %s from disease list', disease)
 
@@ -791,9 +780,8 @@ class Coriell(Source):
                         ref.setType(self.globaltt['journal article'])
                         ref.addRefToGraph()
                         graph.addTriple(
-                            pubmed_id, self.globaltt['mentions'], cell_line_id,
-                            subject_category=blv.terms.Publication.value,
-                            object_category=blv.terms.CellLine.value)
+                            pubmed_id, self.globaltt['mentions'], cell_line_id
+                        )
 
                 if not self.test_mode and (
                         limit is not None and line_counter > limit):
@@ -825,8 +813,8 @@ class Coriell(Source):
             repo_page = page
 
             model.addIndividualToGraph(
-                repo_id, repo_label, self.globaltt['collection'],
-                ind_category=blv.terms.Provider.value)
+                repo_id, repo_label, self.globaltt['collection']
+            )
             reference.addPage(repo_id, repo_page)
 
         return

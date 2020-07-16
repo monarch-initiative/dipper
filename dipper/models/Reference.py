@@ -1,7 +1,6 @@
 import logging
 from dipper.graph.Graph import Graph
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -51,23 +50,14 @@ class Reference:
         if ref_id is not None and ref_id[:4] == 'http':
             self.ref_url = ref_id
 
-        return
-
     def setTitle(self, title):
         self.title = title
-        return
 
     def setYear(self, year):
-
         self.year = year
 
-        return
-
     def setType(self, reference_type):
-
         self.ref_type = reference_type
-
-        return
 
     def setAuthorList(self, author_list):
         """
@@ -77,35 +67,30 @@ class Reference:
         """
 
         self.author_list = author_list
-        return
 
     def addAuthor(self, author):
-
         self.author_list += [author]
-
-        return
 
     def setShortCitation(self, citation):
         self.short_citation = citation
-        return
 
-    def addPage(self, subject_id, page_url,
-                subject_category=None,
-                page_category=blv.terms.InformationContentEntity.value):
+    def addPage(
+            self, subject_id, page_url, subject_category=None, page_category=None
+    ):
         self.graph.addTriple(
-            subject_id, self.globaltt['page'],   # foaf:page  not  <sio:web page>
-            page_url, object_is_literal=False,    # URL is not a literal
+            subject_id,
+            self.globaltt['page'],   # foaf:page  not  <sio:web page>
+            page_url,
+            object_is_literal=False,    # URL is not a literal
             subject_category=subject_category,
-            object_category=page_category)
-        return
+            object_category=page_category
+        )
 
     def addTitle(self, subject_id, title):
         if title is not None and title != '':
             self.graph.addTriple(
-                subject_id, self.globaltt['title (dce)'], title,
-                object_is_literal=True,
-                subject_category=blv.terms.InformationContentEntity.value)
-        return
+                subject_id, self.globaltt['title (dce)'], title, object_is_literal=True
+            )
 
     def addRefToGraph(self):
 
@@ -116,13 +101,11 @@ class Reference:
         if self.ref_url is not None:
             if self.title is not None:
                 self.addTitle(self.ref_url, self.title)
-            self.model.addType(self.ref_url, self.ref_type,
-                               subject_category=blv.terms.InformationContentEntity.value)
+            self.model.addType(self.ref_url, self.ref_type)
             if cite is not None:
                 self.model.addLabel(self.ref_url, cite)
         elif self.ref_id is not None:
-            self.model.addIndividualToGraph(self.ref_id, cite, self.ref_type,
-                                            ind_category=blv.terms.Publication.value)
+            self.model.addIndividualToGraph(self.ref_id, cite, self.ref_type)
             if self.title is not None:
                 self.addTitle(self.ref_id, self.title)
         else:
@@ -137,4 +120,3 @@ class Reference:
         #    for auth in self.author_list:
         #        gu.addTriple(
         #           graph, self.ref_id, self.props['has_author'], auth, True)
-        return

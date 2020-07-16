@@ -11,7 +11,6 @@ import pandas as pd
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.Association import Assoc
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 BGEE_FTP = 'ftp.bgee.org'
@@ -223,13 +222,11 @@ class Bgee(Source):
         gene_curie = "ENSEMBL:{}".format(gene_id)
 
         rank = re.sub(r',', '', str(rank))  # ? can't do RE on a float ...
-        model.addIndividualToGraph(gene_curie, None, ind_category=blv.terms.Gene.value)
+        model.addType(gene_curie, self.globaltt['gene'])
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
         g2a_association.rel = self.globaltt['expressed in']
-        g2a_association.add_association_to_graph(subject_category=blv.terms.Gene.value,
-                                                 object_category=
-                                                 blv.terms.AnatomicalEntity.value)
+        g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
             self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
 

@@ -1,7 +1,6 @@
 import logging
 import re
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
@@ -25,11 +24,10 @@ class Pathway():
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        return
 
     def addPathway(
-            self, pathway_id, pathway_label, pathway_type=None,
-            pathway_description=None):
+            self, pathway_id, pathway_label, pathway_type=None, pathway_description=None
+    ):
         """
         Adds a pathway as a class.  If no specific type is specified, it will
         default to a subclass of "GO:cellular_process" and "PW:pathway".
@@ -43,12 +41,9 @@ class Pathway():
         if pathway_type is None:
             pathway_type = self.globaltt['cellular_process']
         self.model.addClassToGraph(
-            pathway_id, pathway_label, pathway_type, pathway_description,
-            class_category=blv.terms.Pathway.value)
-        self.model.addSubClass(pathway_id, self.globaltt['pathway'],
-                               child_category=blv.terms.Pathway.value)
-
-        return
+            pathway_id, pathway_label, pathway_type, pathway_description
+        )
+        self.model.addSubClass(pathway_id, self.globaltt['pathway'])
 
     def addGeneToPathway(self, gene_id, pathway_id):
         """
@@ -64,21 +59,14 @@ class Pathway():
         :return:
         """
 
-        gene_product = '_:'+re.sub(r':', '', gene_id) + 'product'
+        gene_product = '_:' + re.sub(r':', '', gene_id) + 'product'
         self.model.addIndividualToGraph(
             gene_product, None, self.globaltt['gene_product'],
-            ind_category=blv.terms.GeneProduct.value)
-        self.graph.addTriple(
-            gene_id, self.globaltt['has gene product'], gene_product,
-            subject_category=blv.terms.Gene.value,
-            object_category=blv.terms.GeneProduct.value)
+        )
+        self.graph.addTriple(gene_id, self.globaltt['has gene product'], gene_product)
         self.addComponentToPathway(gene_product, pathway_id)
 
-        return
-
-    def addComponentToPathway(self, component_id, pathway_id,
-                              component_category=None,
-                              pathway_category=blv.terms.Pathway.value):
+    def addComponentToPathway(self, component_id, pathway_id):
         """
         This can be used directly when the component is directly involved in
         the pathway.  If a transforming event is performed on the component
@@ -90,8 +78,4 @@ class Pathway():
         :param pathway_category: biolink category for pathway_id
         :return:
         """
-        self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id,
-                             subject_category=component_category,
-                             object_category=pathway_category)
-
-        return
+        self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id)

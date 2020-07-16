@@ -8,7 +8,6 @@ from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -249,47 +248,27 @@ class MPD(Source):
                     continue
 
                 strain_id = 'MPD-strain:' + mpd_strainid
-                model.addIndividualToGraph(strain_id, strain_name, tax_id,
-                                           ind_category=
-                                           blv.terms.PopulationOfIndividualOrganisms.value,
-                                           ind_type_category=blv.terms.OrganismTaxon.value)
+                model.addIndividualToGraph(strain_id, strain_name, tax_id)
                 if mpdshortname != '':
-                    model.addSynonym(strain_id, mpdshortname,
-                                     class_category=
-                                     blv.terms.PopulationOfIndividualOrganisms.value)
+                    model.addSynonym(strain_id, mpdshortname)
 
                 self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
                 if stocknum != '':
                     if vendor == 'J':
                         jax_id = 'JAX:' + stocknum
-                        model.addSameIndividual(strain_id, jax_id,
-                                                subject_category=
-                                                blv.terms.PopulationOfIndividualOrganisms.
-                                                value,
-                                                object_category=
-                                                blv.terms.PopulationOfIndividualOrganisms.
-                                                value)
+                        model.addSameIndividual(strain_id, jax_id)
                     elif vendor == 'Rbrc':  # reiken
                         reiken_id = 'RBRC:' + stocknum
-                        model.addSameIndividual(strain_id, reiken_id,
-                                                subject_category=
-                                                blv.terms.PopulationOfIndividualOrganisms.
-                                                value,
-                                                object_category=
-                                                blv.terms.PopulationOfIndividualOrganisms.
-                                                value)
+                        model.addSameIndividual(strain_id, reiken_id)
                     else:
                         if url != '':
-                            model.addXref(strain_id, url, True,
-                                          class_category=
-                                          blv.terms.PopulationOfIndividualOrganisms.value)
+                            model.addXref(strain_id, url, True)
                         if vendor != '':
                             model.addXref(
                                 strain_id, ':'.join((vendor, stocknum)),
-                                True,
-                                class_category=
-                                blv.terms.PopulationOfIndividualOrganisms.value)
+                                True
+                            )
 
                 # add the panel information
                 if panel != '':
@@ -416,8 +395,7 @@ class MPD(Source):
             graph = self.graph
         model = Model(graph)
         taxon_id = self.globaltt['Mus musculus']
-        model.addClassToGraph(taxon_id, None,
-                              class_category=blv.terms.OrganismTaxon.value)
+        model.addClassToGraph(taxon_id, None)
 
         scores_passing_threshold_count = 0
         scores_passing_threshold_with_ontologies_count = 0
@@ -531,9 +509,8 @@ class MPD(Source):
         graph.addTriple(
             sex_specific_genotype_id,
             self.globaltt['has_sex_agnostic_part'],
-            genotype_id,
-            subject_category=blv.terms.Genotype.value,
-            object_category=blv.terms.Genotype.value)
+            genotype_id
+        )
 
         # #############    BUILD THE G2P ASSOC    #############
         # TODO add more provenance info when that model is completed

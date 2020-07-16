@@ -36,9 +36,16 @@ class StreamedGraph(DipperGraph):
         self.identifier = identifier
 
     def addTriple(
-            self, subject_id, predicate_id, obj, object_is_literal=None,
-            literal_type=None, subject_category=None, object_category=None):
-        # trying making inference on type of object if none is supplied
+            self,
+            subject_id,
+            predicate_id,
+            obj,
+            object_is_literal=None,
+            literal_type=None,
+            subject_category=None,
+            object_category=None
+    ):
+        # trying making inference on type of object (literal vs iri) if none is supplied
         if object_is_literal is None:
             if self.curie_regexp.match(obj) or\
                     obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
@@ -56,9 +63,13 @@ class StreamedGraph(DipperGraph):
 
         if subject_category is not None:
             subject_category_iri = self._getnode(subject_category)
+        else:
+            subject_category_iri = None
 
         if object_category is not None:
             object_category_iri = self._getnode(object_category)
+        else:
+            object_category_iri = None
 
         if obj is not None:
             self.serialize(
@@ -110,7 +121,7 @@ class StreamedGraph(DipperGraph):
                 biolink_category_triples += \
                     "<{}> <{}> <{}> .".format(obj, predicate_category_iri,
                                               object_category_iri)
-        all_triples = "\n".join(triple, biolink_category_triples)
+        all_triples = "\n".join([triple, biolink_category_triples])
 
         if self.file_handle is None:
             print(all_triples)

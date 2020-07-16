@@ -2,7 +2,6 @@ import logging
 import re
 
 from dipper.models.assoc.Association import Assoc
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -23,9 +22,16 @@ class G2PAssoc(Assoc):
 
     """
 
-    def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None,
-                 entity_category=None,
-                 phenotype_category=None):
+    def __init__(
+            self,
+            graph,
+            definedby,
+            entity_id,
+            phenotype_id,
+            rel=None,
+            entity_category=None,
+            phenotype_category=None
+    ):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -52,13 +58,10 @@ class G2PAssoc(Assoc):
             self.start_stage_id = start_stage_id
         if end_stage_id is not None and end_stage_id.strip() != '':
             self.end_stage_id = end_stage_id
-        return
 
     def set_environment(self, environment_id):
         if environment_id is not None and environment_id.strip() != '':
             self.environment_id = environment_id
-
-        return
 
     def set_association_id(self, assoc_id=None):
 
@@ -66,8 +69,6 @@ class G2PAssoc(Assoc):
             self.assoc_id = self.make_g2p_id()
         else:
             self.assoc_id = assoc_id
-
-        return
 
     def add_association_to_graph(self, entity_category=None, phenotype_category=None):
         """
@@ -100,29 +101,26 @@ class G2PAssoc(Assoc):
                                          str(self.end_stage_id)))
             stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
-                stage_process_id, None, self.globaltt['developmental_process'],
-                ind_category=blv.terms.BiologicalProcess.value)
+                stage_process_id, None, self.globaltt['developmental_process']
+            )
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['starts during'], self.start_stage_id,
-                subject_category=blv.terms.BiologicalProcess.value,
-                object_category=blv.terms.LifeStage.value)
+                stage_process_id, self.globaltt['starts during'], self.start_stage_id
+            )
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['ends during'], self.end_stage_id,
-                subject_category=blv.terms.BiologicalProcess.value,
-                object_category=blv.terms.LifeStage.value)
+                stage_process_id, self.globaltt['ends during'], self.end_stage_id
+            )
 
             self.stage_process_id = stage_process_id
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id,
-                object_category=blv.terms.BiologicalProcess.value)
+                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id
+            )
 
         if self.environment_id is not None:
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id,
-                object_category=blv.terms.Environment.value)
-        return
+                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id
+            )
 
     def make_g2p_id(self):
         """

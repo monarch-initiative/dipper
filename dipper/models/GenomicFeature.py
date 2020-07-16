@@ -3,7 +3,6 @@ import re
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -25,9 +24,14 @@ class Feature():
     """
 
     def __init__(
-            self, graph, feature_id=None, label=None, feature_type=None,
+            self,
+            graph,
+            feature_id=None,
+            label=None,
+            feature_type=None,
             description=None,
-            feature_category=None):
+            feature_category=None
+    ):
 
         if isinstance(graph, Graph):
             self.graph = graph
@@ -48,7 +52,8 @@ class Feature():
         self.taxon = None
 
     def addFeatureStartLocation(
-            self, coordinate, reference_id, strand=None, position_types=None):
+            self, coordinate, reference_id, strand=None, position_types=None
+    ):
         """
         Adds coordinate details for the start of this feature.
         :param coordinate:
@@ -63,7 +68,8 @@ class Feature():
         self.start = self._getLocation(coordinate, reference_id, strand, position_types)
 
     def addFeatureEndLocation(
-            self, coordinate, reference_id, strand=None, position_types=None):
+            self, coordinate, reference_id, strand=None, position_types=None
+    ):
         """
         Adds the coordinate details for the end of this feature
         :param coordinate:
@@ -194,16 +200,16 @@ class Feature():
                 self.model.addLabel(curie, rid)
                 region_id = curie
 
-            self.graph.addTriple(self.fid, self.globaltt['location'], region_id,
-                                 subject_category=feature_category,
-                                 object_category=blv.terms.GenomicSequenceLocalization.value)
-            self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'],
-                                            ind_category=
-                                            blv.terms.GenomicSequenceLocalization.value)
+            self.graph.addTriple(
+                self.fid,
+                self.globaltt['location'],
+                region_id,
+                subject_category=feature_category
+            )
+            self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'])
         else:
             region_id = self.fid
-            self.model.addType(region_id, self.globaltt['region'],
-                               subject_category=blv.terms.GenomicSequenceLocalization.value)
+            self.model.addType(region_id, self.globaltt['region'])
 
         # add the start/end positions to the region
         beginp = endp = None
@@ -288,7 +294,8 @@ class Feature():
             self.graph.addTriple(region_id, self.globaltt['end'], end_position_id)
 
     def addPositionToGraph(
-            self, reference_id, position, position_types=None, strand=None):
+            self, reference_id, position, position_types=None, strand=None
+    ):
         """
         Add the positional information to the graph, following the faldo model.
         We assume that if the strand is None,
@@ -310,16 +317,18 @@ class Feature():
         pos_id = self._makePositionId(reference_id, position, position_types)
         if position is not None:
             self.graph.addTriple(
-                pos_id, self.globaltt['position'], position, object_is_literal=True,
-                literal_type="xsd:integer",
-                subject_category=blv.terms.GenomicSequenceLocalization.value)
-        self.graph.addTriple(pos_id, self.globaltt['reference'], reference_id,
-                             subject_category=blv.terms.GenomicSequenceLocalization.value)
+                pos_id,
+                self.globaltt['position'],
+                position,
+                object_is_literal=True,
+                literal_type="xsd:integer"
+            )
+        self.graph.addTriple(
+            pos_id, self.globaltt['reference'], reference_id
+        )
         if position_types is not None:
             for pos_type in position_types:
-                self.model.addType(pos_id, pos_type,
-                                   subject_category=
-                                   blv.terms.GenomicSequenceLocalization.value)
+                self.model.addType(pos_id, pos_type)
         strnd = None
         if strand is not None:
             strnd = strand
@@ -332,12 +341,13 @@ class Feature():
             strnd = self.globaltt['Position']
 
         if strnd is not None:
-            self.model.addType(pos_id, strnd,
-                               subject_category=blv.terms.GenomicSequenceLocalization.value)
+            self.model.addType(pos_id, strnd)
 
         return pos_id
 
-    def addSubsequenceOfFeature(self, parentid):
+    def addSubsequenceOfFeature(
+            self, parentid, subject_category=None, object_category=None
+    ):
         """
         This will add reciprocal triples like:
         feature <is subsequence of> parent
@@ -348,13 +358,21 @@ class Feature():
         :return:
 
         """
-        self.graph.addTriple(self.fid, self.globaltt['is subsequence of'], parentid,
-                             subject_category=blv.terms.GenomicSequenceLocalization.value,
-                             object_category=blv.terms.GenomicSequenceLocalization.value)
+        self.graph.addTriple(
+            self.fid,
+            self.globaltt['is subsequence of'],
+            parentid,
+            subject_category=subject_category,
+            object_category=object_category
+        )
         # this should be expected to be done in reasoning not ETL
-        self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid,
-                             subject_category=blv.terms.GenomicSequenceLocalization.value,
-                             object_category=blv.terms.GenomicSequenceLocalization.value)
+        self.graph.addTriple(
+            parentid,
+            self.globaltt['has subsequence'],
+            self.fid,
+            subject_category=object_category,
+            object_category=subject_category
+        )
 
     def addTaxonToFeature(self, taxonid):
         """
@@ -365,13 +383,21 @@ class Feature():
         :return:
         """
         self.taxon = taxonid
-        self.graph.addTriple(self.fid, self.globaltt['in taxon'], self.taxon,
-                             subject_category=self.feature_category,
-                             object_category=blv.terms.OrganismTaxon.value)
+        self.graph.addTriple(
+            self.fid,
+            self.globaltt['in taxon'],
+            self.taxon,
+            subject_category=self.feature_category
+        )
 
     def addFeatureProperty(self, property_type, feature_property):
-        self.graph.addTriple(self.fid, property_type, feature_property,
-                             subject_category=self.feature_category)
+
+        self.graph.addTriple(
+            self.fid,
+            property_type,
+            feature_property,
+            subject_category=self.feature_category
+        )
 
 
 def makeChromID(chrom, reference=None, prefix=None):

@@ -4,7 +4,6 @@ import yaml
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Pathway import Pathway
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -46,10 +45,12 @@ class Reactome(Source):
         }
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            data_release_version=None
+    ):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skized=are_bnodes_skolemized,
@@ -93,20 +94,19 @@ class Reactome(Source):
             LOG.info("Only parsing first %d rows", limit)
 
         self._parse_reactome_association_file(
-            'ensembl2pathway', limit, subject_prefix='ENSEMBL',
-            object_prefix='REACT', category=blv.terms.Gene.value)
+            'ensembl2pathway', limit, subject_prefix='ENSEMBL', object_prefix='REACT'
+        )
 
         self._parse_reactome_association_file(
-            'chebi2pathway', limit, subject_prefix='CHEBI',
-            object_prefix='REACT', category=blv.terms.ChemicalSubstance.value)
+            'chebi2pathway', limit, subject_prefix='CHEBI', object_prefix='REACT'
+        )
 
     def _parse_reactome_association_file(
             self,
             src_key,
             limit=None,
             subject_prefix=None,
-            object_prefix=None,
-            category=None
+            object_prefix=None
     ):
         """
         Parse ensembl gene to reactome pathway file
@@ -138,22 +138,20 @@ class Reactome(Source):
                         'Evidence code %s not found in %s', go_ecode, str(self.gaf_eco))
 
                 self._add_component_pathway_association(
-                   gene_curie, pathway_curie, pathway_label, eco_curie, category)
+                   gene_curie, pathway_curie, pathway_label, eco_curie)
 
                 if limit is not None and reader.line_num >= limit:
                     break
 
     def _add_component_pathway_association(
-            self, gene_curie, pathway_curie, pathway_label, eco_curie, category=None):
+            self, gene_curie, pathway_curie, pathway_label, eco_curie
+    ):
 
         pathway = Pathway(self.graph)
         pathway.addPathway(pathway_curie, pathway_label)
-        pathway.addComponentToPathway(gene_curie, pathway_curie,
-                                      component_category=category)
+        pathway.addComponentToPathway(gene_curie, pathway_curie)
 
-        association = Assoc(self.graph, self.name,
-                            subject_category=blv.terms.Gene.value,
-                            object_category=blv.terms.Pathway.value)
+        association = Assoc(self.graph, self.name)
         association.sub = gene_curie
         association.rel = self.globaltt['involved in']
         association.obj = pathway_curie

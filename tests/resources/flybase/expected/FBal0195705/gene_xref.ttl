@@ -1,4 +1,2 @@
 FlyBase:FBgn0033159 owl:equivalentClass NCBIGene:35652 .
-
-FlyBase:FBgn0033159 biolink:category biolink:Gene .
 NCBIGene:35652 biolink:category biolink:Gene .

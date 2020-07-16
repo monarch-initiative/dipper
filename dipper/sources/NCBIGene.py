@@ -215,8 +215,7 @@ class NCBIGene(OMIMSource):
             # tax label can get added elsewhere
             geno.addGenome(tax_curie, tax_num)
             # label added elsewhere
-            model.addClassToGraph(tax_curie, None,
-                                  class_category=blv.terms.OrganismTaxon.value)
+            model.addClassToGraph(tax_curie, None)
 
         col = self.files[src_key]['columns']
         LOG.info('Begin reading & parsing')
@@ -283,18 +282,16 @@ class NCBIGene(OMIMSource):
                     continue
 
                 if self.class_or_indiv[gene_id] == 'C':
-                    model.addClassToGraph(gene_id, label, gene_type_id, desc,
-                                          class_category=blv.terms.Gene.value)
+                    model.addClassToGraph(gene_id, label, gene_type_id, desc)
                     # NCBI will be the default leader (for non mods),
                     # so we will not add the leader designation here.
                 else:
-                    model.addIndividualToGraph(gene_id, label, gene_type_id, desc,
-                                               ind_category=blv.terms.GenomicEntity.value)
+                    model.addIndividualToGraph(gene_id, label, gene_type_id, desc)
                     # in this case, they aren't genes.
                     # so we want someone else to be the leader
 
                 if name != '-':
-                    model.addSynonym(gene_id, name, class_category=blv.terms.Gene.value)
+                    model.addSynonym(gene_id, name)
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
                         syn = syn.strip()
@@ -304,13 +301,11 @@ class NCBIGene(OMIMSource):
                             syn = self.informal_species[tax_curie] + 'QTL:' + syn[12:]
                             LOG.info('AnimalQTLdb: CHANGED to: %s', syn)
                         model.addSynonym(
-                            gene_id, syn, model.globaltt['has_related_synonym'],
-                            class_category=blv.terms.Gene.value)
+                            gene_id, syn, model.globaltt['has_related_synonym'])
                 if other_designations != '-':
                     for syn in other_designations.split('|'):
                         model.addSynonym(
-                            gene_id, syn.strip(), model.globaltt['has_related_synonym'],
-                            class_category=blv.terms.Gene.value)
+                            gene_id, syn.strip(), model.globaltt['has_related_synonym'])
 
                 if dbxrefs != '-':
                     self._add_gene_equivalencies(dbxrefs, gene_id, tax_curie)
@@ -443,13 +438,11 @@ class NCBIGene(OMIMSource):
             if dbxref_curie is not None:
                 if prefix == 'HPRD':  # proteins are not == genes.
                     model.addTriple(
-                        gene_id, self.globaltt['has gene product'], dbxref_curie,
-                        subject_category=blv.terms.Gene.value,
-                        object_category=blv.terms.GeneProduct.value)
+                        gene_id, self.globaltt['has gene product'], dbxref_curie)
                     continue
 
                 if prefix == 'ENSEMBL':
-                    model.addXref(gene_id, dbxref_curie, class_category=blv.terms.Gene.value)
+                    model.addXref(gene_id, dbxref_curie)
                 if prefix == 'OMIM':
                     omim_num = dbxref_curie[5:]
                     if omim_num in self.omim_replaced:
@@ -470,20 +463,14 @@ class NCBIGene(OMIMSource):
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
-                        model.addEquivalentClass(gene_id, dbxref_curie,
-                                                 subject_category=blv.terms.Gene.value,
-                                                 object_category=blv.terms.Gene.value)
+                        model.addEquivalentClass(gene_id, dbxref_curie)
                         if taxon in clique_map:
                             if clique_map[taxon] == prefix:
-                                model.makeLeader(dbxref_curie,
-                                                 node_category=blv.terms.Gene.value)
+                                model.makeLeader(dbxref_curie)
                             elif clique_map[taxon] == gene_id.split(':')[0]:
-                                model.makeLeader(gene_id,
-                                                 node_category=blv.terms.Gene.value)
+                                model.makeLeader(gene_id)
                     else:
-                        model.addSameIndividual(gene_id, dbxref_curie,
-                                                subject_category=blv.terms.Gene.value,
-                                                object_category=blv.terms.Gene.value)
+                        model.addSameIndividual(gene_id, dbxref_curie)
                 except AssertionError as err:
                     LOG.warning("Error parsing %s: %s", gene_id, err)
 
@@ -548,28 +535,34 @@ class NCBIGene(OMIMSource):
                 discontinued_gene_id = ':'.join(('NCBIGene', discontinued_num))
                 # add the two genes
                 if self.class_or_indiv.get(gene_id) == 'C':
-                    model.addClassToGraph(gene_id, None,
-                                          class_category=blv.terms.Gene.value)
-                    model.addClassToGraph(discontinued_gene_id, discontinued_symbol,
-                                          class_category=blv.terms.Gene.value)
+                    model.addClassToGraph(gene_id, None)
+                    model.addClassToGraph(
+                        discontinued_gene_id,
+                        discontinued_symbol,
+                        class_category=blv.terms.Gene.value
+                    )
 
                     # add the new gene id to replace the old gene id
-                    model.addDeprecatedClass(discontinued_gene_id, [gene_id],
-                                             old_id_category=blv.terms.Gene.value,
-                                             new_ids_category=blv.terms.Gene.value)
+                    model.addDeprecatedClass(
+                        discontinued_gene_id,
+                        [gene_id],
+                        old_id_category=blv.terms.Gene.value
+                    )
                 else:
-                    model.addIndividualToGraph(gene_id, None,
-                                               ind_category=blv.terms.Gene.value)
+                    model.addIndividualToGraph(gene_id, None)
                     model.addIndividualToGraph(
-                        discontinued_gene_id, discontinued_symbol,
-                        ind_category=blv.terms.Gene.value)
-                    model.addDeprecatedIndividual(discontinued_gene_id, [gene_id],
-                                                  old_id_category=blv.terms.Gene.value,
-                                                  new_ids_category=blv.terms.Gene.value)
+                        discontinued_gene_id,
+                        discontinued_symbol,
+                        ind_category=blv.terms.Gene.value
+                    )
+                    model.addDeprecatedIndividual(
+                        discontinued_gene_id,
+                        [gene_id],
+                        old_id_category=blv.terms.Gene.value
+                    )
 
                 # also add the old symbol as a synonym of the new gene
-                model.addSynonym(gene_id, discontinued_symbol,
-                                 class_category=blv.terms.Gene.value)
+                model.addSynonym(gene_id, discontinued_symbol)
 
                 if not self.test_mode and (limit is not None and line_counter > limit):
                     break
@@ -636,22 +629,18 @@ class NCBIGene(OMIMSource):
                 pubmed_id = ':'.join(('PMID', pubmed_num))
 
                 if self.class_or_indiv.get(gene_id) == 'C':
-                    model.addClassToGraph(gene_id, None,
-                                          class_category=blv.terms.Gene.value)
+                    model.addClassToGraph(gene_id, None)
                 else:
-                    model.addIndividualToGraph(gene_id, None,
-                                               ind_category=blv.terms.Gene.value)
+                    model.addIndividualToGraph(gene_id, None)
                 # add the publication as a NamedIndividual
                 # add type publication
-                model.addIndividualToGraph(pubmed_id, None, None,
-                                           ind_category=blv.terms.Publication.value)
+                model.addIndividualToGraph(pubmed_id, None, None)
                 reference = Reference(
                     graph, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
                 graph.addTriple(
-                    pubmed_id, self.globaltt['is_about'], gene_id,
-                    subject_category=blv.terms.Publication.value,
-                    object_category=blv.terms.Gene.value)
+                    pubmed_id, self.globaltt['is_about'], gene_id
+                )
                 assoc_counter += 1
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -746,10 +735,9 @@ class NCBIGene(OMIMSource):
                     if orthologs is not None:
                         for orth in orthologs:
                             oid = 'NCBIGene:' + str(orth)
-                            model.addClassToGraph(oid, None, self.globaltt['gene'],
-                                                  class_category=blv.terms.Gene.value)
+                            model.addClassToGraph(oid, None, self.globaltt['gene'])
                             otaxid = 'NCBITaxon:' + str(gene_to_taxon[orth])
-                            geno.addTaxon(otaxid, oid, genopart_category=blv.terms.Gene.value)
+                            geno.addTaxon(otaxid, oid)
                             assoc = OrthologyAssoc(graph, self.name, gid, oid)
                             assoc.add_source('PMID:24063302')
                             assoc.add_association_to_graph()

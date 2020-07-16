@@ -7,7 +7,6 @@ from os.path import isfile, join
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -181,17 +180,13 @@ class Monarch(Source):
                     assoc.add_association_to_graph()
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
-                        model.addDescription(aid, phenotype_description,
-                                             subject_category=blv.terms.Association.value)
+                        model.addDescription(aid, phenotype_description)
                     if breed_name != '':
-                        model.addDescription(aid, breed_name + ' [observed in]',
-                                             subject_category=blv.terms.Association.value)
+                        model.addDescription(aid, breed_name + ' [observed in]')
                     if assay != '':
-                        model.addDescription(aid, assay + ' [assay]',
-                                             subject_category=blv.terms.Association.value)
+                        model.addDescription(aid, assay + ' [assay]')
                     if curator_notes != '':
-                        model.addComment(aid, curator_notes,
-                                         subject_category=blv.terms.Association.value)
+                        model.addComment(aid, curator_notes)
 
                     if entity_id != '' or quality_id != '':
                         LOG.info(

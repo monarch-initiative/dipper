@@ -1,6 +1,5 @@
 import logging
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.graph.Graph import Graph
 
 LOG = logging.getLogger(__name__)
@@ -30,8 +29,6 @@ class Evidence:
         self.curie_map = self.graph.curie_map
         self.association = association
 
-        return
-
     def add_supporting_evidence(self, evidence_line, evidence_type=None, label=None):
         """
         Add supporting line of evidence node to association id
@@ -41,14 +38,11 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(
-            self.association, self.globaltt['has_supporting_evidence_line'],
-            evidence_line,
-            subject_category=blv.terms.Association.value,
-            object_category=blv.terms.EvidenceType.value)
+            self.association,
+            self.globaltt['has_supporting_evidence_line'],
+            evidence_line)
         if evidence_type is not None:
-            self.model.addIndividualToGraph(evidence_line, label, evidence_type,
-                                            ind_category=blv.terms.EvidenceType.value)
-        return
+            self.model.addIndividualToGraph(evidence_line, label, evidence_type)
 
     def add_evidence(self, evidence_line, evidence_type=None, label=None):
         """
@@ -59,16 +53,13 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(
-            self.association, self.globaltt['has_evidence_line'], evidence_line,
-            subject_category=blv.terms.Association.value,
-            object_category=blv.terms.EvidenceType.value)
+            self.association, self.globaltt['has_evidence_line'], evidence_line)
         if evidence_type is not None:
-            self.model.addIndividualToGraph(evidence_line, label, evidence_type,
-                                            ind_category=blv.terms.EvidenceType.value)
-        return
+            self.model.addIndividualToGraph(evidence_line, label, evidence_type)
 
-    def add_data_individual(self, data_curie, label=None, ind_type=None,
-                            data_curie_category=None):
+    def add_data_individual(
+            self, data_curie, label=None, ind_type=None, data_curie_category=None
+    ):
         """
         Add data individual
         :param data_curie: str either curie formatted or long string,
@@ -86,9 +77,8 @@ class Evidence:
         else:
             curie = data_curie
 
-        self.model.addIndividualToGraph(curie, label, ind_type,
-                                        ind_category=data_curie_category)
-        return
+        self.model.addIndividualToGraph(
+            curie, label, ind_type, ind_category=data_curie_category)
 
     def add_supporting_data(self, evidence_line, measurement_dict):
         """
@@ -105,18 +95,15 @@ class Evidence:
         """
         for measurement in measurement_dict:
             self.graph.addTriple(
-                evidence_line, self.globaltt['has_evidence_item'], measurement,
-                subject_category=blv.terms.EvidenceType.value,
-                object_category=blv.terms.EvidenceType.value)
+                evidence_line, self.globaltt['has_evidence_item'], measurement)
 
             self.graph.addTriple(
                 measurement, self.globaltt['has_value'],  # 'has measurement value' ??
-                measurement_dict[measurement], True,
-                subject_category=blv.terms.EvidenceType.value)
-        return
+                measurement_dict[measurement], True)
 
     def add_supporting_publication(
-            self, evidence_line, publication, label=None, pub_type=None):
+            self, evidence_line, publication, label=None, pub_type=None
+    ):
         """
         <evidence> <has_supporting_reference> <source>
         <source> <rdf:type> <type>
@@ -128,16 +115,20 @@ class Evidence:
         :return:
         """
         self.graph.addTriple(
-            evidence_line, self.globaltt['has_supporting_reference'],
-            publication,
-            subject_category=blv.terms.EvidenceType.value,
-            object_category=blv.terms.Publication.value)
-        self.model.addIndividualToGraph(publication, label, pub_type,
-                                        ind_category=blv.terms.Publication.value)
-        return
+            evidence_line,
+            self.globaltt['has_supporting_reference'],
+            publication)
 
-    def add_source(self, evidence_line, source, label=None, src_type=None,
-                   source_category=blv.terms.Provider.value):
+        self.model.addIndividualToGraph(publication, label, pub_type)
+
+    def add_source(
+            self,
+            evidence_line,
+            source,
+            label=None,
+            src_type=None,
+            source_category=None
+    ):
         """
         Applies the triples:
         <evidence> <dc:source> <source>
@@ -151,9 +142,14 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line, self.globaltt['Source'], source,
-                             subject_category=blv.terms.EvidenceType.value,
-                             object_category=source_category)
-        self.model.addIndividualToGraph(source, label, src_type,
-                                        ind_category=source_category)
-        return
+        self.graph.addTriple(
+            evidence_line,
+            self.globaltt['Source'],
+            source,
+            subject_category=None,
+            object_category=source_category
+        )
+
+        self.model.addIndividualToGraph(
+            source, label, src_type, ind_category=source_category
+        )

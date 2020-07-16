@@ -1,5 +1,4 @@
 from dipper.models.assoc.Association import Assoc
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -16,12 +15,15 @@ class D2PAssoc(Assoc):
     """
 
     def __init__(
-            self, graph, definedby, disease_id, phenotype_id,
+            self, graph,
+            definedby,
+            disease_id,
+            phenotype_id,
             onset=None,
             frequency=None,
             rel=None,
-            disease_category=blv.terms.Disease.value,
-            phenotype_category=blv.terms.PhenotypicFeature.value
+            disease_category=None,
+            phenotype_category=None
     ):
         super().__init__(graph, definedby)
 

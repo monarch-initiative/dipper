@@ -5,7 +5,6 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'timputman'
 
@@ -114,9 +113,7 @@ class RGD(Source):
         phenotype = record['object']['id']
 
         # instantiate the association
-        g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation,
-                          subject_category=blv.terms.Gene.value,
-                          object_category=blv.terms.PhenotypicFeature.value)
+        g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
 
         # add the references
         references = record['evidence']['has_supporting_reference']
@@ -138,9 +135,7 @@ class RGD(Source):
             # This seems to be specific to this source and
             # there could be non-equivalent references in this list
             for ref in references[1:]:
-                model.addSameIndividual(sub=references[0], obj=ref,
-                                        subject_category=blv.terms.Publication.value,
-                                        object_category=blv.terms.Publication.value)
+                model.addSameIndividual(sub=references[0], obj=ref)
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])

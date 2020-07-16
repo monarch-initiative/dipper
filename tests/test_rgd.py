@@ -58,16 +58,7 @@ class RGDTestCase(unittest.TestCase):
     
     RGD:2535 OBO:RO_0002200 MP:0003340 .
         RGDRef:1581841 a IAO:0000311 ;
-        biolink:category biolink:Publication ;
         owl:sameAs PMID:12799311 .
-        
-    ECO:0005611 biolink:category biolink:EvidenceType .
-    RGDRef:1581841 biolink:category biolink:EvidenceType .
-    
-    MONARCH:b4650e8c3d865f11a1a5 biolink:category biolink:Association .
-    MP:0003340 biolink:category biolink:PhenotypicFeature .
-    RGD:2535 biolink:category biolink:Gene .
-    PMID:12799311 biolink:category biolink:Publication .
         """
         # dbg
         logger.debug("Reference graph: %s",

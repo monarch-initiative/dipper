@@ -6,10 +6,3 @@ MONARCH:bd56c100c5d3b2ba7c36 a OBAN:association ;
     OBAN:association_has_subject FlyBase:FBal0263199 .
 
 FlyBase:FBal0263199 RO:0003301 DOID:0060041 .
-
-FlyBase:FBal0263199 biolink:category biolink:Genotype .
-DOID:0060041 biolink:category biolink:Disease .
-ECO:0000015 biolink:category biolink:EvidenceType .
-PMID:27335463 biolink:category biolink:EvidenceType .
-
-MONARCH:bd56c100c5d3b2ba7c36 biolink:category biolink:Association .

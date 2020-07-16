@@ -211,8 +211,7 @@ class KEGG(OMIMSource):
                 # so add those
                 image_filename = re.sub(r'KEGG-path:', '', pathway_id) + '.png'
                 image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
-                model.addDepiction(pathway_id, image_url,
-                                   subject_category=blv.terms.Pathway.value)
+                model.addDepiction(pathway_id, image_url)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -252,8 +251,9 @@ class KEGG(OMIMSource):
                 # Add the disease as a class.
                 # we don't get all of these from MONDO yet see:
                 # https://github.com/monarch-initiative/human-disease-ontology/issues/3
-                model.addClassToGraph(disease_id, disease_name,
-                                      class_category=blv.terms.Disease.value)
+                model.addClassToGraph(
+                    disease_id, disease_name, class_category=blv.terms.Disease.value
+                )
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
@@ -324,22 +324,18 @@ class KEGG(OMIMSource):
                 # add the long name as the description
                 if len(gene_stuff) > 1:
                     description = gene_stuff[1].strip()
-                    model.addDefinition(gene_id, description,
-                                        class_category=blv.terms.Gene.value)
+                    model.addDefinition(gene_id, description)
 
                 # add the rest of the symbols as synonyms
                 for i in enumerate(symbollist, start=1):
-                    model.addSynonym(gene_id, i[1].strip(),
-                                     class_category=blv.terms.Gene.value)
+                    model.addSynonym(gene_id, i[1].strip())
 
                 if len(gene_stuff) > 2:
                     ko_part = gene_stuff[2]
                     ko_match = re.search(r'K\d+', ko_part)
                     if ko_match is not None and len(ko_match.groups()) == 1:
                         ko = 'KEGG-ko:'+ko_match.group(1)
-                        family.addMemberOf(gene_id, ko,
-                                           member_category=blv.terms.Gene.value,
-                                           group_category=blv.terms.Pathway.value)
+                        family.addMemberOf(gene_id, ko)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -452,8 +448,7 @@ class KEGG(OMIMSource):
 
                 # add gene and orthology class to graph;
                 # assume labels will be taken care of elsewhere
-                model.addClassToGraph(gene_id, None,
-                                      class_category=blv.terms.Gene.value)
+                model.addClassToGraph(gene_id, None)
                 model.addClassToGraph(orthology_class_id, None)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
@@ -688,12 +683,13 @@ class KEGG(OMIMSource):
                     # add ids, and deal with the labels separately
                     model.addClassToGraph(kegg_disease_id, None,
                                           class_category=blv.terms.Disease.value)
-                    model.addClassToGraph(omim_disease_id, None,
-                                          class_category=blv.terms.Disease.value)
+                    model.addClassToGraph(omim_disease_id, None)
                     # TODO is this safe?
-                    model.addEquivalentClass(kegg_disease_id, omim_disease_id,
-                                             subject_category=blv.terms.Disease.value,
-                                             object_category=blv.terms.Disease.value)
+                    model.addEquivalentClass(
+                        kegg_disease_id,
+                        omim_disease_id,
+                        subject_category=blv.terms.Disease.value
+                    )
             else:
                 pass
                 # gu.addXref(g, omim_disease_id, kegg_disease_id)
@@ -781,9 +777,7 @@ class KEGG(OMIMSource):
 
                 r = Reference(graph, pubmed_id, self.globaltt['journal article'])
                 r.addRefToGraph()
-                graph.addTriple(pubmed_id, self.globaltt['is_about'], kegg_id,
-                                subject_category=blv.terms.Publication.value,
-                                object_category=blv.terms.Pathway.value)
+                graph.addTriple(pubmed_id, self.globaltt['is_about'], kegg_id)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -821,9 +815,8 @@ class KEGG(OMIMSource):
                 graph.addTriple(
                     pathway_id,
                     self.globaltt['causally upstream of or within'],
-                    disease_id,
-                    subject_category=blv.terms.Pathway.value,
-                    object_category=blv.terms.Disease.value)
+                    disease_id
+                )
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break

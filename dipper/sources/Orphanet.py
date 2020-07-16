@@ -169,18 +169,16 @@ class Orphanet(Source):
                     lclid = gene_clique[prefix]
                     dbxref = ':'.join((prefix, lclid))
                     if gene_curie != dbxref:
-                        model.addClassToGraph(dbxref, None,
-                                              class_category=blv.terms.Gene.value)
-                        model.addEquivalentClass(gene_curie, dbxref,
-                                                 subject_category=blv.terms.Gene.value,
-                                                 object_category=blv.terms.Gene.value)
+                        model.addClassToGraph(
+                            dbxref, None, class_category=blv.terms.Gene.value
+                        )
+                        model.addEquivalentClass(gene_curie, dbxref)
 
                 syn_list = gene.find('./SynonymList')
                 if int(syn_list.get('count')) > 0 and gene_curie is not None:
                     for syn in syn_list.findall('./Synonym'):
                         if syn is not None and syn.text != '':
-                            model.addSynonym(gene_curie, syn.text,
-                                             class_category=blv.terms.Gene.value)
+                            model.addSynonym(gene_curie, syn.text)
 
                 dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
                 # circa 2020-May
@@ -208,8 +206,7 @@ class Orphanet(Source):
                     self.graph,
                     self.name,
                     gene_curie,
-                    rel_curie,
-                    phenotype_category=blv.terms.Disease.value
+                    rel_curie
                 )
 
                 g2p_assoc.add_evidence(eco_id)

@@ -5,7 +5,6 @@ from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 MCDL = 'http://hgdownload.cse.ucsc.edu/goldenPath'
@@ -197,18 +196,15 @@ class Monochrom(Source):
         taxon_id = 'NCBITaxon:' + taxon
 
         # add the taxon as a class.  adding the class label elsewhere
-        model.addClassToGraph(taxon_id, None,
-                              class_category=blv.terms.OrganismTaxon.value)
-        model.addSynonym(taxon_id, genome_label,
-                         class_category=blv.terms.OrganismTaxon.value)
+        model.addClassToGraph(taxon_id, None)
+        model.addSynonym(taxon_id, genome_label)
 
         if genome_id is None:
             genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node always
         geno.addGenome(taxon_id, genome_label, genome_id)
         model.addOWLPropertyClassRestriction(
-            genome_id, self.globaltt['in taxon'], taxon_id,
-            class_category=blv.terms.Genome.value,
-            property_value_category=blv.terms.OrganismTaxon.value)
+            genome_id, self.globaltt['in taxon'], taxon_id
+        )
 
         placed_scaffold_pattern = r'chr(\d+|X|Y|Z|W|MT|M)'
         # currently unused patterns
@@ -256,9 +252,8 @@ class Monochrom(Source):
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 model.addOWLPropertyClassRestriction(
-                    cclassid, self.globaltt['member of'], genome_id,
-                    class_category=blv.terms.GenomicEntity.value,
-                    property_value_category=blv.terms.Genome.value)
+                    cclassid, self.globaltt['member of'], genome_id
+                )
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
@@ -267,9 +262,8 @@ class Monochrom(Source):
 
                     region_type_id = self.map_type_of_region(rtype)
                     model.addClassToGraph(
-                        maplocclass_id, maplocclass_label, region_type_id,
-                          class_category=blv.terms.GenomicSequenceLocalization.value,
-                          class_type_category=blv.terms.GenomicSequenceLocalization.value)
+                        maplocclass_id, maplocclass_label, region_type_id
+                    )
                 else:
                     region_type_id = self.globaltt['chromosome']
 
@@ -283,10 +277,8 @@ class Monochrom(Source):
                             model.addOWLPropertyClassRestriction(
                                 maplocclass_id,
                                 self.globaltt['has_sequence_attribute'],
-                                self.resolve(rtype),
-                                class_category=blv.terms.GenomicSequenceLocalization.value,
-                                property_value_category=
-                                blv.terms.GenomicSequenceLocalization.value)
+                                self.resolve(rtype)
+                            )
                     else:
                         # usually happens if it's a chromosome (SO:000340) because
                         # they don't actually have banding info
@@ -311,11 +303,7 @@ class Monochrom(Source):
                     pclassid = cclassid + parent  # class chr parts
                     pclass_label = makeChromLabel(chrom + parent, genome_label)
                     rti = getChrPartTypeByNotation(parent, self.graph)
-                    model.addClassToGraph(pclassid, pclass_label, rti,
-                                          class_category=
-                                          blv.terms.GenomicSequenceLocalization.value,
-                                          class_type_category=
-                                          blv.terms.GenomicSequenceLocalization.value)
+                    model.addClassToGraph(pclassid, pclass_label, rti)
                     # for canonical chromosomes,
                     # then the subbands are subsequences of the full band
                     # add the subsequence stuff as restrictions
@@ -324,41 +312,33 @@ class Monochrom(Source):
                         grandparent = 1 + parents.index(prnt)
                         pid = cclassid + parents[grandparent]   # the instance
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is subsequence of'], pid,
-                            class_category=blv.terms.GenomicSequenceLocalization.value,
-                            property_value_category=
-                            blv.terms.GenomicSequenceLocalization.value)
+                            pclassid, self.globaltt['is subsequence of'], pid
+                        )
                         model.addOWLPropertyClassRestriction(
-                            pid, self.globaltt['has subsequence'], pclassid,
-                            class_category=blv.terms.GenomicSequenceLocalization.value,
-                            property_value_category=
-                            blv.terms.GenomicSequenceLocalization.value)
+                            pid, self.globaltt['has subsequence'], pclassid
+                        )
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is subsequence of'], cclassid,
-                            class_category=blv.terms.GenomicSequenceLocalization.value,
-                            property_value_category=
-                            blv.terms.GenomicSequenceLocalization.value)
+                            pclassid, self.globaltt['is subsequence of'], cclassid
+                        )
                         model.addOWLPropertyClassRestriction(
-                            cclassid, self.globaltt['has subsequence'], pclassid,
-                            class_category=blv.terms.GenomicSequenceLocalization.value,
-                            property_value_category=
-                            blv.terms.GenomicSequenceLocalization.value)
+                            cclassid, self.globaltt['has subsequence'], pclassid
+                        )
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
                     model.addOWLPropertyClassRestriction(
-                        maplocclass_id, self.globaltt['is subsequence of'],
-                        cclassid + parents[0],
-                        class_category=blv.terms.GenomicSequenceLocalization.value,
-                        property_value_category=blv.terms.GenomicSequenceLocalization.value)
-                    model.addOWLPropertyClassRestriction(
-                        cclassid + parents[0], self.globaltt['has subsequence'],
                         maplocclass_id,
-                        class_category=blv.terms.GenomicSequenceLocalization.value,
-                        property_value_category=blv.terms.GenomicSequenceLocalization.value)
+                        self.globaltt['is subsequence of'],
+                        cclassid + parents[0]
+                    )
+                    model.addOWLPropertyClassRestriction(
+                        cclassid + parents[0],
+                        self.globaltt['has subsequence'],
+                        maplocclass_id
+                    )
 
                 if limit is not None and line_counter > limit:
                     break

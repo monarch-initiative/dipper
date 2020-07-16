@@ -240,20 +240,14 @@ class HGNC(OMIMSource):
                 else:
                     gene_type_id = self.resolve(locus_type, mandatory=False)
                     if gene_type_id != locus_type:
-                        model.addClassToGraph(hgnc_id, symbol, gene_type_id, name,
-                                              class_category=blv.terms.Gene.value)
-                    model.makeLeader(hgnc_id,
-                                     node_category=blv.terms.Gene.value)
+                        model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
+                    model.makeLeader(hgnc_id)
 
                 if entrez_id != '':
-                    model.addEquivalentClass(hgnc_id, 'NCBIGene:' + entrez_id,
-                                             subject_category=blv.terms.Gene.value,
-                                             object_category=blv.terms.Gene.value)
+                    model.addEquivalentClass(hgnc_id, 'NCBIGene:' + entrez_id)
 
                 if ensembl_gene_id != '':
-                    model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id,
-                                             subject_category=blv.terms.Gene.value,
-                                             object_category=blv.terms.Gene.value)
+                    model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
 
                 for omim_id in omim_ids.split('|'):
                     if omim_id in self.omim_replaced:
@@ -265,21 +259,17 @@ class HGNC(OMIMSource):
 
                     if omim_id in self.omim_type and \
                             self.omim_type[omim_id] == self.globaltt['gene']:
-                        model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id,
-                                                 subject_category=blv.terms.Gene.value,
-                                                 object_category=blv.terms.Gene.value)
+                        model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id)
 
-                geno.addTaxon(self.taxon_curie, hgnc_id,
-                              genopart_category=blv.terms.Gene.value)
+                geno.addTaxon(self.taxon_curie, hgnc_id)
 
                 # add pubs as "is about"
                 for pubmed_id in pubmed_ids.split('|'):
                     pmid = pubmed_id.strip()
                     if pmid is not None and pmid != '':
                         graph.addTriple(
-                            'PMID:' + pmid, self.globaltt['is_about'], hgnc_id,
-                        subject_category=blv.terms.Publication.value,
-                        object_category=blv.terms.Gene.value)
+                            'PMID:' + pmid, self.globaltt['is_about'], hgnc_id
+                        )
 
                 # add the default taxon to the gene
                 graph.addTriple(hgnc_id, self.globaltt['in taxon'], self.taxon_curie)
@@ -296,8 +286,7 @@ class HGNC(OMIMSource):
                     chrom = chr_match.group(1)
                     chrom_id = makeChromID(chrom, self.taxon_curie, 'CHR')
                     band_match = band_pattern.search(location)
-                    feat = Feature(graph, hgnc_id, None, None,
-                                   feature_category=blv.terms.Gene.value)
+                    feat = Feature(graph, hgnc_id, None, None)
                     if band_match is not None and band_match.groups():
                         band = band_match.group(1)
                         band = chrom + band
@@ -305,13 +294,10 @@ class HGNC(OMIMSource):
                         # as a feature but assume that the band is created
                         # as a class with properties elsewhere in Monochrom
                         band_id = makeChromID(band, self.taxon_curie, 'CHR')
-                        model.addClassToGraph(band_id, None,
-                                              class_category=
-                                              blv.terms.GenomicSequenceLocalization.value)
+                        model.addClassToGraph(band_id, None)
                         feat.addSubsequenceOfFeature(band_id)
                     else:
-                        model.addClassToGraph(chrom_id, None,
-                                              blv.terms.GenomicEntity.value)
+                        model.addClassToGraph(chrom_id, None)
                         feat.addSubsequenceOfFeature(chrom_id)
 
                 if not self.test_mode and limit is not None and \

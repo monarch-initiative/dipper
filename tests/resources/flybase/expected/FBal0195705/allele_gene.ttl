@@ -1,12 +1,8 @@
 FlyBase:FBal0195705 a GENO:0000512 ;
     rdfs:label "Dscam1[+t73.3]" ;
     GENO:0000418 FlyBase:FBgn0033159 ;
-    RO:0002162 NCBITaxon:7227 ;
-    biolink:category biolink:SequenceVariant .
+    RO:0002162 NCBITaxon:7227 .
     
 FlyBase:FBgn0033159 a owl:Class ;
     rdfs:label "Dscam1" ;
-    rdfs:subClassOf SO:0000704 ;
-    biolink:category biolink:Gene .
-
-OBO:NCBITaxon_7227 biolink:category biolink:OrganismTaxon .
+    rdfs:subClassOf SO:0000704 .

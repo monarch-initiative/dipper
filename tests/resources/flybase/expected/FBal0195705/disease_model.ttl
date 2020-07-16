@@ -15,13 +15,3 @@ MONARCH:b12b95e1e393a76f1196 a OBAN:association ;
 
 FlyBase:FBal0195705 RO:0003301 DOID:14250,
         DOID:14261 .
-
-FlyBase:FBal0195705 biolink:category biolink:Genotype .
-DOID:14250 biolink:category biolink:Disease .
-DOID:14261 biolink:category biolink:Disease .
-ECO:0000015 biolink:category biolink:EvidenceType .
-PMID:23666178 biolink:category biolink:EvidenceType .
-PMID:29196216 biolink:category biolink:EvidenceType .
-
-MONARCH:b0139d064383561d3a8d biolink:category biolink:Association .
-MONARCH:b12b95e1e393a76f1196 biolink:category biolink:Association .

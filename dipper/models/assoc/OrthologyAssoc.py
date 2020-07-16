@@ -7,9 +7,16 @@ __author__ = 'nlw'
 
 class OrthologyAssoc(Assoc):
 
-    def __init__(self, graph, definedby, gene1, gene2, rel=None,
-                 subject_category=blv.terms.Gene.value,
-                 object_category=blv.terms.Gene.value):
+    def __init__(
+            self,
+            graph,
+            definedby,
+            gene1,
+            gene2,
+            rel=None,
+            subject_category=None,
+            object_category=None
+    ):
         super().__init__(graph, definedby)
         self.globaltt = graph.globaltt
         self.globaltcid = graph.globaltcid
@@ -23,7 +30,6 @@ class OrthologyAssoc(Assoc):
         self.subject_category = subject_category
         self.object_category = object_category
         self.set_relationship(rel)
-        return
 
     def add_gene_family_to_graph(self, family_id):
         """
@@ -48,15 +54,21 @@ class OrthologyAssoc(Assoc):
 
         # make the assumption that the genes
         # have already been added as classes previously
-        self.model.addIndividualToGraph(family_id, None, gene_family,
-                                        ind_category=blv.terms.GeneFamily.value)
+        self.model.addIndividualToGraph(
+            family_id, None, gene_family, ind_category=blv.terms.GeneFamily.value
+        )
 
         # add each gene to the family
-        family.addMember(family_id, self.sub,
-                         group_category=blv.terms.GeneFamily.value,
-                         member_category=self.subject_category)
-        family.addMember(family_id, self.obj,
-                         group_category=blv.terms.GeneFamily.value,
-                         member_category=self.object_category)
+        family.addMember(
+            family_id,
+            self.sub,
+            group_category=blv.terms.GeneFamily.value,
+            member_category=self.subject_category
+        )
 
-        return
+        family.addMember(
+            family_id,
+            self.obj,
+            group_category=blv.terms.GeneFamily.value,
+            member_category=self.object_category
+        )

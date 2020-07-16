@@ -263,8 +263,7 @@ class CTD(Source):
         if re.match(r'KEGG', pathway_id):
             pathway_id = re.sub(r'KEGG:', 'KEGG-path:map', pathway_id)
         # just in case, add it as a class
-        model.addClassToGraph(entrez_id, None,
-                              class_category=blv.terms.Gene.value)
+        model.addType(entrez_id, self.globaltt['gene'])
 
         self.pathway.addPathway(pathway_id, pathway_name)
         self.pathway.addGeneToPathway(entrez_id, pathway_id)
@@ -303,10 +302,12 @@ class CTD(Source):
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
         rel_id = self.resolve(direct_evidence)
-        model.addClassToGraph(chem_id, chem_name,
-                              class_category=blv.terms.ChemicalSubstance.value)
-        model.addClassToGraph(disease_id, None,
-                              class_category=blv.terms.Disease.value)
+        model.addClassToGraph(
+            chem_id, chem_name, class_category=blv.terms.ChemicalSubstance.value
+        )
+        model.addClassToGraph(
+            disease_id, None, class_category=blv.terms.DiseaseOrPhenotypicFeature.value
+        )
         self._make_association(chem_id, disease_id, rel_id, reference_list)
 
     def _process_disease2gene(self, row):

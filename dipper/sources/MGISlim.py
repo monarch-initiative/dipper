@@ -2,10 +2,11 @@ import logging
 import datetime
 
 from intermine.webservice import Service
+from dipper.models.Model import Model
+from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.models.Reference import Reference
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class MGISlim(Source):
 
     def parse(self, limit=None):
 
+        model = Model(self.graph)
+        geno = Genotype(self.graph)
+
         count = 0
         for num in range(10, 100):
             fuzzy_gene = "MGI:{0}*".format(num)
@@ -69,8 +73,11 @@ class MGISlim(Source):
                 mgi_curie = row["subject.primaryIdentifier"]
                 mp_curie = row["ontologyTerm.identifier"]
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
-                assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie,
-                                 entity_category=blv.terms.Gene.value)
+
+                model.addType(mgi_curie, self.globaltt['gene'])
+                geno.addTaxon('NCBITaxon:' + self.txid, mgi_curie)
+
+                assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie)
                 if row["evidence.publications.pubMedId"]:
                     reference = Reference(
                         self.graph, pub_curie, self.globaltt['journal article'])

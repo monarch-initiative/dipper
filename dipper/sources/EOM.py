@@ -210,8 +210,11 @@ class EOM(PostgreSQLSource):
 
                 # Add morphology term to graph as a class
                 # with label, type, and description.
-                model.addClassToGraph(morphology_term_id, morphology_term_label,
-                                      blv.terms.PhenotypicFeature.value)
+                model.addClassToGraph(
+                    morphology_term_id,
+                    morphology_term_label,
+                    blv.terms.PhenotypicFeature.value
+                )
 
                 # Assemble the description text
 
@@ -236,35 +239,31 @@ class EOM(PostgreSQLSource):
                 # do we want both images?
                 # morphology_term_id has depiction small_figure_url
                 if small_figure_url != '':
-                    model.addDepiction(morphology_term_id, small_figure_url,
-                                       subject_category=blv.terms.PhenotypicFeature.value,
-                                       object_category=
-                                       blv.terms.InformationContentEntity.value)
+                    model.addDepiction(morphology_term_id, small_figure_url)
 
                 # morphology_term_id has depiction large_figure_url
                 if large_figure_url != '':
-                    model.addDepiction(morphology_term_id, large_figure_url,
-                                       subject_category=blv.terms.PhenotypicFeature.value,
-                                       object_category=blv.terms.PhenotypicFeature.value)
+                    model.addDepiction(morphology_term_id, large_figure_url)
 
                 # morphology_term_id has comment comments
                 if comments != '':
-                    model.addComment(morphology_term_id, comments,
-                                     subject_category=blv.terms.PhenotypicFeature.value)
+                    model.addComment(morphology_term_id, comments)
 
                 for syn in synonyms.split(';'):
                     model.addSynonym(
-                        morphology_term_id, syn.strip(),
-                        self.globaltt['has_exact_synonym'],
-                        class_category=blv.terms.PhenotypicFeature.value)
+                        morphology_term_id,
+                        syn.strip(),
+                        self.globaltt['has_exact_synonym']
+                    )
 
                 # morphology_term_id has_related_synonym replaces (; delimited)
                 if replaces not in ['', synonyms]:
                     for syn in replaces.split(';'):
                         model.addSynonym(
-                            morphology_term_id, syn.strip(),
-                            self.globaltt['has_related_synonym'],
-                            class_category=blv.terms.PhenotypicFeature.value)
+                            morphology_term_id,
+                            syn.strip(),
+                            self.globaltt['has_related_synonym']
+                        )
 
                 # <morphology_term_id> <foaf:page> morphology_term_url
                 if morphology_term_id is not None:
@@ -275,8 +274,7 @@ class EOM(PostgreSQLSource):
                     # Not so sure we need explicit   <eom_uri> <webpage> <eom_url>.
                     # since <eom_uri> IS the <eom_url>.
 
-                    reference.addPage(morphology_term_id, morphology_term_url,
-                                      subject_category=blv.terms.PhenotypicFeature.value)
+                    reference.addPage(morphology_term_id, morphology_term_url)
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -313,15 +311,9 @@ class EOM(PostgreSQLSource):
                 hp_id = re.sub('_', ':', hp_id)
                 if re.match(".*HP:.*", hp_id):
                     # add the HP term as a class
-                    model.addClassToGraph(hp_id, None,
-                                          class_category=blv.terms.PhenotypicFeature.
-                                          value)  # TEC subclass of phenotype??
+                    model.addClassToGraph(hp_id, None)
                     # Add the HP ID as an equivalent class
-                    model.addEquivalentClass(morphology_term_id, hp_id,
-                                             subject_category=
-                                             blv.terms.PhenotypicFeature.value,
-                                             object_category=
-                                             blv.terms.PhenotypicFeature.value)
+                    model.addEquivalentClass(morphology_term_id, hp_id)
                 else:
                     LOG.warning('No matching HP term for %s', morphology_term_id)
 

@@ -13,5 +13,3 @@ class InteractionAssoc(Assoc):
         if rel is None:
             rel = self.globaltt['interacts with']
         self.set_relationship(rel)
-
-        return

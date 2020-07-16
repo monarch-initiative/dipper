@@ -46,25 +46,23 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
-    def _make_category_triple(self, this_subject,
-                              category=blv.terms.NamedThing.value,
-                              predicate=blv.terms.category.value):
+    def _make_category_triple(
+            self, subject, category, predicate=blv.terms.category.value
+    ):
         """
         add a triple to capture subject or object category (in CURIE form) that was
         passed to addTriple()
         """
-        if category is None:
-            category = blv.terms.NamedThing.value
         try:
             self.add((
-                self._getnode(this_subject),
+                self._getnode(subject),
                 self._getnode(predicate),
                 self._getnode(category)))
         except:
             LOG.warning(
                 "Problem adding triple in _makeCategoryTriple for " + \
                 "subj: %s pred: %s obj(category): %s",
-                this_subject, predicate, category)
+                subject, predicate, category)
                 
     def _is_literal(self, thing):
         """
@@ -80,10 +78,16 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         return object_is_literal
 
-            
     def addTriple(
-            self, subject_id, predicate_id, obj, object_is_literal=None,
-            literal_type=None, subject_category=None, object_category=None):
+            self,
+            subject_id,
+            predicate_id,
+            obj,
+            object_is_literal=None,
+            literal_type=None,
+            subject_category=None,
+            object_category=None
+    ):
 
         if object_is_literal is None:
             object_is_literal = self._is_literal(obj)
@@ -127,7 +131,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                     LOG.warning(
                         '\t%sfrom: %s', '\t' * call, sys._getframe(call).f_code.co_name)
 
-        elif obj is not None and obj != '':  # object is a resourse
+        elif obj is not None and obj != '':  # object is a resource
             self.add((
                 self._getnode(subject_id),
                 self._getnode(predicate_id),
@@ -144,7 +148,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         node = re.sub(r'rdflib/', '', node)  # remove string added by rdflib
         return URIRef(node)
 
-    def _getnode(self, curie):  # convention is lowercase names
+    def _getnode(self, curie):
         """
         This is a wrapper for creating a URIRef or Bnode object
         with a given a curie or iri as a string.
@@ -197,6 +201,8 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
     # serialize() conflicts between rdflib & Graph.serialize abstractmethod
     # GraphUtils expects the former.  (too bad there is no multiple dispatch)
-    def serialize(  # rdflib version
-            self, destination=None, format='turtle', base=None, encoding=None):
+    # rdflib version
+    def serialize(
+            self, destination=None, format='turtle', base=None, encoding=None
+    ):
         return ConjunctiveGraph.serialize(self, destination, format)

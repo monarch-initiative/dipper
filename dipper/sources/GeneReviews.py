@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nicole'
 
@@ -172,8 +171,7 @@ class GeneReviews(OMIMSource):
                 id_map[nbk_num].add(omim_num)
 
                 # add the class along with the shortname
-                model.addClassToGraph(gr_id, None,
-                                      class_category=blv.terms.InformationContentEntity.value)
+                model.addClassToGraph(gr_id, None)
                 model.addSynonym(gr_id, shortname)
 
                 allomimids.add(omim_num)
@@ -227,11 +225,8 @@ class GeneReviews(OMIMSource):
                     # add the gene reviews as a superclass to the omim id,
                     # but only if the omim id is not a gene
                     if omim_id in entries_that_are_phenotypes:
-                        model.addClassToGraph(omim_id, None,
-                                              class_category=blv.terms.Disease.value)
-                        model.addSubClass(omim_id, gr_id,
-                                          child_category=blv.terms.Disease.value,
-                                          parent_category=blv.terms.Disease.value)
+                        model.addClassToGraph(omim_id, None)
+                        model.addSubClass(omim_id, gr_id)
             # add this as a generic subclass  -- TEC: this is the job of inference
             model.addSubClass(gr_id, self.globaltt['disease'])
 
@@ -274,11 +269,8 @@ class GeneReviews(OMIMSource):
                 gr_id = 'GeneReviews:' + nbk_num
                 self.book_ids.add(nbk_num)  # a global set of the book nums
                 if limit is None or reader.line_num < limit:
-                    model.addClassToGraph(gr_id, row[col.index('GR_Title')],
-                                          class_category=
-                                          blv.terms.InformationContentEntity.value)
-                    model.addSynonym(gr_id, row[col.index('GR_shortname')],
-                                     class_category=blv.terms.InformationContentEntity.value)
+                    model.addClassToGraph(gr_id, row[col.index('GR_Title')])
+                    model.addSynonym(gr_id, row[col.index('GR_shortname')])
                 # TODO include the new PMID?
 
     def create_books(self):
@@ -371,9 +363,7 @@ class GeneReviews(OMIMSource):
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
                             self.graph.addTriple(
-                                pmid, self.globaltt['is_about'], nbk_id,
-                                subject_category=blv.terms.Publication.value,
-                                object_is_literal=blv.terms.InformationContentEntity.value)
+                                pmid, self.globaltt['is_about'], nbk_id)
                             pmid_set.add(pmnum)
                             reference = Reference(
                                 self.graph, pmid, self.globaltt['journal article'])

@@ -68,6 +68,7 @@ dbSNP:rs7020413 a OBO:SO_0000694,
 
 <http://www.ebi.ac.uk/efo/EFO_0004337> a owl:Class ;
     rdfs:label "intelligence" ;
+    biolink:category biolink:PhenotypicFeature ;
     rdfs:subClassOf OBO:UPHENO_0001001 .
 
 <https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> a faldo:Position ;
@@ -89,24 +90,3 @@ dbSNP:rs7020413 a OBO:SO_0000694,
     rdfs:label "GRCh38chr9-37002118" ;
     faldo:position 37002118 ;
     faldo:reference OBO:CHR_GRCh38chr9 .
-
-OBO:ECO_0000213 biolink:category biolink:EvidenceType .
-OBO:NCBITaxon_9606 biolink:category biolink:OrganismTaxon .
-<http://www.ebi.ac.uk/efo/EFO_0004337> biolink:category biolink:PhenotypicFeature .
-HGNC:8619 biolink:category biolink:Gene .
-dbSNP:rs1329573 biolink:category biolink:SequenceVariant .
-dbSNP:rs3758171 biolink:category biolink:SequenceVariant .
-dbSNP:rs3824344 biolink:category biolink:SequenceVariant .
-dbSNP:rs7020413 biolink:category biolink:SequenceVariant .
-<http://www.ncbi.nlm.nih.gov/pubmed/22449649> biolink:category biolink:EvidenceType .
-<http://www.ncbi.nlm.nih.gov/pubmed/22449649> biolink:category biolink:Publication .
-<https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> biolink:category biolink:GenomicSequenceLocalization .
-<https://monarchinitiative.org/MONARCH_b464cf2c118cac01ef22> biolink:category biolink:Association .
-<https://monarchinitiative.org/haplotype_bb627b1f64039b0f751a> biolink:category biolink:SequenceVariant .

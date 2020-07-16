@@ -25,7 +25,7 @@ class Graph(metaclass=ABCMeta):
             self,
             subject_id,
             predicate_id,
-            object_id,
+            obj,
             object_is_literal=False,
             literal_type=None,
             subject_category=None,

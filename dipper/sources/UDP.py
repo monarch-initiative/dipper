@@ -9,7 +9,6 @@ import requests
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
 
@@ -266,8 +265,8 @@ class UDP(Source):
                 model.globaltt['intrinsic_genotype'])
 
             self.graph.addTriple(
-                patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode,
-                subject_category=blv.terms.Case.value, object_category=blv.terms.Genotype.value)
+                patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode
+            )
             for variant_id, variant in patient_var_map[patient].items():
                 build = variant['build']
                 chromosome = variant['chromosome']
@@ -311,14 +310,13 @@ class UDP(Source):
                 label_list = list(labels)
 
                 if len(label_list) == 0:
-                    model.addLabel(variant_bnode, variant_label,
-                                   subject_category=blv.terms.SequenceVariant.value)
+                    model.addLabel(variant_bnode, variant_label)
 
                 self.graph.addTriple(
-                    variant_bnode, self.globaltt['in taxon'],
-                    self.globaltt['Homo sapiens'],
-                    subject_category=blv.terms.SequenceVariant.value,
-                    object_category=blv.terms.OrganismTaxon.value)
+                    variant_bnode,
+                    self.globaltt['in taxon'],
+                    self.globaltt['Homo sapiens']
+                )
                 self.graph.addTriple(
                     intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)

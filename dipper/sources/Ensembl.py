@@ -347,37 +347,30 @@ class Ensembl(Source):
                 if entrezgene != '':
                     if taxid == '9606':
                         # Use HGNC for eq in human data
-                        model.addXref(gene_id, entrez_curie,
-                                      class_category=blv.terms.Gene.value,
-                                      xref_category=blv.terms.Gene.value)
+                        model.addXref(
+                            gene_id, entrez_curie, xref_category=blv.terms.Gene.value
+                        )
                     else:
-                        model.addEquivalentClass(gene_id, entrez_curie,
-                                                 subject_category=blv.terms.Gene.value,
-                                                 object_category=blv.terms.Gene.value)
+                        model.addEquivalentClass(
+                            gene_id, entrez_curie, object_category=blv.terms.Gene.value
+                        )
 
                 if hgnc_curie is not None and hgnc_curie != '':
-                    model.addEquivalentClass(gene_id, hgnc_curie,
-                                             subject_category=blv.terms.Gene.value,
-                                             object_category=blv.terms.Gene.value)
+                    model.addEquivalentClass(
+                        gene_id, hgnc_curie, object_category=blv.terms.Gene.value
+                    )
 
-                geno.addTaxon('NCBITaxon:' + taxid, gene_id,
-                              genopart_category=blv.terms.Gene.value)
+                geno.addTaxon('NCBITaxon:' + taxid, gene_id)
 
                 if ensembl_peptide_id is not None and ensembl_peptide_id != '':
                     peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
-                    model.addIndividualToGraph(peptide_curie, None, gene_type_id,
-                                               ind_category=blv.terms.Protein.value)
-                    geno.addGeneProduct(gene_id, peptide_curie,
-                                        product_category=blv.terms.Protein.value)
+                    model.addIndividualToGraph(peptide_curie, None, gene_type_id)
+                    geno.addGeneProduct(gene_id, peptide_curie)
                     if uniprotswissprot != '':
                         uniprot_curie = 'UniProtKB:{}'.format(uniprotswissprot)
-                        model.addIndividualToGraph(uniprot_curie, None, gene_type_id,
-                                                   ind_category=blv.terms.Protein.value)
-                        geno.addGeneProduct(gene_id, uniprot_curie,
-                                            product_category=blv.terms.Protein.value)
-                        model.addXref(peptide_curie, uniprot_curie,
-                                      class_category=blv.terms.Protein.value,
-                                      xref_category=blv.terms.Protein.value)
+                        model.addIndividualToGraph(uniprot_curie, None, gene_type_id)
+                        geno.addGeneProduct(gene_id, uniprot_curie)
+                        model.addXref(peptide_curie, uniprot_curie)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break

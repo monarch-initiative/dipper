@@ -1,22 +1,16 @@
-FBdv:00005336 biolink:category biolink:InformationContentEntity .
-PMID:23666178 biolink:category biolink:EvidenceType .
-PMID:29196216 biolink:category biolink:EvidenceType .
-
 MONARCH:b0ac0e667b65c8ef13d0 a OBAN:association ;
     GENO:0000580 FBcv:0000061 ;
     dc:source PMID:23666178 ;
     OBAN:association_has_object GO:0030424PHENOTYPE ;
     OBAN:association_has_predicate RO:0002200 ;
-    OBAN:association_has_subject FlyBase:FBal0195705 ;
-    biolink:category biolink:InformationContentEntity .
+    OBAN:association_has_subject FlyBase:FBal0195705 .
     
 MONARCH:b2e5e3c43998e3b6e9e8 a OBAN:association ;
     GENO:0000580 FBdv:00005336 ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object OBO:FBbt00005839PHENOTYPE ;
     OBAN:association_has_predicate RO:0002200 ;
-    OBAN:association_has_subject FlyBase:FBal0195705 ;
-    biolink:category biolink:InformationContentEntity .
+    OBAN:association_has_subject FlyBase:FBal0195705 .
 
 MONARCH:b45ce44256c8a1807c99 a OBAN:association ;
     dc:source PMID:23666178 ;
@@ -35,16 +29,14 @@ MONARCH:b6146f17aa3153099bbe a OBAN:association ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object OBO:FBbt00005837PHENOTYPE ;
     OBAN:association_has_predicate RO:0002200 ;
-    OBAN:association_has_subject FlyBase:FBal0195705 ;
-    biolink:category biolink:InformationContentEntity .
+    OBAN:association_has_subject FlyBase:FBal0195705 .
     
 MONARCH:ba25ff82dce0e8292ee6 a OBAN:association ;
     GENO:0000580 FBdv:00005339 ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object FBcv:0000414 ;
     OBAN:association_has_predicate RO:0002200 ;
-    OBAN:association_has_subject FlyBase:FBal0195705 ;
-    biolink:category biolink:InformationContentEntity .
+    OBAN:association_has_subject FlyBase:FBal0195705 .
     
 MONARCH:bb4250edee7fe624bd61 a OBAN:association ;
     dc:source PMID:23666178 ;
@@ -63,33 +55,10 @@ MONARCH:bcd4c71a9891ba353df5 a OBAN:association ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object FBcv:0000434 ;
     OBAN:association_has_predicate RO:0002200 ;
-    OBAN:association_has_subject FlyBase:FBal0195705 ;
-    biolink:category biolink:InformationContentEntity .
-
-OBO:FBcv_0000061 biolink:category biolink:InformationContentEntity .
-
-OBO:FBdv_00005339 biolink:category biolink:InformationContentEntity .
-
-OBO:FBbt00005837PHENOTYPE biolink:category biolink:PhenotypicFeature .
-
-OBO:FBbt00005839PHENOTYPE biolink:category biolink:PhenotypicFeature .
-
-OBO:FBbt00005919PHENOTYPE biolink:category biolink:PhenotypicFeature .
-
-OBO:FBcv_0000414 biolink:category biolink:PhenotypicFeature .
-
-OBO:FBcv_0000421 biolink:category biolink:PhenotypicFeature .
-
-OBO:FBcv_0000434 biolink:category biolink:PhenotypicFeature .
-
-OBO:FBcv_0000435 biolink:category biolink:PhenotypicFeature .
-
-OBO:FBcv_0000682 biolink:category biolink:PhenotypicFeature .
+    OBAN:association_has_subject FlyBase:FBal0195705 .
 
 GO:0030424PHENOTYPE a owl:Class ;
-    rdfs:label "axon phenotype" ;
-    biolink:category biolink:PhenotypicFeature ;
-    rdfs:subClassOf biolink:PhenotypicFeature .
+    rdfs:label "axon phenotype" .
     
 FlyBase:FBal0195705 RO:0002200 OBO:FBbt00005837PHENOTYPE,
         OBO:FBbt00005839PHENOTYPE,
@@ -99,16 +68,5 @@ FlyBase:FBal0195705 RO:0002200 OBO:FBbt00005837PHENOTYPE,
         FBcv:0000434,
         FBcv:0000435,
         FBcv:0000682,
-        GO:0030424PHENOTYPE ;
-    biolink:category biolink:Genotype .
-
-MONARCH:b0ac0e667b65c8ef13d0 biolink:category biolink:Association .
-MONARCH:b2e5e3c43998e3b6e9e8 biolink:category biolink:Association .
-MONARCH:b45ce44256c8a1807c99 biolink:category biolink:Association .
-MONARCH:b4ed07746b7007319213 biolink:category biolink:Association .
-MONARCH:b6146f17aa3153099bbe biolink:category biolink:Association .
-MONARCH:ba25ff82dce0e8292ee6 biolink:category biolink:Association .
-MONARCH:bb4250edee7fe624bd61 biolink:category biolink:Association .
-MONARCH:bc8f62666ba428b2fe69 biolink:category biolink:Association .
-MONARCH:bcd4c71a9891ba353df5 biolink:category biolink:Association .
+        GO:0030424PHENOTYPE .
 

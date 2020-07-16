@@ -16,45 +16,50 @@
 curie_prefix: "biolink"
 
 terms:
-- category # this one alone is a node property and not a class
-- Publication
+- AnatomicalEntity  # is a subcellular location cell type or gross anatomical part
+- Association
+- BiologicalProcess
+- BiologicalSex
+- Case
+- category  # this one alone is a node property and not a class
+- ChemicalSubstance
+- CellLine
 - Disease
+- DataFile
+- DataSet
+- DataSetVersion
+- DiseaseOrPhenotypicFeature
+- EnvironmentFeature
+- ExposureEvent
+- EvidenceType
+- FrequencyValue
 - Gene
 - Genotype
-- NamedThing
-- PopulationOfIndividualOrganisms
-- SequenceVariant # synonym for allele
-- InformationContentEntity
-- Zygosity
-- PhenotypicFeature
-- Publications
-- BiologicalSex
-- OrganismTaxon
-- MolecularEntity
-- GenomicEntity # we are using this for chromosome
-- Case
-- OntologyClass
-- GeneFamily
-- Transcript
-- Protein
-- ChemicalSubstance
-- GenomicSequenceLocalization
-- IndividualOrganism
+- GenomicEntity  # we are using this for chromosome
+- GeneProduct
 - GeneGrouping
+- GeneToGeneHomologyAssociation
 - Genome
 - GenomeBuild
-- BiologicalProcess
+- GeneFamily
+- GenomicSequenceLocalization
+- InformationContentEntity
+- IndividualOrganism
 - LifeStage
-- Environment
-- EvidenceType
-# AnatomicalEntity is a subcellular location cell type or gross anatomical part
-- AnatomicalEntity
-- Provider
-- Procedure
-- Association
-- GeneProduct
-- Pathway
-- FrequencyValue
-- CellLine
+- MolecularEntity
+- NamedThing
 - NoncodingRnaProduct
-
+- OrganismTaxon
+- OntologyClass
+- PopulationOfIndividualOrganisms
+- Publications
+- PhenotypicFeature
+- Provider
+- Protein
+- Publication
+- Procedure
+- Pathway
+- SourceFile
+- SequenceVariant # synonym for allele
+- Transcript
+- Zygosity
