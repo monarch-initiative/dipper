@@ -342,7 +342,7 @@ class Ensembl(Source):
 
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description,
-                    class_category=blv.terms.Gene.value)
+                    class_category=blv.terms['Gene'])
 
                 if entrezgene != '':
                     if taxid == '9606':

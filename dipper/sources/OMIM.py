@@ -986,8 +986,9 @@ class OMIM(OMIMSource):
         orpha_mappings = []
         if 'externalLinks' in entry:
             links = entry['externalLinks']
-            # KS - This appears to buggy (lot's of ORPHA:None)
-            # and we get them from MONDO anyway
+            # KS - This appears to buggy (lot's of ORPHA:None, which
+            # are coming from OMIM - eg https://omim.org/entry/122900
+            # and we get them from MONDO anyway (to do check if circular)
             #
             # if 'orphanetDiseases' in links:
             #    # triple semi-colon delimited list of
@@ -1134,7 +1135,3 @@ def get_omim_id_from_entry(entry):
     else:
         omimid = None
     return omimid
-
-
-
-

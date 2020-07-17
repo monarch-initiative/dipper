@@ -38,10 +38,11 @@ class D2PAssoc(Assoc):
         self.phenotype_id = phenotype_id
 
         self.set_subject(disease_id)
-        self.disease_category = disease_category
         self.set_relationship(rel)
         self.set_object(phenotype_id)
-        self.phenotype_category = phenotype_category
+
+        self.subject_category = disease_category
+        self.object_category = phenotype_category
 
         return
 
@@ -54,7 +55,7 @@ class D2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, disease_category=None, phenotype_category=None):
+    def add_association_to_graph(self, association_category=None):
         """
         The reified relationship between a disease and a phenotype is decorated
         with some provenance information.
@@ -70,26 +71,19 @@ class D2PAssoc(Assoc):
 
         """
 
-        if disease_category is not None:
-            self.disease_category = disease_category
-        if phenotype_category is not None:
-            self.phenotype_category = phenotype_category
-
         # add the basic association nodes
         # if rel == self.globaltt[['has disposition']:
 
-        Assoc.add_association_to_graph(self,
-                                       subject_category=self.disease_category,
-                                       object_category=self.phenotype_category)
+        Assoc.add_association_to_graph(self)
         # anticipating trouble with onsets ranges that look like curies
         if self.onset is not None and self.onset != '':
             self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset,
-                                 object_category=self.phenotype_category)
+                                 object_category=self.object_category)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['frequency'], self.frequency,
-                object_category=self.phenotype_category)
+                object_category=self.object_category)
 
         return
 

@@ -554,7 +554,7 @@ class Genotype():
             build_id,
             build_label,
             self.globaltt['reference_genome'],
-            blv.terms.GenomeBuild.value
+            blv.terms['GenomeBuild']
         )
         self.model.addType(
             build_id, genome_id, subject_category=blv.terms['GenomeBuild']

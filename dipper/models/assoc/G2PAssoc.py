@@ -48,8 +48,8 @@ class G2PAssoc(Assoc):
         self.set_object(phenotype_id)
         self.set_relationship(rel)
 
-        self.entity_category = entity_category
-        self.phenotype_category = phenotype_category
+        self.subject_category = entity_category
+        self.object_category = phenotype_category
 
         return
 
@@ -85,15 +85,8 @@ class G2PAssoc(Assoc):
         :param phenotype_category: a biolink category CURIE for self.obj
         :return:
         """
-
-        if entity_category is None:
-            entity_category = self.entity_category
-        if phenotype_category is None:
-            phenotype_category = self.phenotype_category
-
-        Assoc.add_association_to_graph(self,
-                                       subject_category=entity_category,
-                                       object_category=phenotype_category)
+        # is this kosher?
+        Assoc.add_association_to_graph(self)
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:

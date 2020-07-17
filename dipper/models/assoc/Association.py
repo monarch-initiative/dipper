@@ -2,6 +2,7 @@ import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -17,8 +18,16 @@ class Assoc:
 
     """
 
-    def __init__(self, graph, definedby, sub=None, obj=None, pred=None,
-                 subject_category=None, object_category=None):
+    def __init__(
+            self,
+            graph,
+            definedby,
+            sub=None,
+            obj=None,
+            pred=None,
+            subject_category=None,
+            object_category=None
+    ):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
@@ -82,29 +91,20 @@ class Assoc:
             )
         return True
 
-    def add_association_to_graph(
-            self,
-            association_category=None,
-            subject_category=None,
-            object_category=None
-    ):
+    def add_association_to_graph(self, association_category=None):
 
-        if not self._is_valid():
-            return
-
-        if subject_category is None:
-            subject_category = self.subject_category
-        if object_category is None:
-            object_category = self.object_category
+        # Assume null and iri checks happen downstream
+        #if not self._is_valid():
+        #    return
 
         self.graph.addTriple(self.sub, self.rel, self.obj,
-                             subject_category=subject_category,
-                             object_category=object_category)
+                             subject_category=self.subject_category,
+                             object_category=self.object_category)
 
         if self.assoc_id is None:
             self.set_association_id()
 
-        assert self.assoc_id is not None
+        # assert self.assoc_id is not None
 
         self.model.addType(self.assoc_id, self.model.globaltt['association'])
 
@@ -118,24 +118,31 @@ class Assoc:
             self.assoc_id, self.globaltt['association has predicate'], self.rel
         )
 
-        if self.description is not None:
+        if association_category is not None:
+            self.graph.addTriple(
+                self.assoc_id,
+                blv.terms['category'],
+                association_category
+            )
+
+        if self.description:
             self.model.addDescription(self.assoc_id, self.description)
 
-        if self.evidence is not None and len(self.evidence) > 0:
+        if self.evidence:
             for evi in self.evidence:
                 self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi)
 
-        if self.source is not None and len(self.source) > 0:
+        if self.source:
             for src in self.source:
                 # TODO assume that the source is a publication? use Reference class
                 self.graph.addTriple(self.assoc_id, self.globaltt['Source'], src)
 
-        if self.provenance is not None and len(self.provenance) > 0:
+        if self.provenance:
             for prov in self.provenance:
                 self.graph.addTriple(
                     self.assoc_id, self.globaltt['has_provenance'], prov)
 
-        if self.date is not None and len(self.date) > 0:
+        if self.date:
             for dat in self.date:
                 self.graph.addTriple(
                     self.assoc_id,
@@ -279,5 +286,5 @@ class Assoc:
         items_to_hash = [x for x in items_to_hash if x is not None]
 
         assoc_id = ':'.join(('MONARCH', GraphUtils.digest_id('+'.join(items_to_hash))))
-        assert assoc_id is not None
+        # assert assoc_id is not None
         return assoc_id

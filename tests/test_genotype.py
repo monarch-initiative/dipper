@@ -21,10 +21,10 @@ class GenotypeTestCase(unittest.TestCase):
         self.curie_map = curie_map.get()
         self.genotype = Genotype(self.graph)
         self.cutil = CurieUtil(self.curie_map)
-        self.test_cat_pred = self.cutil.get_uri(blv.terms.category.value)
-        self.test_cat_genotype_category = self.cutil.get_uri(blv.terms.Genotype.value)
+        self.test_cat_pred = self.cutil.get_uri(blv.terms['category'])
+        self.test_cat_genotype_category = self.cutil.get_uri(blv.terms['Genotype'])
         self.test_cat_background_category = self.cutil.get_uri(
-            blv.terms.PopulationOfIndividualOrganisms.value)
+            blv.terms['PopulationOfIndividualOrganisms'])
 
     def tearDown(self):
         self.genotype = None
@@ -84,22 +84,23 @@ class GenotypeTestCase(unittest.TestCase):
                          URIRef(self.test_cat_background_category),
                          "addTriples() didn't assign the right background category")
 
-    def test_addParts(self):
-        """
-        """
-        if part_relationship is None:
-            part_relationship = self.globaltt['has_part']
-        # Fail loudly if parent or child identifiers are None
-        if parent_id is None:
-            raise TypeError('Attempt to pass None as parent')
-        elif part_id is None:
-            raise TypeError('Attempt to pass None as child')
-        elif part_relationship is None:
-            part_relationship = self.globaltt['has_part']
-
-        self.graph.addTriple(parent_id, part_relationship, part_id,
-                             subject_category=subject_category,
-                             object_category=object_category)
+# does not compile
+#    def test_addParts(self):
+#        """
+#        """
+#        if part_relationship is None:
+#            part_relationship = self.globaltt['has_part']
+#        # Fail loudly if parent or child identifiers are None
+#        if parent_id is None:
+#            raise TypeError('Attempt to pass None as parent')
+#        elif part_id is None:
+#            raise TypeError('Attempt to pass None as child')
+#        elif part_relationship is None:
+#            part_relationship = self.globaltt['has_part']
+#
+#        self.graph.addTriple(parent_id, part_relationship, part_id,
+#                             subject_category=subject_category,
+#                             object_category=object_category)
 
         return
 

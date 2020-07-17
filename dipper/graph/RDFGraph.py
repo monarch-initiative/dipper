@@ -37,14 +37,12 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # print("in RDFGraph  with id: ", identifier)
         super().__init__('IOMemory', identifier)
         self.are_bnodes_skized = are_bnodes_skized
+        self.prefixes = set()
 
         # Can be removed when this is resolved
         # https://github.com/RDFLib/rdflib/issues/632
         for pfx in ('OBO',):  # , 'ORPHA'):
             self.bind(pfx, Namespace(self.curie_map[pfx]))
-
-        # try adding them all
-        # self.bind_all_namespaces()  # too much
 
     def _make_category_triple(
             self, subject, category, predicate=blv.terms['category']
@@ -140,13 +138,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
             LOG.warning(
                 "None/empty object IRI for subj: %s and pred: %s",
                 subject_id, predicate_id)
-        return
 
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
-        node = BNode(stripped_id).skolemize(self.curie_util.get_base())
-        node = re.sub(r'rdflib/', '', node)  # remove string added by rdflib
-        return URIRef(node)
+        return URIRef(stripped_id + self.curie_map['BNODE'])
 
     def _getnode(self, curie):
         """
@@ -163,7 +158,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         """
         node = None
         if curie[0] == '_':
-            if self.are_bnodes_skized is True:
+            if self.are_bnodes_skized:
                 node = self.skolemizeBlankNode(curie)
             else:  # delete the leading underscore to make it cleaner
                 node = BNode(re.sub(r'^_:|^_', '', curie, 1))
@@ -174,12 +169,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         else:
             iri = RDFGraph.curie_util.get_uri(curie)
             if iri is not None:
-                node = URIRef(RDFGraph.curie_util.get_uri(curie))
+                node = URIRef(iri)
                 # Bind prefix map to graph
                 prefix = curie.split(':')[0]
-                if prefix not in self.namespace_manager.namespaces():
-                    mapped_iri = self.curie_map[prefix]
-                    self.bind(prefix, Namespace(mapped_iri))
+                self.prefixes.add(prefix)
             else:
                 LOG.error("couldn't make URI for %s", curie)
                 # get a sense of where the CURIE-ish? thing is comming from
@@ -197,7 +190,6 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         for prefix in self.curie_map.keys():
             iri = self.curie_map[prefix]
             self.bind(prefix, Namespace(iri))
-        return
 
     # serialize() conflicts between rdflib & Graph.serialize abstractmethod
     # GraphUtils expects the former.  (too bad there is no multiple dispatch)
@@ -205,4 +197,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
     def serialize(
             self, destination=None, format='turtle', base=None, encoding=None
     ):
+        for prefix in self.prefixes:
+            mapped_iri = self.curie_map[prefix]
+            self.bind(prefix, Namespace(mapped_iri))
         return ConjunctiveGraph.serialize(self, destination, format)
