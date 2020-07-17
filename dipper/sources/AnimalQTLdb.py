@@ -510,7 +510,7 @@ class AnimalQTLdb(Source):
                     )
 
                     model.addXref(
-                        qtl_id, dbsnp_id, xref_category=blv.terms.SequenceVariant.value
+                        qtl_id, dbsnp_id, xref_category=blv.terms['SequenceVariant']
                     )
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
@@ -553,7 +553,7 @@ class AnimalQTLdb(Source):
                 model.addClassToGraph(
                     trait_id,
                     trait_name,
-                    class_category=blv.terms.PhenotypicFeature.value
+                    class_category=blv.terms['PhenotypicFeature']
                 )
 
                 # Add publication

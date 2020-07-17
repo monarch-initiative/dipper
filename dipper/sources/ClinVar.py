@@ -188,7 +188,7 @@ def make_biolink_category_triple(subj, cat):
         return this_triple
     try:
         this_triple = " ".join([subj,
-                                expand_curie(blv.terms.category.value),
+                                expand_curie(blv.terms['category']),
                                 expand_curie(cat),
                                 " .\n"])
     except ValueError:
@@ -432,7 +432,7 @@ def allele_to_triples(allele, triples) -> None:
     """
 
     write_spo(allele.id, 'rdf:type', resolve(allele.variant_type), triples,
-              subject_category=blv.terms.SequenceVariant.value)
+              subject_category=blv.terms['SequenceVariant'])
     write_spo(allele.id, GLOBALTT['in taxon'], GLOBALTT['Homo sapiens'], triples)
     if allele.label is not None:
         write_spo(allele.id, 'rdfs:label', allele.label, triples)
@@ -450,13 +450,13 @@ def allele_to_triples(allele, triples) -> None:
             GLOBALTT['database_cross_reference'],
             dbsnp_id,
             triples,
-            subject_category=blv.terms.SequenceVariant.value,
-            object_category=blv.terms.SequenceVariant.value)
+            subject_category=blv.terms['SequenceVariant'],
+            object_category=blv.terms['SequenceVariant'])
 
     for syn in allele.synonyms:
         write_spo(allele.id, GLOBALTT['has_exact_synonym'], syn, triples,
-                  subject_category=blv.terms.SequenceVariant.value,
-                  object_category=blv.terms.SequenceVariant.value)
+                  subject_category=blv.terms['SequenceVariant'],
+                  object_category=blv.terms['SequenceVariant'])
 
 
 def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
@@ -470,7 +470,7 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
     """
     # For all genotypes variants we add a type, label, and has_taxon human
     write_spo(rcv.genovar.id, 'rdf:type', resolve(rcv.genovar.variant_type), triples,
-              subject_category=blv.terms.SequenceVariant.value)
+              subject_category=blv.terms['SequenceVariant'])
     write_spo(rcv.genovar.id, GLOBALTT['in taxon'], GLOBALTT['Homo sapiens'], triples)
     if rcv.genovar.label is not None:
         write_spo(rcv.genovar.id, 'rdfs:label', rcv.genovar.label, triples)
@@ -483,8 +483,8 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
             for allele in rcv.genovar.alleles:
                 write_spo(
                     rcv.genovar.id, GLOBALTT['has_variant_part'], allele.id, triples,
-                    subject_category=blv.terms.SequenceVariant.value,
-                    object_category=blv.terms.SequenceVariant.value)
+                    subject_category=blv.terms['SequenceVariant'],
+                    object_category=blv.terms['SequenceVariant'])
 
         for allele in rcv.genovar.alleles:
             allele_to_triples(allele, triples)
@@ -522,16 +522,16 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                         resolve(allele_rel),
                         'NCBIGene:' + gene,
                         triples,
-                        subject_category=blv.terms.SequenceVariant.value,
-                        object_category=blv.terms.Gene.value)
+                        subject_category=blv.terms['SequenceVariant'],
+                        object_category=blv.terms['Gene'])
                 else:
                     write_spo(
                         rcv.genovar.id,
                         GLOBALTT['part_of'],
                         'NCBIGene:' + gene,
                         triples,
-                        subject_category=blv.terms.SequenceVariant.value,
-                        object_category=blv.terms.Gene.value)
+                        subject_category=blv.terms['SequenceVariant'],
+                        object_category=blv.terms['Gene'])
 
         else:
             for allele in rcv.genovar.alleles:
@@ -541,15 +541,15 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                         GLOBALTT['part_of'],
                         'NCBIGene:' + gene.id,
                         triples,
-                        subject_category=blv.terms.SequenceVariant.value,
-                        object_category=blv.terms.SequenceVariant.value)
+                        subject_category=blv.terms['SequenceVariant'],
+                        object_category=blv.terms['SequenceVariant'])
 
     elif isinstance(rcv.genovar, Genotype):
         for variant in rcv.genovar.variants:
             write_spo(
                 rcv.genovar.id, GLOBALTT['has_variant_part'], variant.id, triples,
-                subject_category=blv.terms.SequenceVariant.value,
-                object_category=blv.terms.SequenceVariant.value)
+                subject_category=blv.terms['SequenceVariant'],
+                object_category=blv.terms['SequenceVariant'])
 
             for allele in variant.alleles:
                 allele_to_triples(allele, triples)
@@ -560,8 +560,8 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                         resolve(gene.association_to_allele),
                         'NCBIGene:' + gene.id,
                         triples,
-                        subject_category=blv.terms.SequenceVariant.value,
-                        object_category=blv.terms.SequenceVariant.value)
+                        subject_category=blv.terms['SequenceVariant'],
+                        object_category=blv.terms['SequenceVariant'])
 
         # Zygosity if we can infer it from the type
         if rcv.genovar.variant_type == "CompoundHeterozygote":
@@ -570,8 +570,8 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 GLOBALTT['has_zygosity'],
                 GLOBALTT['compound heterozygous'],
                 triples,
-                subject_category=blv.terms.SequenceVariant.value,
-                object_category=blv.terms.Zygosity.value)
+                subject_category=blv.terms['SequenceVariant'],
+                object_category=blv.terms['Zygosity'])
 
         # If all variants are within the same single gene,
         # the genotype affects the gene
@@ -584,8 +584,8 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
                 GLOBALTT['has_affected_feature'],
                 'NCBIGene:' + gene_allele[0][0],
                 triples,
-                subject_category=blv.terms.SequenceVariant.value,
-                object_category=blv.terms.Gene.value)
+                subject_category=blv.terms['SequenceVariant'],
+                object_category=blv.terms['Gene'])
     else:
         raise ValueError("Invalid type for genovar in rcv {}".format(rcv.id))
 
@@ -1088,24 +1088,24 @@ def parse():
                     _evidence_id = '_:' + digest_id(monarch_id + '_evidence')
 
                     write_spo(_evidence_id, 'rdfs:label', monarch_id + '_evidence', rcvtriples,
-                              subject_category=blv.terms.EvidenceType.value)
+                              subject_category=blv.terms['EvidenceType'])
 
                     _assertion_id = '_:' + digest_id(monarch_id + '_assertion')
                     write_spo(_assertion_id, 'rdfs:label', monarch_id + '_assertion', rcvtriples,
-                              subject_category=blv.terms.InformationContentEntity.value)
+                              subject_category=blv.terms['InformationContentEntity'])
 
                     #                   TRIPLES
                     # <monarch_assoc><rdf:type><OBAN:association>  .
                     write_spo(monarch_assoc, 'rdf:type', 'OBAN:association', rcvtriples,
-                              subject_category=blv.terms.Association.value,
-                              object_category=blv.terms.OntologyClass.value)
+                              subject_category=blv.terms['Association'],
+                              object_category=blv.terms['OntologyClass'])
                     # <monarch_assoc>
                     #   <OBAN:association_has_subject>
                     #       <ClinVarVariant:rcv_variant_id>
                     write_spo(
                         monarch_assoc, 'OBAN:association_has_subject', rcv.genovar.id, rcvtriples,
-                        subject_category=blv.terms.Association.value,
-                        object_category=blv.terms.SequenceVariant.value)
+                        subject_category=blv.terms['Association'],
+                        object_category=blv.terms['SequenceVariant'])
 
                     # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv.variant.label>  .
 
@@ -1113,14 +1113,14 @@ def parse():
                     write_spo(
                         monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie,
                         rcvtriples,
-                        subject_category=blv.terms.Association.value,
-                        object_category=blv.terms.Disease.value)
+                        subject_category=blv.terms['Association'],
+                        object_category=blv.terms['Disease'])
                         # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # medgen might not have a disease label
                     if condition.label is not None:
                         write_spo(rcv_disease_curie, 'rdfs:label', condition.label,
-                                  rcvtriples, subject_category=blv.terms.Disease.value)
+                                  rcvtriples, subject_category=blv.terms['Disease'])
 
                     # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
                     write_spo(
@@ -1128,41 +1128,41 @@ def parse():
                         GLOBALTT['has_supporting_evidence_line'],
                         _evidence_id,
                         rcvtriples,
-                        subject_category=blv.terms.Association.value,
-                        object_category=blv.terms.EvidenceType.value)
+                        subject_category=blv.terms['Association'],
+                        object_category=blv.terms['EvidenceType'])
                     # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
                     write_spo(
                         monarch_assoc,
                         GLOBALTT['is_asserted_in'],
                         _assertion_id,
                         rcvtriples,
-                        subject_category=blv.terms.Association.value,
-                        object_category=blv.terms.InformationContentEntity.value)
+                        subject_category=blv.terms['Association'],
+                        object_category=blv.terms['InformationContentEntity'])
 
                     # <:_evidence_id><rdf:type><ECO:0000000> .
                     write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'], rcvtriples,
-                              subject_category=blv.terms.EvidenceType.value,
-                              object_category=blv.terms.OntologyClass.value)
+                              subject_category=blv.terms['EvidenceType'],
+                              object_category=blv.terms['OntologyClass'])
 
                     # <:_assertion_id><rdf:type><SEPIO:0000001> .
                     write_spo(_assertion_id, 'rdf:type', GLOBALTT['assertion'], rcvtriples,
-                              subject_category=blv.terms.InformationContentEntity.value,
-                              object_category=blv.terms.OntologyClass.value)
+                              subject_category=blv.terms['InformationContentEntity'],
+                              object_category=blv.terms['OntologyClass'])
                     # <:_assertion_id><rdfs:label><'assertion'>  .
                     write_spo(_assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id, rcvtriples,
-                              subject_category=blv.terms.InformationContentEntity.value)
+                              subject_category=blv.terms['InformationContentEntity'])
 
                     # <:_assertion_id><SEPIO_0000111><:_evidence_id>
                     write_spo(
                         _assertion_id,
                         GLOBALTT['is_assertion_supported_by_evidence'], _evidence_id, rcvtriples,
-                        subject_category=blv.terms.InformationContentEntity.value)
+                        subject_category=blv.terms['InformationContentEntity'])
 
                     # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
                     write_spo(
                         _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver, rcvtriples,
-                        subject_category=blv.terms.InformationContentEntity.value,
-                        object_category=blv.terms.InformationContentEntity.value)
+                        subject_category=blv.terms['InformationContentEntity'],
+                        object_category=blv.terms['InformationContentEntity'])
 
                     # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
                     write_spo(
@@ -1170,20 +1170,20 @@ def parse():
                         GLOBALTT['created_by'],
                         'ClinVarSubmitters:' + scv_orgid,
                         rcvtriples,
-                        subject_category=blv.terms.InformationContentEntity.value,
-                        object_category=blv.terms.Provider.value)
+                        subject_category=blv.terms['InformationContentEntity'],
+                        object_category=blv.terms['Provider'])
                     # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
                     write_spo(
                         'ClinVarSubmitters:' + scv_orgid,
                         'rdf:type',
                         'foaf:organization',
                         rcvtriples,
-                        subject_category=blv.terms.Provider.value,
-                        object_category=blv.terms.Provider.value)
+                        subject_category=blv.terms['Provider'],
+                        object_category=blv.terms['Provider'])
                     # <ClinVarSubmitters:scv_orgid><rdfs:label><scv_submitter>  .
                     write_spo(
                         'ClinVarSubmitters:' + scv_orgid, 'rdfs:label', scv_submitter, rcvtriples,
-                        subject_category=blv.terms.Provider.value)
+                        subject_category=blv.terms['Provider'])
 
                     ################################################################
                     ClinicalSignificance = SCV_Assertion.find('./ClinicalSignificance')
@@ -1206,7 +1206,7 @@ def parse():
                                     GLOBALTT['Date Created'],
                                     scv_eval_date,
                                     rcvtriples,
-                                    subject_category=blv.terms.InformationContentEntity.value)
+                                    subject_category=blv.terms['InformationContentEntity'])
 
                             scv_assert_method = SCV_Attribute.text
                             #  need to be mapped to a <sepio:100...n> curie ????
@@ -1224,7 +1224,7 @@ def parse():
                                 _assertion_method_id, 'rdfs:label',
                                 scv_assert_method + '_assertionmethod',
                                 rcvtriples,
-                                subject_category=blv.terms.Procedure.value)
+                                subject_category=blv.terms['Procedure'])
 
                             #       TRIPLES   specified_by
                             # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
@@ -1232,8 +1232,8 @@ def parse():
                                 _assertion_id, GLOBALTT['is_specified_by'],
                                 _assertion_method_id,
                                 rcvtriples,
-                                subject_category=blv.terms.InformationContentEntity.value,
-                                object_category=blv.terms.Procedure.value)
+                                subject_category=blv.terms['InformationContentEntity'],
+                                object_category=blv.terms['Procedure'])
 
                             # <_assertion_method_id><rdf:type><SEPIO:0000037>
                             write_spo(
@@ -1241,12 +1241,12 @@ def parse():
                                 'rdf:type',
                                 GLOBALTT['assertion method'],
                                 rcvtriples,
-                                subject_category=blv.terms.Procedure.value)
+                                subject_category=blv.terms['Procedure'])
 
                             # <_assertion_method_id><rdfs:label><scv_assert_method>
                             write_spo(
                                 _assertion_method_id, 'rdfs:label', scv_assert_method, rcvtriples,
-                                subject_category=blv.terms.Procedure.value)
+                                subject_category=blv.terms['Procedure'])
 
                             # <_assertion_method_id><ERO:0000480><scv_citation_url>
                             if SCV_Citation is not None:
@@ -1255,9 +1255,9 @@ def parse():
                                     write_spo(
                                         _assertion_method_id, GLOBALTT['has_url'],
                                         SCV_Citation_URL.text, rcvtriples,
-                                        subject_category=blv.terms.Procedure.value,
+                                        subject_category=blv.terms['Procedure'],
                                         object_category=
-                                        blv.terms.InformationContentEntity.value)
+                                        blv.terms['InformationContentEntity'])
 
                     # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
                     # RecordStatus                             # assert =='current' ?
@@ -1280,18 +1280,18 @@ def parse():
                             GLOBALTT['has_supporting_reference'],
                             'PMID:' + scv_citation_id,
                             rcvtriples,
-                            subject_category=blv.terms.EvidenceType.value,
-                            object_category=blv.terms.Publication.value)
+                            subject_category=blv.terms['EvidenceType'],
+                            object_category=blv.terms['Publication'])
                         # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                         write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id, rcvtriples,
-                                  subject_category=blv.terms.Association.value,
-                                  object_category=blv.terms.Publication.value)
+                                  subject_category=blv.terms['Association'],
+                                  object_category=blv.terms['Publication'])
 
                         # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                         write_spo(
                             'PMID:' + scv_citation_id,
                             'rdf:type', GLOBALTT['journal article'], rcvtriples,
-                            subject_category=blv.terms.Publication.value)
+                            subject_category=blv.terms['Publication'])
 
                         # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
@@ -1319,12 +1319,12 @@ def parse():
                                 'OBAN:association_has_predicate',
                                 scv_geno,
                                 rcvtriples,
-                                subject_category=blv.terms.Association.value)
+                                subject_category=blv.terms['Association'])
                             # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                             write_spo(genovar.id, scv_geno, rcv_disease_curie,
                                       rcvtriples,
-                                      subject_category=blv.terms.SequenceVariant.value,
-                                      object_category=blv.terms.Disease.value)
+                                      subject_category=blv.terms['SequenceVariant'],
+                                      object_category=blv.terms['Disease'])
 
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
                             write_spo(
@@ -1332,8 +1332,8 @@ def parse():
                                 GLOBALTT['database_cross_reference'],
                                 'ClinVar:' + rcv_acc,
                                 rcvtriples,
-                                subject_category=blv.terms.Association.value,
-                                object_category=blv.terms.InformationContentEntity.value)
+                                subject_category=blv.terms['Association'],
+                                object_category=blv.terms['InformationContentEntity'])
 
                             # store association's significance to compare w/sibs
                             pathocalls[monarch_assoc] = scv_geno
@@ -1362,32 +1362,32 @@ def parse():
                                         _evidence_id,
                                         GLOBALTT['has_supporting_reference'],
                                         'PMID:' + scv_citation_id.text, rcvtriples,
-                                        subject_category=blv.terms.EvidenceType.value,
-                                        object_category=blv.terms.Publication.value)
+                                        subject_category=blv.terms['EvidenceType'],
+                                        object_category=blv.terms['Publication'])
 
                                     # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                                     write_spo(
                                         'PMID:' + scv_citation_id.text,
                                         'rdf:type', GLOBALTT['journal article'],
                                         rcvtriples,
-                                        subject_category=blv.terms.Publication.value,
+                                        subject_category=blv.terms['Publication'],
                                         object_category=
-                                        blv.terms.InformationContentEntity.value)
+                                        blv.terms['InformationContentEntity'])
 
                                     # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                                     write_spo(
                                         monarch_assoc,
                                         'dc:source',
                                         'PMID:' + scv_citation_id.text, rcvtriples,
-                                        subject_category=blv.terms.Association.value,
-                                        object_category=blv.terms.Publication.value)
+                                        subject_category=blv.terms['Association'],
+                                        object_category=blv.terms['Publication'])
                                 for scv_pub_comment in SCV_Citation.findall(
                                         './Attribute[@Type="Description"]'):
                                     # <PMID:scv_citation_id><rdf:comment><scv_pub_comment>
                                     write_spo(
                                         'PMID:' + scv_citation_id.text,
                                         'rdf:comment', scv_pub_comment, rcvtriples,
-                                        subject_category=blv.terms.Publication.value)
+                                        subject_category=blv.terms['Publication'])
                             # for SCV_Citation in SCV_ObsData.findall('./Citation'):
                             for SCV_Description in SCV_ObsData.findall(
                                     'Attribute[@Type="Description"]'):
@@ -1398,7 +1398,7 @@ def parse():
                                         'dc:description',
                                         SCV_Description.text,
                                         rcvtriples,
-                                        subject_category=blv.terms.EvidenceType.value)
+                                        subject_category=blv.terms['EvidenceType'])
 
                         # /SCV/ObservedIn/TraitSet
                         # /SCV/ObservedIn/Citation
@@ -1432,7 +1432,7 @@ def parse():
                                 write_spo(
                                     _provenance_id, 'rdfs:label',
                                     _evidence_id + scv_evidence_type, rcvtriples,
-                                    subject_category=blv.terms.EvidenceType.value)
+                                    subject_category=blv.terms['EvidenceType'])
 
                                 # TRIPLES
                                 # has_provenance -> has_supporting_study
@@ -1442,20 +1442,20 @@ def parse():
                                     GLOBALTT['has_supporting_activity'],
                                     _provenance_id,
                                     rcvtriples,
-                                    subject_category=blv.terms.EvidenceType.value,
-                                    object_category=blv.terms.EvidenceType.value)
+                                    subject_category=blv.terms['EvidenceType'],
+                                    object_category=blv.terms['EvidenceType'])
 
                                 # <_:provenance_id><rdf:type><scv_evidence_type>
                                 write_spo(
                                     _provenance_id, 'rdf:type', scv_evidence_type,
                                     rcvtriples,
-                                    subject_category=blv.terms.EvidenceType.value,
-                                    object_category=blv.terms.OntologyClass.value)
+                                    subject_category=blv.terms['EvidenceType'],
+                                    object_category=blv.terms['OntologyClass'])
 
                                 # <_:provenance_id><rdfs:label><SCV_OIMT.text>
                                 write_spo(
                                     _provenance_id, 'rdfs:label', SCV_OIMT.text,
-                                    rcvtriples, subject_category=blv.terms.EvidenceType.value)
+                                    rcvtriples, subject_category=blv.terms['EvidenceType'])
 
                     # End of a SCV (a.k.a. MONARCH association)
             # End of the ClinVarSet.

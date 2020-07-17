@@ -443,7 +443,7 @@ class Dataset:
             predicate,
             url,
             object_is_literal=is_object_literal,
-            subject_category=blv.terms.DataSetVersion.value
+            subject_category=blv.terms['DataSetVersion']
         )
 
     def get_graph(self):

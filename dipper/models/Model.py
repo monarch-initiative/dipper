@@ -464,5 +464,5 @@ class Model():
             self.globaltt['has_sex_specificty'],
             sex,
             subject_category=subject_category,
-            object_category=blv.terms.BiologicalSex.value
+            object_category=blv.terms['BiologicalSex']
         )

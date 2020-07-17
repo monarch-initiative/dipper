@@ -534,7 +534,7 @@ class FlyBase(PostgreSQLSource):
                 xref_curie = xref_prefix + ':' + xref_id
 
                 model.addEquivalentClass(
-                    gene_curie, xref_curie, object_category=blv.terms.Gene.value
+                    gene_curie, xref_curie, object_category=blv.terms['Gene']
                 )
 
                 if limit is not None and reader.line_num > limit:

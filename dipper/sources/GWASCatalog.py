@@ -464,7 +464,7 @@ class GWASCatalog(Source):
                 else:
                     self.id_location_map[location].add(current_rs_id)
             model.addDeprecatedIndividual(
-                snp_id, current_rs_id, old_id_category=blv.terms.SequenceVariant.value
+                snp_id, current_rs_id, old_id_category=blv.terms['SequenceVariant']
             )
 
             # TODO check on this
@@ -527,7 +527,7 @@ class GWASCatalog(Source):
                         model.addClassToGraph(
                             trait_curie, mapped_traits[index],
                             self.globaltt['phenotype'],
-                            class_category=blv.terms.PhenotypicFeature.value)
+                            class_category=blv.terms['PhenotypicFeature'])
                     LOG.debug("{} not in mondo".format(trait_curie))
                 else:
                     LOG.debug("{} in mondo".format(trait_curie))

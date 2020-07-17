@@ -1361,10 +1361,10 @@ class ZFIN(Source):
                 # Add the stage as a class, and it's obo equivalent
                 stage_curie = ':'.join(('ZFIN', stage_id))
                 model.addClassToGraph(stage_curie, stage_name,
-                                      class_category=blv.terms.LifeStage.value)
+                                      class_category=blv.terms['LifeStage'])
                 model.addEquivalentClass(stage_curie, stage_obo_id,
-                                         subject_category=blv.terms.LifeStage.value,
-                                         object_category=blv.terms.LifeStage.value)
+                                         subject_category=blv.terms['LifeStage'],
+                                         object_category=blv.terms['LifeStage'])
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break

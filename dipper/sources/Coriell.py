@@ -500,7 +500,7 @@ class Coriell(Source):
                         family_comp_id,
                         family_label,
                         self.globaltt['family'],
-                        ind_category=blv.terms.PopulationOfIndividualOrganisms.value
+                        ind_category=blv.terms['PopulationOfIndividualOrganisms']
                     )
 
                     # Add the patient as a member of the family

@@ -47,7 +47,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # self.bind_all_namespaces()  # too much
 
     def _make_category_triple(
-            self, subject, category, predicate=blv.terms.category.value
+            self, subject, category, predicate=blv.terms['category']
     ):
         """
         add a triple to capture subject or object category (in CURIE form) that was

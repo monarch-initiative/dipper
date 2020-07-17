@@ -557,12 +557,12 @@ class Genotype():
             blv.terms.GenomeBuild.value
         )
         self.model.addType(
-            build_id, genome_id, subject_category=blv.terms.GenomeBuild.value
+            build_id, genome_id, subject_category=blv.terms['GenomeBuild']
         )
         if re.match(r'[0-9]+', taxon_id):
             taxon_id = 'NCBITaxon:' + taxon_id
 
-        self.addTaxon(taxon_id, build_id, genopart_category=blv.terms.GenomeBuild.value)
+        self.addTaxon(taxon_id, build_id, genopart_category=blv.terms['GenomeBuild'])
 
     @staticmethod
     def makeGenomeID(taxon_id):
@@ -607,10 +607,10 @@ class Genotype():
             # add the build-specific chromosome
             # as a member of the build (both ways)
             family.addMember(
-                build_id, chrinbuild_id, group_category=blv.terms.GenomeBuild.value
+                build_id, chrinbuild_id, group_category=blv.terms['GenomeBuild']
             )
             family.addMemberOf(
-                chrinbuild_id, build_id, group_category=blv.terms.GenomeBuild.value
+                chrinbuild_id, build_id, group_category=blv.terms['GenomeBuild']
             )
 
     def addChromosomeClass(self, chrom_num, taxon_id, taxon_label):
@@ -649,7 +649,7 @@ class Genotype():
         # add the build-specific chromosome
         # as a member of the build  (both ways)
         family.addMember(
-            reference_id, chr_id, group_category=blv.terms.GenomeBuild.value
+            reference_id, chr_id, group_category=blv.terms['GenomeBuild']
         )
         family.addMemberOf(chr_id, reference_id)
 

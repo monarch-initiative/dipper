@@ -213,7 +213,7 @@ class EOM(PostgreSQLSource):
                 model.addClassToGraph(
                     morphology_term_id,
                     morphology_term_label,
-                    blv.terms.PhenotypicFeature.value
+                    blv.terms['PhenotypicFeature']
                 )
 
                 # Assemble the description text
@@ -231,7 +231,7 @@ class EOM(PostgreSQLSource):
                     (objective_definition, subjective_definition))
 
                 model.addDefinition(morphology_term_id, definition,
-                                    class_category=blv.terms.PhenotypicFeature.value)
+                                    class_category=blv.terms['PhenotypicFeature'])
 
                 # <term id> FOAF:depicted_by literal url
                 # <url> type foaf:depiction

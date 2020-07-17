@@ -356,7 +356,7 @@ class OMIM(OMIMSource):
                 omim_curie,
                 nodelabel,
                 description=newlabel,
-                class_category=blv.terms.Disease.value
+                class_category=blv.terms['Disease']
             )
 
         elif omimtype in [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
@@ -369,14 +369,14 @@ class OMIM(OMIMSource):
                 nodelabel,
                 self.globaltt['gene'],
                 newlabel,
-                class_category=blv.terms.Gene.value
+                class_category=blv.terms['Gene']
             )
         elif omimtype == self.globaltt['phenotype']:
             model.addClassToGraph(
                 omim_curie,
                 nodelabel,
                 description=newlabel,
-                class_category=blv.terms.Disease.value
+                class_category=blv.terms['Disease']
             )
         else:
             # omim is NOT subclass_of D|P|or ?...
@@ -696,8 +696,8 @@ class OMIM(OMIMSource):
             gene_id,
             disorder_id,
             rel_id,
-            entity_category=blv.terms.Gene.value,
-            phenotype_category=blv.terms.Disease.value
+            entity_category=blv.terms['Gene'],
+            phenotype_category=blv.terms['Disease']
         )
 
         if phene_key is not None:
@@ -805,7 +805,7 @@ class OMIM(OMIMSource):
                         model.addDeprecatedIndividual(
                             al_id,
                             moved_ids,
-                            old_id_category= blv.terms.SequenceVariant.value
+                            old_id_category= blv.terms['SequenceVariant']
                         )
                     else:
                         LOG.error(
@@ -909,7 +909,7 @@ class OMIM(OMIMSource):
                 ps_num = row[col.index('Phenotypic Series number')].strip()
                 omimps_curie = 'OMIMPS:' + ps_num
                 model.addClassToGraph(
-                    omimps_curie, ps_label, class_category=blv.terms.Disease.value
+                    omimps_curie, ps_label, class_category=blv.terms['Disease']
                 )
 
                 if not self.test_mode and limit is not None and line_counter > limit:
@@ -952,7 +952,7 @@ class OMIM(OMIMSource):
         for phser in set(serieslist):
             series_curie = 'OMIMPS:' + phser
             model.addClassToGraph(
-                series_curie, None, class_category=blv.terms.Disease.value
+                series_curie, None, class_category=blv.terms['Disease']
             )
             if omimtype in [
                     self.globaltt['gene'], self.globaltt['has_affected_feature']]:
@@ -967,8 +967,8 @@ class OMIM(OMIMSource):
                 model.addSubClass(
                     omim_curie,
                     series_curie,
-                    child_category=blv.terms.Disease.value,
-                    parent_category=blv.terms.Disease.value
+                    child_category=blv.terms['Disease'],
+                    parent_category=blv.terms['Disease']
                 )
             else:
                 LOG.info('Unable to map type %s to phenotypic series', omimtype)
@@ -1106,11 +1106,11 @@ class OMIM(OMIMSource):
                 self.globaltt['gene'],
                 self.globaltt['has_affected_feature']
             ]:
-                omim_id_category = blv.terms.Gene.value
+                omim_id_category = blv.terms['Gene']
             elif self.omim_type[entry_num] == self.globaltt['phenotype']:
-                omim_id_category = blv.terms.Disease.value
+                omim_id_category = blv.terms['Disease']
             elif self.omim_type[entry_num] == self.globaltt['heritable_phenotypic_marker']:
-                omim_id_category = blv.terms.GenomicEntity.value
+                omim_id_category = blv.terms['GenomicEntity']
             else:
                 omim_id_category = None
         else:

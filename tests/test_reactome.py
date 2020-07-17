@@ -4,7 +4,6 @@ import unittest
 from dipper.sources.Reactome import Reactome
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
-from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 
 class ReactomeTestCase(unittest.TestCase):

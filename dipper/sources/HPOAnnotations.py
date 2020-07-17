@@ -266,7 +266,7 @@ class HPOAnnotations(Source):
                         assoc.get_association_id(),
                         self.globaltt['has_sex_specificty'],
                         self.globaltt[sex],
-                        object_category=blv.terms.BiologicalSex.value
+                        object_category=blv.terms['BiologicalSex']
                     )
 
                 # Publication

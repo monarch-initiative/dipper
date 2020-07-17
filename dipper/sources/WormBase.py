@@ -290,7 +290,7 @@ class WormBase(Source):
                 )
                 if live == 'Dead':
                     model.addDeprecatedClass(gene_id,
-                                             old_id_category=blv.terms.Gene.value)
+                                             old_id_category=blv.terms['Gene'])
                 geno.addTaxon(taxon_id, gene_id)
                 if gene_synonym != '' and gene_synonym is not None:
                     model.addSynonym(gene_id, gene_synonym)

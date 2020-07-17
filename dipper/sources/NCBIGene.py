@@ -539,26 +539,26 @@ class NCBIGene(OMIMSource):
                     model.addClassToGraph(
                         discontinued_gene_id,
                         discontinued_symbol,
-                        class_category=blv.terms.Gene.value
+                        class_category=blv.terms['Gene']
                     )
 
                     # add the new gene id to replace the old gene id
                     model.addDeprecatedClass(
                         discontinued_gene_id,
                         [gene_id],
-                        old_id_category=blv.terms.Gene.value
+                        old_id_category=blv.terms['Gene']
                     )
                 else:
                     model.addIndividualToGraph(gene_id, None)
                     model.addIndividualToGraph(
                         discontinued_gene_id,
                         discontinued_symbol,
-                        ind_category=blv.terms.Gene.value
+                        ind_category=blv.terms['Gene']
                     )
                     model.addDeprecatedIndividual(
                         discontinued_gene_id,
                         [gene_id],
-                        old_id_category=blv.terms.Gene.value
+                        old_id_category=blv.terms['Gene']
                     )
 
                 # also add the old symbol as a synonym of the new gene

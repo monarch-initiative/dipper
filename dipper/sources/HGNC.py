@@ -233,7 +233,7 @@ class HGNC(OMIMSource):
 
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id,
-                                             old_id_category=blv.terms.Gene.value)
+                                             old_id_category=blv.terms['Gene'])
                 elif symbol[-1] == '@':  # 10)  region (HOX), RNA cluster, gene (PCDH)
                     continue
 

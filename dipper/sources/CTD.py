@@ -303,10 +303,10 @@ class CTD(Source):
         reference_list = self._process_pubmed_ids(pubmed_ids)
         rel_id = self.resolve(direct_evidence)
         model.addClassToGraph(
-            chem_id, chem_name, class_category=blv.terms.ChemicalSubstance.value
+            chem_id, chem_name, class_category=blv.terms['ChemicalSubstance']
         )
         model.addClassToGraph(
-            disease_id, None, class_category=blv.terms.DiseaseOrPhenotypicFeature.value
+            disease_id, None, class_category=blv.terms['DiseaseOrPhenotypicFeature']
         )
         self._make_association(chem_id, disease_id, rel_id, reference_list)
 

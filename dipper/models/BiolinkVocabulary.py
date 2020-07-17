@@ -1,6 +1,5 @@
 import logging
 import os
-from enum import Enum
 from pathlib import Path
 
 import yaml
@@ -25,10 +24,8 @@ class BioLinkVocabulary:
         with open(os.path.join(bl_file_with_path)) as yaml_file:
             bl_vocab = yaml.safe_load(yaml_file)
             LOG.debug("Loaded biolink vocabulary: %s", bl_vocab)
-            bl_dict = {} # keys are terms, values are bl CURIES
+            terms = {} # keys are terms, values are bl CURIES
             for key in bl_vocab["terms"]:
-                bl_dict[key] = bl_vocab["curie_prefix"] + ":" + key
+                terms[key] = bl_vocab["curie_prefix"] + ":" + key
     else:
         LOG.debug("Cannot find biolink vocab yaml file: %s", bl_file_with_path)
-    terms = Enum('DynamicEnum', bl_dict)
-

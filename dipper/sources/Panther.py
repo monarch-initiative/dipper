@@ -267,7 +267,7 @@ class Panther(Source):
                 )
 
                 assoc.add_association_to_graph(
-                    blv.terms.GeneToGeneHomologyAssociation.value
+                    blv.terms['GeneToGeneHomologyAssociation']
                 )
 
                 # note this is incomplete...

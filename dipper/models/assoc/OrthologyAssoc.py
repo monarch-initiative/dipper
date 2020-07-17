@@ -55,20 +55,20 @@ class OrthologyAssoc(Assoc):
         # make the assumption that the genes
         # have already been added as classes previously
         self.model.addIndividualToGraph(
-            family_id, None, gene_family, ind_category=blv.terms.GeneFamily.value
+            family_id, None, gene_family, ind_category=blv.terms['GeneFamily']
         )
 
         # add each gene to the family
         family.addMember(
             family_id,
             self.sub,
-            group_category=blv.terms.GeneFamily.value,
+            group_category=blv.terms['GeneFamily'],
             member_category=self.subject_category
         )
 
         family.addMember(
             family_id,
             self.obj,
-            group_category=blv.terms.GeneFamily.value,
+            group_category=blv.terms['GeneFamily'],
             member_category=self.object_category
         )

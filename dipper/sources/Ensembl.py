@@ -348,16 +348,16 @@ class Ensembl(Source):
                     if taxid == '9606':
                         # Use HGNC for eq in human data
                         model.addXref(
-                            gene_id, entrez_curie, xref_category=blv.terms.Gene.value
+                            gene_id, entrez_curie, xref_category=blv.terms['Gene']
                         )
                     else:
                         model.addEquivalentClass(
-                            gene_id, entrez_curie, object_category=blv.terms.Gene.value
+                            gene_id, entrez_curie, object_category=blv.terms['Gene']
                         )
 
                 if hgnc_curie is not None and hgnc_curie != '':
                     model.addEquivalentClass(
-                        gene_id, hgnc_curie, object_category=blv.terms.Gene.value
+                        gene_id, hgnc_curie, object_category=blv.terms['Gene']
                     )
 
                 geno.addTaxon('NCBITaxon:' + taxid, gene_id)

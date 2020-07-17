@@ -101,7 +101,7 @@ class Orphanet(Source):
             # these free-text disorder names become synonyms
             disorder_label = elem.find('Name').text
             model.addClassToGraph(disorder_curie, disorder_label,
-                                  class_category=blv.terms.Disease.value)
+                                  class_category=blv.terms['Disease'])
 
             assoc_list = elem.find('DisorderGeneAssociationList')
             expected_genes = assoc_list.get('count')
@@ -170,7 +170,7 @@ class Orphanet(Source):
                     dbxref = ':'.join((prefix, lclid))
                     if gene_curie != dbxref:
                         model.addClassToGraph(
-                            dbxref, None, class_category=blv.terms.Gene.value
+                            dbxref, None, class_category=blv.terms['Gene']
                         )
                         model.addEquivalentClass(gene_curie, dbxref)
 

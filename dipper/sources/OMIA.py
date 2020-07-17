@@ -328,7 +328,7 @@ class OMIA(OMIMSource):
             breed_id,
             breed_label,
             tax_id,
-            ind_category=blv.terms.PopulationOfIndividualOrganisms.value
+            ind_category=blv.terms['PopulationOfIndividualOrganisms']
         )
         self.label_hash[breed_id] = breed_label
 
@@ -379,7 +379,7 @@ class OMIA(OMIMSource):
             sp_phene_label,
             omia_id,
             descr,
-            class_category=blv.terms.PhenotypicFeature.value
+            class_category=blv.terms['PhenotypicFeature']
         )
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = sp_phene_id
@@ -391,7 +391,7 @@ class OMIA(OMIMSource):
                 model.addDescription(
                     sp_phene_id,
                     row[item] + ' ['+item+']',
-                    subject_category=blv.terms.PhenotypicFeature.value
+                    subject_category=blv.terms['PhenotypicFeature']
                 )
         # if row['symbol'] is not None:  # species-specific
         # CHECK ME - sometimes spaces or gene labels
@@ -401,7 +401,7 @@ class OMIA(OMIMSource):
             sp_phene_id,
             self.globaltt['in taxon'],
             species_id,
-            class_category=blv.terms.PhenotypicFeature.value
+            class_category=blv.terms['PhenotypicFeature']
         )
 
         # add inheritance as an association
@@ -415,7 +415,7 @@ class OMIA(OMIMSource):
             assoc = D2PAssoc( # JR: not sure we should be using D2PAssoc for this
                 self.graph, self.name, sp_phene_id, inheritance_id,
                 rel=self.globaltt['has disposition'],
-                disease_category=blv.terms.PhenotypicFeature.value
+                disease_category=blv.terms['PhenotypicFeature']
             )
             assoc.add_association_to_graph()
 
@@ -498,7 +498,7 @@ class OMIA(OMIMSource):
                 assoc.add_association_to_graph()
                 # disease_id = None
         model.addClassToGraph(disease_id, None,
-                              class_category=blv.terms.Disease.value)
+                              class_category=blv.terms['Disease'])
 
         if group_summary == '':
             group_summary = None
@@ -697,8 +697,8 @@ class OMIA(OMIMSource):
             return
 
         model.addXref(omia_id, omim_id,
-                      class_category=blv.terms.Disease.value,
-                      xref_category=blv.terms.Disease.value)
+                      class_category=blv.terms['Disease'],
+                      xref_category=blv.terms['Disease'])
 
     def _process_group_mpo_row(self, row):
         """

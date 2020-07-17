@@ -252,7 +252,7 @@ class KEGG(OMIMSource):
                 # we don't get all of these from MONDO yet see:
                 # https://github.com/monarch-initiative/human-disease-ontology/issues/3
                 model.addClassToGraph(
-                    disease_id, disease_name, class_category=blv.terms.Disease.value
+                    disease_id, disease_name, class_category=blv.terms['Disease']
                 )
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
@@ -509,7 +509,7 @@ class KEGG(OMIMSource):
                         continue
                     # type this disease_id as a disease
                     model.addClassToGraph(disease_id, disease_label,
-                                          class_category=blv.terms.Disease.value)
+                                          class_category=blv.terms['Disease'])
                     # , class_type=self.globaltt['disease'])
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
@@ -574,7 +574,7 @@ class KEGG(OMIMSource):
                     # these are genes!
                     # so add them as a class then make equivalence
                     model.addClassToGraph(omim_id, None,
-                                          class_category=blv.terms.Gene.value)
+                                          class_category=blv.terms['Gene'])
                     geno.addGene(kegg_gene_id, None)
 
                     # previous: if omim type is not disease-ish then use
@@ -682,13 +682,13 @@ class KEGG(OMIMSource):
                 if len(self.kegg_disease_hash[kegg_disease_id]) == 1:
                     # add ids, and deal with the labels separately
                     model.addClassToGraph(kegg_disease_id, None,
-                                          class_category=blv.terms.Disease.value)
+                                          class_category=blv.terms['Disease'])
                     model.addClassToGraph(omim_disease_id, None)
                     # TODO is this safe?
                     model.addEquivalentClass(
                         kegg_disease_id,
                         omim_disease_id,
-                        subject_category=blv.terms.Disease.value
+                        subject_category=blv.terms['Disease']
                     )
             else:
                 pass
@@ -738,12 +738,12 @@ class KEGG(OMIMSource):
                 # unless there happens to be additional gene IDs in this table
                 # not present in the genes table.
                 model.addClassToGraph(kegg_gene_id, None,
-                                      class_category=blv.terms.Gene.value)
+                                      class_category=blv.terms['Gene'])
                 model.addClassToGraph(ncbi_gene_id, None,
-                                      class_category=blv.terms.Gene.value)
+                                      class_category=blv.terms['Gene'])
                 model.addEquivalentClass(kegg_gene_id, ncbi_gene_id,
-                                         subject_category=blv.terms.Gene.value,
-                                         object_category=blv.terms.Gene.value)
+                                         subject_category=blv.terms['Gene'],
+                                         object_category=blv.terms['Gene'])
 
                 if not self.test_mode and (
                         limit is not None and reader.line_num > limit):

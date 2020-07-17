@@ -1,4 +1,3 @@
-
 import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
