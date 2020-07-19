@@ -141,7 +141,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
-        return URIRef(stripped_id + self.curie_map['BNODE'])
+        return URIRef(self.curie_map['BNODE'] + stripped_id)
 
     def _getnode(self, curie):
         """
