@@ -127,6 +127,7 @@ class Monarch(Source):
                 row = next(filereader)
                 if self.check_fileheader(col, row):
                     pass
+
                 for row in filereader:
                     if len(row) != len(col):
                         LOG.info(

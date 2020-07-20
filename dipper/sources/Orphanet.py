@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -99,7 +100,8 @@ class Orphanet(Source):
             # Orphanet mappings are expected to be in Mondo
             # these free-text disorder names become synonyms
             disorder_label = elem.find('Name').text
-            model.addClassToGraph(disorder_curie, disorder_label)
+            model.addClassToGraph(disorder_curie, disorder_label,
+                                  class_category=blv.terms['Disease'])
 
             assoc_list = elem.find('DisorderGeneAssociationList')
             expected_genes = assoc_list.get('count')
@@ -167,7 +169,9 @@ class Orphanet(Source):
                     lclid = gene_clique[prefix]
                     dbxref = ':'.join((prefix, lclid))
                     if gene_curie != dbxref:
-                        model.addClassToGraph(dbxref, None)
+                        model.addClassToGraph(
+                            dbxref, None, class_category=blv.terms['Gene']
+                        )
                         model.addEquivalentClass(gene_curie, dbxref)
 
                 syn_list = gene.find('./SynonymList')
@@ -198,7 +202,13 @@ class Orphanet(Source):
                 eco_id = self.resolve(
                     assoc.find('DisorderGeneAssociationStatus/Name').text)
 
-                g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, rel_curie)
+                g2p_assoc = G2PAssoc(
+                    self.graph,
+                    self.name,
+                    gene_curie,
+                    rel_curie
+                )
+
                 g2p_assoc.add_evidence(eco_id)
                 g2p_assoc.add_association_to_graph()
 

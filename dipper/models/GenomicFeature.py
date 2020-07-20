@@ -24,8 +24,14 @@ class Feature():
     """
 
     def __init__(
-            self, graph, feature_id=None, label=None, feature_type=None,
-            description=None):
+            self,
+            graph,
+            feature_id=None,
+            label=None,
+            feature_type=None,
+            description=None,
+            feature_category=None
+    ):
 
         if isinstance(graph, Graph):
             self.graph = graph
@@ -37,6 +43,7 @@ class Feature():
         self.curie_map = self.graph.curie_map
         self.gfxutl = GraphUtils(self.curie_map)
         self.fid = feature_id
+        self.feature_category = feature_category
         self.label = label
         self.ftype = feature_type
         self.description = description
@@ -45,7 +52,8 @@ class Feature():
         self.taxon = None
 
     def addFeatureStartLocation(
-            self, coordinate, reference_id, strand=None, position_types=None):
+            self, coordinate, reference_id, strand=None, position_types=None
+    ):
         """
         Adds coordinate details for the start of this feature.
         :param coordinate:
@@ -60,7 +68,8 @@ class Feature():
         self.start = self._getLocation(coordinate, reference_id, strand, position_types)
 
     def addFeatureEndLocation(
-            self, coordinate, reference_id, strand=None, position_types=None):
+            self, coordinate, reference_id, strand=None, position_types=None
+    ):
         """
         Adds the coordinate details for the end of this feature
         :param coordinate:
@@ -116,7 +125,8 @@ class Feature():
         return strand_id
 
     def addFeatureToGraph(
-            self, add_region=True, region_id=None, feature_as_class=False):
+            self, add_region=True, region_id=None, feature_as_class=False,
+            feature_category=None):
         """
         We make the assumption here that all features are instances.
         The features are located on a region,
@@ -138,16 +148,23 @@ class Feature():
         faldo:position Integer(numeric position)
         faldo:reference reference_id
 
-        :param graph:
-
+        :param add_region [True]
+        :param region_id [None]
+        :param feature_as_class [False]
+        :param feature_category: a biolink category CURIE for feature
         """
+
+        if feature_category is None:
+            feature_category = self.feature_category
 
         if feature_as_class:
             self.model.addClassToGraph(
-                self.fid, self.label, self.ftype, self.description)
+                self.fid, self.label, self.ftype, self.description,
+                class_category=feature_category)
         else:
             self.model.addIndividualToGraph(
-                self.fid, self.label, self.ftype, self.description)
+                self.fid, self.label, self.ftype, self.description,
+                ind_category=feature_category)
 
         if self.start is None and self.stop is None:
             add_region = False
@@ -183,7 +200,12 @@ class Feature():
                 self.model.addLabel(curie, rid)
                 region_id = curie
 
-            self.graph.addTriple(self.fid, self.globaltt['location'], region_id)
+            self.graph.addTriple(
+                self.fid,
+                self.globaltt['location'],
+                region_id,
+                subject_category=feature_category
+            )
             self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'])
         else:
             region_id = self.fid
@@ -195,7 +217,8 @@ class Feature():
             beginp = self._makePositionId(
                 self.start['reference'], self.start['coordinate'], self.start['type'])
             self.addPositionToGraph(
-                self.start['reference'], self.start['coordinate'], self.start['type'])
+                self.start['reference'], self.start['coordinate'], self.start['type'],
+            )
 
         if self.stop is not None:
             endp = self._makePositionId(
@@ -271,7 +294,8 @@ class Feature():
             self.graph.addTriple(region_id, self.globaltt['end'], end_position_id)
 
     def addPositionToGraph(
-            self, reference_id, position, position_types=None, strand=None):
+            self, reference_id, position, position_types=None, strand=None
+    ):
         """
         Add the positional information to the graph, following the faldo model.
         We assume that if the strand is None,
@@ -293,9 +317,15 @@ class Feature():
         pos_id = self._makePositionId(reference_id, position, position_types)
         if position is not None:
             self.graph.addTriple(
-                pos_id, self.globaltt['position'], position, object_is_literal=True,
-                literal_type="xsd:integer")
-        self.graph.addTriple(pos_id, self.globaltt['reference'], reference_id)
+                pos_id,
+                self.globaltt['position'],
+                position,
+                object_is_literal=True,
+                literal_type="xsd:integer"
+            )
+        self.graph.addTriple(
+            pos_id, self.globaltt['reference'], reference_id
+        )
         if position_types is not None:
             for pos_type in position_types:
                 self.model.addType(pos_id, pos_type)
@@ -315,7 +345,9 @@ class Feature():
 
         return pos_id
 
-    def addSubsequenceOfFeature(self, parentid):
+    def addSubsequenceOfFeature(
+            self, parentid, subject_category=None, object_category=None
+    ):
         """
         This will add reciprocal triples like:
         feature <is subsequence of> parent
@@ -326,9 +358,21 @@ class Feature():
         :return:
 
         """
-        self.graph.addTriple(self.fid, self.globaltt['is subsequence of'], parentid)
+        self.graph.addTriple(
+            self.fid,
+            self.globaltt['is subsequence of'],
+            parentid,
+            subject_category=subject_category,
+            object_category=object_category
+        )
         # this should be expected to be done in reasoning not ETL
-        self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid)
+        self.graph.addTriple(
+            parentid,
+            self.globaltt['has subsequence'],
+            self.fid,
+            subject_category=object_category,
+            object_category=subject_category
+        )
 
     def addTaxonToFeature(self, taxonid):
         """
@@ -339,10 +383,21 @@ class Feature():
         :return:
         """
         self.taxon = taxonid
-        self.graph.addTriple(self.fid, self.globaltt['in taxon'], self.taxon)
+        self.graph.addTriple(
+            self.fid,
+            self.globaltt['in taxon'],
+            self.taxon,
+            subject_category=self.feature_category
+        )
 
     def addFeatureProperty(self, property_type, feature_property):
-        self.graph.addTriple(self.fid, property_type, feature_property)
+
+        self.graph.addTriple(
+            self.fid,
+            property_type,
+            feature_property,
+            subject_category=self.feature_category
+        )
 
 
 def makeChromID(chrom, reference=None, prefix=None):

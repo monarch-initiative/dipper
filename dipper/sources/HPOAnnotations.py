@@ -13,6 +13,7 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper import config
 
 LOG = logging.getLogger(__name__)
@@ -224,7 +225,7 @@ class HPOAnnotations(Source):
                 if row[col.index('Qualifier')] == 'NOT':
                     continue
 
-                pheno_id = row[col.index('HPO_ID')]
+                hpo_id = row[col.index('HPO_ID')]
                 publist = row[col.index('Reference')]
                 eco_id = self.resolve(row[col.index('Evidence')])
                 onset = row[col.index('Onset')]
@@ -235,22 +236,27 @@ class HPOAnnotations(Source):
                 # row[col.index('Biocuration')]  unused
 
                 # LOG.info(
-                #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
+                #    'adding <%s>-to-<%s> because <%s>', disease_id, hpo_id, eco_id)
 
                 model.addClassToGraph(disease_id)
-                model.addClassToGraph(pheno_id)
                 model.addClassToGraph(eco_id)
                 if onset is not None and onset != '':
                     model.addClassToGraph(onset)
 
                 if asp in ('P', 'M'):  # phenotype? abnormality or mortality
+                    model.addClassToGraph(hpo_id)
                     assoc = D2PAssoc(  # default rel=self.globaltt['has phenotype']
-                        graph, self.name, disease_id, pheno_id,
-                        onset, freq)
+                        graph, self.name, disease_id, hpo_id, onset, freq
+                    )
                 elif asp in ('I', 'C'):  # inheritance pattern or clinical course/onset
+                    model.addClassToGraph(hpo_id)
                     assoc = D2PAssoc(
-                        graph, self.name, disease_id, pheno_id,
-                        rel=self.globaltt['has disposition'])
+                        graph,
+                        self.name,
+                        disease_id,
+                        hpo_id,
+                        rel=self.globaltt['has disposition']
+                    )
                 else:
                     LOG.error("Unknown aspect : %s at line %i", asp, reader.line_num)
 
@@ -259,7 +265,9 @@ class HPOAnnotations(Source):
                     self.graph.addTriple(
                         assoc.get_association_id(),
                         self.globaltt['has_sex_specificty'],
-                        self.globaltt[sex])
+                        self.globaltt[sex],
+                        object_category=blv.terms['BiologicalSex']
+                    )
 
                 # Publication
                 # cut -f 5 phenotype.hpoa | grep ";" | tr ';' '\n' | cut -f1 -d ':' |\

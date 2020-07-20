@@ -2,7 +2,7 @@ import logging
 import csv
 import gzip
 from contextlib import closing
-from typing import Optional    #  playing make belive
+from typing import Optional
 
 import requests
 from dipper.sources.Source import Source

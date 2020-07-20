@@ -161,16 +161,16 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         )
 
         triples = """
-<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
-  BFO:0000051 OBO:STATO_0000076,
-      <https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> ;
-  BFO:0000050  IMPC-pipe:MGP_001 ,
-      <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-  SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> ;
-  SEPIO:0000017 <http://www.sanger.ac.uk/>  .
-
 <https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
     rdfs:label "MEFW" .
+
+<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
+    BFO:0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project>,
+        IMPC-pipe:MGP_001 ;
+    BFO:0000051 STATO:0000076,
+        IMPC-proc:MGP_XRY_001 ;
+    SEPIO:0000017 <http://www.sanger.ac.uk/> ;
+    SEPIO:0000114 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> .
 
 <http://www.sanger.ac.uk/> a foaf:organization ;
     rdfs:label "WTSI" .
@@ -183,12 +183,13 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
 IMPC-pipe:MGP_001 a owl:NamedIndividual ;
     rdfs:label "MGP Select Pipeline" .
-<https://www.mousephenotype.org/impress/ProcedureInfo?action=list&procID=MGP_XRY_001> a owl:NamedIndividual ;
+
+IMPC-proc:MGP_XRY_001 a owl:NamedIndividual ;
     rdfs:label "X-ray" .
 """
 
         # dbg
-        LOG.debug(
+        LOG.info(
             "Reference graph: %s",
             impc.graph.serialize(format="turtle").decode("utf-8")
         )
@@ -214,7 +215,6 @@ IMPC-pipe:MGP_001 a owl:NamedIndividual ;
 
     <https://www.mousephenotype.org/> a foaf:organization ;
         rdfs:label "International Mouse Phenotyping Consortium" .
-
         """
         # dbg
         LOG.info(

@@ -6,7 +6,7 @@ from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.GenomicFeature import Feature, makeChromID
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -232,7 +232,8 @@ class HGNC(OMIMSource):
                     name = None
 
                 if locus_type == 'withdrawn':
-                    model.addDeprecatedClass(hgnc_id)
+                    model.addDeprecatedClass(hgnc_id,
+                                             old_id_category=blv.terms['Gene'])
                 elif symbol[-1] == '@':  # 10)  region (HOX), RNA cluster, gene (PCDH)
                     continue
 
@@ -267,7 +268,8 @@ class HGNC(OMIMSource):
                     pmid = pubmed_id.strip()
                     if pmid is not None and pmid != '':
                         graph.addTriple(
-                            'PMID:' + pmid, self.globaltt['is_about'], hgnc_id)
+                            'PMID:' + pmid, self.globaltt['is_about'], hgnc_id
+                        )
 
                 # add the default taxon to the gene
                 graph.addTriple(hgnc_id, self.globaltt['in taxon'], self.taxon_curie)
