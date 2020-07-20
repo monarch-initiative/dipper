@@ -7,7 +7,7 @@ rdf:type triples in dipper
 For example, given the input turtle
 
 ```
-@prefix OMIM: <http://purl.obolibrary.org/obo/OMIM_> .
+@prefix OMIM: <https://omim.org/entry/> .
 @prefix HP: <http://purl.obolibrary.org/obo/HP_> .
 @prefix SO: <http://purl.obolibrary.org/obo/SO_> .
 
@@ -24,7 +24,7 @@ We expect the output:
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix biolink: <https://w3id.org/biolink/vocab/> .
 
-<http://purl.obolibrary.org/obo/OMIM_154700>
+<https://omim.org/entry/154700>
         biolink:category  biolink:Disease .
 
 <http://purl.obolibrary.org/obo/SO_0000704>
