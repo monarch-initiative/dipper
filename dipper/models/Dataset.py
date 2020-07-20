@@ -9,6 +9,7 @@ from rdflib import Literal, XSD
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -413,9 +414,7 @@ class Dataset:
         self.graph.addTriple(file_iri, self.globaltt['retrieved_on'], date,
                              object_is_literal=True, literal_type=datatype)
 
-    def set_ingest_source(self, url,
-                          predicate=None,
-                          is_object_literal=False):
+    def set_ingest_source(self, url, predicate=None, is_object_literal=False):
         """
         This method writes a triple to the dataset graph indicating that the ingest
         used a file or resource at [url] during the ingest.
@@ -440,8 +439,12 @@ class Dataset:
         if predicate is None:
             predicate = self.globaltt["Source (dct)"]
         self.graph.addTriple(
-            self.version_level_curie, predicate, url,
-            object_is_literal=is_object_literal)
+            self.version_level_curie,
+            predicate,
+            url,
+            object_is_literal=is_object_literal,
+            subject_category=blv.terms['DataSetVersion']
+        )
 
     def get_graph(self):
         """

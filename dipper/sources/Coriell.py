@@ -14,6 +14,7 @@ from dipper.models.Family import Family
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.utils.DipperUtil import DipperUtil
 
 
@@ -422,7 +423,8 @@ class Coriell(Source):
                 cell_line_reagent_id = self.globaltt['cell line']
 
                 model.addIndividualToGraph(
-                    cell_line_id, line_label, cell_line_reagent_id)
+                    cell_line_id, line_label, cell_line_reagent_id
+                )
 
                 # add the equivalent id == dna_ref
                 dna_ref = row[col.index('dna_ref')].strip()
@@ -431,7 +433,8 @@ class Coriell(Source):
                     # some of the equivalent ids are not defined
                     # in the source data; so add them
                     model.addIndividualToGraph(
-                        equiv_cell_line, None, cell_line_reagent_id)
+                        equiv_cell_line, None, cell_line_reagent_id
+                    )
                     model.addSameIndividual(cell_line_id, equiv_cell_line)
 
                 # Cell line derives from patient
@@ -494,7 +497,11 @@ class Coriell(Source):
 
                     # Add the family ID as a named individual
                     model.addIndividualToGraph(
-                        family_comp_id, family_label, self.globaltt['family'])
+                        family_comp_id,
+                        family_label,
+                        self.globaltt['family'],
+                        ind_category=blv.terms['PopulationOfIndividualOrganisms']
+                    )
 
                     # Add the patient as a member of the family
                     family.addMemberOf(patient_id, family_comp_id)
@@ -559,13 +566,18 @@ class Coriell(Source):
                         karyotype_feature_label = \
                             'some karyotype alteration on chr' + str(chrom)
                         feat = Feature(
-                            graph, karyotype_feature_id, karyotype_feature_label,
-                            self.globaltt['sequence_alteration'])
+                            graph,
+                            karyotype_feature_id,
+                            karyotype_feature_label,
+                            self.globaltt['sequence_alteration']
+                        )
                         feat.addFeatureStartLocation(None, chr_id)
                         feat.addFeatureToGraph()
                         geno.addParts(
-                            karyotype_feature_id, karyotype_id,
-                            self.globaltt['has_variant_part'])
+                            karyotype_feature_id,
+                            karyotype_id,
+                            self.globaltt['has_variant_part']
+                        )
 
                 gene = row[col.index('gene')].strip()
                 mutation = row[col.index('mutation')].strip()
@@ -642,8 +654,10 @@ class Coriell(Source):
                         # the alleles at all.
                         # so the vslcs are just a pot of them
                         model.addIndividualToGraph(
-                            vslc_id, vslc_label,
-                            self.globaltt['variant single locus complement'])
+                            vslc_id,
+                            vslc_label,
+                            self.globaltt['variant single locus complement']
+                        )
                         for var in omim_map.get(omim):
                             # this is actually a sequence alt
                             allele1_id = 'OMIM:' + omim + '.' + var
@@ -652,9 +666,12 @@ class Coriell(Source):
                             # assume that the sa -> var_loc -> gene
                             # is taken care of in OMIM
                             geno.addPartsToVSLC(
-                                vslc_id, allele1_id, None,
+                                vslc_id,
+                                allele1_id,
+                                None,
                                 self.globaltt['indeterminate'],
-                                self.globaltt['has_variant_part'])
+                                self.globaltt['has_variant_part']
+                            )
 
                         if vslc_id != gvc_id:
                             geno.addVSLCtoParent(vslc_id, gvc_id)
@@ -669,8 +686,10 @@ class Coriell(Source):
                 # add the gvc
                 if gvc_id is not None:
                     model.addIndividualToGraph(
-                        gvc_id, gvc_label,
-                        self.globaltt['genomic_variation_complement'])
+                        gvc_id,
+                        gvc_label,
+                        self.globaltt['genomic_variation_complement']
+                    )
 
                     # add the gvc to the genotype
                     if genotype_id is not None:
@@ -690,8 +709,10 @@ class Coriell(Source):
                             genotype_id = karyotype_id
                         else:
                             geno.addParts(
-                                karyotype_id, genotype_id,
-                                self.globaltt['has_reference_part'])
+                                karyotype_id,
+                                genotype_id,
+                                self.globaltt['has_reference_part']
+                            )
                     else:
                         genotype_label = gvc_label
                         # use the catalog id as the background
@@ -707,7 +728,8 @@ class Coriell(Source):
                     # TODO check if the genotype belongs to
                     # the cell line or to the patient
                     graph.addTriple(
-                        patient_id, self.globaltt['has_genotype'], genotype_id)
+                        patient_id, self.globaltt['has_genotype'], genotype_id
+                    )
                 else:
                     geno.addTaxon(taxon, patient_id)
 
@@ -734,8 +756,8 @@ class Coriell(Source):
                                 # add the association:
                                 #   the patient has the disease
                                 assoc = G2PAssoc(
-                                    graph, self.name,
-                                    patient_id, disease_id)
+                                    graph, self.name, patient_id, disease_id
+                                )
                                 assoc.add_association_to_graph()
 
                                 # this line is a model of this disease
@@ -744,7 +766,8 @@ class Coriell(Source):
                                 graph.addTriple(
                                     cell_line_id,
                                     self.globaltt['is model of'],
-                                    disease_id)
+                                    disease_id
+                                )
                             else:
                                 LOG.info('drop gene %s from disease list', disease)
 
@@ -757,7 +780,8 @@ class Coriell(Source):
                         ref.setType(self.globaltt['journal article'])
                         ref.addRefToGraph()
                         graph.addTriple(
-                            pubmed_id, self.globaltt['mentions'], cell_line_id)
+                            pubmed_id, self.globaltt['mentions'], cell_line_id
+                        )
 
                 if not self.test_mode and (
                         limit is not None and line_counter > limit):
@@ -789,7 +813,8 @@ class Coriell(Source):
             repo_page = page
 
             model.addIndividualToGraph(
-                repo_id, repo_label, self.globaltt['collection'])
+                repo_id, repo_label, self.globaltt['collection']
+            )
             reference.addPage(repo_id, repo_page)
 
         return

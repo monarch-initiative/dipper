@@ -11,6 +11,7 @@ from dipper.models.Evidence import Evidence
 from dipper.models.Provenance import Provenance
 from dipper.models.Model import Model
 
+
 LOG = logging.getLogger(__name__)
 # Sometimes latest disappears
 IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
@@ -332,14 +333,17 @@ class IMPC(Source):
                 colony_genotype_label = vslc_colony_label
                 geno.addGenotype(colony_genotype_id, colony_genotype_label)
                 geno.addParts(
-                    allele_accession_id, colony_genotype_id,
-                    self.globaltt['has_variant_part'])
+                    allele_accession_id,
+                    colony_genotype_id,
+                    self.globaltt['has_variant_part']
+                )
 
                 geno.addPartsToVSLC(
                     vslc_colony, allele_accession_id, None,
                     self.globaltt['indeterminate'], self.globaltt['has_variant_part'])
                 graph.addTriple(
-                    colony_id, self.globaltt['has_genotype'], colony_genotype_id)
+                    colony_id, self.globaltt['has_genotype'], colony_genotype_id
+                )
 
                 # ##########    BUILD THE ANNOTATED GENOTYPE    ##########
                 # now, we'll build the genotype of the individual that derives
@@ -384,17 +388,27 @@ class IMPC(Source):
                 vslc_id = re.sub(r':', '', vslc_id)
                 vslc_id = '_:' + vslc_id
                 model.addIndividualToGraph(
-                    vslc_id, vslc_name,
-                    self.globaltt['variant single locus complement'])
+                    vslc_id,
+                    vslc_name,
+                    self.globaltt['variant single locus complement']
+                )
                 geno.addPartsToVSLC(
-                    vslc_id, allele1_id, allele2_id, zygosity_id,
-                    self.globaltt['has_variant_part'], allele2_rel)
+                    vslc_id,
+                    allele1_id,
+                    allele2_id,
+                    zygosity_id,
+                    self.globaltt['has_variant_part'],
+                    allele2_rel
+                )
 
                 # add vslc to genotype
                 geno.addVSLCtoParent(vslc_id, genotype_id)
 
                 # note that the vslc is also the gvc
-                model.addType(vslc_id, self.globaltt['genomic_variation_complement'])
+                model.addType(
+                    vslc_id,
+                    self.globaltt['genomic_variation_complement']
+                )
 
                 # Add the genomic background
                 # create the genomic background id and name
@@ -406,8 +420,10 @@ class IMPC(Source):
                 genotype_name = vslc_name
                 if genomic_background_id is not None:
                     geno.addGenotype(
-                        genomic_background_id, strain_name,
-                        self.globaltt['genomic_background'])
+                        genomic_background_id,
+                        strain_name,
+                        self.globaltt['genomic_background']
+                    )
 
                     # make a phenotyping-center-specific strain
                     # to use as the background
@@ -422,10 +438,13 @@ class IMPC(Source):
                         pheno_center_strain_id = '_:' + pheno_center_strain_id
 
                     geno.addGenotype(
-                        pheno_center_strain_id, pheno_center_strain_label,
-                        self.globaltt['genomic_background'])
+                        pheno_center_strain_id,
+                        pheno_center_strain_label,
+                        self.globaltt['genomic_background']
+                    )
                     geno.addSequenceDerivesFrom(
-                        pheno_center_strain_id, genomic_background_id)
+                        pheno_center_strain_id, genomic_background_id
+                    )
 
                     # Making genotype labels from the various parts,
                     # can change later if desired.
@@ -458,8 +477,10 @@ class IMPC(Source):
                 geno.addGenotype(
                     sex_qualified_genotype_id, sex_qualified_genotype_label, sq_type_id)
                 geno.addParts(
-                    genotype_id, sex_qualified_genotype_id,
-                    self.globaltt['has_variant_part'])
+                    genotype_id,
+                    sex_qualified_genotype_id,
+                    self.globaltt['has_variant_part']
+                )
 
                 if genomic_background_id is not None and genomic_background_id != '':
                     # Add the taxon to the genomic_background_id
@@ -484,7 +505,8 @@ class IMPC(Source):
                 # a procedure in a pipeline at a center and a parameter tested
 
                 assoc = G2PAssoc(
-                    graph, self.name, sex_qualified_genotype_id, mp_term_id)
+                    graph, self.name, sex_qualified_genotype_id, mp_term_id
+                )
                 assoc.add_evidence(eco_id)
                 # assoc.set_score(float(p_value))
 
@@ -556,12 +578,14 @@ class IMPC(Source):
             'International Mouse Phenotyping Consortium')
 
         self.graph.addTriple(
-            assoc_id, self.globaltt['is_asserted_in'], assertion_bnode)
+            assoc_id, self.globaltt['is_asserted_in'], assertion_bnode
+        )
 
         self.graph.addTriple(
             assertion_bnode,
-            self.globaltt['is_assertion_supported_by_evidence'],  # "SEPIO:0000111"
-            evidence_line_bnode)
+            self.resolve('is_assertion_supported_by_evidence'),  # "SEPIO:0000111"
+            evidence_line_bnode
+        )
 
     def _add_study_provenance(
             self,
@@ -597,13 +621,21 @@ class IMPC(Source):
 
         # Add provenance
         # A study is a blank node equal to its parts
-        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
-            phenotyping_center, colony, project_fullname, pipeline_stable_id,
-            procedure_stable_id, parameter_stable_id, statistical_method,
-            resource_name), '_')
+        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}"
+            .format(
+                phenotyping_center,
+                colony,
+                project_fullname,
+                pipeline_stable_id,
+                procedure_stable_id,
+                parameter_stable_id,
+                statistical_method,
+                resource_name
+            ),
+            '_'
+        )
 
-        model.addIndividualToGraph(
-            study_bnode, None, self.globaltt['study'])
+        model.addIndividualToGraph(study_bnode, None, self.globaltt['study'])
 
         # List of nodes linked to study with has_part property
         study_parts = []
@@ -626,7 +658,8 @@ class IMPC(Source):
         logging.info("Adding Provenance for %s", project_fullname)
         model.addIndividualToGraph(parameter_curie, parameter_label)
         provenance_model.add_study_measure(
-            study_bnode, parameter_curie, object_is_literal=False)
+            study_bnode, parameter_curie, object_is_literal=False
+        )
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
@@ -637,11 +670,13 @@ class IMPC(Source):
         model.addIndividualToGraph(
             phenotyping_center_id,
             phenotyping_center,
-            self.globaltt['organization'])
+            self.globaltt['organization']
+        )
 
         # self.graph
         model.addTriple(
-            study_bnode, self.globaltt['has_agent'], phenotyping_center_id)
+            study_bnode, self.globaltt['has_agent'], phenotyping_center_id
+        )
 
         # add pipeline and project
         model.addIndividualToGraph(pipeline_curie, pipeline_name)
@@ -654,7 +689,8 @@ class IMPC(Source):
             project_fullname_id = self.resolve(project_fullname)
 
         model.addIndividualToGraph(
-            project_fullname_id, project_fullname, self.globaltt['project'])
+            project_fullname_id, project_fullname, self.globaltt['project']
+        )
 
         # self.graph
         model.addTriple(study_bnode, self.globaltt['part_of'], project_fullname_id)
@@ -708,14 +744,16 @@ class IMPC(Source):
                 "{0}{1}{2}".format(
                     evidence_line_bnode, 'percentage_change', percentage_change), '_')
             model.addIndividualToGraph(
-                fold_change_bnode, None, self.resolve('percentage_change'))
+                fold_change_bnode, None, self.resolve('percentage_change')
+            )
             measurements[fold_change_bnode] = percentage_change
         if effect_size is not None or effect_size != "":
             fold_change_bnode = self.make_id(
                 "{0}{1}{2}".format(
                     evidence_line_bnode, 'effect_size', effect_size), '_')
             model.addIndividualToGraph(
-                fold_change_bnode, None, self.globaltt['effect size estimate'])
+                fold_change_bnode, None, self.globaltt['effect size estimate']
+            )
             measurements[fold_change_bnode] = effect_size
 
         evidence_model.add_supporting_data(evidence_line_bnode, measurements)
@@ -724,7 +762,8 @@ class IMPC(Source):
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         self.graph.addTriple(
             evidence_line_bnode, self.globaltt['has_supporting_activity'],
-            study_bnode)
+            study_bnode
+        )
 
         return evidence_line_bnode
 

@@ -7,6 +7,7 @@ import xml.etree.ElementTree as etree
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from datetime import datetime
 
 LOG = logging.getLogger(__name__)
@@ -320,6 +321,7 @@ class Ensembl(Source):
                 ensembl_peptide_id = row[col.index('ensembl_peptide_id')].strip()
                 uniprotswissprot = row[col.index('uniprotswissprot')].strip()
                 hgnc_curie = None
+
                 # in the case of human genes, we also get the hgnc id,
                 if taxid == '9606' and 'hgnc_id' in col:
                     hgnc_curie = row[col.index('hgnc_id')].strip()
@@ -339,18 +341,27 @@ class Ensembl(Source):
                     default=self.globaltt['polypeptide'])
 
                 model.addClassToGraph(
-                    gene_id, external_gene_name, gene_type_id, description)
+                    gene_id, external_gene_name, gene_type_id, description,
+                    class_category=blv.terms['Gene'])
 
                 if entrezgene != '':
                     if taxid == '9606':
                         # Use HGNC for eq in human data
-                        model.addXref(gene_id, entrez_curie)
+                        model.addXref(
+                            gene_id, entrez_curie, xref_category=blv.terms['Gene']
+                        )
                     else:
-                        model.addEquivalentClass(gene_id, entrez_curie)
+                        model.addEquivalentClass(
+                            gene_id, entrez_curie, object_category=blv.terms['Gene']
+                        )
 
                 if hgnc_curie is not None and hgnc_curie != '':
-                    model.addEquivalentClass(gene_id, hgnc_curie)
+                    model.addEquivalentClass(
+                        gene_id, hgnc_curie, object_category=blv.terms['Gene']
+                    )
+
                 geno.addTaxon('NCBITaxon:' + taxid, gene_id)
+
                 if ensembl_peptide_id is not None and ensembl_peptide_id != '':
                     peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
                     model.addIndividualToGraph(peptide_curie, None, gene_type_id)

@@ -24,8 +24,6 @@ class Chem2DiseaseAssoc(Assoc):
             rel_id = self.globaltt['has phenotype']
         self.set_relationship(rel_id)
 
-        return
-
     def set_association_id(self, assoc_id=None):
         """
         This will set the association ID based on the internal parts
@@ -41,8 +39,6 @@ class Chem2DiseaseAssoc(Assoc):
 
         if assoc_id is None:
             self.assoc_id = self.make_c2p_assoc_id()
-
-        return
 
     def make_c2p_assoc_id(self):
 

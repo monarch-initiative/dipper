@@ -329,17 +329,20 @@ class GeneOntology(Source):
                 uniprotid = None
                 gene_id = None
                 if dbase == 'UniProtKB':
-                    if id_map is not None and gene_num in id_map:
-                        gene_id = id_map[gene_num]
-                        uniprotid = ':'.join((dbase, gene_num))
-                        (dbase, gene_num) = gene_id.split(':')
-                        uniprot_hit += 1
-                    else:
-                        # LOG.warning(
-                        #   "UniProt id %s is without a 1:1 mapping to entrez/ensembl",
-                        #    gene_num)
-                        uniprot_miss += 1
-                        continue
+                    if id_map is not None:
+                        # try/except much faster than checking
+                        # for dict key membership
+                        try:
+                            gene_id = id_map[gene_num]
+                            uniprotid = ':'.join((dbase, gene_num))
+                            (dbase, gene_num) = gene_id.split(':')
+                            uniprot_hit += 1
+                        except KeyError:
+                            # LOG.warning(
+                            #   "UniProt id %s is without a 1:1 mapping to entrez/ensembl",
+                            #    gene_num)
+                            uniprot_miss += 1
+                            continue
                 else:
                     gene_num = gene_num.split(':')[-1]  # last
                     gene_id = ':'.join((dbase, gene_num))
@@ -348,7 +351,9 @@ class GeneOntology(Source):
                         gene_num not in self.test_ids:
                     continue
 
-                model.addClassToGraph(gene_id, gene_symbol)
+                model.addLabel(gene_id, gene_symbol)
+                model.addType(gene_id, self.globaltt['gene'])
+
                 if gene_name != '':
                     model.addDescription(gene_id, gene_name)
                 if gene_synonym != '':

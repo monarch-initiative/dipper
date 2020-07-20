@@ -22,7 +22,16 @@ class G2PAssoc(Assoc):
 
     """
 
-    def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None):
+    def __init__(
+            self,
+            graph,
+            definedby,
+            entity_id,
+            phenotype_id,
+            rel=None,
+            entity_category=None,
+            phenotype_category=None
+    ):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -39,6 +48,9 @@ class G2PAssoc(Assoc):
         self.set_object(phenotype_id)
         self.set_relationship(rel)
 
+        self.subject_category = entity_category
+        self.object_category = phenotype_category
+
         return
 
     def set_stage(self, start_stage_id, end_stage_id):
@@ -46,13 +58,10 @@ class G2PAssoc(Assoc):
             self.start_stage_id = start_stage_id
         if end_stage_id is not None and end_stage_id.strip() != '':
             self.end_stage_id = end_stage_id
-        return
 
     def set_environment(self, environment_id):
         if environment_id is not None and environment_id.strip() != '':
             self.environment_id = environment_id
-
-        return
 
     def set_association_id(self, assoc_id=None):
 
@@ -61,9 +70,7 @@ class G2PAssoc(Assoc):
         else:
             self.assoc_id = assoc_id
 
-        return
-
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, entity_category=None, phenotype_category=None):
         """
         Overrides  Association by including bnode support
 
@@ -74,9 +81,11 @@ class G2PAssoc(Assoc):
 
         currently hardcoded to map the annotation to the monarch namespace
         :param g:
+        :param entity_category: a biolink category CURIE for self.sub
+        :param phenotype_category: a biolink category CURIE for self.obj
         :return:
         """
-
+        # is this kosher?
         Assoc.add_association_to_graph(self)
 
         # make a blank stage
@@ -85,22 +94,26 @@ class G2PAssoc(Assoc):
                                          str(self.end_stage_id)))
             stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
-                stage_process_id, None, self.globaltt['developmental_process'])
+                stage_process_id, None, self.globaltt['developmental_process']
+            )
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['starts during'], self.start_stage_id)
+                stage_process_id, self.globaltt['starts during'], self.start_stage_id
+            )
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['ends during'], self.end_stage_id)
+                stage_process_id, self.globaltt['ends during'], self.end_stage_id
+            )
 
             self.stage_process_id = stage_process_id
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id)
+                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id
+            )
 
         if self.environment_id is not None:
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id)
-        return
+                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id
+            )
 
     def make_g2p_id(self):
         """

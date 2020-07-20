@@ -1,8 +1,8 @@
-
 import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -18,7 +18,16 @@ class Assoc:
 
     """
 
-    def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
+    def __init__(
+            self,
+            graph,
+            definedby,
+            sub=None,
+            obj=None,
+            pred=None,
+            subject_category=None,
+            object_category=None
+    ):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
@@ -32,6 +41,8 @@ class Assoc:
         self.sub = sub
         self.obj = obj
         self.rel = pred
+        self.subject_category = subject_category
+        self.object_category = object_category
         self.assoc_id = None
 
         self.description = None
@@ -45,7 +56,6 @@ class Assoc:
         self.score_type = None
         self.score_unit = None
 
-        return
 
     def _is_valid(self):
         # check if sub/obj/rel are none...raise error
@@ -81,59 +91,76 @@ class Assoc:
             )
         return True
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, association_category=None):
 
-        if not self._is_valid():
-            return
+        # Assume null and iri checks happen downstream
+        #if not self._is_valid():
+        #    return
 
-        self.graph.addTriple(self.sub, self.rel, self.obj)
+        self.graph.addTriple(self.sub, self.rel, self.obj,
+                             subject_category=self.subject_category,
+                             object_category=self.object_category)
 
         if self.assoc_id is None:
             self.set_association_id()
 
-        assert self.assoc_id is not None
+        # assert self.assoc_id is not None
 
         self.model.addType(self.assoc_id, self.model.globaltt['association'])
 
         self.graph.addTriple(
-            self.assoc_id, self.globaltt['association has subject'], self.sub)
+            self.assoc_id, self.globaltt['association has subject'], self.sub
+        )
         self.graph.addTriple(
-            self.assoc_id, self.globaltt['association has object'], self.obj)
+            self.assoc_id, self.globaltt['association has object'], self.obj
+        )
         self.graph.addTriple(
-            self.assoc_id, self.globaltt['association has predicate'], self.rel)
+            self.assoc_id, self.globaltt['association has predicate'], self.rel
+        )
 
-        if self.description is not None:
+        if association_category is not None:
+            self.graph.addTriple(
+                self.assoc_id,
+                blv.terms['category'],
+                association_category
+            )
+
+        if self.description:
             self.model.addDescription(self.assoc_id, self.description)
 
-        if self.evidence is not None and len(self.evidence) > 0:
+        if self.evidence:
             for evi in self.evidence:
                 self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi)
 
-        if self.source is not None and len(self.source) > 0:
+        if self.source:
             for src in self.source:
                 # TODO assume that the source is a publication? use Reference class
                 self.graph.addTriple(self.assoc_id, self.globaltt['Source'], src)
 
-        if self.provenance is not None and len(self.provenance) > 0:
+        if self.provenance:
             for prov in self.provenance:
                 self.graph.addTriple(
                     self.assoc_id, self.globaltt['has_provenance'], prov)
 
-        if self.date is not None and len(self.date) > 0:
+        if self.date:
             for dat in self.date:
                 self.graph.addTriple(
-                    self.assoc_id,self.globaltt['created_on'], dat,
-                    object_is_literal=True)
+                    self.assoc_id,
+                    self.globaltt['created_on'],
+                    dat,
+                    object_is_literal=True
+                )
 
         if self.score is not None:
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has measurement value'], self.score,
-                True, 'xsd:float')
+                self.assoc_id,
+                self.globaltt['has measurement value'],
+                self.score,
+                True, 'xsd:float'
+            )
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
-
-        return
 
     def add_predicate_object(
             self, predicate, object_node, object_type=None, datatype=None):
@@ -141,27 +168,24 @@ class Assoc:
         if object_type == 'Literal':
             if datatype is not None:
                 self.graph.addTriple(
-                    self.assoc_id, predicate, object_node, True, datatype)
+                    self.assoc_id, predicate, object_node, True, datatype
+                )
             else:
                 self.graph.addTriple(self.assoc_id, predicate, object_node, True)
         else:
             self.graph.addTriple(self.assoc_id, predicate, object_node, False)
 
-        return
 
     # This isn't java, but predecessors favored the use of property decorators
     # and CamelCase and ...
     def set_subject(self, identifier):
         self.sub = identifier
-        return
 
     def set_object(self, identifier):
         self.obj = identifier
-        return
 
     def set_relationship(self, identifier):
         self.rel = identifier
-        return
 
     def set_association_id(self, assoc_id=None):
         """
@@ -192,15 +216,10 @@ class Assoc:
     def set_description(self, description):
         self.description = description
 
-        return
-
     def set_score(self, score, unit=None, score_type=None):
-
         self.score = score
         self.score_unit = unit
         self.score_type = score_type
-
-        return
 
     def add_evidence(self, identifier):
         """
@@ -213,8 +232,6 @@ class Assoc:
 
         if identifier is not None and identifier.strip() != '':
             self.evidence += [identifier]
-
-        return
 
     def add_source(self, identifier):
         """
@@ -231,20 +248,14 @@ class Assoc:
         if identifier is not None and identifier.strip() != '':
             self.source += [identifier]
 
-        return
-
     def add_date(self, date):
         if date is not None and date.strip() != '':
             self.date += [date]
-
-        return
 
     def add_provenance(self, identifier):
 
         if identifier is not None and identifier.strip() != '':
             self.provenance += [identifier]
-
-        return
 
     @staticmethod
     def make_association_id(definedby, sub, pred, obj, attributes=None):
@@ -275,5 +286,5 @@ class Assoc:
         items_to_hash = [x for x in items_to_hash if x is not None]
 
         assoc_id = ':'.join(('MONARCH', GraphUtils.digest_id('+'.join(items_to_hash))))
-        assert assoc_id is not None
+        # assert assoc_id is not None
         return assoc_id

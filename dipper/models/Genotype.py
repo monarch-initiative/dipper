@@ -4,6 +4,7 @@ from dipper.models.Model import Model
 from dipper.models.Family import Family
 from dipper.graph.Graph import Graph
 from dipper.models.GenomicFeature import makeChromID, makeChromLabel
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 LOG = logging.getLogger(__name__)
@@ -50,8 +51,8 @@ class Genotype():
             genotype_type = self.globaltt['intrinsic_genotype']
 
         self.model.addIndividualToGraph(
-            genotype_id, genotype_label, genotype_type, genotype_description)
-        return
+            genotype_id, genotype_label, genotype_type, genotype_description
+        )
 
     def addAllele(
             self, allele_id, allele_label, allele_type=None,
@@ -72,9 +73,8 @@ class Genotype():
         if allele_type is None:
             allele_type = self.globaltt['allele']  # TODO is this a good idea?
         self.model.addIndividualToGraph(
-            allele_id, allele_label, allele_type, allele_description)
-
-        return
+            allele_id, allele_label, allele_type, allele_description
+        )
 
     def addGene(
             self, gene_id, gene_label=None, gene_type=None, gene_description=None
@@ -82,23 +82,35 @@ class Genotype():
         ''' genes are classes '''
         if gene_type is None:
             gene_type = self.globaltt['gene']
-        self.model.addClassToGraph(gene_id, gene_label, gene_type, gene_description)
-
-        return
+        self.model.addClassToGraph(
+            gene_id, gene_label, gene_type, gene_description
+        )
 
     def addConstruct(
             self, construct_id, construct_label, construct_type=None,
-            construct_description=None
-    ):
+            construct_description=None,
+            construct_category=None, construct_type_category=None):
+        """
+        :param construct_id:
+        :param construct_label:
+        :param construct_type:
+        :param construct_description:
+        :param construct_category: a biolink category CURIE for construct_id
+        :param construct_type_category: a biolink category CURIE for construct_type
+        :return:
+
+        """
         # TODO add base type for construct
         # if (constrcut_type is None):
-        #    constrcut_type=self.construct_base_type
+        #    construct_type=self.construct_base_type
         self.model.addIndividualToGraph(construct_id, construct_label,
-                                        construct_type, construct_description)
+                                        construct_type, construct_description,
+                                        ind_category=construct_category,
+                                        ind_type_category=construct_type_category)
 
-        return
-
-    def addDerivesFrom(self, child_id, parent_id):
+    def addDerivesFrom(
+            self, child_id, parent_id, child_category=None, parent_category=None
+    ):
         """
         We add a derives_from relationship between the child and parent id.
         Examples of uses include between:
@@ -113,13 +125,23 @@ class Genotype():
         """
 
         self.graph.addTriple(
-            child_id, self.globaltt['derives_from'], parent_id)
+            child_id,
+            self.globaltt['derives_from'],
+            parent_id,
+            subject_category=child_category,
+            object_category=parent_category
+        )
 
-        return
-
-    def addSequenceDerivesFrom(self, child_id, parent_id):
+    def addSequenceDerivesFrom(self, child_id, parent_id,
+                               child_category=None,
+                               parent_category=None):
         self.graph.addTriple(
-            child_id, self.globaltt['sequence_derives_from'], parent_id)
+            child_id,
+            self.globaltt['sequence_derives_from'],
+            parent_id,
+            subject_category=child_category,
+            object_category=parent_category
+        )
 
         return
 
@@ -139,7 +161,6 @@ class Genotype():
         if rel_id is None:
             rel_id = self.globaltt["is_allele_of"]
         self.graph.addTriple(allele_id, rel_id, gene_id)
-        return
 
     def addAffectedLocus(
             self, allele_id, gene_id, rel_id=None):
@@ -158,10 +179,16 @@ class Genotype():
         if rel_id is None:
             rel_id = self.globaltt['has_affected_feature']
         self.graph.addTriple(allele_id, rel_id, gene_id)
-        return
 
     def addGeneProduct(
-            self, sequence_id, product_id, product_label=None, product_type=None):
+            self,
+            sequence_id,
+            product_id,
+            product_label=None,
+            product_type=None,
+            sequence_category=None,
+            product_category=None
+    ):
         """
         Add gene/variant/allele has_gene_product relationship
         Can be used to either describe a gene to transcript relationship
@@ -170,20 +197,33 @@ class Genotype():
         :param product_id:
         :param product_label:
         :param product_type:
+        :param sequence_category: a biolink category CURIE for sequence_id [blv.terms.Gene].value
+        :param product_category: a biolink category CURIE for product_id
         :return:
 
         """
         if product_label is not None and product_type is not None:
             self.model.addIndividualToGraph(
-                product_id, product_label, product_type)
+                product_id,
+                product_label,
+                product_type,
+                ind_category=product_category
+            )
         self.graph.addTriple(
-            sequence_id, self.globaltt['has gene product'], product_id)
-
-        return
+            sequence_id,
+            self.globaltt['has gene product'],
+            product_id,
+            subject_category=sequence_category,
+            object_category=product_category
+        )
 
     def addPolypeptide(
-            self, polypeptide_id, polypeptide_label=None,
-            transcript_id=None, polypeptide_type=None):
+            self,
+            polypeptide_id,
+            polypeptide_label=None,
+            transcript_id=None,
+            polypeptide_type=None
+    ):
         """
         :param polypeptide_id:
         :param polypeptide_label:
@@ -195,16 +235,24 @@ class Genotype():
         if polypeptide_type is None:
             polypeptide_type = self.globaltt['polypeptide']
         self.model.addIndividualToGraph(
-            polypeptide_id, polypeptide_label, polypeptide_type)
+            polypeptide_id, polypeptide_label, polypeptide_type
+        )
         if transcript_id is not None:
             self.graph.addTriple(
-                transcript_id, self.globaltt['translates_to'], polypeptide_id)
-
-        return
+                transcript_id,
+                self.globaltt['translates_to'],
+                polypeptide_id
+            )
 
     def addPartsToVSLC(
-            self, vslc_id, allele1_id, allele2_id, zygosity_id=None,
-            allele1_rel=None, allele2_rel=None):
+            self,
+            vslc_id,
+            allele1_id,
+            allele2_id,
+            zygosity_id=None,
+            allele1_rel=None,
+            allele2_rel=None
+    ):
         """
         Here we add the parts to the VSLC.  While traditionally alleles
         (reference or variant loci) are traditionally added, you can add any
@@ -238,22 +286,40 @@ class Genotype():
         if zygosity_id is not None:
             self.graph.addTriple(vslc_id, self.globaltt['has_zygosity'], zygosity_id)
 
-        return
 
-    def addVSLCtoParent(self, vslc_id, parent_id):
+    def addVSLCtoParent(
+            self,
+            vslc_id,
+            parent_id,
+            part_category=None,
+            parent_category=None
+    ):
         """
         The VSLC can either be added to a genotype or to a GVC.
         The vslc is added as a part of the parent.
         :param vslc_id:
         :param parent_id:
+        :param part_category: a biolink category CURIE for part
+        :param parent_category: a biolink category CURIE for parent
         :return:
         """
 
-        self.addParts(vslc_id, parent_id, self.globaltt['has_variant_part'])
+        self.addParts(
+            vslc_id,
+            parent_id,
+            self.globaltt['has_variant_part'],
+            part_category=part_category,
+            parent_category=parent_category
+        )
 
-        return
-
-    def addParts(self, part_id, parent_id, part_relationship=None):
+    def addParts(
+            self,
+            part_id,
+            parent_id,
+            part_relationship=None,
+            part_category=None,
+            parent_category=None
+    ):
         """
         This will add a has_part (or subproperty) relationship between
         a parent_id and the supplied part.
@@ -262,6 +328,8 @@ class Genotype():
         :param part_id:
         :param parent_id:
         :param part_relationship:
+        :param part_category: a biolink vocab curie for part_id
+        :param parent_category: a biolink vocab curie for parent_id
         :return:
 
         """
@@ -275,45 +343,59 @@ class Genotype():
         elif part_relationship is None:
             part_relationship = self.globaltt['has_part']
 
-        self.graph.addTriple(parent_id, part_relationship, part_id)
+        self.graph.addTriple(
+            parent_id,
+            part_relationship,
+            part_id,
+            subject_category=parent_category,
+            object_category=part_category
+        )
 
-        return
-
-    def addSequenceAlteration(self, sa_id, sa_label, sa_type=None, sa_description=None):
+    def addSequenceAlteration(
+            self,
+            sa_id,
+            sa_label,
+            sa_type=None,
+            sa_description=None
+    ):
 
         if sa_type is None:
             sa_type = self.globaltt['sequence_alteration']
 
-        self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description)
-
-        return
+        self.model.addIndividualToGraph(
+            sa_id,
+            sa_label,
+            sa_type,
+            sa_description
+        )
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
         self.addParts(sa_id, vl_id, self.globaltt['has_variant_part'])
-        return
 
     def addGenomicBackground(
-            self, background_id, background_label, background_type=None,
-            background_description=None):
+            self,
+            background_id,
+            background_label,
+            background_type=None,
+            background_description=None
+    ):
         if background_type is None:
             background_type = self.globaltt['genomic_background']
         self.model.addIndividualToGraph(
-            background_id, background_label, background_type,
-            background_description)
-
-        return
+            background_id, background_label, background_type, background_description
+        )
 
     def addGenomicBackgroundToGenotype(
-            self, background_id, genotype_id, background_type=None):
+            self, background_id, genotype_id, background_type=None
+    ):
         if background_type is None:
             background_type = self.globaltt['genomic_background']
         self.model.addType(background_id, background_type)
         self.addParts(
-            background_id, genotype_id, self.globaltt['has_reference_part'])
+            background_id, genotype_id, self.globaltt['has_reference_part']
+        )
 
-        return
-
-    def addTaxon(self, taxon_id, genopart_id):
+    def addTaxon(self, taxon_id, genopart_id, genopart_category=None):
         """
         The supplied geno part will have the specified taxon added with
         RO:in_taxon relation.
@@ -322,26 +404,34 @@ class Genotype():
         regulatory element, or sequence alteration).
         :param taxon_id:
         :param genopart_id:
-
+        :param genopart_category: a biolink term for genopart_id
         :return:
 
         """
-        self.graph.addTriple(
-            genopart_id, self.globaltt['in taxon'], taxon_id)
-
-        return
+        self.graph.addTriple(genopart_id, self.globaltt['in taxon'], taxon_id)
 
     def addGeneTargetingReagentToGenotype(self, reagent_id, genotype_id):
-        # for example, add a morphant reagent thingy to the genotype,
-        # assuming it's a extrinsic_genotype
-        self.graph.addTriple(
-            genotype_id, self.globaltt['has_variant_part'], reagent_id)
 
-        return
+        """
+        Add genotype has_variant_part reagent_id. For example, add a morphant
+        reagent thingy to the genotype, assuming it's a extrinsic_genotype
+        Also a triple to assign biolink categories to genotype and reagent.
+        :param reagent_id
+        :param genotype_id
+        :return:
+
+        """
+        self.graph.addTriple(genotype_id, self.globaltt['has_variant_part'], reagent_id)
 
     def addGeneTargetingReagent(
-            self, reagent_id, reagent_label, reagent_type, gene_id,
-            description=None):
+            self,
+            reagent_id,
+            reagent_label,
+            reagent_type,
+            gene_id,
+            description=None,
+            reagent_category=None
+    ):
         """
         Here, a gene-targeting reagent is added.
         The actual targets of this reagent should be added separately.
@@ -355,15 +445,24 @@ class Genotype():
 
         # TODO add default type to reagent_type
         self.model.addIndividualToGraph(
-            reagent_id, reagent_label, reagent_type, description)
+            reagent_id,
+            reagent_label,
+            reagent_type,
+            description,
+            ind_category=reagent_category
+        )
 
         self.graph.addTriple(reagent_id, self.globaltt['targets_gene'], gene_id)
 
-        return
-
     def addReagentTargetedGene(
-            self, reagent_id, gene_id, targeted_gene_id=None,
-            targeted_gene_label=None, description=None):
+            self,
+            reagent_id,
+            gene_id,
+            targeted_gene_id=None,
+            targeted_gene_label=None,
+            description=None,
+            reagent_category=None
+    ):
         """
         This will create the instance of a gene that is targeted by a molecular
         reagent (such as a morpholino or rnai).
@@ -381,6 +480,7 @@ class Genotype():
         :param reagent_id:
         :param gene_id:
         :param targeted_gene_id:
+        :param reagent_category: a biolink category CURIE for reagent_id
         :return:
 
         """
@@ -390,19 +490,21 @@ class Genotype():
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
             targeted_gene_id = targeted_gene_id.replace(":", "")
         self.model.addIndividualToGraph(
-            targeted_gene_id, targeted_gene_label,
-
-            self.globaltt['reagent_targeted_gene'], description)
+            targeted_gene_id,
+            targeted_gene_label,
+            self.globaltt['reagent_targeted_gene'],
+            description,
+            ind_category=reagent_category
+        )
 
         if gene_id is not None:
             self.graph.addTriple(
-                targeted_gene_id, self.globaltt['is_expression_variant_of'],
-                gene_id)
+                targeted_gene_id, self.globaltt['is_expression_variant_of'], gene_id
+            )
 
         self.graph.addTriple(
-            targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id)
-
-        return
+            targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id
+        )
 
     def addTargetedGeneSubregion(
             self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
@@ -413,16 +515,15 @@ class Genotype():
 
     def addMemberOfPopulation(self, member_id, population_id):
         self.graph.addTriple(
-            population_id, self.globaltt['has_member_with_allelotype'], member_id)
-        return
+            population_id, self.globaltt['has_member_with_allelotype'], member_id
+        )
 
     def addTargetedGeneComplement(
-            self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
+            self, tgc_id, tgc_label, tgc_type=None, tgc_description=None
+    ):
         if tgc_type is None:
             tgc_type = self.globaltt['targeted_gene_complement']
         self.model.addIndividualToGraph(tgc_id, tgc_label, tgc_type, tgc_description)
-
-        return
 
     def addGenome(self, taxon_num, taxon_label=None, genome_id=None):
         ncbitaxon = 'NCBITaxon:' + taxon_num
@@ -441,22 +542,27 @@ class Genotype():
                 ' may need to be added to a local translation table')
 
         genome_label = taxon_label + ' genome'
+
         if genome_id is None:
             genome_id = self.makeGenomeID(taxon_num)
-        self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'])
 
-        return
+        self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'])
 
     def addReferenceGenome(self, build_id, build_label, taxon_id):
         genome_id = self.makeGenomeID(taxon_id)
         self.model.addIndividualToGraph(
-            build_id, build_label, self.globaltt['reference_genome'])
-        self.model.addType(build_id, genome_id)
+            build_id,
+            build_label,
+            self.globaltt['reference_genome'],
+            blv.terms['GenomeBuild']
+        )
+        self.model.addType(
+            build_id, genome_id, subject_category=blv.terms['GenomeBuild']
+        )
         if re.match(r'[0-9]+', taxon_id):
             taxon_id = 'NCBITaxon:' + taxon_id
-        self.addTaxon(taxon_id, build_id)
 
-        return
+        self.addTaxon(taxon_id, build_id, genopart_category=blv.terms['GenomeBuild'])
 
     @staticmethod
     def makeGenomeID(taxon_id):
@@ -500,10 +606,12 @@ class Genotype():
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
-            family.addMember(build_id, chrinbuild_id)
-            family.addMemberOf(chrinbuild_id, build_id)
-
-        return
+            family.addMember(
+                build_id, chrinbuild_id, group_category=blv.terms['GenomeBuild']
+            )
+            family.addMemberOf(
+                chrinbuild_id, build_id, group_category=blv.terms['GenomeBuild']
+            )
 
     def addChromosomeClass(self, chrom_num, taxon_id, taxon_label):
         taxon = re.sub('NCBITaxon:', '', taxon_id)
@@ -511,12 +619,12 @@ class Genotype():
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
         self.model.addClassToGraph(
-            chrom_class_id, chrom_class_label, self.globaltt['chromosome'])
-
-        return
+            chrom_class_id, chrom_class_label, self.globaltt['chromosome']
+        )
 
     def addChromosomeInstance(
-            self, chr_num, reference_id, reference_label, chr_type=None):
+            self, chr_num, reference_id, reference_label, chr_type=None
+    ):
         """
         Add the supplied chromosome as an instance within the given reference
         :param chr_num:
@@ -532,22 +640,24 @@ class Genotype():
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-        self.model.addIndividualToGraph(chr_id, chr_label, self.globaltt['chromosome'])
+        self.model.addIndividualToGraph(
+            chr_id, chr_label, self.globaltt['chromosome']
+        )
         if chr_type is not None:
             self.model.addType(chr_id, chr_type)
 
         # add the build-specific chromosome
         # as a member of the build  (both ways)
-        family.addMember(reference_id, chr_id)
-        family.addMemberOf(chr_id, reference_id)   # usage dependent, todo: ommit
-
-        return
+        family.addMember(
+            reference_id, chr_id, group_category=blv.terms['GenomeBuild']
+        )
+        family.addMemberOf(chr_id, reference_id)
 
     @staticmethod
     def make_variant_locus_label(gene_label, allele_label):
         if gene_label is None:
             gene_label = ''
-        label = gene_label.strip()+'<' + allele_label.strip() + '>'
+        label = gene_label.strip() + '<' + allele_label.strip() + '>'
 
         return label
 
@@ -580,10 +690,12 @@ class Genotype():
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)
-        animal_id = '_:'+animal_id
+        animal_id = '_:' + animal_id
 
         animal_label = ' '.join((genotype_label, taxon_label))
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
+
         self.graph.addTriple(
-            animal_id, self.globaltt['has_genotype'], genotype_id)
+            animal_id, self.globaltt['has_genotype'], genotype_id
+        )
         return animal_id

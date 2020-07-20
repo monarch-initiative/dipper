@@ -6,7 +6,6 @@ from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 
-
 LOG = logging.getLogger(__name__)
 MCDL = 'http://hgdownload.cse.ucsc.edu/goldenPath'
 
@@ -204,7 +203,8 @@ class Monochrom(Source):
             genome_id = geno.makeGenomeID(taxon_id)  # makes a blank node always
         geno.addGenome(taxon_id, genome_label, genome_id)
         model.addOWLPropertyClassRestriction(
-            genome_id, self.globaltt['in taxon'], taxon_id)
+            genome_id, self.globaltt['in taxon'], taxon_id
+        )
 
         placed_scaffold_pattern = r'chr(\d+|X|Y|Z|W|MT|M)'
         # currently unused patterns
@@ -252,7 +252,8 @@ class Monochrom(Source):
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 model.addOWLPropertyClassRestriction(
-                    cclassid, self.globaltt['member of'], genome_id)
+                    cclassid, self.globaltt['member of'], genome_id
+                )
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
@@ -261,7 +262,8 @@ class Monochrom(Source):
 
                     region_type_id = self.map_type_of_region(rtype)
                     model.addClassToGraph(
-                        maplocclass_id, maplocclass_label, region_type_id)
+                        maplocclass_id, maplocclass_label, region_type_id
+                    )
                 else:
                     region_type_id = self.globaltt['chromosome']
 
@@ -275,7 +277,8 @@ class Monochrom(Source):
                             model.addOWLPropertyClassRestriction(
                                 maplocclass_id,
                                 self.globaltt['has_sequence_attribute'],
-                                self.resolve(rtype))
+                                self.resolve(rtype)
+                            )
                     else:
                         # usually happens if it's a chromosome (SO:000340) because
                         # they don't actually have banding info
@@ -301,7 +304,6 @@ class Monochrom(Source):
                     pclass_label = makeChromLabel(chrom + parent, genome_label)
                     rti = getChrPartTypeByNotation(parent, self.graph)
                     model.addClassToGraph(pclassid, pclass_label, rti)
-
                     # for canonical chromosomes,
                     # then the subbands are subsequences of the full band
                     # add the subsequence stuff as restrictions
@@ -310,25 +312,33 @@ class Monochrom(Source):
                         grandparent = 1 + parents.index(prnt)
                         pid = cclassid + parents[grandparent]   # the instance
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is subsequence of'], pid)
+                            pclassid, self.globaltt['is subsequence of'], pid
+                        )
                         model.addOWLPropertyClassRestriction(
-                            pid, self.globaltt['has subsequence'], pclassid)
+                            pid, self.globaltt['has subsequence'], pclassid
+                        )
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is subsequence of'], cclassid)
+                            pclassid, self.globaltt['is subsequence of'], cclassid
+                        )
                         model.addOWLPropertyClassRestriction(
-                            cclassid, self.globaltt['has subsequence'], pclassid)
+                            cclassid, self.globaltt['has subsequence'], pclassid
+                        )
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
                     model.addOWLPropertyClassRestriction(
-                        maplocclass_id, self.globaltt['is subsequence of'],
-                        cclassid + parents[0])
+                        maplocclass_id,
+                        self.globaltt['is subsequence of'],
+                        cclassid + parents[0]
+                    )
                     model.addOWLPropertyClassRestriction(
-                        cclassid + parents[0], self.globaltt['has subsequence'],
-                        maplocclass_id)
+                        cclassid + parents[0],
+                        self.globaltt['has subsequence'],
+                        maplocclass_id
+                    )
 
                 if limit is not None and line_counter > limit:
                     break
@@ -391,7 +401,7 @@ class Monochrom(Source):
         return test_suite
 
 
-def getChrPartTypeByNotation(notation, graph=None):
+def getChrPartTypeByNotation(notation, graph):
     """
     This method will figure out the kind of feature that a given band
     is based on pattern matching to standard karyotype notation.

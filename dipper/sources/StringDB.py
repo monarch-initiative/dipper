@@ -4,6 +4,8 @@ import gzip
 import pandas as pd
 from dipper.sources.Source import Source, USER_AGENT
 from dipper.sources.Ensembl import Ensembl
+from dipper.models.Model import Model
+
 
 LOG = logging.getLogger(__name__)
 
@@ -183,7 +185,10 @@ class StringDB(Source):
             self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
     def _process_protein_links(
-            self, dataframe, p2gene_map, taxon, limit=None, rank_min=700):
+            self, dataframe, p2gene_map, taxon, limit=None, rank_min=700
+    ):
+        model = Model(self.graph)
+
         filtered_df = dataframe[dataframe['combined_score'] > rank_min]
         filtered_out_count = 0
         for index, row in filtered_df.iterrows():
@@ -207,6 +212,8 @@ class StringDB(Source):
             if gene1_curies is not None and gene2_curies is not None:
                 for gene1 in gene1_curies:
                     for gene2 in gene2_curies:
+                        model.addType(gene1, self.globaltt['gene'])
+                        model.addType(gene2, self.globaltt['gene'])
                         self.graph.addTriple(
                             gene1, self.globaltt['interacts with'], gene2)
                 if limit is not None and index >= limit:

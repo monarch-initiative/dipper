@@ -9,6 +9,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 #       https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
 # mapDwnLd36738TDWS.txt.gz
@@ -355,7 +356,8 @@ class AnimalQTLdb(Source):
                         build_id,
                         build,
                         common_name,
-                        limit)
+                        limit
+                    )
 
             fname_cm = common_name + '_cm'
             if fname_cm in self.files:
@@ -504,9 +506,12 @@ class AnimalQTLdb(Source):
                     dbsnp_id = 'dbSNP:' + peak_mark.strip()
 
                     model.addIndividualToGraph(
-                        dbsnp_id, None,
-                        self.globaltt['sequence_alteration'])
-                    model.addXref(qtl_id, dbsnp_id)
+                        dbsnp_id, None, self.globaltt['sequence_alteration']
+                    )
+
+                    model.addXref(
+                        qtl_id, dbsnp_id, xref_category=blv.terms['SequenceVariant']
+                    )
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
@@ -541,12 +546,15 @@ class AnimalQTLdb(Source):
                             # add the rsid as a seq alt of the gene_id
                             vl_id = '_:' + re.sub(
                                 r':', '', gene_id) + '-' + peak_mark.strip()
-                            geno.addSequenceAlterationToVariantLocus(
-                                dbsnp_id, vl_id)
+                            geno.addSequenceAlterationToVariantLocus(dbsnp_id, vl_id)
                             geno.addAffectedLocus(vl_id, gene_id)
 
                 # add the trait
-                model.addClassToGraph(trait_id, trait_name)
+                model.addClassToGraph(
+                    trait_id,
+                    trait_name,
+                    class_category=blv.terms['PhenotypicFeature']
+                )
 
                 # Add publication
                 reference = None
@@ -556,14 +564,16 @@ class AnimalQTLdb(Source):
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
                     reference = Reference(
-                        graph, pub_id, self.globaltt['journal article'])
+                        graph, pub_id, self.globaltt['journal article']
+                    )
 
                 if reference is not None:
                     reference.addRefToGraph()
 
                 # make the association to the QTL
                 assoc = G2PAssoc(
-                    graph, self.name, qtl_id, trait_id, self.globaltt['is marker for'])
+                    graph, self.name, qtl_id, trait_id, self.globaltt['is marker for']
+                )
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -831,7 +841,6 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                     model.addXref(ato_id, cmo_id)
 
         LOG.info("Done with trait mappings")
-        return
 
     def getTestSuite(self):
         import unittest

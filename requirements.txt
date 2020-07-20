@@ -1,4 +1,4 @@
-rdflib
+rdflib==4.2.2
 isodate
 roman
 pyyaml

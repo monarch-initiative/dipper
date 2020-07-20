@@ -1,0 +1,65 @@
+# This is a YAML file consumed by BiolinkVocabulary class in order to categorize
+# everything we ingest using biolink model categories.
+#
+# This file is used to populate an Enum with such that each term is a name, and the
+# value for each term is a curie for the term, formed by prepended the term with
+# `curie_prefix`. The CURIEs are used to assign biolink categories to entities we
+# ingest, for example:
+#
+# OMIM:135800 biolink:category biolink:Disease .
+#
+# Each member of 'terms' below (except "category") should be a biolink model class, in
+# camel case. No spaces or metacharacters. If you need to add an item for something
+# that isn't already here consult this YAML file:
+# https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
+
+curie_prefix: "biolink"
+
+terms:
+- AnatomicalEntity  # is a subcellular location cell type or gross anatomical part
+- Association
+- BiologicalProcess
+- BiologicalSex
+- Case
+- category  # this one alone is a node property and not a class
+- ChemicalSubstance
+- CellLine
+- Disease
+- DataFile
+- DataSet
+- DataSetVersion
+- DiseaseOrPhenotypicFeature
+- EnvironmentFeature
+- ExposureEvent
+- EvidenceType
+- FrequencyValue
+- Gene
+- Genotype
+- GenomicEntity  # we are using this for chromosome
+- GeneProduct
+- GeneGrouping
+- GeneToGeneHomologyAssociation
+- Genome
+- GenomeBuild
+- GeneFamily
+- GenomicSequenceLocalization
+- InformationContentEntity
+- IndividualOrganism
+- LifeStage
+- MolecularEntity
+- NamedThing
+- NoncodingRnaProduct
+- OrganismTaxon
+- OntologyClass
+- PopulationOfIndividualOrganisms
+- Publications
+- PhenotypicFeature
+- Provider
+- Protein
+- Publication
+- Procedure
+- Pathway
+- SourceFile
+- SequenceVariant # synonym for allele
+- Transcript
+- Zygosity

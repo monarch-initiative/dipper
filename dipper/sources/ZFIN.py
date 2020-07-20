@@ -15,6 +15,7 @@ from dipper.models.GenomicFeature import makeChromID
 from dipper.models.GenomicFeature import Feature
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 ZFDL = 'http://zfin.org/downloads'
@@ -699,7 +700,8 @@ class ZFIN(Source):
                 geno.addGenotype(
                     extrinsic_id, extrinsic_label, self.globaltt['extrinsic_genotype'])
                 geno.addParts(
-                    extrinsic_id, fish_id, self.globaltt['has_variant_part'])
+                    extrinsic_id, fish_id, self.globaltt['has_variant_part']
+                )
 
             # check if the intrinsic is in the wildtype genotypes,
             # then it's a genomic background
@@ -1030,7 +1032,8 @@ class ZFIN(Source):
                         allele1_id, vloci1)
                     geno.addAlleleOfGene(vloci1, gene_curie)
                     model.addIndividualToGraph(
-                        vloci1, vloci1_label, self.globaltt['variant_locus'])
+                        vloci1, vloci1_label, self.globaltt['variant_locus']
+                    )
                     if allele2_id is not None and allele2_id not in ['WT', '0', 'UN']:
                         vloci2 = self._make_variant_locus_id(
                             gene_curie, allele2_id)
@@ -1039,7 +1042,8 @@ class ZFIN(Source):
                         geno.addSequenceAlterationToVariantLocus(
                             allele2_id, vloci2)
                         model.addIndividualToGraph(
-                            vloci2, vloci2_label, self.globaltt['variant_locus'])
+                            vloci2, vloci2_label, self.globaltt['variant_locus']
+                        )
                         geno.addAlleleOfGene(vloci2, gene_curie)
                 else:
                     vloci1 = allele1_id
@@ -1068,12 +1072,15 @@ class ZFIN(Source):
                 self.id_label_map[vslc_id] = vslc_label
 
                 model.addIndividualToGraph(
-                    vslc_id, vslc_label,
-                    self.globaltt['variant single locus complement'])
+                    vslc_id,
+                    vslc_label,
+                    self.globaltt['variant single locus complement']
+                )
                 geno.addPartsToVSLC(
                     vslc_id, vloci1, vloci2, zygosity_id,
                     self.globaltt['has_variant_part'],
-                    self.globaltt['has_variant_part'])
+                    self.globaltt['has_variant_part']
+                )
 
                 gvcparts += [vslc_id]
 
@@ -1120,7 +1127,8 @@ class ZFIN(Source):
 
                 # add the gvc
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement']
+                )
             elif len(gvc_parts) == 1:
                 # assign the vslc to be also a gvc
                 vslc_id = gvc_parts[0]
@@ -1352,8 +1360,11 @@ class ZFIN(Source):
 
                 # Add the stage as a class, and it's obo equivalent
                 stage_curie = ':'.join(('ZFIN', stage_id))
-                model.addClassToGraph(stage_curie, stage_name)
-                model.addEquivalentClass(stage_curie, stage_obo_id)
+                model.addClassToGraph(stage_curie, stage_name,
+                                      class_category=blv.terms['LifeStage'])
+                model.addEquivalentClass(stage_curie, stage_obo_id,
+                                         subject_category=blv.terms['LifeStage'],
+                                         object_category=blv.terms['LifeStage'])
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -1479,6 +1490,7 @@ class ZFIN(Source):
                     assoc.add_source(pub_id)
                     assoc.add_association_to_graph()
                     assoc_id = assoc.get_association_id()
+
                     if env_curie not in self.environment_hash or len(
                             self.environment_hash.get(env_curie)) > 0:
                         model.addComment(assoc_id, 'Legacy environment id ' + env_curie)
@@ -1549,7 +1561,7 @@ class ZFIN(Source):
                 ncbi_gene_id = 'NCBIGene:' + ncbi_gene_id.strip()
 
                 self.id_label_map[gene_id] = gene_symbol
-
+                
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
@@ -1613,10 +1625,13 @@ class ZFIN(Source):
 
                 genomfeat_curie = ':'.join(('ZFIN', genomic_feature_id))
                 model.addIndividualToGraph(
-                    genomfeat_curie, genomic_feature_name, feature_so_id)
+                    genomfeat_curie, genomic_feature_name, feature_so_id
+                )
 
                 model.addSynonym(
-                    genomfeat_curie, genomic_feature_abbreviation)
+                    genomfeat_curie, genomic_feature_abbreviation
+                )
+
                 if construct_id is not None and construct_id != '':
                     construct_curie = ':'.join(('ZFIN', construct_id))
                     geno.addConstruct(construct_curie, construct_name, construct_so_id)
@@ -1748,7 +1763,8 @@ class ZFIN(Source):
                     # add it's parts and relationship to the gene
                     geno.addSequenceAlterationToVariantLocus(genomic_feature_id, vl_id)
                     model.addIndividualToGraph(
-                        vl_id, vl_label, self.globaltt['variant_locus'])
+                        vl_id, vl_label, self.globaltt['variant_locus']
+                    )
                     geno.addAlleleOfGene(vl_id, gene_curie)
 
                     # note that deficiencies or translocations
@@ -1854,8 +1870,10 @@ class ZFIN(Source):
                     transgene_part_label = 'Tg(' + relationship + ' ' +\
                         gene_symbol + ')'
                     model.addIndividualToGraph(
-                        transgene_part_id, transgene_part_label,
-                        self.globaltt['coding_transgene_feature'])
+                        transgene_part_id,
+                        transgene_part_label,
+                        self.globaltt['coding_transgene_feature']
+                    )
                     geno.addSequenceDerivesFrom(transgene_part_id, gene_curie)
 
                     # save the transgenic parts in a hashmap for later
@@ -1890,9 +1908,11 @@ class ZFIN(Source):
                     # TODO should this be an interaction
                     # instead of this special relationship?
                     model.addIndividualToGraph(
-                        marker_curie, marker_symbol, marker_so_id)
+                        marker_curie, marker_symbol, marker_so_id
+                    )
                     graph.addTriple(
-                        marker_curie, self.globaltt['targets_gene'], gene_curie)
+                        marker_curie, self.globaltt['targets_gene'], gene_curie
+                    )
 
                 self.id_label_map[marker_curie] = marker_symbol
                 # just in case we haven't seen it before
@@ -2448,9 +2468,11 @@ class ZFIN(Source):
                 geno.addGene(gene_curie, gene_symbol)
                 # TODO: Abstract to one of the model utilities
                 model.addIndividualToGraph(
-                    prot_curie, None, self.globaltt['polypeptide'])
+                    prot_curie, None, self.globaltt['polypeptide']
+                )
                 graph.addTriple(
-                    gene_curie, self.globaltt['has gene product'], prot_curie)
+                    gene_curie, self.globaltt['has gene product'], prot_curie
+                )
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
@@ -2671,7 +2693,6 @@ class ZFIN(Source):
                     fish_id, fish_label, fish_taxon, 'zebrafish')
 
                 assoc = Assoc(graph, self.name)
-
                 assoc.set_subject(fish_id)
                 assoc.set_object(disease_id)
                 assoc.set_relationship(self.globaltt['is model of'])
