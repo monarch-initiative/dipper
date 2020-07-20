@@ -1002,13 +1002,13 @@ class OMIM(OMIMSource):
                         model.addClassToGraph(
                             orpha_curie,
                             orpha_label,
-                            class_category=blv.terms.Disease.value
+                            class_category=blv.terms['Disease']
                         )
                         model.addXref(
                             omim_curie,
                             orpha_curie,
-                            class_category=blv.terms.Disease.value,
-                            xref_category=blv.terms.Disease.value
+                            class_category=blv.terms['Disease'],
+                            xref_category=blv.terms['Disease']
                         )
 
             if 'umlsIDs' in links:
