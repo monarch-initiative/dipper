@@ -1,0 +1,41 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX meta: <https://w3id.org/biolink/biolinkml/meta/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX : <../rdf/>
+
+
+CONSTRUCT {
+  ?sub biolink:category ?category .
+}
+WHERE {
+  {
+    GRAPH :class-category.ttl { ?type biolink:category ?category }
+    GRAPH :{DATASET} { ?sub a|rdfs:subClassOf|owl:equivalentClass|owl:sameAs ?type }
+  }
+  UNION
+  {
+    GRAPH :class-category.ttl { ?type biolink:category ?category }
+    GRAPH :{DATASET} {
+      ?obj a ?type .
+      ?sub owl:sameAs ?obj .
+    }
+  }
+  UNION
+  {
+    GRAPH :class-category.ttl { ?sub biolink:category ?category }
+    GRAPH :{DATASET} {
+      ?sub ?p ?o
+      FILTER (?p != rdf:type || ?p != rdfs:subClassOf || ?p != owl:equivalentClass || ?p != owl:sameAs)
+    }
+  }
+  UNION
+  {
+    GRAPH :class-category.ttl { ?sub biolink:category ?category }
+    GRAPH :{DATASET} {
+      ?o ?p ?sub
+      FILTER (?p != rdf:type || ?p != rdfs:subClassOf || ?p != owl:equivalentClass || ?p != owl:sameAs)
+    }
+  }
+}

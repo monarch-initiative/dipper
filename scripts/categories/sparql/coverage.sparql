@@ -1,0 +1,29 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX meta: <https://w3id.org/biolink/biolinkml/meta/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX BFO: <http://purl.obolibrary.org/obo/BFO_>
+PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+
+SELECT
+  (count(distinct ?sub) as ?subCount)
+  (count(distinct ?obj) as ?objCount)
+
+WHERE {
+
+  {
+    ?sub ?p ?o .
+    ?sub biolink:category ?cat .
+    FILTER (?p != biolink:category)
+  }
+
+  UNION
+
+  {
+    ?s ?p ?obj .
+    ?obj biolink:category ?cat .
+    FILTER (?p != biolink:category)
+  }
+
+}

@@ -1,0 +1,25 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX meta: <https://w3id.org/biolink/biolinkml/meta/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX BFO: <http://purl.obolibrary.org/obo/BFO_>
+PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX : <..>
+
+
+CONSTRUCT {
+  ?type biolink:category ?category .
+}
+WHERE {
+  {
+    GRAPH :biolink-model.ttl  { ?category skos:mappingRelation ?class . }
+    GRAPH :monarch-slim.owl  {
+      ?type (a|rdfs:subClassOf|owl:equivalentClass|owl:sameAs|BFO:0000050)* ?class .
+    }
+  }
+  UNION
+  {
+    GRAPH :biolink-model.ttl  { ?category skos:narrowMatch ?class . }
+    GRAPH :monarch-slim.owl  { ?type rdfs:subClassOf+ ?class . }
+  }
+}
