@@ -265,7 +265,8 @@ class UDP(Source):
                 model.globaltt['intrinsic_genotype'])
 
             self.graph.addTriple(
-                patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode)
+                patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode
+            )
             for variant_id, variant in patient_var_map[patient].items():
                 build = variant['build']
                 chromosome = variant['chromosome']
@@ -312,8 +313,10 @@ class UDP(Source):
                     model.addLabel(variant_bnode, variant_label)
 
                 self.graph.addTriple(
-                    variant_bnode, self.globaltt['in taxon'],
-                    self.globaltt['Homo sapiens'])
+                    variant_bnode,
+                    self.globaltt['in taxon'],
+                    self.globaltt['Homo sapiens']
+                )
                 self.graph.addTriple(
                     intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)

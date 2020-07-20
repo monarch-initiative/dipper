@@ -7,7 +7,6 @@ from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
 from dipper.models.Model import Model
 
-
 LOG = logging.getLogger(__name__)
 ZPCURATION = 'http://purl.obolibrary.org/obo/zp/'
 
@@ -154,7 +153,8 @@ class ZFINSlim(Source):
                     assoc = G2PAssoc(self.graph, self.name, gene_curie, zp_id)
                     if pub_id:
                         reference = Reference(
-                            self.graph, pub_curie, self.globaltt['document'])
+                            self.graph, pub_curie, self.globaltt['document']
+                        )
                         reference.addRefToGraph()
                         assoc.add_source(pub_curie)
 

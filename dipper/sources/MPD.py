@@ -246,10 +246,12 @@ class MPD(Source):
                 # create the strain as an instance of the taxon
                 if self.test_mode and 'MPD:' + mpd_strainid not in self.test_ids:
                     continue
+
                 strain_id = 'MPD-strain:' + mpd_strainid
                 model.addIndividualToGraph(strain_id, strain_name, tax_id)
                 if mpdshortname != '':
                     model.addSynonym(strain_id, mpdshortname)
+
                 self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
                 if stocknum != '':
@@ -263,7 +265,10 @@ class MPD(Source):
                         if url != '':
                             model.addXref(strain_id, url, True)
                         if vendor != '':
-                            model.addXref(strain_id, ':'.join((vendor, stocknum)), True)
+                            model.addXref(
+                                strain_id, ':'.join((vendor, stocknum)),
+                                True
+                            )
 
                 # add the panel information
                 if panel != '':
@@ -504,7 +509,8 @@ class MPD(Source):
         graph.addTriple(
             sex_specific_genotype_id,
             self.globaltt['has_sex_agnostic_part'],
-            genotype_id)
+            genotype_id
+        )
 
         # #############    BUILD THE G2P ASSOC    #############
         # TODO add more provenance info when that model is completed

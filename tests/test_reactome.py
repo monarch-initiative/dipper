@@ -38,8 +38,11 @@ class ReactomeTestCase(unittest.TestCase):
          pathway_label,
          go_ecode, species_name) = self.test_set_1
         reactome._add_component_pathway_association(
-            'ENSEMBL:' + gene, 'REACT:' + pathway_id, pathway_label,
-            self.gaf_eco[go_ecode])
+            'ENSEMBL:' + gene,
+            'REACT:' + pathway_id,
+            pathway_label,
+            self.gaf_eco[go_ecode]
+        )
 
         triples = """
         ENSEMBL:ENSBTAP00000013354 RO:0002331 REACT:R-BTA-3000480 .

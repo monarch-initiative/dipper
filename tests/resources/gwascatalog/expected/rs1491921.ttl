@@ -21,10 +21,12 @@ MONARCH:bff9b97458d67ed7f517 a OBAN:association ;
 
 <http://www.ebi.ac.uk/efo/EFO_0000270> a owl:Class ;
     rdfs:label "asthma" ;
+    biolink:category biolink:PhenotypicFeature ;
     rdfs:subClassOf OBO:UPHENO_0001001 .
 
 <http://www.ebi.ac.uk/efo/EFO_0006995> a owl:Class ;
     rdfs:label "response to diisocyanate" ;
+    biolink:category biolink:PhenotypicFeature ;
     rdfs:subClassOf OBO:UPHENO_0001001 .
 
 dbSNP:rs1491921 a OBO:SO_0000694,

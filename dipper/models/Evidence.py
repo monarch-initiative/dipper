@@ -29,8 +29,6 @@ class Evidence:
         self.curie_map = self.graph.curie_map
         self.association = association
 
-        return
-
     def add_supporting_evidence(self, evidence_line, evidence_type=None, label=None):
         """
         Add supporting line of evidence node to association id
@@ -40,11 +38,11 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(
-            self.association, self.globaltt['has_supporting_evidence_line'],
+            self.association,
+            self.globaltt['has_supporting_evidence_line'],
             evidence_line)
-        if  evidence_type is not None:
+        if evidence_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, evidence_type)
-        return
 
     def add_evidence(self, evidence_line, evidence_type=None, label=None):
         """
@@ -58,13 +56,15 @@ class Evidence:
             self.association, self.globaltt['has_evidence_line'], evidence_line)
         if evidence_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, evidence_type)
-        return
 
-    def add_data_individual(self, data_curie, label=None, ind_type=None):
+    def add_data_individual(
+            self, data_curie, label=None, ind_type=None, data_curie_category=None
+    ):
         """
         Add data individual
         :param data_curie: str either curie formatted or long string,
                            long strings will be converted to bnodes
+        :param data_curie_category: a biolink category CURIE for data_curie
         :param type: str curie
         :param label: str
         :return: None
@@ -77,8 +77,8 @@ class Evidence:
         else:
             curie = data_curie
 
-        self.model.addIndividualToGraph(curie, label, ind_type)
-        return
+        self.model.addIndividualToGraph(
+            curie, label, ind_type, ind_category=data_curie_category)
 
     def add_supporting_data(self, evidence_line, measurement_dict):
         """
@@ -100,10 +100,10 @@ class Evidence:
             self.graph.addTriple(
                 measurement, self.globaltt['has_value'],  # 'has measurement value' ??
                 measurement_dict[measurement], True)
-        return
 
     def add_supporting_publication(
-            self, evidence_line, publication, label=None, pub_type=None):
+            self, evidence_line, publication, label=None, pub_type=None
+    ):
         """
         <evidence> <has_supporting_reference> <source>
         <source> <rdf:type> <type>
@@ -115,11 +115,20 @@ class Evidence:
         :return:
         """
         self.graph.addTriple(
-            evidence_line, self.globaltt['has_supporting_reference'], publication)
-        self.model.addIndividualToGraph(publication, label, pub_type)
-        return
+            evidence_line,
+            self.globaltt['has_supporting_reference'],
+            publication)
 
-    def add_source(self, evidence_line, source, label=None, src_type=None):
+        self.model.addIndividualToGraph(publication, label, pub_type)
+
+    def add_source(
+            self,
+            evidence_line,
+            source,
+            label=None,
+            src_type=None,
+            source_category=None
+    ):
         """
         Applies the triples:
         <evidence> <dc:source> <source>
@@ -133,6 +142,14 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line, self.globaltt['Source'], source)
-        self.model.addIndividualToGraph(source, label, src_type)
-        return
+        self.graph.addTriple(
+            evidence_line,
+            self.globaltt['Source'],
+            source,
+            subject_category=None,
+            object_category=source_category
+        )
+
+        self.model.addIndividualToGraph(
+            source, label, src_type, ind_category=source_category
+        )

@@ -24,11 +24,10 @@ class Pathway():
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        return
 
     def addPathway(
-            self, pathway_id, pathway_label, pathway_type=None,
-            pathway_description=None):
+            self, pathway_id, pathway_label, pathway_type=None, pathway_description=None
+    ):
         """
         Adds a pathway as a class.  If no specific type is specified, it will
         default to a subclass of "GO:cellular_process" and "PW:pathway".
@@ -42,10 +41,9 @@ class Pathway():
         if pathway_type is None:
             pathway_type = self.globaltt['cellular_process']
         self.model.addClassToGraph(
-            pathway_id, pathway_label, pathway_type, pathway_description)
+            pathway_id, pathway_label, pathway_type, pathway_description
+        )
         self.model.addSubClass(pathway_id, self.globaltt['pathway'])
-
-        return
 
     def addGeneToPathway(self, gene_id, pathway_id):
         """
@@ -61,14 +59,12 @@ class Pathway():
         :return:
         """
 
-        gene_product = '_:'+re.sub(r':', '', gene_id) + 'product'
+        gene_product = '_:' + re.sub(r':', '', gene_id) + 'product'
         self.model.addIndividualToGraph(
-            gene_product, None, self.globaltt['gene_product'])
-        self.graph.addTriple(
-            gene_id, self.globaltt['has gene product'], gene_product)
+            gene_product, None, self.globaltt['gene_product'],
+        )
+        self.graph.addTriple(gene_id, self.globaltt['has gene product'], gene_product)
         self.addComponentToPathway(gene_product, pathway_id)
-
-        return
 
     def addComponentToPathway(self, component_id, pathway_id):
         """
@@ -78,8 +74,8 @@ class Pathway():
 
         :param pathway_id:
         :param component_id:
+        :param component_category: biolink category for component_id
+        :param pathway_category: biolink category for pathway_id
         :return:
         """
         self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id)
-
-        return

@@ -8,6 +8,7 @@ from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Reference import Reference
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -183,7 +184,7 @@ class NCBIGene(OMIMSource):
         """
         Currently loops through the gene_info file and
         creates the genes as classes, typed with SO.  It will add their label,
-        any alternate labels as synonyms, alternate ids as equivlaent classes.
+        any alternate labels as synonyms, alternate ids as equivalent classes.
         HPRDs get added as protein products.
         The chromosome and chr band get added as blank node regions,
         and the gene is faldo:located
@@ -535,15 +536,30 @@ class NCBIGene(OMIMSource):
                 # add the two genes
                 if self.class_or_indiv.get(gene_id) == 'C':
                     model.addClassToGraph(gene_id, None)
-                    model.addClassToGraph(discontinued_gene_id, discontinued_symbol)
+                    model.addClassToGraph(
+                        discontinued_gene_id,
+                        discontinued_symbol,
+                        class_category=blv.terms['Gene']
+                    )
 
                     # add the new gene id to replace the old gene id
-                    model.addDeprecatedClass(discontinued_gene_id, [gene_id])
+                    model.addDeprecatedClass(
+                        discontinued_gene_id,
+                        [gene_id],
+                        old_id_category=blv.terms['Gene']
+                    )
                 else:
                     model.addIndividualToGraph(gene_id, None)
                     model.addIndividualToGraph(
-                        discontinued_gene_id, discontinued_symbol)
-                    model.addDeprecatedIndividual(discontinued_gene_id, [gene_id])
+                        discontinued_gene_id,
+                        discontinued_symbol,
+                        ind_category=blv.terms['Gene']
+                    )
+                    model.addDeprecatedIndividual(
+                        discontinued_gene_id,
+                        [gene_id],
+                        old_id_category=blv.terms['Gene']
+                    )
 
                 # also add the old symbol as a synonym of the new gene
                 model.addSynonym(gene_id, discontinued_symbol)
@@ -623,7 +639,8 @@ class NCBIGene(OMIMSource):
                     graph, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
                 graph.addTriple(
-                    pubmed_id, self.globaltt['is_about'], gene_id)
+                    pubmed_id, self.globaltt['is_about'], gene_id
+                )
                 assoc_counter += 1
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break

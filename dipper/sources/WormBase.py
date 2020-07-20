@@ -12,6 +12,7 @@ from dipper.models.GenomicFeature import makeChromID, Feature
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -285,9 +286,11 @@ class WormBase(Source):
                 if gene_symbol == '':
                     gene_symbol = None
                 model.addClassToGraph(
-                    gene_id, gene_symbol, self.globaltt['gene'])
+                    gene_id, gene_symbol, self.globaltt['gene']
+                )
                 if live == 'Dead':
-                    model.addDeprecatedClass(gene_id)
+                    model.addDeprecatedClass(gene_id,
+                                             old_id_category=blv.terms['Gene'])
                 geno.addTaxon(taxon_id, gene_id)
                 if gene_synonym != '' and gene_synonym is not None:
                     model.addSynonym(gene_id, gene_synonym)
@@ -453,12 +456,16 @@ class WormBase(Source):
                             #   allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
 
                             model.addIndividualToGraph(
-                                allele_id, None,
-                                self.globaltt['reagent_targeted_gene'])
+                                allele_id,
+                                None,
+                                self.globaltt['reagent_targeted_gene']
+                            )
 
                             self.graph.addTriple(
-                                allele_id, self.globaltt['is_expression_variant_of'],
-                                gene_id)
+                                allele_id,
+                                self.globaltt['is_expression_variant_of'],
+                                gene_id
+                            )
 
                         elif re.search(r'WBVar', allele_id):
                             # this may become deprecated by using wormmine
@@ -553,7 +560,8 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
 
                     rnai_id = 'WormBase:'+rnai_num
                     geno.addGeneTargetingReagent(
-                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
+                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id
+                    )
 
                     # make the "allele" of the gene
                     # that is targeted by the reagent
@@ -561,7 +569,8 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                         gene_num, rnai_num)
                     allele_label = gene_alt_symbol+'<'+rnai_num+'>'
                     geno.addReagentTargetedGene(
-                        rnai_id, gene_id, allele_id, allele_label)
+                        rnai_id, gene_id, allele_id, allele_label
+                    )
 
                     assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
                     assoc.add_source('WormBase:'+ref_num)
@@ -812,7 +821,8 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
                 gene_id = 'WormBase:'+gene_num
 
                 assoc = G2PAssoc(
-                    graph, self.name, gene_id, disease_id, self.globaltt['is model of'])
+                    graph, self.name, gene_id, disease_id, self.globaltt['is model of']
+                )
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)

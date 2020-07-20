@@ -8,3 +8,6 @@ procedures that cannot be web scraped as they are served as PDFs
 
 ###eco_map.yaml
 Evidence Code to ECO curie map, manually generated
+
+###biolink_vocabulary.yaml
+Biolink model terms used to categorize things we ingest.

@@ -34,42 +34,6 @@ class GeneralGraphTestCase(unittest.TestCase):
 
         return
 
-    def readGraphFromTurtleFile(self, f):
-        """
-        This will read the specified file into a graph.  A simple parsing test.
-        :param f:
-        :return:
-
-        """
-        import os
-        vg = RDFGraph()
-        p = os.path.abspath(f)
-        logger.info("Testing reading turtle file from %s", p)
-        vg.parse(f, format="turtle")
-        logger.info('Found %s graph nodes in %s', len(vg), p)
-        self.assertTrue(len(vg) > 0, "No nodes found in "+p)
-
-        return
-
-    def readGraphIntoOWL(self, f):
-        """
-        test if the ttl can be parsed by owlparser
-        this expects owltools to be accessible from commandline
-        :param f: file of ttl
-        :return:
-        """
-
-        import subprocess
-        from subprocess import check_call
-
-        status = check_call(["owltools", f], stderr=subprocess.STDOUT)
-        # returns zero is success!
-        if status != 0:
-            logger.error(
-                'finished verifying with owltools with status %s', status)
-        self.assertTrue(status == 0)
-
-        return
 
 if __name__ == '__main__':
     unittest.main()

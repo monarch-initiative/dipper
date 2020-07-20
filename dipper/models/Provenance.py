@@ -28,30 +28,32 @@ class Provenance:
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        return
 
     def add_date_created(self, prov_type, date):
         self.graph.addTriple(
-            object_is_literal=True, subject_id=prov_type,
-            predicate_id=self.globaltt['created_on'], obj=date)
-        return
+            subject_id=prov_type,
+            predicate_id=self.globaltt['created_on'],
+            obj=date,
+            object_is_literal=True
+        )
 
-    def add_study_parts(self, study, study_parts):
+    def add_study_parts(self, study, study_parts, study_parts_category=None):
         for part in study_parts:
             self.graph.addTriple(
-                study, self.globaltt['has_part'], part)
-        return
+                study,
+                self.globaltt['has_part'],
+                part,
+                object_category=study_parts_category
+            )
 
     def add_study_to_measurements(self, study, measurements):
         for measurement in measurements:
-            self.graph.addTriple(
-                measurement, self.globaltt['output_of'], study)
-        return
+            self.graph.addTriple(measurement, self.globaltt['output_of'], study)
 
     def add_study_measure(self, study, measure, object_is_literal=None):
         self.graph.addTriple(
-            study, self.globaltt['measures_parameter'], measure, object_is_literal)
-        return
+            study, self.globaltt['measures_parameter'], measure, object_is_literal
+        )
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
         """
@@ -66,30 +68,37 @@ class Provenance:
 
         self.add_agent_to_graph(agent, agent_label, self.globaltt['organization'])
 
-        self.graph.addTriple(
-            assertion, self.globaltt['created_by'], agent)
+        self.graph.addTriple(assertion, self.globaltt['created_by'], agent)
 
         if date is not None:
             self.graph.addTriple(
-                self.graph, assertion, self.globaltt['Date Created'], date)
-
-        return
+                self.graph, assertion, self.globaltt['Date Created'], date
+            )
 
     def add_agent_to_graph(
-            self, agent_id, agent_label, agent_type=None, agent_description=None):
+            self,
+            agent_id,
+            agent_label,
+            agent_type=None,
+            agent_description=None,
+            agent_category=None
+    ):
 
         if agent_type is None:
             agent_type = self.globaltt['organization']
         self.model.addIndividualToGraph(
-            agent_id, agent_label, agent_type, agent_description)
-
-        return
+            agent_id,
+            agent_label,
+            agent_type,
+            agent_description,
+            ind_category=agent_category
+        )
 
     def add_assay_to_graph(
-            self, assay_id, assay_label, assay_type=None, assay_description=None):
+            self, assay_id, assay_label, assay_type=None, assay_description=None
+    ):
         if assay_type is None:
             assay_type = self.globaltt['assay']
         self.model.addIndividualToGraph(
-            assay_id, assay_label, assay_type, assay_description)
-
-        return
+            assay_id, assay_label, assay_type, assay_description
+        )

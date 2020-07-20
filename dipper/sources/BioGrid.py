@@ -291,7 +291,7 @@ class BioGrid(Source):
                 # TODO make these filters available as commandline options
                 # geneidtypefilters='NCBIGene,OMIM,MGI,FlyBase,ZFIN,MGI,HGNC,
                 #                   WormBase,XenBase,ENSEMBL,miRBase'.split(',')
-                geneidtypefilters = 'NCBIGene,MGI,ENSEMBL,ZFIN,HGNC'.split(',')
+                geneidtypefilters = 'NCBIGene,MGI,ENSEMBL,ZFIN,HGNC,WormBase,XenBase,FlyBase'.split(',')
                 # proteinidtypefilters='HPRD,Swiss-Prot,NCBIProtein'
                 if (speciesfilters is not None) and (
                         organism_label.strip() in speciesfilters):
@@ -301,7 +301,9 @@ class BioGrid(Source):
                         model.addEquivalentClass(biogrid_id, mapped_id)
                     # this symbol will only get attached to the biogrid class
                     elif id_type == 'OFFICIAL_SYMBOL':
-                        model.addClassToGraph(biogrid_id, id_num)
+                        model.addLabel(biogrid_id, id_num)
+                        model.addType(biogrid_id, self.globaltt['gene'])
+
                     # elif (id_type == 'SYNONYM'):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)
