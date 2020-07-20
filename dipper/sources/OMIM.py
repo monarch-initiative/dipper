@@ -986,26 +986,30 @@ class OMIM(OMIMSource):
         orpha_mappings = []
         if 'externalLinks' in entry:
             links = entry['externalLinks']
-            # KS - This appears to buggy (lot's of ORPHA:None, which
-            # are coming from OMIM - eg https://omim.org/entry/122900
-            # and we get them from MONDO anyway (to do check if circular)
-            #
-            # if 'orphanetDiseases' in links:
-            #    # triple semi-colon delimited list of
-            #    # double semi-colon delimited orphanet ID/disease pairs
-            #    # 2970;;566;;Prune belly syndrome
-            #    items = links['orphanetDiseases'].strip().split(';;;')
-            #    for item in items:
-            #        orphdis = item.strip().split(';;')
-            #        orpha_num = orphdis[0].strip()
-            #        orpha_label = orphdis[2].strip()
-            #        orpha_curie = 'ORPHA:' + orpha_num
-            #        orpha_mappings.append(orpha_curie)
-            #        model.addClassToGraph(orpha_curie, orpha_label,
-            #                              class_category=blv.terms.Disease.value)
-            #        model.addXref(omim_curie, orpha_curie,
-            #                      class_category=blv.terms.Disease.value,
-            #                      xref_category=blv.terms.Disease.value)
+
+            if 'orphanetDiseases' in links:
+                # triple semi-colon delimited list of
+                # double semi-colon delimited orphanet ID/disease pairs
+                # 2970;;566;;Prune belly syndrome
+                items = links['orphanetDiseases'].strip().split(';;;')
+                for item in items:
+                    orphdis = item.strip().split(';;')
+                    orpha_num = orphdis[0].strip()
+                    orpha_label = orphdis[2].strip()
+                    if orpha_num != 'None':
+                        orpha_curie = 'ORPHA:' + orpha_num
+                        orpha_mappings.append(orpha_curie)
+                        model.addClassToGraph(
+                            orpha_curie,
+                            orpha_label,
+                            class_category=blv.terms.Disease.value
+                        )
+                        model.addXref(
+                            omim_curie,
+                            orpha_curie,
+                            class_category=blv.terms.Disease.value,
+                            xref_category=blv.terms.Disease.value
+                        )
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
@@ -1119,14 +1123,14 @@ class OMIM(OMIMSource):
 
         return omim_id_category
 
-    # def getTestSuite(self):
+    def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
-    #        import unittest
+       import unittest
     #        # TODO PYLINT  Unable to import 'tests.test_omim'
-    #   from tests.test_omim import OMIMTestCase
+       from tests.test_omim import OMIMTestCase
     #
-    #   test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
-    #   return test_suite
+       test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
+       return test_suite
 
 
 def get_omim_id_from_entry(entry):
