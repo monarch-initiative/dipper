@@ -55,7 +55,8 @@ class OMIA(OMIMSource):
             'file': 'omia.xml.gz',
             # CNAME broken? urllib not following redirects??
             # 'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'
-            'url': 'http://compldb.angis.org.au/dumps/omia.xml.gz',
+            # 'url': 'http://compldb.angis.org.au/dumps/omia.xml.gz',
+            'url': 'https://omia.org/dumps/omia.xml.gz'
             # see dipper/resources/omia/omia_xml.*  for xml xpaths and more
         },
         'causal_mutations':  {  # not used yet
@@ -71,10 +72,8 @@ class OMIA(OMIMSource):
         },
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self, graph_type, are_bnodes_skolemized, data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,

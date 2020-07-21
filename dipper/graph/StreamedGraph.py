@@ -23,7 +23,8 @@ class StreamedGraph(DipperGraph):
     curie_util = CurieUtil(curie_map)
 
     with open(
-            os.path.join(os.path.dirname(__file__),
+            os.path.join(
+                os.path.dirname(__file__),
                          '../../translationtable/GLOBAL_TERMS.yaml')) as fhandle:
         globaltt = yaml.safe_load(fhandle).copy()
         globaltcid = {v: k for k, v in globaltt.items()}
@@ -55,7 +56,9 @@ class StreamedGraph(DipperGraph):
 
         subject_iri = self._getnode(subject_id)
         predicate_iri = self._getnode(predicate_id)
-        if not object_is_literal:
+        if object_is_literal:
+            pass
+        else:
             obj = self._getnode(obj)
 
         if literal_type is not None:
@@ -136,7 +139,7 @@ class StreamedGraph(DipperGraph):
         :param curie: str id as curie or iri
         :return:
         """
-        if re.match(r'^_:', curie):
+        if curie[0] == '_':
             if self.are_bnodes_skized is True:
                 node = self.skolemizeBlankNode(curie)
             else:

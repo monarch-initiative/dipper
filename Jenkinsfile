@@ -607,34 +607,38 @@ pipeline {
                         '''
                     }
                 }
-                stage("ZFINSlim") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.ZFINSLIM != null }
+                Stage('Danio'){
+                    stages {
+                        stage("ZFIN") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.ZFIN != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=zfin
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
+                                '''
+                            }
                         }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=zfinslim
-                            $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
-                        '''
-                    }
-                }
-                stage("ZFIN") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.ZFIN != null }
+                        stage("ZFINSlim") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.ZFINSLIM != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=zfinslim
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
+                                '''
+                            }
                         }
-                    }
-                    steps {
-                        sh '''
-                            SOURCE=zfin
-                            $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
-                        '''
                     }
                 }
                 stage("RGD") {
