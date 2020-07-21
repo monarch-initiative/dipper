@@ -962,26 +962,34 @@ def parse():
                             rcv_disease_id = RCV_TraitXRef.get('ID')
                             break
 
+                    # Accept MONDO if no OMIM or Orphanet  # revisit priority
+                    if rcv_disease_db is None or rcv_disease_id is None:
+                        if rcv_disease_db is not None:
+                            break
+                        for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="MONDO"]'):
+                            rcv_disease_db = 'MONDO'  # RCV_TraitXRef.get('DB')
+                            rcv_disease_id = RCV_TraitXRef.get('ID')
+                            break
+
                     # Always get medgen for g2p mapping file
                     for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="MedGen"]'):
-                        has_medgen_id = True
                         medgen_id = RCV_TraitXRef.get('ID')
-                        break
-
-                    if rcv_disease_db is None and has_medgen_id:
-                        # use UMLS prefix instead of MedGen
-                        # see https://github.com/monarch-initiative/dipper/issues/874
-                        rcv_disease_db = 'UMLS'  # RCV_TraitXRef.get('DB')
-                    if rcv_disease_id is None and has_medgen_id:
-                        rcv_disease_id = medgen_id
+                        if rcv_disease_db is None:
+                            # use UMLS prefix instead of MedGen
+                            # https://github.com/monarch-initiative/dipper/issues/874
+                            rcv_disease_db = 'UMLS'  # RCV_TraitXRef.get('DB')
+                        if rcv_disease_id is None:
+                            rcv_disease_id = medgen_id
 
                     # See if there are any leftovers. Possibilities include:
                     # EFO, Gene, Human Phenotype Ontology
                     if rcv_disease_db is None:
                         for RCV_TraitXRef in RCV_Trait.findall('./XRef'):
                             LOG.warning(
-                                rcv_acc + " UNKNOWN DISEASE DB:\t" +
-                                RCV_TraitXRef.get('DB') + ":" + RCV_TraitXRef.get('ID'))
+                                "%s has UNKNOWN DISEASE database\t %s has id %s",
+                                rcv_acc,
+                                RCV_TraitXRef.get('DB'),
+                                RCV_TraitXRef.get('ID'))
                             # 82372 MedGen
                             #    58 EFO
                             #     1 Human Phenotype Ontology
@@ -1060,8 +1068,10 @@ def parse():
                     if condition.database is None:
                         continue
 
-                    rcv_disease_curie = condition.database + ':' + condition.id
-
+                    if len(condition.id.split(':')) == 1:
+                        rcv_disease_curie = condition.database + ':' + condition.id
+                    else:
+                        rcv_disease_curie = condition.id
                     scv_id = SCV_Assertion.get('ID')
                     monarch_id = digest_id(rcv.id + scv_id + condition.id)
                     monarch_assoc = 'MONARCH:' + monarch_id
