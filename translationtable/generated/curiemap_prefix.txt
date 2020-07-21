@@ -172,6 +172,7 @@
 "ZFIN"
 "ZFS"
 "ZP"
+"biolink"
 "catfishQTL"
 "cattleQTL"
 "chickenQTL"
