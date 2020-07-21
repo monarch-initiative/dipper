@@ -9,6 +9,7 @@ from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map as curie_map_class
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -36,26 +37,73 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # print("in RDFGraph  with id: ", identifier)
         super().__init__('IOMemory', identifier)
         self.are_bnodes_skized = are_bnodes_skized
+        self.prefixes = set()
 
         # Can be removed when this is resolved
         # https://github.com/RDFLib/rdflib/issues/632
         for pfx in ('OBO',):  # , 'ORPHA'):
             self.bind(pfx, Namespace(self.curie_map[pfx]))
 
-        # try adding them all
-        # self.bind_all_namespaces()  # too much
+    def _make_category_triple(
+            self, subject, category, predicate=blv.terms['category']
+    ):
+        """
+        add a triple to capture subject or object category (in CURIE form) that was
+        passed to addTriple()
+        """
+        try:
+            self.add((
+                self._getnode(subject),
+                self._getnode(predicate),
+                self._getnode(category)))
+        except:
+            LOG.warning(
+                "Problem adding triple in _makeCategoryTriple for " + \
+                "subj: %s pred: %s obj(category): %s",
+                subject, predicate, category)
+                
+    def _is_literal(self, thing):
+        """
+        make inference on type (literal or CURIE)
+
+        return: logical
+        """
+        if self.curie_regexp.match(thing) is not None or\
+           thing.split(':')[0].lower() in ('http', 'https', 'ftp'):
+            object_is_literal = False
+        else:
+            object_is_literal = True
+
+        return object_is_literal
 
     def addTriple(
-            self, subject_id, predicate_id, obj, object_is_literal=None,
-            literal_type=None):
-        # trying making infrence on type of object if none is supplied
-        if object_is_literal is None:
-            if self.curie_regexp.match(obj) is not None or\
-                    obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
-                object_is_literal = False
-            else:
-                object_is_literal = True
+            self,
+            subject_id,
+            predicate_id,
+            obj,
+            object_is_literal=None,
+            literal_type=None,
+            subject_category=None,
+            object_category=None
+    ):
 
+        if object_is_literal is None:
+            object_is_literal = self._is_literal(obj)
+
+        # add triples for subject category info
+        if subject_category is not None:
+            self._make_category_triple(subject_id, subject_category)
+
+        # add triples for obj category info, if obj is not a literal
+        if not object_is_literal:
+            if object_category is not None:
+                self._make_category_triple(obj, object_category)
+        else: # emit warning if object category is given for a literal
+            if object_category is not None:
+                LOG.warning("I was given a category %s for obj: %s, " +
+                            "which seems to be a literal!",
+                            object_category, obj)
+            
         if object_is_literal is True:
             if isinstance(obj, str):
                 re.sub(r'[\t\n\r\f\v]+', ' ', obj)  # reduce any ws to a space
@@ -81,7 +129,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                     LOG.warning(
                         '\t%sfrom: %s', '\t' * call, sys._getframe(call).f_code.co_name)
 
-        elif obj is not None and obj != '':  # object is a resourse
+        elif obj is not None and obj != '':  # object is a resource
             self.add((
                 self._getnode(subject_id),
                 self._getnode(predicate_id),
@@ -90,15 +138,12 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
             LOG.warning(
                 "None/empty object IRI for subj: %s and pred: %s",
                 subject_id, predicate_id)
-        return
 
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
-        node = BNode(stripped_id).skolemize(self.curie_util.get_base())
-        node = re.sub(r'rdflib/', '', node)  # remove string added by rdflib
-        return URIRef(node)
+        return URIRef(self.curie_map['BNODE'] + stripped_id)
 
-    def _getnode(self, curie):  # convention is lowercase names
+    def _getnode(self, curie):
         """
         This is a wrapper for creating a URIRef or Bnode object
         with a given a curie or iri as a string.
@@ -113,7 +158,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         """
         node = None
         if curie[0] == '_':
-            if self.are_bnodes_skized is True:
+            if self.are_bnodes_skized:
                 node = self.skolemizeBlankNode(curie)
             else:  # delete the leading underscore to make it cleaner
                 node = BNode(re.sub(r'^_:|^_', '', curie, 1))
@@ -124,12 +169,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         else:
             iri = RDFGraph.curie_util.get_uri(curie)
             if iri is not None:
-                node = URIRef(RDFGraph.curie_util.get_uri(curie))
+                node = URIRef(iri)
                 # Bind prefix map to graph
                 prefix = curie.split(':')[0]
-                if prefix not in self.namespace_manager.namespaces():
-                    mapped_iri = self.curie_map[prefix]
-                    self.bind(prefix, Namespace(mapped_iri))
+                self.prefixes.add(prefix)
             else:
                 LOG.error("couldn't make URI for %s", curie)
                 # get a sense of where the CURIE-ish? thing is comming from
@@ -147,10 +190,14 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         for prefix in self.curie_map.keys():
             iri = self.curie_map[prefix]
             self.bind(prefix, Namespace(iri))
-        return
 
     # serialize() conflicts between rdflib & Graph.serialize abstractmethod
     # GraphUtils expects the former.  (too bad there is no multiple dispatch)
-    def serialize(  # rdflib version
-            self, destination=None, format='turtle', base=None, encoding=None):
+    # rdflib version
+    def serialize(
+            self, destination=None, format='turtle', base=None, encoding=None
+    ):
+        for prefix in self.prefixes:
+            mapped_iri = self.curie_map[prefix]
+            self.bind(prefix, Namespace(mapped_iri))
         return ConjunctiveGraph.serialize(self, destination, format)

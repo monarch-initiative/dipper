@@ -13,7 +13,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -263,7 +263,7 @@ class CTD(Source):
         if re.match(r'KEGG', pathway_id):
             pathway_id = re.sub(r'KEGG:', 'KEGG-path:map', pathway_id)
         # just in case, add it as a class
-        model.addClassToGraph(entrez_id, None)
+        model.addType(entrez_id, self.globaltt['gene'])
 
         self.pathway.addPathway(pathway_id, pathway_name)
         self.pathway.addGeneToPathway(entrez_id, pathway_id)
@@ -302,8 +302,12 @@ class CTD(Source):
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
         rel_id = self.resolve(direct_evidence)
-        model.addClassToGraph(chem_id, chem_name)
-        model.addClassToGraph(disease_id, None)
+        model.addClassToGraph(
+            chem_id, chem_name, class_category=blv.terms['ChemicalSubstance']
+        )
+        model.addClassToGraph(
+            disease_id, None, class_category=blv.terms['DiseaseOrPhenotypicFeature']
+        )
         self._make_association(chem_id, disease_id, rel_id, reference_list)
 
     def _process_disease2gene(self, row):
@@ -418,13 +422,23 @@ class CTD(Source):
 
         self._make_association(gene_id, preferred_disease_id, rel_id, refs)
 
-    def _make_association(self, subject_id, object_id, rel_id, pubmed_ids):
+    def _make_association(
+            self,
+            subject_id,
+            object_id,
+            rel_id,
+            pubmed_ids,
+            subject_category=None,
+            object_category=None
+    ):
         """
         Make a reified association given an array of pubmed identifiers.
 
         Args:
             :param subject_id  id of the subject of the association (gene/chem)
             :param object_id  id of the object of the association (disease)
+            :param subject_category a biolink category CURIE for subject
+            :param object_category a biolink category CURIE for object
             :param rel_id  relationship id
             :param pubmed_ids an array of pubmed identifiers
         Returns:
@@ -433,7 +447,9 @@ class CTD(Source):
         """
 
         # TODO pass in the relevant Assoc class rather than relying on G2P
-        assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id)
+        assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id,
+                         entity_category=subject_category,
+                         phenotype_category=object_category)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
             for pmid in pubmed_ids:
                 ref = Reference(
@@ -462,7 +478,6 @@ class CTD(Source):
         for (i, val) in enumerate(id_list):
             id_list[i] = 'PMID:' + val
         return id_list
-
 
     def getTestSuite(self):
         import unittest

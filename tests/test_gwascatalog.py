@@ -16,7 +16,6 @@ DOT_PATH = TEST_PATH + "/dot/"
 RAW_PATH = TEST_PATH + "/input/"
 TTL_PATH = TEST_PATH + "/expected/"
 
-
 # Variants
 VARIANTS = [
     'rs1329573',  # rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?
@@ -61,6 +60,7 @@ class GWASCatalogTestCase(unittest.TestCase):
         scripts/dot-to-svg.sh
         """
         for variant in VARIANTS:
+            LOG.debug(f"testing variant {variant}")
             with self.subTest(variant_id=variant):
                 self.tearDownAndSetUp()
                 self.gwascatalog.rawdir = RAW_PATH + '/' + variant

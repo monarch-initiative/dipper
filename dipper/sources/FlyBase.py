@@ -11,7 +11,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -531,7 +531,9 @@ class FlyBase(PostgreSQLSource):
                     xref_prefix = 'HGNC'
                 xref_curie = xref_prefix + ':' + xref_id
 
-                model.addEquivalentClass(gene_curie, xref_curie)
+                model.addEquivalentClass(
+                    gene_curie, xref_curie, object_category=blv.terms['Gene']
+                )
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -584,7 +586,8 @@ class FlyBase(PostgreSQLSource):
                             geno.addAllele(allele_curie, allele_label)
                             geno.addTaxon(
                                 species_map[allele_prefix[0]][1],
-                                allele_curie)
+                                allele_curie
+                            )
                         else:
                             # If it's a foreign transgenic allele, skip
                             continue
@@ -594,8 +597,10 @@ class FlyBase(PostgreSQLSource):
 
                 elif not allele_prefix:
                     geno.addAllele(allele_curie, allele_label)
-                    geno.addTaxon(self.globaltt['Drosophila melanogaster'],
-                                  allele_curie)
+                    geno.addTaxon(
+                        self.globaltt['Drosophila melanogaster'],
+                        allele_curie
+                    )
                 else:
                     raise ValueError("Did not correctly parse allele label {}"
                                      .format(allele_label))
@@ -618,8 +623,10 @@ class FlyBase(PostgreSQLSource):
 
                 elif not gene_prefix:
                     geno.addGene(gene_curie, gene_label)
-                    geno.addTaxon(self.globaltt['Drosophila melanogaster'],
-                                  allele_curie)
+                    geno.addTaxon(
+                        self.globaltt['Drosophila melanogaster'],
+                        allele_curie
+                    )
                 else:
                     raise ValueError("Did not correct parse gene label {}"
                                      .format(gene_label))

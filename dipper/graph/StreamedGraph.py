@@ -37,9 +37,16 @@ class StreamedGraph(DipperGraph):
         self.identifier = identifier
 
     def addTriple(
-            self, subject_id, predicate_id, obj, object_is_literal=None,
-            literal_type=None):
-        # trying making infrence on type of object if none is supplied
+            self,
+            subject_id,
+            predicate_id,
+            obj,
+            object_is_literal=None,
+            literal_type=None,
+            subject_category=None,
+            object_category=None
+    ):
+        # trying making inference on type of object (literal vs iri) if none is supplied
         if object_is_literal is None:
             if self.curie_regexp.match(obj) or\
                     obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
@@ -57,9 +64,21 @@ class StreamedGraph(DipperGraph):
         if literal_type is not None:
             literal_type = self._getnode(literal_type)
 
+        if subject_category is not None:
+            subject_category_iri = self._getnode(subject_category)
+        else:
+            subject_category_iri = None
+
+        if object_category is not None:
+            object_category_iri = self._getnode(object_category)
+        else:
+            object_category_iri = None
+
         if obj is not None:
             self.serialize(
-                subject_iri, predicate_iri, obj, object_is_literal, literal_type)
+                subject_iri, predicate_iri, obj, object_is_literal, literal_type,
+                subject_category_iri=subject_category_iri,
+                object_category_iri=object_category_iri)
         else:
             LOG.warning("Null value passed as object")
         return
@@ -71,7 +90,10 @@ class StreamedGraph(DipperGraph):
         return skolem_iri
 
     def serialize(self, subject_iri, predicate_iri, obj,
-                  object_is_literal=False, literal_type=None):
+                  object_is_literal=False, literal_type=None,
+                  subject_category_iri=None,
+                  predicate_category_iri="biolink:category",
+                  object_category_iri=None):
         if not object_is_literal:
             triple = "<{}> <{}> <{}> .".format(subject_iri, predicate_iri, obj)
         elif literal_type is not None:
@@ -90,10 +112,24 @@ class StreamedGraph(DipperGraph):
                 else:
                     raise TypeError("Cannot determine type of {}".format(obj))
 
+        biolink_category_triples = []
+        if subject_category_iri is not None:
+            biolink_category_triples += \
+                "<{}> <{}> <{}> .".format(subject_iri, predicate_category_iri,
+                                          subject_category_iri)
+        if object_category_iri is not None:
+            if object_is_literal or literal_type is not None:
+                LOG.warning("can't write biolink category triple for literal!")
+            else:
+                biolink_category_triples += \
+                    "<{}> <{}> <{}> .".format(obj, predicate_category_iri,
+                                              object_category_iri)
+        all_triples = "\n".join([triple, biolink_category_triples])
+
         if self.file_handle is None:
-            print(triple)
+            print(all_triples)
         else:
-            self.file_handle.write("{}\n".format(triple))
+            self.file_handle.write("{}\n".format(all_triples))
 
     def _getnode(self, curie):
         """

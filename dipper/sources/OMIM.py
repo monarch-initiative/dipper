@@ -10,6 +10,7 @@ from dipper.sources.OMIMSource import OMIMSource
 from dipper.sources.Source import USER_AGENT
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
@@ -17,7 +18,6 @@ from dipper import config
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 
 LOG = logging.getLogger(__name__)
-
 
 # omimftp key EXPIRES
 # get a new one here: https://omim.org/help/api
@@ -347,13 +347,17 @@ class OMIM(OMIMSource):
         nodelabel = newlabel
         # this uses our cleaned-up label
         if omimtype == self.globaltt['heritable_phenotypic_marker']:
-            if abbrev is not None:
-                nodelabel = abbrev
+            #if abbrev is not None:
+            #    nodelabel = abbrev
             # in this special case,
             # make it a disease by not declaring it as a gene/marker
             # ??? and if abbrev is None?
-            model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
-            # class_type=self.globaltt['disease or disorder'],
+            model.addClassToGraph(
+                omim_curie,
+                nodelabel,
+                description=newlabel,
+                class_category=blv.terms['Disease']
+            )
 
         elif omimtype in [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
             omimtype = self.globaltt['gene']
@@ -361,10 +365,30 @@ class OMIM(OMIMSource):
                 nodelabel = abbrev
             # omim is subclass_of gene (provide type term)
             model.addClassToGraph(
-                omim_curie, nodelabel, self.globaltt['gene'], newlabel)
+                omim_curie,
+                nodelabel,
+                self.globaltt['gene'],
+                newlabel,
+                class_category=blv.terms['Gene']
+            )
+        elif omimtype == self.globaltt['phenotype']:
+            model.addClassToGraph(
+                omim_curie,
+                nodelabel,
+                description=newlabel,
+                class_category=blv.terms['Disease']
+            )
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
+
+        model.addSynonym(omim_curie, label)
+
+        # add the alternate labels and includes as synonyms
+        for label in other_labels:
+            model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
+            model.addSynonym(
+                omim_curie, label, model.globaltt['has_related_synonym'])
 
         # KS: commenting out, we will get disease descriptions
         # from MONDO, and gene descriptions from the mygene API
@@ -664,7 +688,17 @@ class OMIM(OMIMSource):
             # this is a questionable mapping!  skip?
             rel_id = self.globaltt['contributes to']
 
-        assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
+        # Note: this is actually a G2D association;
+        # see https://github.com/monarch-initiative/dipper/issues/748
+        assoc = G2PAssoc(
+            graph,
+            self.name,
+            gene_id,
+            disorder_id,
+            rel_id,
+            entity_category=blv.terms['Gene'],
+            phenotype_category=blv.terms['Disease']
+        )
 
         if phene_key is not None:
             evidence = self.resolve(phene_key, False)
@@ -736,6 +770,7 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id)
+
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
                             dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
@@ -767,7 +802,11 @@ class OMIM(OMIMSource):
                         if 'movedTo' in alv['allelicVariant']:
                             moved_id = 'OMIM:' + alv['allelicVariant']['movedTo']
                             moved_ids = [moved_id]
-                        model.addDeprecatedIndividual(al_id, moved_ids)
+                        model.addDeprecatedIndividual(
+                            al_id,
+                            moved_ids,
+                            old_id_category= blv.terms['SequenceVariant']
+                        )
                     else:
                         LOG.error(
                             'Uncaught alleleic variant status %s',
@@ -869,7 +908,9 @@ class OMIM(OMIMSource):
                 ps_label = row[col.index('Phenotypic Series Title')].strip()
                 ps_num = row[col.index('Phenotypic Series number')].strip()
                 omimps_curie = 'OMIMPS:' + ps_num
-                model.addClassToGraph(omimps_curie, ps_label)
+                model.addClassToGraph(
+                    omimps_curie, ps_label, class_category=blv.terms['Disease']
+                )
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -887,6 +928,7 @@ class OMIM(OMIMSource):
         omimtype = self.omim_type[omim_num]
         # the phenotypic series mappings
         serieslist = []
+
         if 'phenotypeMapList' in entry:
             phenolist = entry['phenotypeMapList']
             for phl in phenolist:
@@ -909,7 +951,9 @@ class OMIM(OMIMSource):
                 omim_curie, len(serieslist))
         for phser in set(serieslist):
             series_curie = 'OMIMPS:' + phser
-            model.addClassToGraph(series_curie, None)
+            model.addClassToGraph(
+                series_curie, None, class_category=blv.terms['Disease']
+            )
             if omimtype in [
                     self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                 model.addTriple(
@@ -920,7 +964,12 @@ class OMIM(OMIMSource):
                     self.globaltt['phenotype'],
                     self.globaltt['heritable_phenotypic_marker']
             ]:
-                model.addSubClass(omim_curie, series_curie)
+                model.addSubClass(
+                    omim_curie,
+                    series_curie,
+                    child_category=blv.terms['Disease'],
+                    parent_category=blv.terms['Disease']
+                )
             else:
                 LOG.info('Unable to map type %s to phenotypic series', omimtype)
 
@@ -937,6 +986,7 @@ class OMIM(OMIMSource):
         orpha_mappings = []
         if 'externalLinks' in entry:
             links = entry['externalLinks']
+
             if 'orphanetDiseases' in links:
                 # triple semi-colon delimited list of
                 # double semi-colon delimited orphanet ID/disease pairs
@@ -946,10 +996,20 @@ class OMIM(OMIMSource):
                     orphdis = item.strip().split(';;')
                     orpha_num = orphdis[0].strip()
                     orpha_label = orphdis[2].strip()
-                    orpha_curie = 'ORPHA:' + orpha_num
-                    orpha_mappings.append(orpha_curie)
-                    model.addClassToGraph(orpha_curie, orpha_label)
-                    model.addXref(omim_curie, orpha_curie)
+                    if orpha_num != 'None':
+                        orpha_curie = 'ORPHA:' + orpha_num
+                        orpha_mappings.append(orpha_curie)
+                        model.addClassToGraph(
+                            orpha_curie,
+                            orpha_label,
+                            class_category=blv.terms['Disease']
+                        )
+                        model.addXref(
+                            omim_curie,
+                            orpha_curie,
+                            class_category=blv.terms['Disease'],
+                            xref_category=blv.terms['Disease']
+                        )
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
@@ -1009,6 +1069,7 @@ class OMIM(OMIMSource):
 
         ref_to_pmid = {}
         entry_num = entry['mimNumber']
+
         if 'referenceList' in entry:
             reflist = entry['referenceList']
             for rlst in reflist:
@@ -1044,14 +1105,32 @@ class OMIM(OMIMSource):
 
         return ref_to_pmid
 
-    # def getTestSuite(self):
+    def _omim_type_2_biolink_category(self, entry_num):
+        if entry_num in self.omim_type:
+            if self.omim_type[entry_num] in [
+                self.globaltt['gene'],
+                self.globaltt['has_affected_feature']
+            ]:
+                omim_id_category = blv.terms['Gene']
+            elif self.omim_type[entry_num] == self.globaltt['phenotype']:
+                omim_id_category = blv.terms['Disease']
+            elif self.omim_type[entry_num] == self.globaltt['heritable_phenotypic_marker']:
+                omim_id_category = blv.terms['GenomicEntity']
+            else:
+                omim_id_category = None
+        else:
+            omim_id_category = None
+
+        return omim_id_category
+
+    def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
-    #        import unittest
+       import unittest
     #        # TODO PYLINT  Unable to import 'tests.test_omim'
-    #   from tests.test_omim import OMIMTestCase
+       from tests.test_omim import OMIMTestCase
     #
-    #   test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
-    #   return test_suite
+       test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
+       return test_suite
 
 
 def get_omim_id_from_entry(entry):

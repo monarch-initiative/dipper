@@ -12,7 +12,6 @@ from dipper.models.Model import Model
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -564,7 +563,8 @@ SELECT  r._relationship_key as rel_key,
                             strain_id,
                             "This genomic background is unknown.  " +
                             "This is a placeholder background for " +
-                            mgiid + ".")
+                            mgiid + "."
+                        )
                         background_type = self.globaltt[
                             'unspecified_genomic_background']
 
@@ -658,8 +658,11 @@ SELECT  r._relationship_key as rel_key,
             genotype = geno_hash.get(gt)
             gvc = sorted(genotype.get('vslcs'))
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
-            model.addComment(gt, self._make_internal_identifier(
-                'genotype', genotype.get('key')))
+            model.addComment(
+                gt, self._make_internal_identifier(
+                    'genotype', genotype.get('key')
+                )
+            )
             geno.addGenotype(gt, label.strip())
 
     def _process_all_summary_view(self, limit):
@@ -732,8 +735,8 @@ SELECT  r._relationship_key as rel_key,
                     self.idhash['allele'][object_key] = mgiid
                     # TODO consider not adding the individuals in this one
                     model.addIndividualToGraph(
-                        mgiid, short_description.strip(),
-                        altype, description.strip())
+                        mgiid, short_description.strip(), altype, description.strip()
+                    )
                     self.label_hash[mgiid] = short_description.strip()
 
                 # TODO deal with non-preferreds, are these deprecated?
@@ -858,7 +861,8 @@ SELECT  r._relationship_key as rel_key,
                     self.idhash['seqalt'][allele_key] = allele_id
                     model.addComment(
                         allele_id,
-                        self._make_internal_identifier('allele', allele_key))
+                        self._make_internal_identifier('allele', allele_key)
+                    )
                 elif marker_id is not None:
                     # marker_id will be none if the allele
                     # is not linked to a marker
@@ -891,7 +895,6 @@ SELECT  r._relationship_key as rel_key,
                     # as sequence alterations also removing the < and > from sa
                     sa_label = re.sub(r'[\<\>]', '', sa_label)
 
-                    # gu.addIndividualToGraph(graph,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id, sa_label, None, name)
                     self.label_hash[sa_id] = sa_label
 
@@ -981,10 +984,10 @@ SELECT  r._relationship_key as rel_key,
                 vslc_label = allele1 + '/'
                 if allele2_id is None:
                     if zygosity_id in [
-                            self.globaltt['hemizygous insertion-linked'],
-                            self.globaltt['hemizygous-x'],
-                            self.globaltt['hemizygous-y'],
-                            self.globaltt['hemizygous']]:
+                        self.globaltt['hemizygous insertion-linked'],
+                        self.globaltt['hemizygous-x'],
+                        self.globaltt['hemizygous-y'],
+                        self.globaltt['hemizygous']]:
                         vslc_label += '0'
                     elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
@@ -1002,8 +1005,10 @@ SELECT  r._relationship_key as rel_key,
                     vslc_label += allele2
 
                 model.addIndividualToGraph(
-                    ivslc_id, vslc_label,
-                    self.globaltt['variant single locus complement'])
+                    ivslc_id,
+                    vslc_label,
+                    self.globaltt['variant single locus complement']
+                )
                 self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = self.globaltt['has_variant_part']
                 if allele1_id in self.wildtype_alleles:
@@ -1011,7 +1016,8 @@ SELECT  r._relationship_key as rel_key,
                 if allele2_id in self.wildtype_alleles:
                     rel2 = self.globaltt['has_reference_part']
                 geno.addPartsToVSLC(
-                    ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
+                    ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2
+                )
 
                 # if genotype_id not in geno_hash:
                 #     geno_hash[genotype_id] = [vslc_label]
@@ -1023,7 +1029,7 @@ SELECT  r._relationship_key as rel_key,
 
         # build the gvc and the genotype label
         for gt in geno_hash.keys():
-            if gt is None:   # not sure why, but sometimes this is the case
+            if gt is None:  # not sure why, but sometimes this is the case
                 continue
             vslcs = sorted(list(geno_hash[gt]))
             gvc_label = None
@@ -1048,7 +1054,8 @@ SELECT  r._relationship_key as rel_key,
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement']
+                )
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
                 LOG.info("No VSLCs for %s", gt)
@@ -1066,7 +1073,6 @@ SELECT  r._relationship_key as rel_key,
             else:
                 genotype_label = '[' + bkgd_label + ']'
 
-            model.addSynonym(gt, genotype_label)
             self.label_hash[gt] = genotype_label
 
     def _process_all_allele_mutation_view(self, limit):
@@ -1593,18 +1599,22 @@ SELECT  r._relationship_key as rel_key,
                     # everything except for genes are modeled as individuals
 
                     if mapped_marker_type in [
-                            self.globaltt['gene'],
-                            self.globaltt['pseudogene']]:
+                        self.globaltt['gene'],
+                        self.globaltt['pseudogene']]:
                         model.addClassToGraph(
-                            marker_id, symbol, mapped_marker_type, name)
+                            marker_id, symbol, mapped_marker_type, name
+                        )
                         model.addSynonym(
-                            marker_id, name, self.globaltt['has_exact_synonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym']
+                        )
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
-                            marker_id, symbol, mapped_marker_type, name)
+                            marker_id, symbol, mapped_marker_type, name
+                        )
                         model.addSynonym(
-                            marker_id, name, self.globaltt['has_exact_synonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym']
+                        )
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -2068,10 +2078,9 @@ SELECT  r._relationship_key as rel_key,
                     if int(marker_key) not in self.test_keys.get('marker'):
                         continue
 
-                # make the chromsomome, and the build-instance
+                # make the chromosome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
                 if version is not None and version != '' and version != '(null)':
-
                     # switch on maptype or mapkey
                     assembly = version
                     build_id = 'NCBIGenome:' + assembly
@@ -2148,7 +2157,7 @@ SELECT  r._relationship_key as rel_key,
                 # property_name = row[col.index('property_name')].strip()
                 gene_num = int(row[col.index('property_value')])
 
-                if self.test_mode and allele_key not in self.test_keys.get('allele')\
+                if self.test_mode and allele_key not in self.test_keys.get('allele') \
                         and gene_num not in self.test_ids:
                     continue
 

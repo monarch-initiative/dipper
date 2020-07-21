@@ -10,6 +10,7 @@ from dipper.models.Family import Family
 from dipper.models.Reference import Reference
 from dipper.models.Pathway import Pathway
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -250,7 +251,9 @@ class KEGG(OMIMSource):
                 # Add the disease as a class.
                 # we don't get all of these from MONDO yet see:
                 # https://github.com/monarch-initiative/human-disease-ontology/issues/3
-                model.addClassToGraph(disease_id, disease_name)
+                model.addClassToGraph(
+                    disease_id, disease_name, class_category=blv.terms['Disease']
+                )
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
@@ -505,7 +508,8 @@ class KEGG(OMIMSource):
                             disease_label)
                         continue
                     # type this disease_id as a disease
-                    model.addClassToGraph(disease_id, disease_label)
+                    model.addClassToGraph(disease_id, disease_label,
+                                          class_category=blv.terms['Disease'])
                     # , class_type=self.globaltt['disease'])
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
@@ -540,6 +544,9 @@ class KEGG(OMIMSource):
 
         <assoc_id> has subject <omim_disease_id>
         <assoc_id> has object <kegg_gene_id>
+
+        <kegg_gene_id> biolink:category biolink:Gene
+        <omim_gene_id> biolink:category biolink:Gene
         :param limit:
 
         :return:
@@ -566,7 +573,8 @@ class KEGG(OMIMSource):
                 if link_type == 'equivalent':
                     # these are genes!
                     # so add them as a class then make equivalence
-                    model.addClassToGraph(omim_id, None)
+                    model.addClassToGraph(omim_id, None,
+                                          class_category=blv.terms['Gene'])
                     geno.addGene(kegg_gene_id, None)
 
                     # previous: if omim type is not disease-ish then use
@@ -624,6 +632,9 @@ class KEGG(OMIMSource):
         <kegg_disease_id> is a class
         <omim_disease_id> is a class
         <kegg_disease_id> hasXref <omim_disease_id>
+
+        <kegg_disease_id> biolink:category biolink:Disease
+        <omim_disease_id> biolink:category biolink:Disease
         :param limit:
 
         :return:
@@ -670,10 +681,15 @@ class KEGG(OMIMSource):
                 kegg_disease_id = ''.join(self.omim_disease_hash.get(omim_disease_id))
                 if len(self.kegg_disease_hash[kegg_disease_id]) == 1:
                     # add ids, and deal with the labels separately
-                    model.addClassToGraph(kegg_disease_id, None)
+                    model.addClassToGraph(kegg_disease_id, None,
+                                          class_category=blv.terms['Disease'])
                     model.addClassToGraph(omim_disease_id, None)
                     # TODO is this safe?
-                    model.addEquivalentClass(kegg_disease_id, omim_disease_id)
+                    model.addEquivalentClass(
+                        kegg_disease_id,
+                        omim_disease_id,
+                        subject_category=blv.terms['Disease']
+                    )
             else:
                 pass
                 # gu.addXref(g, omim_disease_id, kegg_disease_id)
@@ -690,6 +706,9 @@ class KEGG(OMIMSource):
         <kegg_gene_id> is a class
         <ncbi_gene_id> is a class
         <kegg_gene_id> equivalentClass <ncbi_gene_id>
+
+        <kegg_gene_id> biolink:category biolink:Gene
+        <ncbi_gene_id> biolink:category biolink:Gene
         :param limit:
         :return:
 
@@ -718,9 +737,13 @@ class KEGG(OMIMSource):
                 # Adding the KEGG gene ID to the graph here is redundant,
                 # unless there happens to be additional gene IDs in this table
                 # not present in the genes table.
-                model.addClassToGraph(kegg_gene_id, None)
-                model.addClassToGraph(ncbi_gene_id, None)
-                model.addEquivalentClass(kegg_gene_id, ncbi_gene_id)
+                model.addClassToGraph(kegg_gene_id, None,
+                                      class_category=blv.terms['Gene'])
+                model.addClassToGraph(ncbi_gene_id, None,
+                                      class_category=blv.terms['Gene'])
+                model.addEquivalentClass(kegg_gene_id, ncbi_gene_id,
+                                         subject_category=blv.terms['Gene'],
+                                         object_category=blv.terms['Gene'])
 
                 if not self.test_mode and (
                         limit is not None and reader.line_num > limit):
@@ -792,7 +815,8 @@ class KEGG(OMIMSource):
                 graph.addTriple(
                     pathway_id,
                     self.globaltt['causally upstream of or within'],
-                    disease_id)
+                    disease_id
+                )
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break

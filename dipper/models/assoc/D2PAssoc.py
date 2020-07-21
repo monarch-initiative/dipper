@@ -15,10 +15,15 @@ class D2PAssoc(Assoc):
     """
 
     def __init__(
-            self, graph, definedby, disease_id, phenotype_id,
+            self, graph,
+            definedby,
+            disease_id,
+            phenotype_id,
             onset=None,
             frequency=None,
-            rel=None
+            rel=None,
+            disease_category=None,
+            phenotype_category=None
     ):
         super().__init__(graph, definedby)
 
@@ -36,6 +41,9 @@ class D2PAssoc(Assoc):
         self.set_relationship(rel)
         self.set_object(phenotype_id)
 
+        self.subject_category = disease_category
+        self.object_category = phenotype_category
+
         return
 
     def set_association_id(self, assoc_id=None):
@@ -47,7 +55,7 @@ class D2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, association_category=None):
         """
         The reified relationship between a disease and a phenotype is decorated
         with some provenance information.
@@ -55,7 +63,10 @@ class D2PAssoc(Assoc):
         are classes.
 
         :param g:
-
+        :param disease_category: a biolink category CURIE for disease_id (defaults to
+        biolink:Disease via the constructor)
+        :param phenotype_category: a biolink category CURIE for phenotype_id (defaults
+        to biolink:PhenotypicFeature via the constructor)
         :return:
 
         """
@@ -66,11 +77,13 @@ class D2PAssoc(Assoc):
         Assoc.add_association_to_graph(self)
         # anticipating trouble with onsets ranges that look like curies
         if self.onset is not None and self.onset != '':
-            self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset)
+            self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset,
+                                 object_category=self.object_category)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['frequency'], self.frequency)
+                self.assoc_id, self.globaltt['frequency'], self.frequency,
+                object_category=self.object_category)
 
         return
 

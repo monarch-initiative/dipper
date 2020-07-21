@@ -164,12 +164,14 @@ class SGD(Source):
                 record['pheno_obj']['quality']['apo_id'].replace(':', '_')
             )
             g2p_assoc = Assoc(
-                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation
+            )
         else:
             pheno_label = record['pheno_obj']['entity']['term']
             pheno_id = record['pheno_obj']['entity']['apo_id']
             g2p_assoc = Assoc(
-                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation
+            )
             assoc_id = g2p_assoc.make_association_id(
                 'yeastgenome.org', gene, relation, pheno_id)
             g2p_assoc.set_association_id(assoc_id=assoc_id)
@@ -185,7 +187,8 @@ class SGD(Source):
         model.addTriple(
             subject_id=pheno_id,
             predicate_id=self.globaltt['subclass_of'],
-            obj=self.globaltt['phenotype'])
+            obj=self.globaltt['phenotype']
+        )
 
         # label nodes
         # pheno label

@@ -26,8 +26,8 @@ class ZFINTestCase(SourceTestCase):
         :return:
 
         """
-        mapping_file = "./tests/resources/zfin/zp-mapping-test-map.txt"
-        pheno_file = "./tests/resources/zfin/zp-mapping-test-phenotype.txt"
+        mapping_file = "./resources/zfin/zp-mapping-test-map.txt"
+        pheno_file = "./resources/zfin/zp-mapping-test-phenotype.txt"
 
         self.source.zp_map = self.source._load_zp_mappings(mapping_file)
         pheno_dat = open(pheno_file).read().split('\t')
