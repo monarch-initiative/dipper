@@ -1071,7 +1071,8 @@ def parse():
                     if len(condition.id.split(':')) == 1:
                         rcv_disease_curie = condition.database + ':' + condition.id
                     else:
-                        rcv_disease_curie = condition.id
+                        rcv_disease_curie = ':'.join(condition.id.split(':')[-2:])
+
                     scv_id = SCV_Assertion.get('ID')
                     monarch_id = digest_id(rcv.id + scv_id + condition.id)
                     monarch_assoc = 'MONARCH:' + monarch_id
