@@ -20,7 +20,7 @@
     stat --printf="%s\t%n\n" ./out/+([^_]).ttl |sort -nr |cut -f2 |
         parallel -j0 "serdi -i turtle -o ntriples {} > ntriples/{/.}.nt"
 
-    # Scigraph requires the RDF data files be self-delared as OWL ontologies
+    # Scigraph requires the RDF data files be self-declared as OWL ontologies
     (
         cd ntriples
         for nt in *.nt; do
