@@ -344,9 +344,10 @@ xmlstarlet sel -t -m JDBOR/DisorderList/Disorder[OrphaNumber="$o"] -c . en_produ
 
 
 and that is a test set   
-at the top of the file there is a count of Disorders in the llist that need to be changed to
+at the top of the file there is a count of Disorders in the list that need to be changed to
 however many are in the file (four in this case)
 
 ```
 sed -i 's|<DisorderList count="[0-9]*">|<DisorderList count="4">|' orphatest.xml
+
 ```
