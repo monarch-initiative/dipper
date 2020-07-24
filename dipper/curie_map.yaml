@@ -235,6 +235,7 @@
 'TrEMBL': 'http://purl.uniprot.org/uniprot/'                                    # UniProt Knowledgebase UniProtKB  Automated
 'UniProtKB': 'http://identifiers.org/uniprot/'                                  # UniProt Knowledgebase UniProtKB  Both
 
+'InterPro': 'https://www.ebi.ac.uk/interpro/entry/InterPro/'                    # Classification of protein families
 #                                                                                   # may become "GtoPdb"
 'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='  # Omnibus pharmacological information portal
 
