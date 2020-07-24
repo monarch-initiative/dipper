@@ -34,59 +34,76 @@ function parse(str, arr){
     n = match($0, / [(][[:digit:]]*[)]>];$/)
     if(n>0)
         arr[substr($0,1,n)] = substr($0, n+2, length($0)-n-5)
-	else
-		arr[$1 " " $2 " " $3 " "]++
+    else
+        arr[$1 " " $2 " " $3 " "]++
 }
 
 # strip metadata from filename
 function de_path_ext(pth){
-	split(pth, a, "/")
-	return substr(a[length(a)], 1, index(a[length(a)], ".")-1)
+    split(pth, a, "/")
+    return substr(a[length(a)], 1, index(a[length(a)], ".")-1)
 }
 
-BEGIN { NOCOUNTS=0}
+BEGIN {
+    NOCOUNTS=0
+    DFLT="black"
+    GAIN="blue"
+    DROP="orange"
+    LESS="pink"
+}
 
 # collect the edges from both files
 NR==FNR && /^[^ ]+ -> [^ ]+ / {
-	label1 = FILENAME;
-	parse($0, edge1)
+    label1 = FILENAME;
+    parse($0, edge1)
 }
 NR!=FNR && /^[^ ]+ -> [^ ]+ / {
-	label2 = FILENAME;
-	parse($0, edge2)
+    label2 = FILENAME;
+    parse($0, edge2)
 }
 
 END{
-	for(e in edge1){
-		if(!(e in edge2)) edges[e "(" edge1[e] ")>, color=\"orange\"];"];
-		else {
-			# edge is in both graphs
-			if(NOCOUNTS)
-				edges[e "()>, color=\"black\"];"]
-			else {
-				diff = edge2[e] - edge1[e];
-				if(diff < 0)
-					# diff = "<font color=\"red\">" diff "</font>" #  breaks svg
-					edges[e "(" diff ")>, color=\"pink\"];"]
-				else
-					edges[e "(" diff ")>, color=\"black\"];"]
-			}
-			delete edge2[e]
-		}
-	}
-	# only edges not in first file
-	for(e in edge2)
-		edges[e "(" edge2[e] ")>, color=\"blue\"];"];  # expects label=<tag> to close
+    for(e in edge1){
+        if(!(e in edge2)) edges[e "(-" edge1[e] ")>, color=\"" DROP "\"];"];
+        else {
+            # edge is in both graphs
+            if(NOCOUNTS)
+                edges[e "()>, color=\"" DELT "\"];"]
+            else {
+                diff = edge2[e] - edge1[e];
+                if(diff < 0)
+                    # diff = "<font color=\"" DROP "\">" diff "</font>" #  breaks svg
+                    edges[e "(" diff ")>, color=\"" DROP "\"];"]
+                else
+                    edges[e "(" diff ")>, color=\"" DFLT "\"];"]
+            }
+            delete edge2[e]
+        }
+    }
+    # only edges not in first file
+    for(e in edge2)
+        edges[e "(" edge2[e] ")>, color=\"" GAIN "\"];"];  # expects label=<tag> to close
 
-	print "digraph {"
-	print "rankdir=LR;"
-	print "charset=\"utf-8\";"
-	print "LITERAL [shape=record];"
-	print "labelloc=\"t\";"
-	print "label=\"" de_path_ext(label1) " <=> " de_path_ext(label2) "\""
+    print "digraph {"
+    print "rankdir=LR;"
+    print "charset=\"utf-8\";"
+    print "LITERAL [shape=record];"
+    print "labelloc=\"t\";"
+    print "label=\"" de_path_ext(label1) " <=> " de_path_ext(label2) "\""
 
-	n = asorti(edges,output)
-	for(i=1;i<=n;i++ ){print output[i]}
-	print "\n}\n"
+    n = asorti(edges,output)
+    for(i=1;i<=n;i++ ){print output[i]}
+
+    # include a Legend  rank [min,max,sink]
+    print "\n\tnode[shape=plaintext];\n\tsubgraph cluster_key{rank=max;label=\"Color Legend\";"
+    print "\tdflt [label=< <font color=\"" DFLT "\">Typical Case</font> >];"
+    print "\tgain [label=< <font color=\"" GAIN "\">New Edge</font> >];"
+    print "\tdrop [label=< <font color=\"" DROP "\">Lost Edge</font> >];"
+    print "\tless [label=< <font color=\"" LESS "\">Diminished Count</font> >];"
+    print "\tdflt -> dflt [color=\"" DFLT "\"];"
+    print "\tgain -> gain [color=\"" GAIN "\"];"
+    print "\tdrop -> drop [color=\"" DROP "\"];"
+    print "\tless -> less [color=\"" LESS "\"];"
+
+    print "\t}\n}\n"
 }
-
