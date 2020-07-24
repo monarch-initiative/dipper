@@ -252,8 +252,6 @@ pipeline {
                         '''
                     }
                 }
-                /**
-                    disable till we resolve automatic file fetching
                 stage("AnimalQTLdb") {
                     when {
                         anyOf {
@@ -268,9 +266,7 @@ pipeline {
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
-                }
-                **/
-
+                }        
                 stage("Bgee") {
                     when {
                         anyOf {
