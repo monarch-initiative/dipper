@@ -100,8 +100,8 @@ class Orphanet(Source):
             # Orphanet mappings are expected to be in Mondo
             # these free-text disorder names become synonyms
             disorder_label = elem.find('Name').text
-            model.addClassToGraph(disorder_curie, disorder_label,
-                                  class_category=blv.terms['Disease'])
+            model.addClassToGraph(
+                disorder_curie, disorder_label, class_category=blv.terms['Disease'])
 
             assoc_list = elem.find('DisorderGeneAssociationList')
             expected_genes = assoc_list.get('count')
@@ -203,10 +203,11 @@ class Orphanet(Source):
                     assoc.find('DisorderGeneAssociationStatus/Name').text)
 
                 g2p_assoc = G2PAssoc(
-                    self.graph,
-                    self.name,
-                    gene_curie,
-                    rel_curie
+                    self.graph,      # graph
+                    self.name,       # definedby
+                    gene_curie,      # entity_id
+                    disorder_curie,  # phenotype_id
+                    rel_curie        # rel=None
                 )
 
                 g2p_assoc.add_evidence(eco_id)

@@ -1,0 +1,35 @@
+# Clinvar
+
+Including some snapshots of the metadata to help track changes
+
+Main file is:
+
+wget --timestamping "https://archive.monarchinitiative.org/DipperCache/clinvar/ClinVarFullRelease_00-latest.xml.gz"
+
+may be less resources to symlink to one in dipper/raw/
+
+
+To get a canonical snapshot of the structure.
+
+note: 
+This produces the superposition of all the structures 
+so not every stanza is guarenteed to contain every path 
+
+
+# be warned, xml is currently at 14G, 
+# and this takes a very long time to finish  (~ 1.5 hours)  ... or my machine is hosed
+
+xmlstarlet el -a data/ClinVarFullRelease_00-latest.xml |
+	sort -u > ClinVarFullRelease_$(datestamp).xpath
+
+an XML NAMESPACE that may be needed
+
+XMLNS="http://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/clinvar_public_1.61.xsd"
+
+
+Get the disease namespaces and their counts
+ 
+xmlstarlet sel -t -v \
+	"./ReleaseSet/ClinVarSet/ClinVarAssertion/TraitSet/Trait[@Type='Disease']/XRef/@DB"\
+	data/ClinVarFullRelease_00-latest.xml | sort | uniq -c | sort -nr
+

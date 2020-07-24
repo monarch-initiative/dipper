@@ -34,6 +34,8 @@ function parse(str, arr){
     n = match($0, / [(][[:digit:]]*[)]>];$/)
     if(n>0)
         arr[substr($0,1,n)] = substr($0, n+2, length($0)-n-5)
+	else
+		arr[$1 " " $2 " " $3 " "]++
 }
 
 # strip metadata from filename
@@ -74,7 +76,7 @@ END{
 	}
 	# only edges not in first file
 	for(e in edge2)
-		edges[e "(" edge2[e] ")>, color=\"blue\"];"];
+		edges[e "(" edge2[e] ")>, color=\"blue\"];"];  # expects label=<tag> to close
 
 	print "digraph {"
 	print "rankdir=LR;"
