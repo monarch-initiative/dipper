@@ -266,7 +266,7 @@ pipeline {
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
-                }        
+                }
                 stage("Bgee") {
                     when {
                         anyOf {
@@ -603,7 +603,7 @@ pipeline {
                         '''
                     }
                 }
-                Stage('Danio'){
+                stage('Danio'){
                     stages {
                         stage("ZFIN") {
                             when {
