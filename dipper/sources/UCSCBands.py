@@ -43,7 +43,7 @@ class UCSCBands(Source):
     <build number>chr<num><band>
     with triples for a given band like:
     _:hg19chr1p36.33
-        rdfs:type SO:chromosome_band,
+        rdf:type SO:chromosome_band,
         faldo:Region, CHR:9606chr1p36.33,
         subsequence_of _:hg19chr1p36.3,
         faldo:location
