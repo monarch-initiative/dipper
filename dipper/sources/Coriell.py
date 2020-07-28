@@ -795,7 +795,7 @@ class Coriell(Source):
 
         Triples:
             Repository a ERO:collection
-            rdf:label Literal(label)
+            rdfs:label Literal(label)
             foaf:page Literal(page)
 
         :param collection_id:
