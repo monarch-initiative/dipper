@@ -145,8 +145,8 @@ class NCBIGene(OMIMSource):
 
         # Defaults
         if self.tax_ids is None:
-            LOG.info('No taxon recived.")  # fallback to defaults')
-            # self.tax_ids = ['9606', '10090', '7955']
+            LOG.info('No taxon recived. Fallback to defaults')
+            self.tax_ids = self.COMMON_TAXON
         else:
             self.tax_ids = [str(x) for x in self.tax_ids]
 
@@ -292,6 +292,7 @@ class NCBIGene(OMIMSource):
 
                 if name != '-':
                     model.addSynonym(gene_id, name)
+
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
                         syn = syn.strip()
@@ -452,13 +453,16 @@ class NCBIGene(OMIMSource):
                                     self.omim_type[omim] == self.globaltt['gene']:
                                 dbxref_curie = 'OMIM:' + omim
                                 model.addXref(gene_id, dbxref_curie)
-                                omim_num = omim  # last wins
+                                omim_num = omim  # last "gene" wins
 
-                    elif omim_num in self.omim_type and\
+                    if omim_num in self.omim_type and\
                             self.omim_type[omim_num] == self.globaltt['gene']:
                         model.addXref(gene_id, dbxref_curie)
                     else:
-                        continue  # no equivilance between ncbigene and omin-nongene
+                        # OMIM disease/phenotype is not considered a gene at all
+                        # no equivilance between ncbigene and omin-nongene
+                        # and ncbi is never a human clique leader in any case
+                        break
                 # designate clique leaders
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
