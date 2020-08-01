@@ -4,7 +4,7 @@ import unittest
 import logging
 import os
 import yaml
-from tests import test_general
+from tests import test_rdfgraph, test_general
 from dipper.utils.GraphUtils import GraphUtils
 
 logging.basicConfig(level=logging.WARNING)
@@ -23,11 +23,9 @@ class SourceTestCase(unittest.TestCase):
         self.source = None
         # pull in the common test identifiers
         self.all_test_ids = SourceTestCase.all_test_ids
-        return
 
     def tearDown(self):
         self.source = None
-        return
 
     def test_parse(self):
         if self.source is not None:  # don't test the abstract class
@@ -52,16 +50,12 @@ class SourceTestCase(unittest.TestCase):
                 LOG.error(WriteException)
                 self.assertFalse(True, "Write failed")
 
-        return
-
     def test_readGraph(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
             self.assertTrue(
                 os.path.exists(f), "path does not exist for {0}".format(f))
-            test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
-
-        return
+            test_rdfgraph.RDFGraphTestCase().read_graph_from_turtle_file(f)
 
     @unittest.skip
     def test_readGraphIntoOWL(self):
@@ -70,16 +64,13 @@ class SourceTestCase(unittest.TestCase):
             self.assertTrue(os.path.exists(f), "path does not exist for " + f)
             test_general.GeneralGraphTestCase().readGraphIntoOWL(f)
 
-        return
-
     def _setDirToSource(self):
         if len(os.listdir(self.source.rawdir)) < 1:
             # reset the raw dir to be the source data if it doesn't exist
             # in the test dir
-            self.source.rawdir = '../'+self.source.rawdir
+            self.source.rawdir = '../' + self.source.rawdir
             p = os.path.abspath(self.source.rawdir)
             logging.info("Resetting the rawdir to %s", p)
-        return
 
     # no such 'test_ids.json' file exists  ->  became yaml
     def _get_testid(self):
