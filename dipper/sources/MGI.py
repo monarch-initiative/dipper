@@ -671,7 +671,7 @@ SELECT  r._relationship_key as rel_key,
         We also add the id to this source's global idhash for lookup later
 
         <alleleid> a OWL:NamedIndividual
-            rdf:label "allele symbol"
+            rdfs:label "allele symbol"
             dc:description "long allele name"
 
         :param limit:
@@ -984,10 +984,10 @@ SELECT  r._relationship_key as rel_key,
                 vslc_label = allele1 + '/'
                 if allele2_id is None:
                     if zygosity_id in [
-                        self.globaltt['hemizygous insertion-linked'],
-                        self.globaltt['hemizygous-x'],
-                        self.globaltt['hemizygous-y'],
-                        self.globaltt['hemizygous']]:
+                            self.globaltt['hemizygous insertion-linked'],
+                            self.globaltt['hemizygous-x'],
+                            self.globaltt['hemizygous-y'],
+                            self.globaltt['hemizygous']]:
                         vslc_label += '0'
                     elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
@@ -1471,7 +1471,7 @@ SELECT  r._relationship_key as rel_key,
         These strains are created as instances of the species that they are.
         Triples:
             <strain id> a GENO:intrinsic_genotype
-                rdf:label "strain label"
+                rdfs:label "strain label"
                 RO:in_taxon <NCBI taxon id>
 
         :param limit:
@@ -1546,7 +1546,7 @@ SELECT  r._relationship_key as rel_key,
         Triples:
         <marker_id> a owl:Class OR owl:NamedIndividual
             GENO:marker_type
-            rdf:label <symbol>
+            rdfs:label <symbol>
             RO:in_taxon <NCBITaxon_id>
 
         :param limit:
@@ -1599,8 +1599,8 @@ SELECT  r._relationship_key as rel_key,
                     # everything except for genes are modeled as individuals
 
                     if mapped_marker_type in [
-                        self.globaltt['gene'],
-                        self.globaltt['pseudogene']]:
+                            self.globaltt['gene'],
+                            self.globaltt['pseudogene']]:
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name
                         )

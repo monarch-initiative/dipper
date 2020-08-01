@@ -197,8 +197,8 @@ class Genotype():
         :param product_id:
         :param product_label:
         :param product_type:
-        :param sequence_category: a biolink category CURIE for sequence_id [blv.terms.Gene].value
-        :param product_category: a biolink category CURIE for product_id
+        :param sequence_category: biolink category CURIE for sequence_id [blv.terms.Gene].value
+        :param product_category: biolink category CURIE for product_id
         :return:
 
         """
@@ -285,7 +285,6 @@ class Genotype():
 
         if zygosity_id is not None:
             self.graph.addTriple(vslc_id, self.globaltt['has_zygosity'], zygosity_id)
-
 
     def addVSLCtoParent(
             self,
@@ -473,7 +472,7 @@ class Genotype():
         gene class.
 
         <targeted_gene_id> a GENO:reagent_targeted_gene
-        rdf:label targeted_gene_label
+        rdfs:label targeted_gene_label
         dc:description description
         <reagent_id> GENO:targets_gene <gene_id>
 

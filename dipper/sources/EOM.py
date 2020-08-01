@@ -157,7 +157,7 @@ class EOM(PostgreSQLSource):
 
         Turtle:
             <eom id> a owl:Class
-                rdf:label Literal(eom label)
+                rdfs:label Literal(eom label)
                 oboInOwl:has_related_synonym Literal(synonym list)
                 IAO:definition Literal(objective_def. subjective def)
                 foaf:depiction Literal(small_image_url),

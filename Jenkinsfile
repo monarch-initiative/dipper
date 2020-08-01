@@ -603,7 +603,7 @@ pipeline {
                         '''
                     }
                 }
-                stage('Danio'){
+                stage('Danio'){ /* the slim after the main ingest to use same files */
                     stages {
                         stage("ZFIN") {
                             when {
@@ -702,10 +702,26 @@ pipeline {
         stage('Estatic'){
             steps {
                 sh '''
+                    echo "Taking a moment of silent contemplation ..."
+                    sleep 1m
                     # Move Data to Monarch Archive
                     ./scripts/mdma.sh
                 '''
             }
         }
     }
+    /* alternative  to stage 'Estatic'
+    post {
+        // regression, aborted, failure, success, unstable, unsuccessful, cleanup //
+        success {
+            sh '''
+                echo "Taking a moment of silent contemplation ..."
+                sleep 1m
+                # Move Data to Monarch Archive
+                ./scripts/mdma.sh
+            '''
+        }
+        cleanup {}
+    }
+    */
 }
