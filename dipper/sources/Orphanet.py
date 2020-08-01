@@ -197,7 +197,7 @@ class Orphanet(Source):
                 # genotype_curie = self.resolve(" | ".join((dg_label, gene_type)))
 
                 # use dg association status to issue an evidence code
-                # FIXME these codes mau be sub-optimal (there are only two)
+                # FIXME these codes may be sub-optimal (there are only two)
                 # maybe just attach a "pending" to the minority that need it.
                 eco_id = self.resolve(
                     assoc.find('DisorderGeneAssociationStatus/Name').text)
