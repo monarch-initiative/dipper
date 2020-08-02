@@ -462,18 +462,20 @@ class NCBIGene(OMIMSource):
                         # OMIM disease/phenotype is not considered a gene at all
                         # no equivilance between ncbigene and omin-nongene
                         # and ncbi is never a human clique leader in any case
-                        break
+                        dbxref_curie = None
+                        continue
                 # designate clique leaders
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
-                    if self.class_or_indiv.get(gene_id) == 'C':
+                    if self.class_or_indiv.get(gene_id) == 'C' and \
+                            dbxref_curie is not None:
                         model.addEquivalentClass(gene_id, dbxref_curie)
                         if taxon in clique_map:
                             if clique_map[taxon] == prefix:
                                 model.makeLeader(dbxref_curie)
                             elif clique_map[taxon] == gene_id.split(':')[0]:
                                 model.makeLeader(gene_id)
-                    else:
+                    elif dbxref_curie is not None:
                         model.addSameIndividual(gene_id, dbxref_curie)
                 except AssertionError as err:
                     LOG.warning("Error parsing %s: %s", gene_id, err)
