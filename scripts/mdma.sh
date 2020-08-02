@@ -1,4 +1,8 @@
-#! /bin/bash -e
+#! /bin/bash
+
+set -e
+set -u
+set -o pipefaill
 
 # mdma.sh
 # Move Data to Monarch Archive
@@ -10,24 +14,27 @@
     # copy main turtle files to ntriple format
     # https://github.com/drobilla/serd
     mkdir -p ntriples
-    # avoid redundant ntriple files in botb ntriples/ and rdf/ dirs
-    #if [ -e  out/*.nt ] ; then
-    mv -u out/*.nt ntriples/
-    #fi
+
+    # avoid redundant ntriple files in both ntriples/ and rdf/ dirs
+    for t in  out/*.nt ; do
+        sort -u "$t" > "ntriples/${t##out/}" && rm -f "$t"
+    done
 
     # enable extended gobbing for selecting filenames without an underbar
     shopt -s extglob
     stat --printf="%s\t%n\n" ./out/+([^_]).ttl |sort -nr |cut -f2 |
-        parallel -j0 "serdi -i turtle -o ntriples {} > ntriples/{/.}.nt"
+        parallel -j0 "serdi -i turtle -o ntriples {} | sort -u > ntriples/{/.}.nt"
 
     # Scigraph requires the RDF data files be self-declared as OWL ontologies
+    p = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+    o = "<http://www.w3.org/2002/07/owl#Ontology>"
     (
         cd ntriples
         for nt in *.nt; do
-            echo "<https://archive.monarchinitiative.org/#${nt%%.nt}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> ." >> "$nt"
+            echo "<https://archive.monarchinitiative.org/#${nt%%.nt}> $p $o ." >> "$nt"
         done
     )
-    # compress the ntriples as machine readable shouldn't care (humans use zcat)
+    # compress the ntriples as machine readable shouldn't care (& humans can use zcat)
     tar -czf ntriples_"$YYYYMM.tgz" ntriples/
     # rename; as 'out' makes no sense downstream. todo: change in dipper
     mv -u  out rdf
