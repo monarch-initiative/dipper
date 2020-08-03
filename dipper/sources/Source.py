@@ -154,6 +154,9 @@ class Source:
             file_handle=file_handle
         )
 
+        # see jenkins file   human, mouse, zebrafish, fly, worm        rat
+        self.COMMON_TAXON = ['9606','10090','7955','7227','6239']  # '10116'
+
     def fetch(self, is_dl_forced=False):
         """
         abstract method to fetch all data from an external resource.

@@ -69,6 +69,7 @@ class OMIMSource(Source):
         self.omim_type = {}
         self.omim_replaced = {}
         self.populate_omim_type()
+        self.write_out()
 
     # abstract
     def fetch(self, is_dl_forced=False):
@@ -88,6 +89,20 @@ class OMIMSource(Source):
 
         """
         raise NotImplementedError
+
+    def write_out(self):
+        '''
+            To have a copy of the replaces and typed OMIM's on hand.
+            place the output in the raw directory
+        '''
+
+        with open('/'.join((self.rawdir, 'omim_type.tsv')), 'w') as writefile:
+            out = csv.writer(writefile, delimiter='\t')
+            out.writerows(self.omim_type.items())
+
+        with open('/'.join((self.rawdir, 'omim_replaced.tsv')), 'w') as writefile:
+            out = csv.writer(writefile, delimiter='\t')
+            out.writerows(self.omim_replaced.items())
 
     def populate_omim_type(self):
         '''
@@ -197,6 +212,8 @@ class OMIMSource(Source):
                     LOG.error('Unknown OMIM type line %s', reader.line_num)
         LOG.info('Have %i obsoleted OMIMS ids', len(self.omim_replaced))
         LOG.info('Have %i OMIM typed', len(self.omim_type))
+
+
 '''
 cut -f2 raw/omim/mim2gene.txt | grep -v '^#' | dist
   16068 gene

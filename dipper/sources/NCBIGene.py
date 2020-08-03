@@ -145,8 +145,8 @@ class NCBIGene(OMIMSource):
 
         # Defaults
         if self.tax_ids is None:
-            LOG.info('No taxon recived.")  # fallback to defaults')
-            # self.tax_ids = ['9606', '10090', '7955']
+            LOG.info('No taxon recived. Fallback to defaults')
+            self.tax_ids = self.COMMON_TAXON
         else:
             self.tax_ids = [str(x) for x in self.tax_ids]
 
@@ -292,6 +292,7 @@ class NCBIGene(OMIMSource):
 
                 if name != '-':
                     model.addSynonym(gene_id, name)
+
                 if synonyms != '-':
                     for syn in synonyms.split('|'):
                         syn = syn.strip()
@@ -416,31 +417,38 @@ class NCBIGene(OMIMSource):
         else:
             graph = self.graph
         model = Model(graph)
-        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport', '']
+        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport', '', None]
 
         # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
 
         for dbxref in dbxrefs.strip().split('|'):
-            prefix = ':'.join(dbxref.split(':')[:-1]).strip()  # restore nonterminal ':'
+            dbxref = dbxref.strip()
+            # de stutter dbxref
+            (prefix, local_id) = dbxref.split(':')[-2:]
+
+            # skip some of these based on curie prefix or malformatting
+            if prefix is None or prefix in filter_out or \
+                    local_id is None or local_id == '':
+                continue
 
             if prefix in self.localtt:
                 prefix = self.localtt[prefix]
 
-            # skip some of these for now based on curie prefix
-            if prefix in filter_out:
-                continue
-
             if prefix == 'AnimalQTLdb' and taxon in self.informal_species:
                 prefix = self.informal_species[taxon] + 'QTL'
+            elif prefix == 'AnimalQTLdb':
+                LOG.warning(
+                    'Unknown AnimalQTLdb species %s for %s:%s', taxon, prefix, local_id)
+            # else: # taxon is not in informal species (not unexpected)
 
-            dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
+            dbxref_curie = ':'.join((prefix, local_id))
+
             if dbxref_curie is not None:
                 if prefix == 'HPRD':  # proteins are not == genes.
                     model.addTriple(
                         gene_id, self.globaltt['has gene product'], dbxref_curie)
                     continue
-
                 if prefix == 'ENSEMBL':
                     model.addXref(gene_id, dbxref_curie)
                 if prefix == 'OMIM':
@@ -451,25 +459,29 @@ class NCBIGene(OMIMSource):
                             if omim in self.omim_type and \
                                     self.omim_type[omim] == self.globaltt['gene']:
                                 dbxref_curie = 'OMIM:' + omim
-                                model.addXref(gene_id, dbxref_curie)
-                                omim_num = omim  # last wins
+                                omim_num = omim  # last "gene" wins (is never > 2)
 
-                    elif omim_num in self.omim_type and\
+                    if omim_num in self.omim_type and\
                             self.omim_type[omim_num] == self.globaltt['gene']:
                         model.addXref(gene_id, dbxref_curie)
                     else:
-                        continue  # no equivilance between ncbigene and omin-nongene
+                        # OMIM disease/phenotype is not considered a gene at all
+                        # no equivilance between ncbigene and omin-nongene
+                        # and ncbi is never a human clique leader in any case
+                        dbxref_curie = None
+                        continue
                 # designate clique leaders
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
-                    if self.class_or_indiv.get(gene_id) == 'C':
+                    if self.class_or_indiv.get(gene_id) == 'C' and \
+                            dbxref_curie is not None:
                         model.addEquivalentClass(gene_id, dbxref_curie)
                         if taxon in clique_map:
                             if clique_map[taxon] == prefix:
                                 model.makeLeader(dbxref_curie)
                             elif clique_map[taxon] == gene_id.split(':')[0]:
                                 model.makeLeader(gene_id)
-                    else:
+                    elif dbxref_curie is not None:
                         model.addSameIndividual(gene_id, dbxref_curie)
                 except AssertionError as err:
                     LOG.warning("Error parsing %s: %s", gene_id, err)
