@@ -417,31 +417,38 @@ class NCBIGene(OMIMSource):
         else:
             graph = self.graph
         model = Model(graph)
-        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport', '']
+        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport', '', None]
 
         # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
 
         for dbxref in dbxrefs.strip().split('|'):
-            prefix = ':'.join(dbxref.split(':')[:-1]).strip()  # restore nonterminal ':'
+            dbxref = dbxref.strip()
+            # de stutter dbxref
+            (prefix, local_id) = dbxref.split(':')[-2:]
+
+            # skip some of these based on curie prefix or malformatting
+            if prefix is None or prefix in filter_out or \
+                    local_id is None or local_id == '':
+                continue
 
             if prefix in self.localtt:
                 prefix = self.localtt[prefix]
 
-            # skip some of these for now based on curie prefix
-            if prefix in filter_out:
-                continue
-
             if prefix == 'AnimalQTLdb' and taxon in self.informal_species:
                 prefix = self.informal_species[taxon] + 'QTL'
+            elif prefix == 'AnimalQTLdb':
+                LOG.warning(
+                    'Unknown AnimalQTLdb species %s for %s:%s', taxon, prefix, local_id)
+            # else: # taxon is not in informal species (not unexpected)
 
-            dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
+            dbxref_curie = ':'.join((prefix, local_id))
+
             if dbxref_curie is not None:
                 if prefix == 'HPRD':  # proteins are not == genes.
                     model.addTriple(
                         gene_id, self.globaltt['has gene product'], dbxref_curie)
                     continue
-
                 if prefix == 'ENSEMBL':
                     model.addXref(gene_id, dbxref_curie)
                 if prefix == 'OMIM':
@@ -452,8 +459,7 @@ class NCBIGene(OMIMSource):
                             if omim in self.omim_type and \
                                     self.omim_type[omim] == self.globaltt['gene']:
                                 dbxref_curie = 'OMIM:' + omim
-                                model.addXref(gene_id, dbxref_curie)
-                                omim_num = omim  # last "gene" wins
+                                omim_num = omim  # last "gene" wins (is never > 2)
 
                     if omim_num in self.omim_type and\
                             self.omim_type[omim_num] == self.globaltt['gene']:
