@@ -2,7 +2,7 @@
 
 set -e
 set -u
-set -o pipefaill
+set -o pipefail
 
 # mdma.sh
 # Move Data to Monarch Archive
