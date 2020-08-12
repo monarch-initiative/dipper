@@ -1169,9 +1169,10 @@ def parse():
                         GLOBALTT['is_assertion_supported_by_evidence'], _evidence_id, rcvtriples,
                         subject_category=blv.terms['InformationContentEntity'])
 
-                    # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
+                    # <:_assertion_id><dcterms:identifier><scv_acc + '.' + scv_accver>
                     write_spo(
-                        _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver, rcvtriples,
+                        _assertion_id,
+                        'GLOBALTT['identifier'], scv_acc + '.' + scv_accver, rcvtriples,
                         subject_category=blv.terms['InformationContentEntity'],
                         object_category=blv.terms['InformationContentEntity'])
 
@@ -1293,15 +1294,19 @@ def parse():
                             rcvtriples,
                             subject_category=blv.terms['EvidenceType'],
                             object_category=blv.terms['Publication'])
-                        # <:monarch_assoc><dc:source><PMID:scv_citation_id>
-                        write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id, rcvtriples,
-                                  subject_category=blv.terms['Association'],
-                                  object_category=blv.terms['Publication'])
+                        # <:monarch_assoc><dcterms:source><PMID:scv_citation_id>
+                        write_spo(
+                            monarch_assoc,
+                            GLOBALTT['source'], 'PMID:' + scv_citation_id,
+                            rcvtriples,
+                            subject_category=blv.terms['Association'],
+                            object_category=blv.terms['Publication'])
 
                         # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                         write_spo(
                             'PMID:' + scv_citation_id,
-                            'rdf:type', GLOBALTT['journal article'], rcvtriples,
+                            GLOBALTT['type'],
+                            GLOBALTT['journal article'], rcvtriples,
                             subject_category=blv.terms['Publication'])
 
                         # <PMID:scv_citation_id><SEPIO:0000123><literal>
@@ -1379,7 +1384,7 @@ def parse():
                                     # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                                     write_spo(
                                         'PMID:' + scv_citation_id.text,
-                                        'rdf:type', GLOBALTT['journal article'],
+                                        GLOBALTT['type'], GLOBALTT['journal article'],
                                         rcvtriples,
                                         subject_category=blv.terms['Publication'],
                                         object_category=
@@ -1388,7 +1393,7 @@ def parse():
                                     # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                                     write_spo(
                                         monarch_assoc,
-                                        'dc:source',
+                                        GLOBALTT['source'],
                                         'PMID:' + scv_citation_id.text, rcvtriples,
                                         subject_category=blv.terms['Association'],
                                         object_category=blv.terms['Publication'])
@@ -1402,11 +1407,11 @@ def parse():
                             # for SCV_Citation in SCV_ObsData.findall('./Citation'):
                             for SCV_Description in SCV_ObsData.findall(
                                     'Attribute[@Type="Description"]'):
-                                # <_evidence_id> <dc:description> "description"
+                                # <_evidence_id> <dcterms:description> "description"
                                 if SCV_Description.text != 'not provided':
                                     write_spo(
                                         _evidence_id,
-                                        'dc:description',
+                                        GLOBALTT['description'],
                                         SCV_Description.text,
                                         rcvtriples,
                                         subject_category=blv.terms['EvidenceType'])
