@@ -18,6 +18,7 @@ class OMIMTestCase(SourceTestCase):
     def setUp(self):
         self.source = OMIM('rdf_graph', True)
         self.source.settestonly(True)
+        self.source.settestmode(True)
         self._setDirToSource()
         return
 
