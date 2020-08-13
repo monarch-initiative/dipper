@@ -21,7 +21,7 @@ import collections
 from rdflib import XSD
 
 LABEL_PROPERTIES = [rdflib.RDFS.label,
-                    rdflib.URIRef("http://purl.org/dc/elements/1.1/title"),
+                    rdflib.URIRef("http://purl.org/dc/terms/title"),
                     rdflib.URIRef("http://xmlns.com/foaf/0.1/name"),
                     rdflib.URIRef("http://www.w3.org/2006/vcard/ns#fn"),
                     rdflib.URIRef("http://www.w3.org/2006/vcard/ns#org")

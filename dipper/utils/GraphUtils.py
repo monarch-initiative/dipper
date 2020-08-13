@@ -4,7 +4,7 @@ import hashlib
 from xml.sax import SAXParseException
 from collections import defaultdict
 from rdflib import URIRef, ConjunctiveGraph, util as rdflib_util
-from rdflib.namespace import DC, RDF, OWL
+from rdflib.namespace import DCTERMS, RDF, OWL
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -110,11 +110,11 @@ class GraphUtils:
             ontology_graph.subjects(RDF['type'], OWL['DatatypeProperty']),
             graph, OWL['DatatypeProperty'], properties)
 
-        for row in graph.predicates(DC['source'], OWL['AnnotationProperty']):
+        for row in graph.predicates(DCTERMS['source'], OWL['AnnotationProperty']):
             if row == RDF['type']:
                 graph.remove(
-                    (DC['source'], RDF['type'], OWL['AnnotationProperty']))
-        graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
+                    (DCTERMS['source'], RDF['type'], OWL['AnnotationProperty']))
+        graph.add((DCTERMS['source'], RDF['type'], OWL['ObjectProperty']))
 
         # Hardcoded properties
         graph.add((
