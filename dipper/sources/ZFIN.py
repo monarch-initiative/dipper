@@ -1269,7 +1269,7 @@ class ZFIN(Source):
         Triples created:
         <genotype id> a GENO:wildtype
         <genotype id> rdfs:label genotype_abbreviation
-        <genotype id> dc:description genotype_name
+        <genotype id> dcterms:description genotype_name
 
         :param limit:
         :return:
@@ -1561,7 +1561,7 @@ class ZFIN(Source):
                 ncbi_gene_id = 'NCBIGene:' + ncbi_gene_id.strip()
 
                 self.id_label_map[gene_id] = gene_symbol
-                
+
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
@@ -2489,11 +2489,11 @@ class ZFIN(Source):
         Triples created:
         <zfin gene id> a class
         <zfin gene id> rdfs:label gene_symbol
-        <zfin gene id> dc:description gene_name
+        <zfin gene id> dcterms:description gene_name
 
         <human gene id> a class
         <human gene id> rdfs:label gene_symbol
-        <human gene id> dc:description gene_name
+        <human gene id> dcterms:description gene_name
         <human gene id> equivalent class <omim id>
 
         <zfin gene id> orthology association <human gene id>

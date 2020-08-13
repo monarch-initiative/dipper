@@ -522,7 +522,7 @@ class OMIM(OMIMSource):
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
         <assoc> hasPredicate <causes condition>
-        <assoc> DC:evidence <eco_id>
+        <assoc> DCTERMS:evidence <eco_id>
         :param limit:
         :return:
         """
