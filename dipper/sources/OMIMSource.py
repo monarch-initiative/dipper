@@ -90,6 +90,25 @@ class OMIMSource(Source):
         """
         raise NotImplementedError
 
+    # these next two should propagate to parent class without needing to be here
+    def settestonly(self, testonly):
+        """
+        Set that this source should only be processed in testMode
+        :param testOnly:
+        :return: None
+        """
+        self.test_only = testonly
+
+    def settestmode(self, mode):
+        """
+        Set testMode to (mode).
+        - True: run the Source in testMode;
+        - False: run it in full mode
+        :param mode:
+        :return: None
+        """
+        self.test_mode = mode
+
     def write_out(self):
         '''
             To have a copy of the replaces and typed OMIM's on hand.
