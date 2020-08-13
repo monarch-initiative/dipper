@@ -1,7 +1,7 @@
 :MONARCH_b464cf2c118cac01ef22 a OBAN:association ;
     OBO:RO_0002558 OBO:ECO_0000213 ;
-    dc:description "A study of Intelligence in 656 European ancestry individuals from ADHD families with NA on platform Illumina [795637] (p=4E-8)" ;
-    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/22449649> ;
+    dcterms:description "A study of Intelligence in 656 European ancestry individuals from ADHD families with NA on platform Illumina [795637] (p=4E-8)" ;
+    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/22449649> ;
     OBAN:association_has_object <http://www.ebi.ac.uk/efo/EFO_0004337> ;
     OBAN:association_has_predicate OBO:RO_0003304 ;
     OBAN:association_has_subject :haplotype_bb627b1f64039b0f751a .

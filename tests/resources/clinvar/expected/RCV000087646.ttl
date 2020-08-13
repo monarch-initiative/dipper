@@ -44,7 +44,7 @@ BNODE:bb77ce61eda1e1160cfd a OBO:SEPIO_0000001 ;
         "b409eb231ce1985a1a4d_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/1058> ;
     OBO:SEPIO_0000111 BNODE:bcffea4366ef7f890f2a ;
-    dc:identifier "SCV000120538.1" .
+    dcterms:identifier "SCV000120538.1" .
 
 <http://omim.org/entry/130050> rdfs:label "Ehlers-Danlos syndrome, type 4" .
 

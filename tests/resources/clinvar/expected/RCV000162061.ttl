@@ -1,7 +1,7 @@
 :MONARCH_b25e1dcae8dd05dc4d16 a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:b8e43a4f4ce6a8409c4a ;
     OBO:SEPIO_0000015 BNODE:bd539326250b4352d101 ;
-    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/25786579> ;
+    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/25786579> ;
     OBAN:association_has_object <http://omim.org/entry/608716> ;
     OBAN:association_has_predicate OBO:GENO_0000840 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> ;
@@ -53,7 +53,7 @@ BNODE:bd539326250b4352d101 a OBO:SEPIO_0000001 ;
         "b25e1dcae8dd05dc4d16_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505721> ;
     OBO:SEPIO_0000111 BNODE:b8e43a4f4ce6a8409c4a ;
-    dc:identifier "SCV000189126.2" .
+    dcterms:identifier "SCV000189126.2" .
 
 <http://omim.org/entry/608716> rdfs:label "Primary autosomal recessive microcephaly 5" .
 

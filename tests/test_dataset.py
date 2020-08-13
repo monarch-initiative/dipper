@@ -48,7 +48,6 @@ class DatasetTestCase(unittest.TestCase):
         cls.timestamp_date = datetime.today().strftime("%Y%m%d")
 
         cls.base_cito = 'http://purl.org/spar/cito/'
-        cls.base_dc = 'http://purl.org/dc/elements/1.1/'
         cls.base_dcat = 'http://www.w3.org/ns/dcat#'
         cls.base_dcterms = 'http://purl.org/dc/terms/'
         cls.base_dctypes = 'http://purl.org/dc/dcmitype/'
@@ -91,7 +90,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_rdf_type = URIRef(cls.base_rdf + "type")
         cls.iri_title = URIRef(cls.base_dcterms + "title")
         cls.iri_dataset = URIRef(cls.base_dctypes + "Dataset")
-        cls.iri_description = URIRef(cls.base_dc + "description")
+        cls.iri_description = URIRef(cls.base_dcterms + "description")
         cls.iri_publisher = URIRef(cls.base_dcterms + "Publisher")
         cls.iri_source = URIRef(cls.base_dcterms + "source")
         cls.iri_logo = URIRef(cls.base_schema + "logo")

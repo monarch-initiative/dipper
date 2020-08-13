@@ -42,16 +42,16 @@ class CTDTestCase(unittest.TestCase):
         triples = """
             :MONARCH_b6c289df47cb72653f79 a OBAN:association ;
                 RO:0002558 ECO:0000033 ;
-                dc:source PMID:12345, PMID:56789 ;
+                dcterms:source PMID:12345, PMID:56789 ;
                 OBAN:association_has_object OMIM:188890 ;
                 OBAN:association_has_predicate RO:0002606 ;
                 OBAN:association_has_subject MESH:D009538 .
-            
+
             MESH:D009538 a owl:Class ;
                 rdfs:label "Nicotine" ;
                 biolink:category biolink:ChemicalSubstance ;
                 RO:0002606 OMIM:188890 .
-                
+
             PMID:12345 a IAO:0000013 .
 
             PMID:56789 a IAO:0000013 .
