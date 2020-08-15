@@ -1001,7 +1001,7 @@ class OMIM(OMIMSource):
                         orpha_mappings.append(orpha_curie)
                         model.addClassToGraph(
                             orpha_curie,
-                            orpha_label,
+                            # orpha_label,  # TODO till #969 is resolved
                             class_category=blv.terms['Disease']
                         )
                         model.addXref(
