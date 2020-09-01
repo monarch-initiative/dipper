@@ -700,6 +700,9 @@ pipeline {
             }
         }
         stage('Estatic'){
+            when {
+                expression { env.RELEASE != null }
+            }
             steps {
                 sh '''
                     echo "Taking a moment of silent contemplation ..."

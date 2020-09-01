@@ -371,9 +371,9 @@ class GeneOntology(Source):
                         else:
                             model.addSynonym(gene_id, syn)
 
-                for txid in taxon.split('|'):
-                    tax_curie = re.sub(r'taxon:', 'NCBITaxon:', txid)
-                    geno.addTaxon(tax_curie, gene_id)
+                # First taxon is for the gene, after the pipe are interacting taxa
+                tax_curie = re.sub(r'taxon:', 'NCBITaxon:', taxon.split('|')[0])
+                geno.addTaxon(tax_curie, gene_id)
 
                 assoc = Assoc(graph, self.name)
                 assoc.set_subject(gene_id)

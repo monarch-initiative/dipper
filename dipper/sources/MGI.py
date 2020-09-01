@@ -857,13 +857,16 @@ SELECT  r._relationship_key as rel_key,
                 allele_label = self.label_hash.get(allele_id)
                 marker_label = self.label_hash.get(marker_id)
                 if allele_label is not None and allele_label == marker_label:
-                    model.addSameIndividual(allele_id, marker_id)
+                    # model.addSameIndividual(allele_id, marker_id)
+                    # this causes disjoint category violations, see
+                    # https://github.com/monarch-initiative/dipper/issues/519
                     self.idhash['seqalt'][allele_key] = allele_id
                     model.addComment(
                         allele_id,
                         self._make_internal_identifier('allele', allele_key)
                     )
-                elif marker_id is not None:
+
+                if marker_id is not None:
                     # marker_id will be none if the allele
                     # is not linked to a marker
                     # (as in, it's not mapped to a locus)
