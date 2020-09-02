@@ -153,9 +153,9 @@ class Panther(Source):
         <assoc_id> :hasSubject <gene1_id>
         <assoc_id> :hasObject <gene2_id>
         <assoc_id> :hasPredicate <RO:orthologous>
-        <assoc_id> dc:evidence ECO:phylogenetic_evidence
+        <assoc_id> dcterms:evidence ECO:phylogenetic_evidence
 
-        <panther_id> a DATA:gene_family
+        <panther_id> rdf:type DATA:gene_family
         <panther_id> RO:has_member <gene1_id>
         <panther_id> RO:has_member <gene2_id>
 

@@ -1,6 +1,6 @@
 MONARCH:bd56c100c5d3b2ba7c36 a OBAN:association ;
     RO:0002558 ECO:0000015 ;
-    dc:source PMID:27335463 ;
+    dcterms:source PMID:27335463 ;
     OBAN:association_has_object DOID:0060041 ;
     OBAN:association_has_predicate RO:0003301 ;
     OBAN:association_has_subject FlyBase:FBal0263199 .

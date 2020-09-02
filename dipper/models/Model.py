@@ -83,7 +83,7 @@ class Model():
         *if a type is added,
             then the node will be an OWL:subclassOf that the type
         *if a description is provided,
-            it will also get added as a dc:description
+            it will also get added as a dcterms:description
         :param class_id:
         :param label:
         :param class_type:
@@ -314,7 +314,7 @@ class Model():
             subject_category=child_category,
             object_category=parent_category
         )
-        
+
     def addSynonym(self, class_id, synonym, synonym_type=None, class_category=None):
         """
         Add the synonym as a property of the class cid.
