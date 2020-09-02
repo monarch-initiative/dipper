@@ -522,7 +522,7 @@ class OMIM(OMIMSource):
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
         <assoc> hasPredicate <causes condition>
-        <assoc> DC:evidence <eco_id>
+        <assoc> DCTERMS:evidence <eco_id>
         :param limit:
         :return:
         """
@@ -1001,7 +1001,7 @@ class OMIM(OMIMSource):
                         orpha_mappings.append(orpha_curie)
                         model.addClassToGraph(
                             orpha_curie,
-                            orpha_label,
+                            # orpha_label,  # TODO till #969 is resolved
                             class_category=blv.terms['Disease']
                         )
                         model.addXref(

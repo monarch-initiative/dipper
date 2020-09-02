@@ -473,7 +473,7 @@ class Genotype():
 
         <targeted_gene_id> a GENO:reagent_targeted_gene
         rdfs:label targeted_gene_label
-        dc:description description
+        dcterms:description description
         <reagent_id> GENO:targets_gene <gene_id>
 
         :param reagent_id:

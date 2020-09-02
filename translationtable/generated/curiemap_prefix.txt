@@ -181,7 +181,6 @@
 "dbSNP"
 "dbSNPIndividual"
 "dbVar"
-"dc"
 "dcat"
 "dcterms"
 "dctypes"

@@ -29,7 +29,7 @@ BNODE:b13b11feeac6001ef4e1 a OBO:SEPIO_0000001 ;
     dcterms:created "2017-04-04" ;
     OBO:SEPIO_0000041 BNODE:bc99926ac85cd459a025 ;
     OBO:SEPIO_0000111 BNODE:bec67224cccaa828d90f ;
-    dc:identifier "SCV000790664.1" .
+    dcterms:identifier "SCV000790664.1" .
 
 BNODE:bc99926ac85cd459a025 a OBO:SEPIO_0000037 ;
     rdfs:label "Counsyl Autosomal Recessive and X-Linked Classification Criteria (2018)",

@@ -424,7 +424,7 @@ class Source:
 
                 fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
                 self.dataset.graph.addTriple(
-                    self.dataset.version_level_curie, self.globaltt["Source (dct)"],
+                    self.dataset.version_level_curie, self.globaltt["Source"],
                     cleaned_file_iri)
                 filedate = Literal(
                     datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y%m%d"),

@@ -9,7 +9,7 @@
 
 BEGIN {hi = -2^PREC; lo = 2^PREC; THRESHOLD = 10}
 
-# there is an unfortunate case where the term label contains parens e.g.
+# there was an unfortunate case where the term label contains parens e.g.
 # ZFIN -> LITERAL [label=<dc:title ! title (dce) (30783)>];
 # AspGD -> GO [label=<RO:0002331 ! involved in (-12)>, color="pink"];
 

@@ -1,5 +1,5 @@
 from rdflib.graph import ConjunctiveGraph, URIRef
-from rdflib.namespace import RDF, OWL, DC
+from rdflib.namespace import RDF, OWL, DCTERMS
 from rdflib import util as rdflib_util
 from xml.sax import SAXParseException
 import argparse

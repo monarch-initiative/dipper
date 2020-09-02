@@ -272,7 +272,7 @@ class Coriell(Source):
             member_of family_id  #what is the right thing here?
             SIO:race EFO:caucasian  #subclass of EFO:0001799
             in_taxon NCBITaxon:9606
-            dc:description Literal(remark)
+            dcterms:description Literal(remark)
             RO:has_phenotype OMIM:disease_id
             GENO:has_genotype genotype_id
 

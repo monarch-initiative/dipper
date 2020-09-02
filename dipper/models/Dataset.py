@@ -255,7 +255,7 @@ class Dataset:
                              self.summary_level_curie)
         if self.ingest_url is not None:
             self.graph.addTriple(self.summary_level_curie,
-                                 self.globaltt["Source (dct)"],
+                                 self.globaltt["Source"],
                                  self.ingest_url)
         if self.ingest_description is not None:
             self.model.addDescription(self.summary_level_curie, self.ingest_description)
@@ -437,7 +437,7 @@ class Dataset:
         :return: None
         """
         if predicate is None:
-            predicate = self.globaltt["Source (dct)"]
+            predicate = self.globaltt["Source"]
         self.graph.addTriple(
             self.version_level_curie,
             predicate,

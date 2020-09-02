@@ -12,7 +12,7 @@
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'                     # Resource Description Framework Schema
-'dc': 'http://purl.org/dc/elements/1.1/'                            # Dublin Core (metadata)
+'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (metadata)
 'foaf': 'http://xmlns.com/foaf/0.1/'                                # Friend Of A Friend (social)
 'xml': 'http://www.w3.org/XML/1998/namespace'                       # Extensible Markup Language
 'xsd': 'http://www.w3.org/2001/XMLSchema#'                          # XML Schema Definition
@@ -24,7 +24,6 @@
 # dataset description
 'dcat': 'http://www.w3.org/ns/dcat#'                                # Data Catalog Vocabulary
 'dctypes': 'http://purl.org/dc/dcmitype/'                           # Dublin Core Metadata Initiative (types)
-'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (addtional terms)
 'pav': 'http://purl.org/pav/'                                       # Provenance, Authoring and Versioning
 'cito': 'http://purl.org/spar/cito/'                                # Citation Typing Ontology
 'void': 'http://rdfs.org/ns/void#'                                  # Vocabulary of Interlinked Datasets (VOID)

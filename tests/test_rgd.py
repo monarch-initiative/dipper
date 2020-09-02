@@ -50,12 +50,12 @@ class RGDTestCase(unittest.TestCase):
         triples = """
     :MONARCH_b4650e8c3d865f11a1a5 a OBAN:association ;
         RO:0002558 ECO:0005611 ;
-        dc:source RGDRef:1581841 ;
+        dcterms:source RGDRef:1581841 ;
         OBAN:association_has_object OBO:MP_0003340 ;
         OBAN:association_has_predicate OBO:RO_0002200 ;
         OBAN:association_has_subject RGD:2535 ;
         pav:createdOn "2006-10-26" .
-    
+
     RGD:2535 OBO:RO_0002200 MP:0003340 .
         RGDRef:1581841 a IAO:0000311 ;
         owl:sameAs PMID:12799311 .
