@@ -451,6 +451,9 @@ class NCBIGene(OMIMSource):
                     continue
                 if prefix == 'ENSEMBL':
                     model.addXref(gene_id, dbxref_curie)
+                    # For Ensembl xrefs, don't proceed to equivalent class code
+                    # these are more loose xrefs than equivalent identifiers
+                    continue
                 if prefix == 'OMIM':
                     omim_num = dbxref_curie[5:]
                     if omim_num in self.omim_replaced:
@@ -470,7 +473,8 @@ class NCBIGene(OMIMSource):
                         # and ncbi is never a human clique leader in any case
                         dbxref_curie = None
                         continue
-                # designate clique leaders
+
+                # designate clique leaders and equivalentClass/sameAs triples
                 # (perhaps premature as this ingest can't know what else exists)
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C' and \
