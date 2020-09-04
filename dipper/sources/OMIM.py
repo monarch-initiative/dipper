@@ -695,9 +695,7 @@ class OMIM(OMIMSource):
             self.name,
             gene_id,
             disorder_id,
-            rel_id,
-            entity_category=blv.terms['Gene'],
-            phenotype_category=blv.terms['Disease']
+            rel_id
         )
 
         if phene_key is not None:
