@@ -166,6 +166,7 @@ class Model():
             sub,
             self.globaltt['equivalent_class'],
             obj,
+            object_is_literal=False,
             subject_category=subject_category,
             object_category=object_category
         )
@@ -177,6 +178,7 @@ class Model():
             sub,
             self.globaltt['same_as'],
             obj,
+            object_is_literal=False,
             subject_category=subject_category,
             object_category=object_category
         )
@@ -214,6 +216,7 @@ class Model():
             class_id,
             self.globaltt['subclass_of'],
             bnode,
+            object_is_literal=False,
             subject_category=class_category
         )
 
@@ -311,6 +314,7 @@ class Model():
             child_id,
             self.globaltt['subclass_of'],
             parent_id,
+            object_is_literal=False,
             subject_category=child_category,
             object_category=parent_category
         )
@@ -421,7 +425,8 @@ class Model():
         self.graph.addTriple(
             node_id,
             self.globaltt['clique_leader'],
-            True, object_is_literal=True,
+            True,
+            object_is_literal=True,
             literal_type='xsd:boolean'
         )
 
