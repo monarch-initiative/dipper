@@ -173,6 +173,9 @@ class Orphanet(Source):
                             dbxref, None, class_category=blv.terms['Gene']
                         )
                         model.addEquivalentClass(gene_curie, dbxref)
+                        # note: when dbxref is a Genatlas family,
+                        # the curie is/was mistaken as a literal
+                        # due to the trailing '@' on the symbol
 
                 syn_list = gene.find('./SynonymList')
                 if int(syn_list.get('count')) > 0 and gene_curie is not None:
