@@ -494,7 +494,9 @@ class FlyBase(PostgreSQLSource):
 
     def _process_gene_xref(self, limit):
         """
-        Make eq axioms between flybase gene ids and ncbi gene and hgnc
+        Make equivalentClass axioms between flybase gene ids
+            and NCBIGene
+            and HGNC noting these are not expected to be orthologs just bad renaming.
 
         Note that there are a lot of genes in flybase from other organisms
         we make the eq axioms so that they clique merge in our large graph
@@ -529,6 +531,7 @@ class FlyBase(PostgreSQLSource):
                     xref_prefix = 'NCBIGene'
                 elif xref_source == 'HGNC':
                     xref_prefix = 'HGNC'
+                    # gene_taxon = self.globaltt['Homo sapiens']
                 xref_curie = xref_prefix + ':' + xref_id
 
                 model.addEquivalentClass(
