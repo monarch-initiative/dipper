@@ -97,9 +97,10 @@ class Evidence:
             self.graph.addTriple(
                 evidence_line, self.globaltt['has_evidence_item'], measurement)
 
-            self.graph.addTriple(
-                measurement, self.globaltt['has_value'],  # 'has measurement value' ??
-                measurement_dict[measurement], True)
+            if measurement_dict[measurement] != '':
+                self.graph.addTriple(
+                    measurement, self.globaltt['has_value'],  # has measurement value ??
+                    measurement_dict[measurement], object_is_literal=True)
 
     def add_supporting_publication(
             self, evidence_line, publication, label=None, pub_type=None
