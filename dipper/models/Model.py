@@ -384,13 +384,14 @@ class Model():
         )
 
     def addDescription(self, subject_id, description, subject_category=None):
-        self.graph.addTriple(
-            subject_id,
-            self.globaltt['description'],
-            description.strip(),
-            object_is_literal=True,
-            subject_category=subject_category
-        )
+        if description is not None and description != '':
+            self.graph.addTriple(
+                subject_id,
+                self.globaltt['description'],
+                description.strip(),
+                object_is_literal=True,
+                subject_category=subject_category
+            )
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
