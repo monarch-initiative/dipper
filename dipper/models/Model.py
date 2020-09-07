@@ -336,7 +336,7 @@ class Model():
         if synonym_type is None:
             synonym_type = self.globaltt['has_exact_synonym']
 
-        if synonym is not None:
+        if synonym is not None and synonym != '':
             self.graph.addTriple(
                 class_id,
                 synonym_type,
@@ -344,6 +344,7 @@ class Model():
                 object_is_literal=True,
                 subject_category=class_category
             )
+            # todo warn
 
     def addDefinition(self, class_id, definition, class_category=None):
         self.graph.addTriple(
@@ -392,6 +393,7 @@ class Model():
                 object_is_literal=True,
                 subject_category=subject_category
             )
+            # todo: warn; but only when we can say where it came from
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(

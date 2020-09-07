@@ -364,11 +364,13 @@ class GeneOntology(Source):
                                 gene_id, self.globaltt['has gene product'], syn)
                         elif re.fullmatch(graph.curie_regexp, syn) is not None and\
                                 syn.split(':')[0] not in self.wont_prefix:
+                            syn = syn.strip()
                             LOG.warning(
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
-                            model.addSynonym(gene_id, syn)
-                        else:
+                            if syn != '':
+                                model.addSynonym(gene_id, syn)
+                        elif syn != '':
                             model.addSynonym(gene_id, syn)
 
                 # First taxon is for the gene, after the pipe are interacting taxa
