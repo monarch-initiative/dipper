@@ -494,12 +494,12 @@ class GWASCatalog(Source):
                     geno.addAffectedLocus(snp_id, 'ENSEMBL:' + geneid)
 
         # add the up and downstream genes if they are available
-        if upstream_gene_num != '':
+        if downstream_gene_num != '':
             downstream_gene_id = 'ENSEMBL:' + downstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is upstream of sequence of'], downstream_gene_id
             )
-        if downstream_gene_num != '':
+        if upstream_gene_num != '':
             upstream_gene_id = 'ENSEMBL:' + upstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is downstream of sequence of'], upstream_gene_id
