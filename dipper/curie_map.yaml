@@ -73,6 +73,9 @@
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 # 'OMIA' was http://omia.angis.org.au/ IS https://omia.org/         # (see about helping to update original data)
 'OMIA': 'https://omia.org/OMIA'                                     # Online Mendelian Inheritance in Animals (disease/species)
+# LIDIA seems retired. so these are not resovable
+'LIDA': 'http://sydney.edu.au/vetscience/lida/dogs/search/disorder/' # Listing of Inherited Disorders in Animals (defunct?)
+                                                                     # Also: http://www.vetsci.usyd.edu.au/lida/
 'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
 'OMIMPS': 'http://www.omim.org/phenotypicSeries/'                   # Online Mendelian Inheritance in Man (phenotypes)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
@@ -104,6 +107,7 @@
 'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'                    # Scientific Evidence and Provenance Information Ontology
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
 'vfb': 'http://virtualflybrain.org/reports/'                        # Drosophila neuroanatomy
+
 
 # phenotype
 'EOM': 'https://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
