@@ -514,6 +514,7 @@ class AnimalQTLdb(Source):
                     )
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
+                gene_id = gene_id.strip(',')  # for "100157483,"  in pig_QTLdata.txt
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
                         and re.fullmatch(r'[^ ]*', gene_id) is not None:
 
