@@ -322,7 +322,7 @@ class WormBase(Source):
 
                 gene_id = 'WormBase:'+gene_num
 
-                if concise_description != 'none available':
+                if concise_description not in ('none available', '', None):
                     model.addDefinition(gene_id, concise_description)
 
                 # remove the description if it's identical to the concise
@@ -334,10 +334,8 @@ class WormBase(Source):
                 }
                 for d in descs:
                     text = descs.get(d)
-                    if text == concise_description \
-                            or re.match(r'none', text) or text == '':
-                        pass  # don't use it
-                    else:
+                    if text != concise_description and \
+                            text[:4] != 'none' and text != '':
                         text = ' '.join((text, '['+d+']'))
                         descs[d] = text
                         model.addDescription(gene_id, text)
@@ -733,7 +731,7 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                     else:
                         model.addSynonym(fid, name)
 
-                if desc is not None:
+                if desc is not None and desc != '':
                     model.addDescription(fid, desc)
 
                 alias = attribute_dict.get('Alias')
@@ -763,7 +761,7 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
 
                 feature.addFeatureToGraph(True, None, feature_is_class)
 
-                if note is not None:
+                if note is not None and note != '':
                     model.addDescription(fid, note)
 
                 if limit is not None and line_counter > limit:
@@ -904,7 +902,8 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
                 # citation is not a pmid or WBref - get this some other way
-                model.addDescription(assoc_id, summary)
+                if summary is not None and summary != '':
+                    model.addDescription(assoc_id, summary)
 
                 if limit is not None and line_counter > limit:
                     break
