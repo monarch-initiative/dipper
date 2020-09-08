@@ -538,20 +538,22 @@ class GWASCatalog(Source):
                     graph, pubmed_curie, self.globaltt['journal article'])
                 ref.addRefToGraph()
 
-                assoc = G2PAssoc(
-                    graph, self.name, variant_id, trait_curie,
-                    model.globaltt['contributes to condition'])
-                assoc.add_source(pubmed_curie)
+                if trait_curie is not None and trait_curie != '' and
+                        variant_id is not None and variant_id != '':
+                    assoc = G2PAssoc(
+                        graph, self.name, variant_id, trait_curie,
+                        model.globaltt['contributes to condition'])
+                    assoc.add_source(pubmed_curie)
 
-                assoc.add_evidence(
-                    self.globaltt['combinatorial evidence used in automatic assertion'])
+                    assoc.add_evidence(
+                        self.globaltt['combinatorial evidence used in automatic assertion'])
 
-                if description is not None:
-                    assoc.set_description(description)
+                    if description is not None:
+                        assoc.set_description(description)
 
-                # FIXME score should get added to provenance/study
-                # assoc.set_score(pvalue)
-                if trait_curie is not None and variant_id is not None:
+                    # FIXME score should get added to provenance/study
+                    # assoc.set_score(pvalue)
+
                     assoc.add_association_to_graph()
 
     @staticmethod
