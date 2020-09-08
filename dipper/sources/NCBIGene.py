@@ -426,6 +426,8 @@ class NCBIGene(OMIMSource):
             dbxref = dbxref.strip()
             # de stutter dbxref
             (prefix, local_id) = dbxref.split(':')[-2:]
+            prefix = prefix.strip()
+            local_id = local_id.strip()
 
             # skip some of these based on curie prefix or malformatting
             if prefix is None or prefix in filter_out or \
@@ -717,10 +719,10 @@ class NCBIGene(OMIMSource):
             for row in tsv:
                 row = row.decode().strip().split('\t')
                 tax_a = row[col.index('tax_id')]
-                gene_a = row[col.index('GeneID')]
+                gene_a = row[col.index('GeneID')].strip()
                 rel = row[col.index('relationship')]
                 tax_b = row[col.index('Other_tax_id')]
-                gene_b = row[col.index('Other_GeneID')]
+                gene_b = row[col.index('Other_GeneID')].strip()
 
                 if rel != 'Ortholog':
                     continue
