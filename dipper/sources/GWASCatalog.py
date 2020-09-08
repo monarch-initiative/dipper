@@ -538,7 +538,7 @@ class GWASCatalog(Source):
                     graph, pubmed_curie, self.globaltt['journal article'])
                 ref.addRefToGraph()
 
-                if trait_curie is not None and trait_curie != '' and
+                if trait_curie is not None and trait_curie != '' and \
                         variant_id is not None and variant_id != '':
                     assoc = G2PAssoc(
                         graph, self.name, variant_id, trait_curie,
