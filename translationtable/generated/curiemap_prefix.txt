@@ -85,6 +85,7 @@
 "KEGG-img"
 "KEGG-ko"
 "KEGG-path"
+"LIDA"
 "LPT"
 "MA"
 "MEDDRA"
