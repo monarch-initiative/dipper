@@ -182,7 +182,7 @@ class FlyBase(PostgreSQLSource):
             remotename = self._resolve_filename(self.files[src_key]['url'], ftp)
             if remotename != "":
                 # prepend ftp:// since this gets added to dataset rdf model
-                self.files[src_key]['url'] = "ftp://" + self.FLYFTP + remotename
+                self.files[src_key]['url'] = "ftp://" + self.FLYFTP + '/' + remotename
             else:  # cached vers?
                 self.files[src_key]['url'] = "/".join(
                     (self.DIPPERCACHE,  self.name, self.files[src_key]['file']))
@@ -304,8 +304,8 @@ class FlyBase(PostgreSQLSource):
                     # skip parsing for now
                     continue
                 else:
-                    raise ValueError("Unexpected phenotype type: {}".
-                                     format(pheno_type))
+                    raise ValueError(
+                        "Unexpected phenotype type: {}".format(pheno_type))
 
                 if pmid_id:
                     ref_curie = 'PMID:' + pmid_id
@@ -315,8 +315,9 @@ class FlyBase(PostgreSQLSource):
                     reference.setTitle(pub_title)
                     reference.addRefToGraph()
 
-                assoc = G2PAssoc(self.graph, self.name, allele_curie,
-                                 phenotype_curie, self.globaltt['has phenotype'])
+                assoc = G2PAssoc(
+                    self.graph, self.name, allele_curie,
+                    phenotype_curie, self.globaltt['has phenotype'])
                 assoc.add_source(ref_curie)
                 # Associations need to be disambiguated via their qualifiers
                 # see http://flybase.org/reports/FBal0207398 as an example
@@ -391,16 +392,19 @@ class FlyBase(PostgreSQLSource):
 
             self.check_fileheader(col, row)
 
-            next(reader)  # blank line
+            row = next(reader)  # blank line
 
             for row in reader:
                 row = [field.strip() for field in row]
-                prefix = row[col.index('abbreviation')]
-                tax_group = row[col.index('taxgroup')]
-                taxon = row[col.index('ncbi-taxon-id')]
+                prefix = row[col.index('abbreviation')].strip()
+                tax_group = row[col.index('taxgroup')].strip()
+                taxon = row[col.index('ncbi-taxon-id')].strip()
                 taxon = taxon.replace("taxon", "NCBITaxon")
 
-                species_map[prefix] = (tax_group, taxon)
+                #  ... tax_group is not None and tax_group != '' and \
+                if prefix is not None and prefix != '' and \
+                       taxon is not None and taxon != '':
+                    species_map[prefix] = (tax_group, taxon)
 
             # Add in hard coded prefixes
             for prefix, taxon in added_prefixes.items():
@@ -494,7 +498,9 @@ class FlyBase(PostgreSQLSource):
 
     def _process_gene_xref(self, limit):
         """
-        Make eq axioms between flybase gene ids and ncbi gene and hgnc
+        Make equivalentClass axioms between flybase gene ids
+            and NCBIGene
+            and HGNC noting these are not expected to be orthologs just bad renaming.
 
         Note that there are a lot of genes in flybase from other organisms
         we make the eq axioms so that they clique merge in our large graph
@@ -529,6 +535,7 @@ class FlyBase(PostgreSQLSource):
                     xref_prefix = 'NCBIGene'
                 elif xref_source == 'HGNC':
                     xref_prefix = 'HGNC'
+                    # gene_taxon = self.globaltt['Homo sapiens']
                 xref_curie = xref_prefix + ':' + xref_id
 
                 model.addEquivalentClass(
@@ -593,6 +600,22 @@ class FlyBase(PostgreSQLSource):
                             continue
                     except KeyError:
                         LOG.info("%s not in species prefix file", allele_prefix[0])
+                        note =  '''
+                            list of unincluded species prefixes include:
+                            Aace,Afun,Agos,Ahyp,Amil,Aobl,Apim,Apol,Aque,Asam,AspBV3L6,
+                            Avin,Baen,Bant,Bcen,Bdor,Beme,Besp,Bger,Blan,Bovi,Brsp,
+                            Bsp240B1,Bsub,Btab,Bter,Bxb1,BYV,CABYV,Cbeta,Ccaj,Cdif,
+                            Cfum,Cgri,Cint,Clsp,Cmar,Cnoc,Cpip,Cprd,Cqui,Crub,Csal,
+                            CsIV,D6,Dano,Dcaa,Dcol,Dcub,Ddun,DENV,Dflo,Dful,Dmas,Dnep,
+                            Drad,Ecab,Efae,Egra,Epos,Equa,EspSC22,Fmer,Gfas,Gint,Gmax,
+                            Gmor,Gthe,gypsy,Harm,hobo,HPV18,Hpyl,Hsod,HspTP009,Htur,
+                            Hver,Isca,jockey,Klac,Kpne,Lcup,Ldis,Lhem,Lmal,Lmon,Lser,
+                            Mani,Mbre,Mosp,Mper,Mril,NDV,Nlug,Npha,Nvec,Nvit,Oari,
+                            Obic,Osat,Paer,Pchi,PCV,Penelope,Pgur,Phum,Pime,Pmat,Pshi,
+                            Pvin,PVX,Pxyl,Rfla,Rhsp,Rpal,Rsph,Shel,Slit,Soce,Spou,
+                            Spyo,Tadh,TBSV,TCV,TEV,Tgeo,Tgon,Tmer,TNPV,TspX513,Tthe,
+                            Vcon,Vdes,Vpar,VV,WSSV,Xvas,Zbai,Zbis,ZIKV,Zrou,ZYMV
+                        '''
                         continue
 
                 elif not allele_prefix:
@@ -628,8 +651,8 @@ class FlyBase(PostgreSQLSource):
                         allele_curie
                     )
                 else:
-                    raise ValueError("Did not correct parse gene label {}"
-                                     .format(gene_label))
+                    raise ValueError(
+                        "Did not correct parse gene label {}".format(gene_label))
 
                 # Connect allele and gene with geno.addAffectedLocus()
                 if allele_prefix and gene_prefix:

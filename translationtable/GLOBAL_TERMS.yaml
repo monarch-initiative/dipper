@@ -175,7 +175,6 @@
 "organization": "foaf:organization",
 "page": "foaf:page",
 "person": "foaf:Person",
-# ??? PATO_0000470: GENO:0000876
 # "Genotype Partonomy Ontology": "GENO:!!!",
 "intrinsic_genotype": "GENO:0000000",
 "variant_locus": "GENO:0000002",

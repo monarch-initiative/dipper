@@ -59,13 +59,15 @@ class Model():
         )
 
     def addLabel(self, subject_id, label, subject_category=None):
-        self.graph.addTriple(
-            subject_id,
-            self.globaltt['label'],
-            label,
-            object_is_literal=True,
-            subject_category=subject_category
-        )
+        if label != '':
+            self.graph.addTriple(
+                subject_id,
+                self.globaltt['label'],
+                label,
+                object_is_literal=True,
+                subject_category=subject_category
+            )
+        # warn
 
     def addClassToGraph(
             self,
@@ -102,7 +104,7 @@ class Model():
             self.globaltt['class'],
             subject_category=class_category
         )
-        if label is not None:
+        if label is not None and label != '':
             self.graph.addTriple(
                 class_id, self.globaltt['label'], label, object_is_literal=True
             )
@@ -114,7 +116,7 @@ class Model():
                 class_type,
                 object_category=class_type_category
             )
-        if description is not None:
+        if description is not None and description != '':
             self.graph.addTriple(
                 class_id,
                 self.globaltt['description'],
@@ -131,7 +133,7 @@ class Model():
             ind_category=None,
             ind_type_category=None
     ):
-        if label is not None:
+        if label is not None and label != '':
             self.graph.addTriple(
                 ind_id, self.globaltt['label'], label, object_is_literal=True
             )
@@ -151,7 +153,7 @@ class Model():
                 self.globaltt['named_individual'],
                 subject_category=ind_category
             )
-        if description is not None:
+        if description is not None and description != '':
             self.graph.addTriple(
                 ind_id,
                 self.globaltt['description'],
@@ -166,6 +168,7 @@ class Model():
             sub,
             self.globaltt['equivalent_class'],
             obj,
+            object_is_literal=False,
             subject_category=subject_category,
             object_category=object_category
         )
@@ -177,6 +180,7 @@ class Model():
             sub,
             self.globaltt['same_as'],
             obj,
+            object_is_literal=False,
             subject_category=subject_category,
             object_category=object_category
         )
@@ -214,6 +218,7 @@ class Model():
             class_id,
             self.globaltt['subclass_of'],
             bnode,
+            object_is_literal=False,
             subject_category=class_category
         )
 
@@ -221,7 +226,7 @@ class Model():
         self.graph.addTriple(
             person_id, self.globaltt['type'], self.globaltt['person']
         )
-        if person_label is not None:
+        if person_label is not None and person_label != '':
             self.graph.addTriple(
                 person_id, self.globaltt['label'], person_label, object_is_literal=True
             )
@@ -311,6 +316,7 @@ class Model():
             child_id,
             self.globaltt['subclass_of'],
             parent_id,
+            object_is_literal=False,
             subject_category=child_category,
             object_category=parent_category
         )
@@ -332,7 +338,7 @@ class Model():
         if synonym_type is None:
             synonym_type = self.globaltt['has_exact_synonym']
 
-        if synonym is not None:
+        if synonym is not None and synonym != '':
             self.graph.addTriple(
                 class_id,
                 synonym_type,
@@ -340,6 +346,7 @@ class Model():
                 object_is_literal=True,
                 subject_category=class_category
             )
+            # todo warn
 
     def addDefinition(self, class_id, definition, class_category=None):
         self.graph.addTriple(
@@ -362,9 +369,9 @@ class Model():
             class_id,
             self.globaltt['database_cross_reference'],
             xref_id,
+            object_is_literal=xref_as_literal,
             subject_category=class_category,
-            object_category=xref_category,
-            object_is_literal=xref_as_literal
+            object_category=xref_category
         )
 
     def addDepiction(self, subject_id, image_url):
@@ -380,13 +387,16 @@ class Model():
         )
 
     def addDescription(self, subject_id, description, subject_category=None):
-        self.graph.addTriple(
-            subject_id,
-            self.globaltt['description'],
-            description.strip(),
-            object_is_literal=True,
-            subject_category=subject_category
-        )
+        description = description.strip()
+        if description is not None and description != '':
+            self.graph.addTriple(
+                subject_id,
+                self.globaltt['description'],
+                description,
+                object_is_literal=True,
+                subject_category=subject_category
+            )
+            # todo: warn; but only when we can say where it came from
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
@@ -421,7 +431,8 @@ class Model():
         self.graph.addTriple(
             node_id,
             self.globaltt['clique_leader'],
-            True, object_is_literal=True,
+            True,
+            object_is_literal=True,
             literal_type='xsd:boolean'
         )
 

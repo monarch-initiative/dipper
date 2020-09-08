@@ -494,12 +494,12 @@ class GWASCatalog(Source):
                     geno.addAffectedLocus(snp_id, 'ENSEMBL:' + geneid)
 
         # add the up and downstream genes if they are available
-        if upstream_gene_num != '':
+        if downstream_gene_num != '':
             downstream_gene_id = 'ENSEMBL:' + downstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is upstream of sequence of'], downstream_gene_id
             )
-        if downstream_gene_num != '':
+        if upstream_gene_num != '':
             upstream_gene_id = 'ENSEMBL:' + upstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is downstream of sequence of'], upstream_gene_id
@@ -538,20 +538,22 @@ class GWASCatalog(Source):
                     graph, pubmed_curie, self.globaltt['journal article'])
                 ref.addRefToGraph()
 
-                assoc = G2PAssoc(
-                    graph, self.name, variant_id, trait_curie,
-                    model.globaltt['contributes to condition'])
-                assoc.add_source(pubmed_curie)
+                if trait_curie is not None and trait_curie != '' and \
+                        variant_id is not None and variant_id != '':
+                    assoc = G2PAssoc(
+                        graph, self.name, variant_id, trait_curie,
+                        model.globaltt['contributes to condition'])
+                    assoc.add_source(pubmed_curie)
 
-                assoc.add_evidence(
-                    self.globaltt['combinatorial evidence used in automatic assertion'])
+                    assoc.add_evidence(
+                        self.globaltt['combinatorial evidence used in automatic assertion'])
 
-                if description is not None:
-                    assoc.set_description(description)
+                    if description is not None:
+                        assoc.set_description(description)
 
-                # FIXME score should get added to provenance/study
-                # assoc.set_score(pvalue)
-                if trait_curie is not None and variant_id is not None:
+                    # FIXME score should get added to provenance/study
+                    # assoc.set_score(pvalue)
+
                     assoc.add_association_to_graph()
 
     @staticmethod

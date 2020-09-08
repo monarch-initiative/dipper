@@ -311,7 +311,7 @@ class AnimalQTLdb(Source):
             taxon_curie = self.globaltt[taxon_label]
             taxon_num = taxon_curie.split(':')[1]
             txid_num = taxon_num  # for now
-            taxon_word = taxon_label.replace(' ', '_')
+            taxon_word = taxon_label.strip().replace(' ', '_')
             src_key = taxon_word + '_info'
             gene_info_file = '/'.join((
                 self.rawdir, self.files[src_key]['file']))
@@ -323,7 +323,7 @@ class AnimalQTLdb(Source):
                 # headers
                 col = self.files[src_key]['columns']
                 for row in filereader:
-                    if re.match('^#', row[0][0]):
+                    if row[0][0] == '#':
                         continue
                     if len(row) != len(col):
                         LOG.warning(
@@ -384,7 +384,7 @@ class AnimalQTLdb(Source):
 
         """
         aql_curie = self.files[src_key]['curie']
-
+        common_name = common_name.strip()
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -456,7 +456,7 @@ class AnimalQTLdb(Source):
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
-                build_id = 'MONARCH:' + common_name.strip() + '-linkage'
+                build_id = 'MONARCH:' + common_name + '-linkage'
                 build_label = common_name + ' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_curie)
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
@@ -514,6 +514,7 @@ class AnimalQTLdb(Source):
                     )
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
+                gene_id = gene_id.strip(',')  # for "100157483,"  in pig_QTLdata.txt
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
                         and re.fullmatch(r'[^ ]*', gene_id) is not None:
 

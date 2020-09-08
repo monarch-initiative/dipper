@@ -731,7 +731,8 @@ class ZFIN(Source):
 
             # since we re-create a label,
             # add the zfin fish label as the synonym
-            model.addSynonym(fish_id, fish['fish_label'])
+            if fish['fish_label'] != '':
+                model.addSynonym(fish_id, fish['fish_label'])
             self.id_label_map[fish_id] = fish_label
 
             if not self.test_mode and limit is not None and reader.line_num > limit:
@@ -841,8 +842,10 @@ class ZFIN(Source):
                 geno.addGenotype(genotype_curie, None)
 
                 # add the given name from ZFIN and uniquename as synonyms
-                model.addSynonym(genotype_curie, genotype_name)
-                model.addSynonym(genotype_curie, genotype_unique_name)
+                if genotype_name != '':
+                    model.addSynonym(genotype_curie, genotype_name)
+                if genotype_unique_name != '':
+                    model.addSynonym(genotype_curie, genotype_unique_name)
 
                 # store the alleles of the genotype,
                 # in order to use when processing fish
@@ -870,7 +873,8 @@ class ZFIN(Source):
 
                 # alleles in zfin are really sequence alterations in our system
                 geno.addSequenceAlteration(allele_curie, allele_name, allele_type_id)
-                model.addSynonym(allele_curie, allele_ab)
+                if allele_ab != '':
+                    model.addSynonym(allele_curie, allele_ab)
 
                 # here, we assemble the items into a genotype hash
                 # we need to do this because each row only holds one allele
@@ -1171,9 +1175,9 @@ class ZFIN(Source):
 
             # add monarch_genotype_name as synonym
             monarch_genotype_name = gvc_label + ' [' + background_label + ']'
-            model.addSynonym(gt, monarch_genotype_name)
-
-            self.id_label_map[gt] = monarch_genotype_name
+            if monarch_genotype_name != '':
+                model.addSynonym(gt, monarch_genotype_name)
+                self.id_label_map[gt] = monarch_genotype_name
 
             # Add the GVC to the genotype
             geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
@@ -1627,10 +1631,8 @@ class ZFIN(Source):
                 model.addIndividualToGraph(
                     genomfeat_curie, genomic_feature_name, feature_so_id
                 )
-
-                model.addSynonym(
-                    genomfeat_curie, genomic_feature_abbreviation
-                )
+                if genomic_feature_abbreviation != '':
+                    model.addSynonym(genomfeat_curie, genomic_feature_abbreviation)
 
                 if construct_id is not None and construct_id != '':
                     construct_curie = ':'.join(('ZFIN', construct_id))
@@ -2400,8 +2402,11 @@ class ZFIN(Source):
                     # add the panel as a genome build
                     panel_curie = ':'.join(('ZFIN', pinfo['id']))
                     geno.addReferenceGenome(panel_curie, panel_label, taxon_id)
-                    model.addSynonym(panel_curie, panel_symbol)
-                    model.addDescription(panel_curie, pinfo['name'])
+
+                    if panel_symbol != '':
+                        model.addSynonym(panel_curie, panel_symbol)
+                    if pinfo['name'] != '':
+                        model.addDescription(panel_curie, pinfo['name'])
 
                     # add the mapping-panel chromosome
                     chr_inst_id = makeChromID(chromosome, panel_curie, 'MONARCH')

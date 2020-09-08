@@ -639,8 +639,12 @@ class OMIA(OMIMSource):
 
         if self.test_mode and omia_id not in self.test_ids['disease']:
             return
+        # LIDIA is hard to find/redolve (404s; suspect offline)
+        # consider changing to model.addSynonym((omia_id, lidaurl)
+        # b/c uri are not literals
+        model.addXref(omia_id, lidaurl)
 
-        model.addXref(omia_id, lidaurl, True)
+
 
     def _process_phene_gene_row(self, row):
         geno = Genotype(self.graph)

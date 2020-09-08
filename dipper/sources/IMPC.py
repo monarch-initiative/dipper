@@ -655,7 +655,7 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
 
-        logging.info("Adding Provenance for %s", project_fullname)
+        # logging.info("Adding Provenance for %s", project_fullname)
         model.addIndividualToGraph(parameter_curie, parameter_label)
         provenance_model.add_study_measure(
             study_bnode, parameter_curie, object_is_literal=False
@@ -755,8 +755,8 @@ class IMPC(Source):
                 fold_change_bnode, None, self.globaltt['effect size estimate']
             )
             measurements[fold_change_bnode] = effect_size
-
-        evidence_model.add_supporting_data(evidence_line_bnode, measurements)
+        if measurements != {}:
+            evidence_model.add_supporting_data(evidence_line_bnode, measurements)
 
         # Link evidence to provenance by connecting to study node
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())

@@ -259,11 +259,13 @@ class EOM(PostgreSQLSource):
                 # morphology_term_id has_related_synonym replaces (; delimited)
                 if replaces not in ['', synonyms]:
                     for syn in replaces.split(';'):
-                        model.addSynonym(
-                            morphology_term_id,
-                            syn.strip(),
-                            self.globaltt['has_related_synonym']
-                        )
+                        syn.strip()
+                        if syn != '':
+                            model.addSynonym(
+                                morphology_term_id,
+                                syn,
+                                self.globaltt['has_related_synonym']
+                            )
 
                 # <morphology_term_id> <foaf:page> morphology_term_url
                 if morphology_term_id is not None:
