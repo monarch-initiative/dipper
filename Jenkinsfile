@@ -667,6 +667,7 @@ pipeline {
                         '''
                     }
                 }
+                /*
                 stage("MyChem Info") {
                     when {
                         anyOf {
@@ -682,6 +683,7 @@ pipeline {
                         '''
                     }
                 }
+                */
                 stage("UCSCBands") {
                     when {
                         anyOf {
