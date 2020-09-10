@@ -25,21 +25,24 @@ class KEGG(OMIMSource):
     files = {
         'disease': {
             'file': 'disease',
-            'url': 'http://rest.genome.jp/list/disease'},
+            'url': 'http://rest.genome.jp/list/disease',
+            'columns': ['disease_id', 'disease_name']},
         'pathway': {
             'file': 'pathway',
-            'url': 'http://rest.genome.jp/list/pathway'},
+            'url': 'http://rest.genome.jp/list/pathway',
+            'columns': ['pathway_id', 'pathway_name']},
         'hsa_genes': {
             'file': 'hsa_genes',
-            'url': 'http://rest.genome.jp/list/hsa'},
+            'url': 'http://rest.genome.jp/list/hsa',
+            'columns': ['gene_id', 'gene_name']},
         'ortholog_classes': {
             'file': 'ortholog_classes',
             'url': 'http://rest.genome.jp/list/orthology'},
         'disease_gene': {
             'file': 'disease_gene',
             'url': 'http://rest.kegg.jp/link/disease/hsa'},
-        'omim2disease': {
-            'file': 'omim2disease',
+        'omim': {
+            'file': 'omim',
             'url': 'http://rest.genome.jp/link/disease/omim'},
         'omim2gene': {
             'file': 'omim2gene',
@@ -48,34 +51,16 @@ class KEGG(OMIMSource):
             'file': 'ncbi',
             'url': 'http://rest.genome.jp/conv/ncbi-geneid/hsa'},
         'hsa_gene2pathway': {
-            'file': 'human_gene2pathway',
+            'file': 'hsa_gene2pathway',
             'url': 'http://rest.kegg.jp/link/pathway/hsa'},
-        'hsa_orthologs': {
-            'file': 'hsa_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/hsa'},
-        'mmu_orthologs': {
-            'file': 'mmu_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/mmu'},
-        'rno_orthologs': {
-            'file': 'rno_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/rno'},
-        'dme_orthologs': {
-            'file': 'dme_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/dme'},
-        'dre_orthologs': {
-            'file': 'dre_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/dre'},
-        'cel_orthologs': {
-            'file': 'cel_orthologs',
-            'url': 'http://rest.kegg.jp/link/orthology/cel'},
-        'pathway_pubmed': {
-            'file': 'pathway_pubmed',
+        'pubmed': {
+            'file': 'pubmed',
             'url': 'http://rest.kegg.jp/link/pathway/pubmed'},
-        'pathway_disease': {
-            'file': 'pathway_disease',
+        'ds': {
+            'file': 'ds',
             'url': 'http://rest.kegg.jp/link/pathway/ds'},
-        'pathway_ko': {
-            'file': 'pathway_ko',
+        'ko': {
+            'file': 'ko',
             'url': 'http://rest.kegg.jp/link/pathway/ko'},
     }
 
@@ -104,10 +89,11 @@ class KEGG(OMIMSource):
             "ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
-    def __init__(self,
-                 graph_type,
-                 are_bnodes_skolemized,
-                 data_release_version=None):
+    def __init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            data_release_version=None):
         super().__init__(
             graph_type=graph_type,
             are_bnodes_skolemized=are_bnodes_skolemized,
@@ -158,17 +144,11 @@ class KEGG(OMIMSource):
 
         self._process_diseases(limit)
         self._process_genes(limit)
-        #self._process_omim2gene(limit)
+        # self._process_omim2gene(limit)
         self._process_omim2disease(limit)
-        #self._process_kegg_disease2gene(limit)
+        # self._process_kegg_disease2gene(limit)
         self._process_pathway_ko(limit)
         self._process_ortholog_classes(limit)
-
-        # TODO add in when refactoring for #141
-        # for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs',
-        #           'dme_orthologs','dre_orthologs','cel_orthologs']:
-        #     file = '/'.join((self.rawdir, self.files[f]['file']))
-        #     self._process_orthologs(file, limit)  # DONE #
 
         LOG.info("Finished parsing")
 
@@ -187,7 +167,7 @@ class KEGG(OMIMSource):
         :return:
 
         """
-
+        src_key = 'pathway'
         LOG.info("Processing pathways")
         if self.test_mode:
             graph = self.testgraph
@@ -195,7 +175,7 @@ class KEGG(OMIMSource):
             graph = self.graph
         model = Model(graph)
         path = Pathway(graph)
-        raw = '/'.join((self.rawdir, self.files['pathway']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -228,14 +208,14 @@ class KEGG(OMIMSource):
         :return:
 
         """
-
+        src_key = 'disease'
         LOG.info("Processing diseases")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['disease']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -279,7 +259,7 @@ class KEGG(OMIMSource):
         :return:
 
         """
-
+        src_key = 'hsa_genes'
         LOG.info("Processing genes")
         if self.test_mode:
             graph = self.testgraph
@@ -288,7 +268,7 @@ class KEGG(OMIMSource):
         model = Model(graph)
         family = Family(graph)
         geno = Genotype(graph)
-        raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -357,21 +337,21 @@ class KEGG(OMIMSource):
 
         :return:
         """
-
+        src_key = 'ortholog_classes'
         LOG.info("Processing ortholog classes")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
                 (orthology_class_id, orthology_class_name) = row
 
                 if self.test_mode and orthology_class_id \
-                        not in self.test_ids['orthology_classes']:
+                        not in self.test_ids[src_key]:
                     continue
 
                 # The orthology class is essentially a KEGG gene ID
@@ -382,7 +362,7 @@ class KEGG(OMIMSource):
                 # the first one is the label we'll use
                 orthology_label = other_labels[0]
 
-                orthology_class_id = 'KEGG-'+orthology_class_id.strip()
+                orthology_class_id = 'KEGG-' + orthology_class_id.strip()
 
                 orthology_type = self.globaltt['gene_family']
                 model.addClassToGraph(
@@ -409,52 +389,6 @@ class KEGG(OMIMSource):
                     break
         LOG.info("Done with ortholog classes")
 
-    def _process_orthologs(self, raw, limit=None):
-        """
-        This method maps orthologs for a species to the KEGG orthology classes.
-
-        Triples created:
-        <gene_id> is a class
-        <orthology_class_id> is a class
-
-        <assoc_id> has subject <gene_id>
-        <assoc_id> has object <orthology_class_id>
-        :param limit:
-        :return:
-
-        """
-
-        LOG.info("Processing orthologs")
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
-        model = Model(graph)
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in reader:
-                (gene_id, orthology_class_id) = row
-
-                orthology_class_id = 'KEGG:'+orthology_class_id.strip()
-                gene_id = 'KEGG:' + gene_id.strip()
-
-                # note that the panther_id references a group of orthologs,
-                # and is not 1:1 with the rest
-
-                # add the KO id as a gene-family grouping class
-                OrthologyAssoc(
-                    graph, self.name, gene_id, None).add_gene_family_to_graph(
-                        orthology_class_id)
-
-                # add gene and orthology class to graph;
-                # assume labels will be taken care of elsewhere
-                model.addClassToGraph(gene_id, None)
-                model.addClassToGraph(orthology_class_id, None)
-
-                if not self.test_mode and limit is not None and reader.line_num > limit:
-                    break
-        LOG.info("Done with orthologs")
-
     def _process_kegg_disease2gene(self, limit=None):
         """
         This method creates an association between diseases and
@@ -472,7 +406,7 @@ class KEGG(OMIMSource):
         :return:
 
         """
-
+        src_key = 'disease_gene'
         LOG.info("Processing KEGG disease to gene")
         if self.test_mode:
             graph = self.testgraph
@@ -482,7 +416,7 @@ class KEGG(OMIMSource):
         geno = Genotype(graph)
         rel = self.globaltt['is marker for']
         noomimset = set()
-        raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -552,6 +486,7 @@ class KEGG(OMIMSource):
         :return:
         """
 
+        src_key = 'omim2gene'
         LOG.info("Processing OMIM to KEGG gene")
         if self.test_mode:
             graph = self.testgraph
@@ -559,7 +494,7 @@ class KEGG(OMIMSource):
             graph = self.graph
         model = Model(graph)
         geno = Genotype(graph)
-        raw = '/'.join((self.rawdir, self.files['omim2gene']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -641,13 +576,14 @@ class KEGG(OMIMSource):
 
         """
 
+        src_key = 'omim'
         LOG.info("Processing 1:1 KEGG disease to OMIM disease mappings")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['omim2disease']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -713,7 +649,7 @@ class KEGG(OMIMSource):
         :return:
 
         """
-
+        src_key = 'ncbi'
         LOG.info("Processing KEGG gene IDs to NCBI gene IDs")
         if self.test_mode:
             graph = self.testgraph
@@ -721,7 +657,7 @@ class KEGG(OMIMSource):
             graph = self.graph
         model = Model(graph)
 
-        raw = '/'.join((self.rawdir, self.files['ncbi']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -757,12 +693,13 @@ class KEGG(OMIMSource):
         :param limit:
         :return:
         """
+        src_key = 'pubmed'
         LOG.info("Processing KEGG pathways to pubmed ids")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
-        raw = '/'.join((self.rawdir, self.files['pathway_pubmed']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -793,13 +730,14 @@ class KEGG(OMIMSource):
         :return:
 
         """
+        src_key = 'ds'
         LOG.info("Processing KEGG pathways to disease ids")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
 
-        raw = '/'.join((self.rawdir, self.files['pathway_disease']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
@@ -828,13 +766,14 @@ class KEGG(OMIMSource):
 
         :return:
         """
+        src_key = 'ko'
         LOG.info("Processing KEGG pathways to kegg ortholog classes")
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
 
-        raw = '/'.join((self.rawdir, self.files['pathway_ko']['file']))
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in reader:
