@@ -290,7 +290,7 @@ class Dataset:
         self.model.addType(self.distribution_level_turtle_curie,
                            self.globaltt['Dataset'])
         self.model.addType(self.distribution_level_turtle_curie,
-                           self.globaltt['distribution'])
+                           self.globaltt['Distribution'])
         self.graph.addTriple(self.distribution_level_turtle_curie,
                              self.globaltt['title'],
                              self.ingest_title +
