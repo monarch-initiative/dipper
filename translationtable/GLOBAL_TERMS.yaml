@@ -58,7 +58,8 @@
 "Microcell hybrid": "CLO:0036939",
 "Chorionic villus-derived cell line": "CLO:0036940",
 # "Data Catalog Vocabulary": "dcat:!!!"
-"distribution": "dcat:Distribution",
+"distribution": "dcat:distribution",
+"Distribution": "dcat:Distribution",
 # "dublin core terms": "dcterms:!!!",
 "Date Created": "dcterms:created",
 "description": "dcterms:description",

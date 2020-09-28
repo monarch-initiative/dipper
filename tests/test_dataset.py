@@ -100,7 +100,8 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_retrieved_on = URIRef(cls.base_pav + "retrievedOn")
         cls.iri_creator = URIRef(cls.base_dcterms + "creator")
         cls.iri_is_version_of = URIRef(cls.base_dcterms + "isVersionOf")
-        cls.iri_distribution = URIRef(cls.base_dcat + "Distribution")
+        cls.iri_distribution = URIRef(cls.base_dcat + "distribution")
+        cls.iri_Distribution = URIRef(cls.base_dcat + "Distribution")
         cls.iri_created_with = URIRef(cls.base_pav + "createdWith")
         cls.iri_format = URIRef(cls.base_dcterms + "format")
         cls.iri_download_url = URIRef(cls.base_dcterms + "downloadURL")
@@ -342,7 +343,7 @@ class DatasetTestCase(unittest.TestCase):
         triples = list(self.dataset.graph.triples(
             (self.distribution_level_IRI_ttl,
              self.iri_rdf_type,
-             self.iri_distribution)))
+             self.iri_Distribution)))
         self.assertTrue(len(triples) == 1,
                         "missing version level type distribution triple")
 
