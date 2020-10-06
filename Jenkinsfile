@@ -722,6 +722,8 @@ pipeline {
             sh '''
                 echo "Taking a moment of silent contemplation ..."
                 sleep 1m
+                echo "relax perms"
+                chmod g+rw out/*
                 # Move Data to Monarch Archive
                 ./scripts/mdma.sh
             '''
