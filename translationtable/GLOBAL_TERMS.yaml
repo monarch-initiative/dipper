@@ -149,6 +149,7 @@
 "Korean": "EFO:0003165",
 "Hispanic": "EFO:0003169",
 "African": "EFO:0004561",
+"induced pluripotent stem cell": "EFO:0004905",  # "NCIT:C124144 ?"
 # "Environment Ontology": "ENVO:!!!",
 "environmental_system": "ENVO:01000254",
 # "Eeagle-i Resource Ontology": "ERO:!!!",
