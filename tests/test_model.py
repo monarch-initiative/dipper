@@ -29,7 +29,7 @@ class ModelTestCase(unittest.TestCase):
         self.test_label_pred = self.cutil.get_uri("rdfs:label")
         self.test_label = "some label"
 
-        self.test_comment_IRI = self.cutil.get_uri("dcterms:comment")
+        self.test_comment_IRI = self.cutil.get_uri("rdfs:comment")
         self.test_comment = 'bonus eruptus'
 
     def tearDown(self):

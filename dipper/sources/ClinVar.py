@@ -1181,7 +1181,7 @@ def parse():
                         rcvtriples,
                         subject_category=blv.terms['InformationContentEntity'])
 
-                    # <:_assertion_id><dcterms:identifier><scv_acc + '.' + scv_accver>
+                    # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
                     write_spo(
                         _assertion_id,
                         GLOBALTT['identifier'], scv_acc + '.' + scv_accver, rcvtriples,
@@ -1309,7 +1309,7 @@ def parse():
                             rcvtriples,
                             subject_category=blv.terms['EvidenceType'],
                             object_category=blv.terms['Publication'])
-                        # <:monarch_assoc><dcterms:source><PMID:scv_citation_id>
+                        # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                         write_spo(
                             monarch_assoc,
                             GLOBALTT['Source'], 'PMID:' + scv_citation_id,
@@ -1406,7 +1406,7 @@ def parse():
                                         object_category=blv.terms[
                                             'InformationContentEntity'])
 
-                                    # <:monarch_assoc><dcterms:source><PMID:scv_citation_id>
+                                    # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                                     write_spo(
                                         monarch_assoc,
                                         GLOBALTT['Source'],
@@ -1424,7 +1424,7 @@ def parse():
                             # for SCV_Citation in SCV_ObsData.findall('./Citation'):
                             for SCV_Description in SCV_ObsData.findall(
                                     'Attribute[@Type="Description"]'):
-                                # <_evidence_id> <dcterms:description> "description"
+                                # <_evidence_id> <dc:description> "description"
                                 if SCV_Description.text != 'not provided':
                                     write_spo(
                                         _evidence_id,

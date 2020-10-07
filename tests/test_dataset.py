@@ -104,7 +104,7 @@ class DatasetTestCase(unittest.TestCase):
         cls.iri_Distribution = URIRef(cls.base_dcat + "Distribution")
         cls.iri_created_with = URIRef(cls.base_pav + "createdWith")
         cls.iri_format = URIRef(cls.base_dcterms + "format")
-        cls.iri_download_url = URIRef(cls.base_dcterms + "downloadURL")
+        cls.iri_download_url = URIRef(cls.base_dcat + "downloadURL")
         cls.iri_license = URIRef(cls.base_dcterms + "license")
         cls.iri_data_rights = URIRef(cls.base_dcterms + "rights")
         cls.iri_cites_as_authority = URIRef(cls.base_cito + "citesAsAuthority")

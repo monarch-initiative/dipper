@@ -16,7 +16,7 @@ BNODE:b26b049ffa3f09ecff76 a OBO:SEPIO_0000001 ;
         "b688d9615bbfa9e0f7df_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/504196> ;
     OBO:SEPIO_0000111 BNODE:b5ac7f4700a842b45cea ;
-    dcterms:identifier "SCV000145571.1" .
+    dc:identifier "SCV000145571.1" .
 
 BNODE:b4c2e0322314fefb6631 a OBO:SEPIO_0000067 ;
     rdfs:label "_:b5ac7f4700a842b45ceaSEPIO:0000067",
@@ -26,10 +26,10 @@ BNODE:b56afa35b1b567770fbb a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_625460",
         "b9abe7978a362ddcafa3_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505954> ;
-    dcterms:created "2015-10-02" ;
+    dc:created "2015-10-02" ;
     OBO:SEPIO_0000041 BNODE:b6766a2d182e85633617 ;
     OBO:SEPIO_0000111 BNODE:b4605648dac1f7f6892e ;
-    dcterms:identifier "SCV000326352.3" .
+    dc:identifier "SCV000326352.3" .
 
 BNODE:b6766a2d182e85633617 a OBO:SEPIO_0000037 ;
     rdfs:label "CIMBA Mutation Classification guidelines May 2016",
@@ -44,10 +44,10 @@ BNODE:bc54e378723b163bff09 a OBO:SEPIO_0000001 ;
     rdfs:label "ClinVarAssertion_581335",
         "b0c37985b4c9880212d8_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/504863> ;
-    dcterms:created "2016-09-08" ;
+    dc:created "2016-09-08" ;
     OBO:SEPIO_0000041 BNODE:bda6f5589149a72a98c4 ;
     OBO:SEPIO_0000111 BNODE:b0d65d10d0cc3ce2e885 ;
-    dcterms:identifier "SCV000300278.2" .
+    dc:identifier "SCV000300278.2" .
 
 BNODE:bda6f5589149a72a98c4 a OBO:SEPIO_0000037 ;
     rdfs:label "ENIGMA BRCA1/2 Classification Criteria (2015)",

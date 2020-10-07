@@ -81,7 +81,7 @@ pipeline {
                 '''
             }
         }
-        stage('Generate monarch owl and rdf') {
+        stage('Generate monarch rdf') {
             parallel {
                 stage("Process sources that call OMIM") {
                     stages {
@@ -184,40 +184,6 @@ pipeline {
                                     '''
                                 }
                             }
-                        }
-                    }
-                }
-                stage("Generate monarch merged owl file") {
-                    when {
-                        anyOf {
-                            expression { env.RUN_ALL != null }
-                            expression { env.MONARCH_OWL != null }
-                        }
-                    }
-                    steps {
-                        dir('./create-monarch-owl') {deleteDir()}
-                        dir('./create-monarch-owl') {
-                            sh '''
-                                wget --quiet --timestamping http://current.geneontology.org/bin/owltools
-                                chmod +x owltools
-                                java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
-
-                                # Hack to resolve https://github.com/monarch-initiative/monarch-ontology/issues/16
-                                # Hack to normalize omim and hgnc IRIs
-
-                                sed -i "/owl#ReflexiveProperty/d;\
-                                    s~http://purl.obolibrary.org/obo/OMIMPS_~http://www.omim.org/phenotypicSeries/PS~;\
-                                    s~http://purl.obolibrary.org/obo/OMIM_~http://omim.org/entry/~;\
-                                    s~http://identifiers.org/omim/~http://omim.org/entry/~;\
-                                    s~http://identifiers.org/hgnc/~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
-                                    s~http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
-                                    s~http://www.informatics.jax.org/marker/MGI:~http://www.informatics.jax.org/accession/MGI:~;\
-                                    s~http://www.ncbi.nlm.nih.gov/gene/~https://www.ncbi.nlm.nih.gov/gene/~; \
-                                    s~http://purl.obolibrary.org/obo/MESH_~http://id.nlm.nih.gov/mesh/~" \
-                                    ./monarch-merged.owl
-
-                                scp monarch-merged.owl $MONARCH_DATA_FS:/var/www/data/owl/
-                            '''
                         }
                     }
                 }
@@ -709,9 +675,45 @@ pipeline {
                 sh '''
                     echo "Taking a moment of silent contemplation ..."
                     sleep 1m
+                    echo "relax perms"
+                    chmod g+rw out/*
                     # Move Data to Monarch Archive
                     ./scripts/mdma.sh
                 '''
+            }
+        }
+        stage("Generate monarch merged owl file") {
+            when {
+                anyOf {
+                    expression { env.RUN_ALL != null }
+                    expression { env.MONARCH_OWL != null }
+                }
+            }
+            steps {
+                dir('./create-monarch-owl') {deleteDir()}
+                dir('./create-monarch-owl') {
+                    sh '''
+                        wget --quiet --timestamping http://current.geneontology.org/bin/owltools
+                        chmod +x owltools
+                        java -Xmx100g -jar owltools http://purl.obolibrary.org/obo/upheno/monarch.owl --merge-import-closure --remove-disjoints --remove-equivalent-to-nothing-axioms -o monarch-merged.owl
+
+                        # Hack to resolve https://github.com/monarch-initiative/monarch-ontology/issues/16
+                        # Hack to normalize omim and hgnc IRIs
+
+                        sed -i "/owl#ReflexiveProperty/d;\
+                            s~http://purl.obolibrary.org/obo/OMIMPS_~http://www.omim.org/phenotypicSeries/PS~;\
+                            s~http://purl.obolibrary.org/obo/OMIM_~http://omim.org/entry/~;\
+                            s~http://identifiers.org/omim/~http://omim.org/entry/~;\
+                            s~http://identifiers.org/hgnc/~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
+                            s~http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=~https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:~;\
+                            s~http://www.informatics.jax.org/marker/MGI:~http://www.informatics.jax.org/accession/MGI:~;\
+                            s~http://www.ncbi.nlm.nih.gov/gene/~https://www.ncbi.nlm.nih.gov/gene/~; \
+                            s~http://purl.obolibrary.org/obo/MESH_~http://id.nlm.nih.gov/mesh/~" \
+                            ./monarch-merged.owl
+
+                        scp monarch-merged.owl $MONARCH_DATA_FS:/var/www/data/owl/
+                    '''
+                }
             }
         }
     }
@@ -722,6 +724,8 @@ pipeline {
             sh '''
                 echo "Taking a moment of silent contemplation ..."
                 sleep 1m
+                echo "relax perms"
+                chmod g+rw out/*
                 # Move Data to Monarch Archive
                 ./scripts/mdma.sh
             '''

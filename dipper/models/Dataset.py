@@ -44,12 +44,12 @@ class Dataset:
 
      SUMMARY LEVEL TRIPLES:
      [summary level resource] - rdf:type -> dctypes:Dataset
-     [summary level resource] - dct:title -> title (literal)
-     [summary level resource] - dct:description -> description (literal)
+     [summary level resource] - dc:title -> title (literal)
+     [summary level resource] - dc:description -> description (literal)
                                                 (use docstring from Source class)
-     [summary level resource] - dcterms:source -> [source web page, e.g. omim.org]
+     [summary level resource] - dc:source -> [source web page, e.g. omim.org]
      [summary level resource] - schema:logo -> [source logo IRI]
-     [summary level resource] - dct:publisher -> monarchinitiative.org
+     [summary level resource] - dc:publisher -> monarchinitiative.org
         n.b: about summary level resource triples:
         -- HCLS spec says we "should" link to our logo and web page, but I'm not,
         because it would confuse the issue of whether we are pointing to our logo/page
@@ -62,15 +62,15 @@ class Dataset:
 
      VERSION LEVEL TRIPLES:
      [version level resource] - rdf:type -> dctypes:Dataset
-     [version level resource] - dct:title -> version title (literal)
-     [version level resource] - dct:description -> version description (literal)
-     [version level resource] - dct:created -> ingest timestamp [ISO 8601 compliant]
+     [version level resource] - dc:title -> version title (literal)
+     [version level resource] - dc:description -> version description (literal)
+     [version level resource] - dc:created -> ingest timestamp [ISO 8601 compliant]
      [version level resource] - pav:version -> ingest timestamp (same one above)
-     [version level resource] - dct:creator	-> monarchinitiative.org
-     [version level resource] - dct:publisher -> monarchinitiative.org
-     [version level resource] - dct:isVersionOf -> [summary level resource]
-     [version level resource] - dcterms:source -> [source file 1 IRI]
-     [version level resource] - dcterms:source -> [source file 2 IRI]
+     [version level resource] - dc:creator	-> monarchinitiative.org
+     [version level resource] - dc:publisher -> monarchinitiative.org
+     [version level resource] - dc:isVersionOf -> [summary level resource]
+     [version level resource] - dc:source -> [source file 1 IRI]
+     [version level resource] - dc:source -> [source file 2 IRI]
      ...
 
      [source file 1 IRI] - pav:retrievedOn -> [download date timestamp]
@@ -87,16 +87,16 @@ class Dataset:
      [version level resource] - cito:citesAsAuthoriy -> [citation id 3]
 
         n.b: about version level resource triples:
-        - spec says we "should" include Date of issue/dct:issued triple, but I'm not
+        - spec says we "should" include Date of issue/dc:issued triple, but I'm not
         because it is redundant with this triple above:
-        [version level resource] - dct:created -> time stamp
+        [version level resource] - dc:created -> time stamp
         and would introduce ambiguity and confusion if the two disagree. Same below
-        for [distribution level resource] - dct:created -> tgiime stamp below
+        for [distribution level resource] - dc:created -> tgiime stamp below
         Also omitting:
           - triples linking to our logo and page, see above.
-          - License/dct:license triple, because we will make this triple via the
+          - License/dc:license triple, because we will make this triple via the
             [distribution level resource] below
-          - Language/dct:language triple b/c it seems superfluous. Same below for
+          - Language/dc:language triple b/c it seems superfluous. Same below for
             [distribution level resource] - no language triple.
         - [version level resource] - pav:version triple is also a bit redundant
         with the pav:version triple below, but the spec requires both these triples
@@ -108,18 +108,18 @@ class Dataset:
      DISTRIBUTION LEVEL TRIPLES:
      [distribution level resource] - rdf:type -> dctypes:Dataset
      [distribution level resource] - rdf:type -> dcat:Distribution
-     [distribution level resource] - dct:title -> distribution title (literal)
-     [distribution level resource] - dct:description -> distribution description (lit.)
-     [distribution level resource] - dct:created -> ingest timestamp[ISO 8601 compliant]
+     [distribution level resource] - dc:title -> distribution title (literal)
+     [distribution level resource] - dc:description -> distribution description (lit.)
+     [distribution level resource] - dc:created -> ingest timestamp[ISO 8601 compliant]
      [distribution level resource] - pav:version -> ingest timestamp (same as above)
-     [distribution level resource] - dct:creator -> monarchinitiative.org
-     [distribution level resource] - dct:publisher -> monarchinitiative.org
-     [distribution level resource] - dct:license -> [license info, if available
+     [distribution level resource] - dc:creator -> monarchinitiative.org
+     [distribution level resource] - dc:publisher -> monarchinitiative.org
+     [distribution level resource] - dc:license -> [license info, if available
                     otherwise indicate unknown]
-     [distribution level resource] - dcterms:rights -> [data rights IRI]
+     [distribution level resource] - dc:rights -> [data rights IRI]
      [distribution level resource] - pav:createdWith -> [Dipper github URI]
-     [distribution level resource] - dct:format -> [IRI of ttl|nt|whatever spec]
-     [distribution level resource] - dct:downloadURL -> [ttl|nt URI]
+     [distribution level resource] - dc:format -> [IRI of ttl|nt|whatever spec]
+     [distribution level resource] - dcat:downloadURL -> [ttl|nt URI]
      [distribution level resource] - void:triples -> [triples count (literal)]
      [distribution level resource] - void:entities -> [entities count (literal)]
      [distribution level resource] - void:distinctSubjects -> [subject count (literal)]
@@ -129,18 +129,18 @@ class Dataset:
 
         n.b: about distribution level resource triples:
         - omitting Vocabularies used/void:vocabulary and Standards
-        used/dct:conformTo triples, because they are described in the ttl file
+        used/dc:conformTo triples, because they are described in the ttl file
         - also omitting Example identifier/idot:exampleIdentifier and
         Example resource/void:exampleResource, because we don't really have one
         canonical example of either - they're all very different.
-        - [distribution level resource] - dct:created should have the exact same
+        - [distribution level resource] - dc:created should have the exact same
         time stamp as this triple above:
-        [version level resource] - dct:created -> time stamp
+        [version level resource] - dc:created -> time stamp
         - this [distribution level resource] - pav:version triple should have the
         same object as [version level resource] - pav:version triple above
-        - Data source provenance/dct:source triples are above in the
+        - Data source provenance/dc:source triples are above in the
         [version level resource]
-        - omitting Byte size/dct:byteSize, RDF File URL/void:dataDump, and
+        - omitting Byte size/dc:byteSize, RDF File URL/void:dataDump, and
         Linkset/void:subset triples because they probably aren't necessary for MI right
         now
         - these triples "should" be emitted, but we will do this in a later iteration:
@@ -419,7 +419,7 @@ class Dataset:
         This method writes a triple to the dataset graph indicating that the ingest
         used a file or resource at [url] during the ingest.
 
-        Triple emitted is version_level_curie dcterms:source [url]
+        Triple emitted is version_level_curie dc:source [url]
 
         This triple is likely to be redundant if Source.get_files() is used to retrieve
         the remote files/resources, since this triple should also be emitted
@@ -427,9 +427,9 @@ class Dataset:
         method for sources that do their own downloading of files.
 
         :param url: a remote resource used as a source during ingest
-        :param predicate: the predicate to use for the triple ["dcterms:source"]
+        :param predicate: the predicate to use for the triple ["dc:source"]
                 from spec (https://www.w3.org/TR/2015/NOTE-hcls-dataset-20150514/)
-                "Use dct:source when the source dataset was used in whole or in part.
+                "Use dc:source when the source dataset was used in whole or in part.
                 Use pav:retrievedFrom when the source dataset was used in whole and was
                 not modified from its original distribution. Use prov:wasDerivedFrom
                 when the source dataset was in whole or in part and was modified from

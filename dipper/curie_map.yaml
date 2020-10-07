@@ -12,7 +12,7 @@
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'                     # Resource Description Framework Schema
-'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (metadata)
+'dc': 'http://purl.org/dc/terms/'                                   # Dublin Core (metadata) (terms is superset of elements)
 'foaf': 'http://xmlns.com/foaf/0.1/'                                # Friend Of A Friend (social)
 'xml': 'http://www.w3.org/XML/1998/namespace'                       # Extensible Markup Language
 'xsd': 'http://www.w3.org/2001/XMLSchema#'                          # XML Schema Definition
@@ -73,9 +73,8 @@
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 # 'OMIA' was http://omia.angis.org.au/ IS https://omia.org/         # (see about helping to update original data)
 'OMIA': 'https://omia.org/OMIA'                                     # Online Mendelian Inheritance in Animals (disease/species)
-# LIDIA seems retired. so these are not resovable
-'LIDA': 'http://sydney.edu.au/vetscience/lida/dogs/search/disorder/' # Listing of Inherited Disorders in Animals (defunct?)
-                                                                     # Also: http://www.vetsci.usyd.edu.au/lida/
+# LIDIA seems retired. so these are not resovable                   # Also: http://www.vetsci.usyd.edu.au/lida/
+'LIDA': 'http://sydney.edu.au/vetscience/lida/dogs/search/disorder/'  # Listing of Inherited Disorders in Animals (defunct?)
 'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
 'OMIMPS': 'http://www.omim.org/phenotypicSeries/'                   # Online Mendelian Inheritance in Man (phenotypes)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs

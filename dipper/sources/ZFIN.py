@@ -1273,7 +1273,7 @@ class ZFIN(Source):
         Triples created:
         <genotype id> a GENO:wildtype
         <genotype id> rdfs:label genotype_abbreviation
-        <genotype id> dcterms:description genotype_name
+        <genotype id> dc:description genotype_name
 
         :param limit:
         :return:
@@ -2494,11 +2494,11 @@ class ZFIN(Source):
         Triples created:
         <zfin gene id> a class
         <zfin gene id> rdfs:label gene_symbol
-        <zfin gene id> dcterms:description gene_name
+        <zfin gene id> dc:description gene_name
 
         <human gene id> a class
         <human gene id> rdfs:label gene_symbol
-        <human gene id> dcterms:description gene_name
+        <human gene id> dc:description gene_name
         <human gene id> equivalent class <omim id>
 
         <zfin gene id> orthology association <human gene id>

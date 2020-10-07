@@ -43,7 +43,7 @@ class EvidenceTestCase(unittest.TestCase):
             self.mgi.graph.serialize(format="turtle").decode("utf-8"))
         expected_triples = """
         :association RO:0002558 ECO:0000006 ;
-            dcterms:source J:74619 ;
+            dc:source J:74619 ;
             :has_sex_specificity PATO:0000384 .
 
         PATO:0000384 biolink:category biolink:BiologicalSex .
