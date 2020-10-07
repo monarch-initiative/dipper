@@ -47,8 +47,8 @@ class SGDTestCase(unittest.TestCase):
         triples = """
         :MONARCH_ba748c98c0f167739128 a OBAN:association ;
             OBO:RO_0002558 OBO:APO_0000020 ;
-            dcterms:description "{0}";
-            dcterms:source PMID:21715656 ;
+            dc:description "{0}";
+            dc:source PMID:21715656 ;
             OBAN:association_has_object MONARCH:APO_0000309APO_0000245 ;
             OBAN:association_has_predicate OBO:RO_0002200 ;
             OBAN:association_has_subject SGD:S000007268 .

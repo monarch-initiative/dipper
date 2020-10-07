@@ -672,7 +672,7 @@ SELECT  r._relationship_key as rel_key,
 
         <alleleid> a OWL:NamedIndividual
             rdfs:label "allele symbol"
-            dcterms:description "long allele name"
+            dc:description "long allele name"
 
         :param limit:
         :return:
@@ -1284,9 +1284,9 @@ SELECT  r._relationship_key as rel_key,
         MP-Sex-Specificity (eg NA, M, F)
 
         Triples:
-        <annot_id> dcterms:evidence <evidence_id>
+        <annot_id> dc:evidence <evidence_id>
         <pub_id> a owl:NamedIndividual
-        <annot_id> dcterms:source <pub_id>
+        <annot_id> dc:source <pub_id>
 
         :param limit:
         :return:
@@ -2010,7 +2010,7 @@ SELECT  r._relationship_key as rel_key,
         """
         Here we fetch the free text descriptions of the phenotype associations.
         Triples:
-        <annot_id> dcterms:description "description text"
+        <annot_id> dc:description "description text"
         :param limit:
         :return:
 
@@ -2247,7 +2247,7 @@ SELECT  r._relationship_key as rel_key,
         """
         Here we fetch the free text descriptions of the phenotype associations.
         Triples:
-        <annot_id> dcterms:description "description text"
+        <annot_id> dc:description "description text"
         :param limit:
 
         :return:

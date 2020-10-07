@@ -132,7 +132,7 @@ class Evidence:
     ):
         """
         Applies the triples:
-        <evidence> <dcterms:source> <source>
+        <evidence> <dc:source> <source>
         <source> <rdf:type> <type>
         <source> <rdfs:label> "label"
 

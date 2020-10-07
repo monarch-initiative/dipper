@@ -85,7 +85,7 @@ class Model():
         *if a type is added,
             then the node will be an OWL:subclassOf that the type
         *if a description is provided,
-            it will also get added as a dcterms:description
+            it will also get added as a dc:description
         :param class_id:
         :param label:
         :param class_type:

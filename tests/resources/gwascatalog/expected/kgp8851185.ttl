@@ -1,7 +1,7 @@
 MONARCH:b795746ddae073f28409 a OBAN:association ;
     RO:0002558 ECO:0000213 ;
-    dcterms:description "A study of Amyotrophic lateral sclerosis (sporadic) in 250 Han Chinese ancestry cases, 250 Han Chinese ancestry controls with NA on platform Illumina [859311] (p=2E-8)" ;
-    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/24529757> ;
+    dc:description "A study of Amyotrophic lateral sclerosis (sporadic) in 250 Han Chinese ancestry cases, 250 Han Chinese ancestry controls with NA on platform Illumina [859311] (p=2E-8)" ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/24529757> ;
     OBAN:association_has_object EFO:0001357 ;
     OBAN:association_has_predicate RO:0003304 ;
     OBAN:association_has_subject GWAS:kgp8851185 .
@@ -13,5 +13,5 @@ GWAS:kgp8851185 a OBO:SO_0000001,
     rdfs:label "kgp8851185-?" ;
     RO:0002162 OBO:NCBITaxon_9606 ;
     RO:0003304 EFO:0001357 ;
-    dcterms:description "0.09 [risk allele frequency]" ;
+    dc:description "0.09 [risk allele frequency]" ;
     MONARCH:cliqueLeader true .
