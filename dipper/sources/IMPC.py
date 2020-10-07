@@ -280,9 +280,10 @@ class IMPC(Source):
                         variant_locus_id, variant_locus_name, variant_locus_type, None)
                     geno.addAlleleOfGene(variant_locus_id, marker_accession_id)
 
-                    # TAG bnode
-                    sequence_alteration_id = '_:seqalt' + re.sub(
-                        r':', '', allele_accession_id)
+                    # Tag bnode
+                    sequence_alteration_id = self.make_id(
+                        'seqalt' + re.sub(r':', '', allele_accession_id), '_')
+
                     geno.addSequenceAlterationToVariantLocus(
                         sequence_alteration_id, variant_locus_id)
 
@@ -435,7 +436,8 @@ class IMPC(Source):
                         re.sub(r'\W+', '', colony_raw)))
                     if not re.match(r'^_', pheno_center_strain_id):
                         # Tag bnode
-                        pheno_center_strain_id = '_:' + pheno_center_strain_id
+                        pheno_center_strain_id = self.make_id(
+                            pheno_center_strain_id, '_')
 
                     geno.addGenotype(
                         pheno_center_strain_id,
@@ -631,8 +633,7 @@ class IMPC(Source):
                 parameter_stable_id,
                 statistical_method,
                 resource_name
-            ),
-            '_'
+            ), '_'
         )
 
         model.addIndividualToGraph(study_bnode, None, self.globaltt['study'])
