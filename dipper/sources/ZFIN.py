@@ -680,8 +680,8 @@ class ZFIN(Source):
                     list_of_targeted_genes += [targeted_gene_id]
                     # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
-                extrinsic_id = '_:' + re.sub(
-                    r':?_?', '', '-'.join(list_of_targeted_genes))
+                extrinsic_id = self.make_id(
+                    r':?_?', '', '-'.join(list_of_targeted_genes)). '_')
                 extrinsic_label = '; '.join(
                     str(self.id_label_map.get(l))
                     for l in list_of_targeted_genes)
@@ -1067,7 +1067,7 @@ class ZFIN(Source):
 
                 # TODO also consider adding this to Genotype.py
                 vslc_id = '-'.join((gn, allele1_id, allele2_id))
-                vslc_id = '_:' + re.sub(r'(ZFIN)?:', '', vslc_id)
+                vslc_id = self.make_id(re.sub(r'(ZFIN)?:', '', vslc_id), '_')
 
                 vslc_label = geno.make_vslc_label(
                     gene_label, allele1_label, allele2_label)
@@ -1110,7 +1110,7 @@ class ZFIN(Source):
 
                 gvc_id = '-'.join(gvc_parts)
                 gvc_id = re.sub(r'(ZFIN)?:', '', gvc_id)
-                gvc_id = '_:' + re.sub(r'^_*', '', gvc_id)
+                gvc_id = self.make_id(re.sub(r'^_*', '', gvc_id), '_')
 
                 for vslc_id in gvc_parts:
                     # add the vslc to the gvc
@@ -1154,7 +1154,7 @@ class ZFIN(Source):
 
             else:
                 background_num = re.sub(r'ZFIN:', '', gt)
-                background_id = '_:bkgd-' + background_num
+                background_id = self.make_id('bkgd-' + background_num, '_')
                 background_label = 'unspecified background'
                 background_label_and_num = \
                     'unspecified background (' + background_num + ')'
@@ -1930,7 +1930,7 @@ class ZFIN(Source):
         transgene_part_id = '-'.join((
             construct_id, part_id, re.sub(r'\W+', '-', relationship)))
         transgene_part_id = re.sub(r'ZFIN:', '', transgene_part_id)
-        transgene_part_id = '_:' + transgene_part_id
+        transgene_part_id = self.make_id(transgene_part_id, '_')
 
         return transgene_part_id
 
@@ -2901,7 +2901,7 @@ class ZFIN(Source):
         """
 
         varloci = '-'.join((gene_id, allele_id))
-        varloci = '_:' + re.sub(r'(ZFIN)?:', '', varloci)
+        varloci = self.make_id(re.sub(r'(ZFIN)?:', '', varloci), '_')
 
         return varloci
 
@@ -3089,10 +3089,10 @@ class ZFIN(Source):
         targeted_gene_id = '-'.join((geneid, reagentid))
         # these are not zfin resolvable, so make BNodes
         targeted_gene_id = re.sub(r'(ZFIN)?:', '', targeted_gene_id)
-        targeted_gene_id = '_:' + targeted_gene_id
+        targeted_gene_id = self.make_id(targeted_gene_id, '_')
         return targeted_gene_id
 
-    # #### SOME OLD (COBLO?) CODE #####
+    # #### SOME OLD (COBOL?) CODE #####
 
 # # LINK THE MORPHOLINO TO THE GENES THAT IT AFFECTS
 # AG = SELF.VARIANT_LOCI_GENES.GET(MORPH_ID)
