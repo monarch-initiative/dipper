@@ -45,8 +45,8 @@ class InteractionsTestCase(unittest.TestCase):
                        SELECT ?assoc ?pubmed ?disease ?chemical
                        WHERE {
                        ?assoc a Annotation: ;
-                           dcterms:evidence OBO:ECO_0000033 ;
-                           dcterms:source ?pubmed ;
+                           dc:evidence OBO:ECO_0000033 ;
+                           dc:source ?pubmed ;
                            :hasObject ?disease ;
                            :hasPredicate OBO:RO_0002606 ;
                            :hasSubject ?chemical .}

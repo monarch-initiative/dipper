@@ -78,7 +78,7 @@ class SourceMetadataTestCase(unittest.TestCase):
 
         # expected IRIs
         cls.iri_version = URIRef(cls.curie_map.get("pav") + "version")
-        cls.iri_source = URIRef(cls.curie_map.get("dcterms") + "source")
+        cls.iri_source = URIRef(cls.curie_map.get("dc") + "source")
         cls.iri_retrieved_on = URIRef(cls.curie_map.get("pav") + "retrievedOn")
         cls.iri_triples_count = URIRef(cls.curie_map.get("void") + "triples")
 

@@ -1,7 +1,7 @@
 :MONARCH_bcd52bafc1e2e04193a9 a OBAN:association ;
     OBO:SEPIO_0000007 BNODE:be870b3d47783bbdcf05 ;
     OBO:SEPIO_0000015 BNODE:bd8e0f2fc4633580d875 ;
-    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/27486776> ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/27486776> ;
     OBAN:association_has_object OMIMPS:PS209900 ;
     OBAN:association_has_predicate OBO:GENO_0000841 ;
     OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/431733> ;
@@ -38,7 +38,7 @@ BNODE:bd8e0f2fc4633580d875 a OBO:SEPIO_0000001 ;
         "bcd52bafc1e2e04193a9_assertion" ;
     OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505664> ;
     OBO:SEPIO_0000111 BNODE:be870b3d47783bbdcf05 ;
-    dcterms:identifier "SCV000296057.1" .
+    dc:identifier "SCV000296057.1" .
 
 OMIMPS:PS209900 rdfs:label "Bardet-Biedl syndrome" .
 

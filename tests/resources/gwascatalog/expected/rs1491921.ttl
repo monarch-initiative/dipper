@@ -1,15 +1,15 @@
 MONARCH:b506ad69fc4a85427fdb a OBAN:association ;
     OBO:RO_0002558 OBO:ECO_0000213 ;
-    dcterms:description "A study of Diisocyanate-induced asthma in 74 European ancestry cases, 824 European ancestry controls with NA on platform Illumina [1556551] (p=7E-7)" ;
-    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/25918132> ;
+    dc:description "A study of Diisocyanate-induced asthma in 74 European ancestry cases, 824 European ancestry controls with NA on platform Illumina [1556551] (p=7E-7)" ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/25918132> ;
     OBAN:association_has_object <http://www.ebi.ac.uk/efo/EFO_0000270> ;
     OBAN:association_has_predicate OBO:RO_0003304 ;
     OBAN:association_has_subject dbSNP:rs1491921 .
 
 MONARCH:bff9b97458d67ed7f517 a OBAN:association ;
     OBO:RO_0002558 OBO:ECO_0000213 ;
-    dcterms:description "A study of Diisocyanate-induced asthma in 74 European ancestry cases, 824 European ancestry controls with NA on platform Illumina [1556551] (p=7E-7)" ;
-    dcterms:source <http://www.ncbi.nlm.nih.gov/pubmed/25918132> ;
+    dc:description "A study of Diisocyanate-induced asthma in 74 European ancestry cases, 824 European ancestry controls with NA on platform Illumina [1556551] (p=7E-7)" ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/25918132> ;
     OBAN:association_has_object <http://www.ebi.ac.uk/efo/EFO_0006995> ;
     OBAN:association_has_predicate OBO:RO_0003304 ;
     OBAN:association_has_subject dbSNP:rs1491921 .
@@ -38,7 +38,7 @@ dbSNP:rs1491921 a OBO:SO_0000694,
     OBO:RO_0002529 ENSEMBL:ENSG00000248286 ;
     OBO:RO_0003304 <http://www.ebi.ac.uk/efo/EFO_0000270>,
         <http://www.ebi.ac.uk/efo/EFO_0006995> ;
-    dcterms:description "0.013 [risk allele frequency]" ;
+    dc:description "0.013 [risk allele frequency]" ;
     MONARCH:cliqueLeader true .
 
 <http://www.ncbi.nlm.nih.gov/pubmed/25918132> a OBO:IAO_0000013 .

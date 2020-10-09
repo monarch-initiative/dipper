@@ -330,7 +330,7 @@ class MMRRC(Source):
                 else:  # len(vars) == 0
                     # it's just anonymous variants in some gene
                     for gene in genes:
-                        vl_id = '_:' + re.sub(r':', '', gene) + '-VL'
+                        vl_id = self.make_id(re.sub(r':', '', gene) + '-VL', '_')
                         vl_symbol = self.id_label_hash[gene] + '<?>'
                         self.id_label_hash[vl_id] = vl_symbol
                         geno.addAllele(
@@ -346,7 +346,7 @@ class MMRRC(Source):
                     # for unknown zygosity
                     vslc_id = re.sub(r'^_', '', vl) + 'U'
                     vslc_id = re.sub(r':', '', vslc_id)
-                    vslc_id = '_:' + vslc_id
+                    vslc_id = self.make_id(vslc_id, '_')
                     vslc_label = self.id_label_hash[vl] + '/?'
                     self.id_label_hash[vslc_id] = vslc_label
                     vslc_list.append(vslc_id)
@@ -365,9 +365,9 @@ class MMRRC(Source):
                     )
                 if vslc_list:
                     if len(vslc_list) > 1:
-                        gvc_id = '-'.join(vslc_list)
+                        gvc_id = self.make_id(str(vslc_list), '_')
                         gvc_id = re.sub(r'_|:', '', gvc_id)
-                        gvc_id = '_:' + gvc_id
+                        gvc_id = self.make_id(gvc_id, '_')
                         gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
                         model.addIndividualToGraph(
                             gvc_id,
@@ -386,12 +386,13 @@ class MMRRC(Source):
                         r':', '', '-'.join((
                             self.globaltt['unspecified_genomic_background'], strain)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
-                    bkgd_id = '_:' + bkgd_id
+                    bkgd_id = self.make_id(bkgd_id, '_')
                     geno.addTaxon(mouse_taxon, bkgd_id)
                     geno.addGenomicBackground(
                         bkgd_id, 'unspecified (' + strain + ')',
                         self.globaltt['unspecified_genomic_background'],
-                        "A placeholder for the unspecified genetic background for " + strain)
+                        "A placeholder for the unspecified genetic background for " +
+                        strain)
                     geno.addGenomicBackgroundToGenotype(
                         bkgd_id, genotype_id,
                         self.globaltt['unspecified_genomic_background'])

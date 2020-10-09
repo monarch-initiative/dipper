@@ -260,7 +260,6 @@ class Feature():
         reference = re.sub(r'\w+\:', '', reference, 1)
         if reference[0] == '_':
             # in this case the reference is a bnode curie as well
-            # ... this is a bad smell of over modleing
             reference = reference[1:]
         unique_words = reference
         if coordinate is not None:
@@ -271,7 +270,7 @@ class Feature():
             if tstring is not None:
                 unique_words = '-'.join((unique_words, tstring))
 
-        curie = '_:' + self.gfxutl.digest_id(unique_words)
+        curie = '_:' + self.gfxutl.digest_id(unique_words)  # bnode
 
         # attach the wordage via a label
         # I want to see more of this (TEC 201905)

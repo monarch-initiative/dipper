@@ -1,3 +1,5 @@
+'''
+'''
 import logging
 import csv
 import re
@@ -151,8 +153,6 @@ class Coriell(Source):
             LOG.error("not configured with FTP user/password.")
             # raise error
 
-        return
-
     def fetch(self, is_dl_forced=False):
         """
         Here we connect to the coriell sftp server using private connection
@@ -229,8 +229,6 @@ class Coriell(Source):
                 self.dataset.set_ingest_source(remote_url)
                 self.dataset.set_ingest_source_file_version_date(remote_url, filedate)
 
-        return
-
     def parse(self, limit=None):
         if limit is not None:
             LOG.info("Only parsing first %s rows of each file", limit)
@@ -247,7 +245,6 @@ class Coriell(Source):
             self._process_data(src_key, limit)
 
         LOG.info("Finished parsing.")
-        return
 
     def _process_data(self, src_key, limit=None):
         """
@@ -272,7 +269,7 @@ class Coriell(Source):
             member_of family_id  #what is the right thing here?
             SIO:race EFO:caucasian  #subclass of EFO:0001799
             in_taxon NCBITaxon:9606
-            dcterms:description Literal(remark)
+            dc:description Literal(remark)
             RO:has_phenotype OMIM:disease_id
             GENO:has_genotype genotype_id
 
@@ -304,8 +301,6 @@ class Coriell(Source):
 
         family = Family(graph)
         model = Model(graph)
-
-        line_counter = 1
         geno = Genotype(graph)
         diputil = DipperUtil()
         col = self.files[src_key]['columns']
@@ -313,21 +308,21 @@ class Coriell(Source):
         # x = row[col.index('x')].strip()
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter=',', quotechar=r'"')
+            reader = csv.reader(csvfile, delimiter=',', quotechar=r'"')
             # we can keep a close watch on changing file formats
-            fileheader = next(filereader, None)
-            fileheader = [c.lower() for c in fileheader]
+            row = next(reader, None)
+            fileheader = [c.lower() for c in row]
             if col != fileheader:  # assert
                 LOG.error('Expected  %s to have columns: %s', raw, col)
                 LOG.error('But Found %s to have columns: %s', raw, fileheader)
                 raise AssertionError('Incomming data headers have changed.')
 
-            for row in filereader:
-                line_counter += 1
+            for row in reader:
+
                 if len(row) != len(col):
                     LOG.warning(
                         'Expected %i values but find %i in  row %i',
-                        len(col), len(row), line_counter)
+                        len(col), len(row), reader.line_num)
                     continue
 
                 # (catalog_id, description, omim_number, sample_type,
@@ -377,17 +372,16 @@ class Coriell(Source):
                 # examples of repeated patients are:
                 #   famid=1159, member=1; fam=152,member=1
 
-                # Make the patient ID
-
-                # make an anonymous patient
-                patient_id = '_:person'
+                # Make the patient ID an anonymous patient bnode
+                patient_id = self.make_id('anonymous_patient_' + catalog_id, '_')
                 fam_id = row[col.index('fam')].strip()
-                fammember = row[col.index('fammember')].strip()
-                if fam_id != '':
-                    patient_id = '-'.join((patient_id, fam_id, fammember))
-                else:
-                    # make an anonymous patient
-                    patient_id = '-'.join((patient_id, catalog_id))
+                # fammember = row[col.index('fammember')].strip()
+
+                # changing the person because family is present seems odd
+                # if fam_id != '':
+                #    patient_id = '-'.join((patient_id, fam_id, fammember))
+                #    patient_id = make_id(
+                #        '-'.join((patient_id,  fam_id, fammember)), '_')
 
                 # properties of the individual patients:  sex, family id,
                 # member/relproband, description descriptions are
@@ -408,7 +402,7 @@ class Coriell(Source):
                 else:
                     LOG.warning(
                         'Novel Affected status  %s at row: %i of %s',
-                        affected, line_counter, raw)
+                        affected, reader.line_num, raw)
                 patient_label = ' '.join((affected, gender, relprob))
                 if relprob == 'proband':
                     patient_label = ' '.join((
@@ -455,7 +449,7 @@ class Coriell(Source):
                     # this would give a BNode that is an instance of Age.
                     # but i don't know how to connect
                     # the age node to the cell line? we need to ask @mbrush
-                    # age_id = '_'+re.sub('\s+','_',age)
+                    # age_id = self.make_id(re.sub('\s+','_',age), '_')
                     # gu.addIndividualToGraph(
                     #   graph,age_id,age,self.globaltt['age'])
                     # gu.addTriple(
@@ -546,8 +540,8 @@ class Coriell(Source):
                 karyotype = diputil.remove_control_characters(karyotype)
                 karyotype_id = None
                 if karyotype.strip() != '':
-                    karyotype_id = '_:'+re.sub(
-                        'MONARCH:', '', self.make_id(karyotype))
+                    karyotype_id = self.make_id(  # bnode
+                        re.sub('MONARCH:', '', self.make_id(karyotype)), '_')
                     # add karyotype as karyotype_variation_complement
                     model.addIndividualToGraph(
                         karyotype_id, karyotype,
@@ -593,15 +587,18 @@ class Coriell(Source):
                         karyotype):
 
                     gvc_id = karyotype_id
-                    if variant_id != '':
-                        gvc_id = '_:' + variant_id.replace(';', '-') + '-' \
-                            + re.sub(r'\w*:', '', karyotype_id)
+                    if variant_id != '':  # bnode
+                        gvc_id = self.make_id(
+                            '-'.join((
+                                variant_id.replace(';', '-'),
+                                re.sub(r'\w*:', '', karyotype_id))), '_')
+
                     if mutation.strip() != '':
                         gvc_label = '; '.join((varl, karyotype))
                     else:
                         gvc_label = karyotype
-                elif variant_id.strip() != '':
-                    gvc_id = '_:' + variant_id.replace(';', '-')
+                elif variant_id.strip() != '':  # bnode
+                    gvc_id = self.make_id(variant_id.replace(';', '-'), '_')
                     gvc_label = varl
                 else:
                     # wildtype?
@@ -647,8 +644,8 @@ class Coriell(Source):
 
                     for omim in omim_map:
                         # gene_id = 'OMIM:' + omim  # TODO unused
-                        vslc_id = '_:' + '-'.join(
-                            [omim + '.' + a for a in omim_map.get(omim)])
+                        vslc_id = self.make_id(
+                            '-'.join([omim + '.' + a for a in omim_map.get(omim)]), '_')
                         vslc_label = varl
                         # we don't really know the zygosity of
                         # the alleles at all.
@@ -680,8 +677,8 @@ class Coriell(Source):
                     # let's just say that this person is wildtype
                     model.addType(patient_id, self.globaltt['wildtype'])
                 elif genotype_id is None:
-                    # make an anonymous genotype id (aka blank node)
-                    genotype_id = '_:geno' + catalog_id.strip()
+                    # make an anonymous genotype id (aka bnode)
+                    genotype_id = self.make_id('geno' + catalog_id, '_')
 
                 # add the gvc
                 if gvc_id is not None:
@@ -716,7 +713,7 @@ class Coriell(Source):
                     else:
                         genotype_label = gvc_label
                         # use the catalog id as the background
-                    genotype_label += ' ['+catalog_id.strip()+']'
+                    genotype_label += ' [' + catalog_id.strip() + ']'
 
                 if genotype_id is not None and gvc_id is not None:
                     # only add the genotype if it has some parts
@@ -784,9 +781,8 @@ class Coriell(Source):
                         )
 
                 if not self.test_mode and (
-                        limit is not None and line_counter > limit):
+                        limit is not None and reader.line_num > limit):
                     break
-        return
 
     def _process_collection(self, collection_id, label, page):
         """
@@ -816,8 +812,6 @@ class Coriell(Source):
                 repo_id, repo_label, self.globaltt['collection']
             )
             reference.addPage(repo_id, repo_page)
-
-        return
 
     @staticmethod
     def _get_affected_chromosomes_from_karyotype(karyotype):
