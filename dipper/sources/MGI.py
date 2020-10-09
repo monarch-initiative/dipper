@@ -810,7 +810,7 @@ SELECT  r._relationship_key as rel_key,
 
                 if self.test_mode is True and \
                         int(allele_key) not in self.test_keys.get('allele'):
-                        continue
+                    continue
                 #  so are allele_key ints or not?  -TEC
                 allele_id = self.idhash['allele'].get(allele_key)
                 if allele_id is None:
@@ -1039,7 +1039,7 @@ SELECT  r._relationship_key as rel_key,
             if len(vslcs) > 1:
                 gvc_id = re.sub(r'_', '', ('-'.join(vslcs)))
                 gvc_id = re.sub(r':', '', gvc_id)
-                gvc_id = '_:' + gvc_id
+                gvc_id = self.make_id(gvc_id, '_')
                 vslc_labels = []
                 for v in vslcs:
                     vslc_labels.append(self.label_hash[v])
@@ -2314,8 +2314,8 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        # these are just blank nodes
-        iid = '_:mgi' + prefix + 'key' + key
+        # these are just more blank node identifiers
+        iid = Source.make_id('mgi' + prefix + 'key' + key, '_')
 
         return iid
 

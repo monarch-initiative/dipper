@@ -810,8 +810,8 @@ def parse():
     # main loop over xml
     # taken in chunks composed of ClinVarSet stanzas
     with gzip.open(filename, 'rt') as clinvar_fh:
-        TREE = ET.iterparse(clinvar_fh)  # w/o specifing events it defaults to 'end'
-        for event, element in TREE:
+        tree = ET.iterparse(clinvar_fh)  # w/o specifing events it defaults to 'end'
+        for event, element in tree:
             if element.tag != 'ClinVarSet':
                 ReleaseSet = element
                 continue
@@ -931,7 +931,7 @@ def parse():
                 # 142532 MedGen
 
                 for RCV_Trait in RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
-                    has_medgen_id = False
+                    # has_medgen_id = False
                     rcv_disease_db = None
                     rcv_disease_id = None
                     medgen_id = None
@@ -1130,7 +1130,6 @@ def parse():
                         rcv_disease_curie, rcvtriples,
                         subject_category=blv.terms['Association'],
                         object_category=blv.terms['Disease'])
-                        # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
                     # medgen might not have a disease label
                     if condition.label is not None:

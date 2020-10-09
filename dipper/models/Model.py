@@ -1,5 +1,4 @@
 import logging
-import re
 from dipper.graph.Graph import Graph
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
@@ -195,12 +194,14 @@ class Model():
             property_value_category=None
     ):
         # make a blank node to hold the property restrictions
-        # scrub the colons, they will make the ttl parsers choke
-        bnode = '_:'+re.sub(
-            r':', '', property_id)+re.sub(r':', '', property_value)
+        uniq_str = '-'.join((property_id, property_value))
+        bnode = self.make_id(uniq_str, '_')
 
         self.graph.addTriple(
             bnode, self.globaltt['type'], self.globaltt['restriction']
+        )
+        self.graph.addTriple(
+            bnode, self.globaltt['label'], uniq_str
         )
         self.graph.addTriple(
             bnode,

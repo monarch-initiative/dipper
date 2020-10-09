@@ -4,7 +4,7 @@ import re
 
 from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
+# from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Family import Family
 from dipper.models.Reference import Reference
@@ -184,13 +184,13 @@ class KEGG(OMIMSource):
                 if self.test_mode and pathway_id not in self.test_ids['pathway']:
                     continue
 
-                pathway_id = 'KEGG-'+pathway_id.strip()
+                pathway_id = 'KEGG-' + pathway_id.strip()
                 path.addPathway(pathway_id, pathway_name)
 
                 # we know that the pathway images from kegg map 1:1 here.
                 # so add those
                 image_filename = re.sub(r'KEGG-path:', '', pathway_id) + '.png'
-                image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
+                image_url = 'http://www.genome.jp/kegg/pathway/map/' + image_filename
                 model.addDepiction(pathway_id, image_url)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
@@ -221,7 +221,7 @@ class KEGG(OMIMSource):
             for row in reader:
                 (disease_id, disease_name) = row
 
-                disease_id = 'KEGG-'+disease_id.strip()
+                disease_id = 'KEGG-' + disease_id.strip()
                 if disease_id not in self.label_hash:
                     self.label_hash[disease_id] = disease_name
 
@@ -274,7 +274,7 @@ class KEGG(OMIMSource):
             for row in reader:
                 (gene_id, gene_name) = row
 
-                gene_id = 'KEGG-'+gene_id.strip()
+                gene_id = 'KEGG-' + gene_id.strip()
 
                 # the gene listing has a bunch of labels
                 # that are delimited, as:
@@ -314,7 +314,7 @@ class KEGG(OMIMSource):
                     ko_part = gene_stuff[2]
                     ko_match = re.search(r'K\d+', ko_part)
                     if ko_match is not None and len(ko_match.groups()) == 1:
-                        ko = 'KEGG-ko:'+ko_match.group(1)
+                        ko = 'KEGG-ko:' + ko_match.group(1)
                         family.addMemberOf(gene_id, ko)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
@@ -374,7 +374,7 @@ class KEGG(OMIMSource):
                         model.addSynonym(orthology_class_id, s.strip())
 
                     # add the last one as the description
-                    d = other_labels[len(other_labels)-1]
+                    d = other_labels[len(other_labels) - 1]
                     model.addDescription(orthology_class_id, d)
 
                     # add the enzyme commission number (EC:1.2.99.5)as an xref
@@ -805,8 +805,10 @@ class KEGG(OMIMSource):
         :return:
 
         """
-        alt_locus_id = '_:'+re.sub(
-            r':', '', gene_id) + '-' + re.sub(r':', '', disease_id) + 'VL'
+        # bnode
+        alt_locus_id = self.make_id(
+            '-'.join((gene_id.replace(':', ''), disease_id.replace(':', ''), 'VL')))
+
         alt_label = self.label_hash.get(gene_id)
         disease_label = self.label_hash.get(disease_id)
         if alt_label is not None and alt_label != '':

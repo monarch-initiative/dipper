@@ -155,7 +155,7 @@ class Source:
         )
 
         # see jenkins file   human, mouse, zebrafish, fly, worm        rat
-        self.COMMON_TAXON = ['9606','10090','7955','7227','6239']  # '10116'
+        self.COMMON_TAXON = ['9606', '10090', '7955', '7227', '6239']  # '10116'
 
     def fetch(self, is_dl_forced=False):
         """
@@ -456,12 +456,12 @@ class Source:
             try:
                 request = urllib.request.Request(remoteurl, headers=headers)
                 response = urllib.request.urlopen(request)
-            except urllib.error.HTTPError as httpErr:
+            except urllib.error.HTTPError as httperr:
                 # raise Exception(httpErr.read())
-                LOG.error('NETWORK issue %s\n\tFor: %s', httpErr.read(), remoteurl)
+                LOG.error('NETWORK issue %s\n\tFor: %s', httperr.read(), remoteurl)
                 return False  # allows re try (e.g. not found in Cache)
-            except urllib.error.URLError as urlErr:
-                LOG.error('URLError %s\n\tFor: %s', urlErr, remoteurl)
+            except urllib.error.URLError as urlerr:
+                LOG.error('URLError %s\n\tFor: %s', urlerr, remoteurl)
             result = response is not None
             if localfile is not None and result:
                 with open(localfile, 'wb') as binwrite:

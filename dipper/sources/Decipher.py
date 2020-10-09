@@ -134,7 +134,7 @@ class Decipher(Source):
             graph = self.graph
 
         # in order for this to work, we need to map the HGNC id-symbol;
-        hgnc = HGNC(self.graph_type, self.are_bnodes_skolemized)
+        # hgnc = HGNC(self.graph_type, self.are_bnodes_skolemized)
         # hgnc_symbol_id_map = hgnc.get_symbol_id_map()  # Does Not Exists in hgnc
 
         myzip = ZipFile(
@@ -151,33 +151,40 @@ class Decipher(Source):
             # score_means_by_measure = {}
             # strain_scores_by_measure = {}   # TODO theseare unused
             for row in reader:
-                line_counter += 1
                 if re.match(r'#', row[0]):   # skip comments
                     continue
 
-                (gencode_gene_name, mode, category, consequence, disease, omim,
-                 ddg2p_id, pubmed_ids, hpo_codes) = row
+                (gencode_gene_name,
+                 mode,
+                 category,
+                 consequence,
+                 disease,
+                 omim,
+                 ddg2p_id,
+                 pubmed_ids,
+                 hpo_codes) = row
 
                 # hgnc_id = hgnc_symbol_id_map.get(gencode_gene_name.strip())
-                if hgnc_id is None:
+                # if hgnc_id is None:
+                if True:
                     LOG.error(
-                        "Couldn't map the gene symbol %s to HGNC.",
+                        "FIXME Couldn't map the gene symbol %s to HGNC.",
                         gencode_gene_name)
                     unmapped_gene_count += 1
                     continue
                 # add the gene
-                self.model.addClassToGraph(hgnc_id, gencode_gene_name)
+                # self.model.addClassToGraph(hgnc_id, gencode_gene_name)
 
                 # TODO make VSLC with the variation
                 #   to associate with the disorder
                 # TODO use the Inheritance and Mutation consequence
                 #   to classify the VSLCs
 
-                allele_id = self.make_allele_by_consequence(
-                    consequence, hgnc_id, gencode_gene_name)
+                # allele_id = self.make_allele_by_consequence(
+                #    consequence, hgnc_id, gencode_gene_name)
 
                 if omim.strip() != '':
-                    omim_id = 'OMIM:'+str(omim.strip())
+                    omim_id = 'OMIM:' + str(omim.strip())
                     # assume this is declared elsewhere in ontology
                     self.model.addClassToGraph(omim_id, None)
 
@@ -191,7 +198,7 @@ class Decipher(Source):
                     # elif category.strip() == 'Not DD gene':
                     #    # TODO negative annotation
                     #    continue
-                    assoc = G2PAssoc(graph, self.name, allele_id, omim_id)
+                    # assoc = G2PAssoc(graph, self.name, allele_id, omim_id)
                     # TODO 'rel' is assigned to but never used
 
                     for p in re.split(r';', pubmed_ids):
@@ -219,7 +226,7 @@ class Decipher(Source):
                 # are they about the gene?  the omim disease?  something else?
                 # So, we wont create associations until this is clarified
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         myzip.close()
@@ -273,7 +280,7 @@ class Decipher(Source):
         # make the allele
         allele_id = ''.join((gene_id, type_id))
         allele_id = re.sub(r':', '', allele_id)
-        allele_id = '_:'+allele_id  # make this a BNode
+        allele_id = self.make_id(allele_id)  # make this a BNode
         allele_label = ' '.join((consequence, 'allele in', gene_symbol))
 
         self.model.addIndividualToGraph(allele_id, allele_label, type_id)

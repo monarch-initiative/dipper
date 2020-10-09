@@ -232,18 +232,18 @@ class IMPC(Source):
                 # colony ids sometimes have <> in them, spaces,
                 # or other non-alphanumerics and break our system;
                 # replace these with underscores
-                colony_id = '_:' + re.sub(r'\W+', '_', colony_raw)
+                # bnode
+                colony_id = self.make_id(colony_raw.replace(' ', '_'), '_')
 
-                if not re.match(r'MGI', allele_accession_id):
-                    allele_accession_id = '_:IMPC-' + re.sub(
-                        r':', '', allele_accession_id)
+                if allele_accession_id[:4] != 'MGI:':
+                    # bnode
+                    allele_accession_id = self.make_id(
+                        'IMPC-' + allele_accession_id, '_')
 
                 if re.search(r'EUROCURATE', strain_accession_id):
-                    # the eurocurate links don't resolve at IMPC
-                    # TODO blank nodes do not maintain identifiers
-                    strain_accession_id = '_:' + strain_accession_id
-
-                elif not re.match(r'MGI', strain_accession_id):
+                    # the eurocurate links don't resolve at IMPC ... bnode
+                    strain_accession_id = self.make_id(strain_accession_id, '_')
+                elif strain_accession_id[:4] != 'MGI:':
                     LOG.info(
                         "Found a strange strain accession...%s", strain_accession_id)
                     strain_accession_id = 'IMPC:' + strain_accession_id
@@ -280,9 +280,10 @@ class IMPC(Source):
                         variant_locus_id, variant_locus_name, variant_locus_type, None)
                     geno.addAlleleOfGene(variant_locus_id, marker_accession_id)
 
-                    # TAG bnode
-                    sequence_alteration_id = '_:seqalt' + re.sub(
-                        r':', '', allele_accession_id)
+                    # Tag bnode
+                    sequence_alteration_id = self.make_id(
+                        'seqalt' + re.sub(r':', '', allele_accession_id), '_')
+
                     geno.addSequenceAlterationToVariantLocus(
                         sequence_alteration_id, variant_locus_id)
 
@@ -324,8 +325,9 @@ class IMPC(Source):
                 # (and it's relationship to the marker, etc.) later
                 # FIXME is it really necessary to create this vslc
                 # when we always know it's unknown zygosity?
-                vslc_colony = '_:' + re.sub(
-                    r':', '', allele_accession_id + self.globaltt['indeterminate'])
+                # bnode
+                vslc_colony = self.make_id(
+                    allele_accession_id + self.globaltt['indeterminate'], '_')
                 vslc_colony_label = allele_symbol + '/<?>'
                 # for ease of reading, we make the colony genotype variables.
                 # in the future, it might be desired to keep the vslcs
@@ -385,8 +387,9 @@ class IMPC(Source):
                 # Add the VSLC
                 vslc_id = '-'.join(
                     (marker_accession_id, allele_accession_id, zygosity))
-                vslc_id = re.sub(r':', '', vslc_id)
-                vslc_id = '_:' + vslc_id
+                vslc_id = vslc_id.replace(':', '')
+                # bnode
+                vslc_id = self.make_id(vslc_id, '_')
                 model.addIndividualToGraph(
                     vslc_id,
                     vslc_name,
@@ -435,7 +438,8 @@ class IMPC(Source):
                         re.sub(r'\W+', '', colony_raw)))
                     if not re.match(r'^_', pheno_center_strain_id):
                         # Tag bnode
-                        pheno_center_strain_id = '_:' + pheno_center_strain_id
+                        pheno_center_strain_id = self.make_id(
+                            pheno_center_strain_id, '_')
 
                     geno.addGenotype(
                         pheno_center_strain_id,
@@ -621,19 +625,15 @@ class IMPC(Source):
 
         # Add provenance
         # A study is a blank node equal to its parts
-        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}"
-            .format(
-                phenotyping_center,
-                colony,
-                project_fullname,
-                pipeline_stable_id,
-                procedure_stable_id,
-                parameter_stable_id,
-                statistical_method,
-                resource_name
-            ),
-            '_'
-        )
+        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
+            phenotyping_center,
+            colony,
+            project_fullname,
+            pipeline_stable_id,
+            procedure_stable_id,
+            parameter_stable_id,
+            statistical_method,
+            resource_name), '_')
 
         model.addIndividualToGraph(study_bnode, None, self.globaltt['study'])
 
@@ -642,7 +642,8 @@ class IMPC(Source):
 
         pipeline_curie = 'IMPC-pipe:' + pipeline_stable_id
         procedure_curie = 'IMPC-proc:' + procedure_stable_id
-        parameter_curie = 'IMPC-param:' + procedure_stable_id + '#' + parameter_stable_id
+        parameter_curie = 'IMPC-param:' + procedure_stable_id
+        parameter_curie += '#' + parameter_stable_id
 
         # Add study parts
 

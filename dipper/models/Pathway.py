@@ -1,5 +1,4 @@
 import logging
-import re
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 
@@ -41,8 +40,7 @@ class Pathway():
         if pathway_type is None:
             pathway_type = self.globaltt['cellular_process']
         self.model.addClassToGraph(
-            pathway_id, pathway_label, pathway_type, pathway_description
-        )
+            pathway_id, pathway_label, pathway_type, pathway_description)
         self.model.addSubClass(pathway_id, self.globaltt['pathway'])
 
     def addGeneToPathway(self, gene_id, pathway_id):
@@ -58,11 +56,13 @@ class Pathway():
         :param gene_id:
         :return:
         """
-
-        gene_product = '_:' + re.sub(r':', '', gene_id) + 'product'
+        # bnode
+        gene_product = self.make_id(gene_id.replace(':', '') + 'product', '_')
         self.model.addIndividualToGraph(
-            gene_product, None, self.globaltt['gene_product'],
-        )
+            gene_product, None, self.globaltt['gene_product'])
+        self.graph.addTriple(
+            gene_product, self.globaltt['label'], pathway_id)
+
         self.graph.addTriple(gene_id, self.globaltt['has gene product'], gene_product)
         self.addComponentToPathway(gene_product, pathway_id)
 

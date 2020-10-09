@@ -197,7 +197,7 @@ class Genotype():
         :param product_id:
         :param product_label:
         :param product_type:
-        :param sequence_category: biolink category CURIE for sequence_id [blv.terms.Gene].value
+        :param sequence_category: bl category CURIE for sequence_id [blv.terms.Gene].value
         :param product_category: biolink category CURIE for product_id
         :return:
 
@@ -485,6 +485,7 @@ class Genotype():
         """
 
         # akin to a variant locus
+        # is this some sort of pseudo bnode?
         if targeted_gene_id is None:
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
             targeted_gene_id = targeted_gene_id.replace(":", "")
@@ -688,8 +689,9 @@ class Genotype():
             self, genotype_id, genotype_label, taxon_id, taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
-        animal_id = re.sub(r':', '', animal_id)
-        animal_id = '_:' + animal_id
+        animal_id = animal_id.replace(':', '')
+        # bnode
+        animal_id = self.make_id(animal_id, '_')
 
         animal_label = ' '.join((genotype_label, taxon_label))
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
