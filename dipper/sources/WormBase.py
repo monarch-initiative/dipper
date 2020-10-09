@@ -36,6 +36,32 @@ GAF20 = [
     'Gene Product Form ID'              # optional
 ]
 
+GFF3 = [  # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
+    'seqid',    # name of the chromosome or scaffold
+    'source',   # database or project name
+    'type',     # term or accession from the SOFA sequence ontology
+    'start',    # Start position of the feature, with sequence numbering starting at 1.
+    'end',      # End position of the feature, with sequence numbering starting at 1.
+    'score',    # A floating point value.
+    'strand',   # defined as + (forward) or - (reverse).
+    'phase',    # One of '0', '1' or '2'. indicates that the first base of the feature
+    'attributes',  # A semicolon-separated list of tag-value pairs,
+]
+
+GFF3_ATT_TAG = [
+    'ID',
+    'Name',
+    'Alias',
+    'Parent',
+    'Target',
+    'Gap',
+    'Derives_from',
+    'Note',
+    'Dbxref',
+    'Ontology_term',
+    'Is_circular',
+]
+
 
 class WormBase(Source):
     """
@@ -71,11 +97,31 @@ class WormBase(Source):
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
             'url': wbprod + species +
-                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz',
+            'columns': [
+                'taxon_num',
+                'gene_num',
+                'gene_symbol',
+                'gene_synonym',
+                'live',
+                'gene_type',
+            ]
+        },
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
         #   'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #   'url': wbdev + species +
-        #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz',
+        #   'columns': [
+        #       'gene_num',
+        #       'public_name',
+        #       'molecular_name',
+        #       'concise_description',
+        #       'provisional_description',
+        #       'detailed_description',
+        #       'automated_description',
+        #       'gene_class_description'
+        #   ]
+        # },
         'allele_pheno': {
             'file': 'phenotype_association.wb',
             'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb',
@@ -83,18 +129,28 @@ class WormBase(Source):
         },
         'rnai_pheno': {
             'file': 'rnai_phenotypes.wb',
-            'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'
-            # not gaf v2.0
+            'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb',
+            'columns': [
+                'gene_num',
+                'gene_alt_symbol',
+                'phenotype_label',
+                'phenotype_id',
+                'rnai_and_refs'
+            ]
         },
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
-            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?' +
-                   'action=WpaXref'},
+            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?' +\
+                   'action=WpaXref',
+            'columns': ['wb_ref', 'xref'],
+        },
         'feature_loc': {
             # species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS273.annotations.gff3.gz
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-            'url': wbprod + species +
-                    '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+            'url': wbprod + species + \
+                    '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz',
+            'columns': GFF3,
+        },
         'disease_assoc': {
             # pub/wormbase/releases/current-production-release/ONTOLOGY/rnai_phenotypes.WS273.wb
             'file': 'disease_association.wb',
@@ -117,15 +173,16 @@ class WormBase(Source):
         #   '/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {  # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-            'url': wbprod + species +
-                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+            'url': wbprod + species + \
+                    '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz',
+        },
         'letter': {
             'file': 'letter',
             'url': wbprod + '/letter.WSNUMBER'},
 
         'checksums': {
             'file': 'CHECKSUMS',  # note *every* file & release eveh' most recent at top
-            'url':  wbprod + '/CHECKSUMS'},
+            'url': wbprod + '/CHECKSUMS'},
         'gaf-eco-mapping': {
             'file': 'gaf-eco-mapping.yaml',
             'url': '/'.join((Source.DIPPERCACHE, 'wormbase', 'gaf-eco-mapping.yaml')),
@@ -257,70 +314,78 @@ class WormBase(Source):
         LOG.info("Finished parsing.")
 
     def process_gene_ids(self, limit):
-        raw = '/'.join((self.rawdir, self.files['gene_ids']['file']))
-
+        src_key = 'gene_ids'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         graph = self.graph
-
         model = Model(graph)
-        LOG.info("Processing: %s", self.files['gene_ids']['file'])
-        line_counter = 0
         geno = Genotype(graph)
+        col = self.files[src_key]['columns']
+        LOG.info("Processing: %s", self.files[src_key]['file'])
+
         with gzip.open(raw, 'rb') as csvfile:
-            filereader = csv.reader(
-                io.TextIOWrapper(csvfile, newline=""), delimiter=',',
-                quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-                (taxon_num,
-                 gene_num,
-                 gene_symbol,
-                 gene_synonym,
-                 live,
-                 gene_type) = row
+            reader = csv.reader(
+                io.TextIOWrapper(csvfile, newline=""), delimiter=',', quotechar='\"')
+            # no header row to check
+            collen = len(col)
+            for row in reader:
+                if len(row) != collen:
+                    LOG.error(
+                        'In %s line %i expected %i colums but got %s.',
+                        self.files[src_key]['file'], reader.line_num, collen, row)
+                    pass
+                taxon_num = row[col.index('taxon_num')]
+                gene_num = row[col.index('gene_num')]
+                gene_symbol = row[col.index('gene_symbol')]
+                gene_synonym = row[col.index('gene_synonym')]
+                live = row[col.index('live')]
+                # gene_type = row[col.index('gene_type')]
                 # 6239,WBGene00000001,aap-1,Y110A7A.10,Live,protein_coding_gene
 
-                taxon_id = 'NCBITaxon:'+taxon_num
-                gene_id = 'WormBase:'+gene_num
+                taxon_curie = 'NCBITaxon:' + taxon_num
+                gene_curie = 'WormBase:' + gene_num
+
                 if gene_symbol == '':
-                    gene_symbol = gene_synonym
+                    gene_symbol = gene_synonym  # these are not the same in my book tec.
                 if gene_symbol == '':
                     gene_symbol = None
                 model.addClassToGraph(
-                    gene_id, gene_symbol, self.globaltt['gene']
+                    gene_curie, gene_symbol, self.globaltt['gene']
                 )
                 if live == 'Dead':
-                    model.addDeprecatedClass(gene_id,
-                                             old_id_category=blv.terms['Gene'])
-                geno.addTaxon(taxon_id, gene_id)
-                if gene_synonym != '' and gene_synonym is not None:
-                    model.addSynonym(gene_id, gene_synonym)
+                    model.addDeprecatedClass(
+                        gene_curie, old_id_category=blv.terms['Gene'])
+                geno.addTaxon(taxon_curie, gene_curie)
+                if gene_synonym is not None and gene_synonym != '':
+                    model.addSynonym(gene_curie, gene_synonym)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
 
-    def process_gene_desc(self, limit):
-        raw = '/'.join((self.rawdir, self.files['gene_desc']['file']))
-
+    def process_gene_desc(self, limit):  # currently unsupported
+        src_key = 'gene_desc'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         graph = self.graph
         model = Model(graph)
-        LOG.info("Processing: %s", self.files['gene_desc']['file'])
-        line_counter = 0
-        # geno = Genotype(graph)  # TODO unused
+        col = self.files[src_key]['columns']
+
         with gzip.open(raw, 'rb') as csvfile:
-            filereader = csv.reader(
-                io.TextIOWrapper(csvfile, newline=""), delimiter='\t',
-                quotechar='\"')
-            for row in filereader:
+            reader = csv.reader(
+                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
+            row = next(reader)
+            for row in reader:
                 if re.match(r'\#', ''.join(row)):
                     continue
-                line_counter += 1
-                if line_counter == 1:
-                    continue
-                (gene_num, public_name, molecular_name, concise_description,
-                 provisional_description, detailed_description,
-                 automated_description, gene_class_description) = row
+                gene_num = row[col.index('gene_num')]
+                # public_name = row[col.index('public_name')]
+                # molecular_name = row[col.index('molecular_name')]
+                concise_description = row[col.index('concise_description')]
+                provisional_description = row[col.index('provisional_description')]
+                detailed_description = row[col.index('detailed_description')]
+                automated_description = row[col.index('automated_description')]
+                gene_class_description = row[col.index('gene_class_description')]
 
-                gene_id = 'WormBase:'+gene_num
+                gene_id = 'WormBase:' + gene_num
 
                 if concise_description not in ('none available', '', None):
                     model.addDefinition(gene_id, concise_description)
@@ -336,11 +401,11 @@ class WormBase(Source):
                     text = descs.get(d)
                     if text != concise_description and \
                             text[:4] != 'none' and text != '':
-                        text = ' '.join((text, '['+d+']'))
+                        text = ' '.join((text, '[' + d + ']'))
                         descs[d] = text
                         model.addDescription(gene_id, text)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
 
     def process_allele_phenotype(self, limit=None):
@@ -358,11 +423,9 @@ class WormBase(Source):
         src_key = 'allele_pheno'
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         col = self.files[src_key]['columns']
-
         graph = self.graph
         model = Model(self.graph)
-
-        LOG.info("Processing Allele phenotype associations")
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -379,7 +442,7 @@ class WormBase(Source):
                 is_not = row[col.index('Qualifier')]
                 phenotype_id = row[col.index('GO ID')]
                 ref = row[col.index('DB:Reference (|DB:Reference)')].strip()
-                eco_symbol = row[col.index('Evidence Code')]
+                eco_symbol = row[col.index('Evidence Code')].strip()
                 with_or_from = row[col.index('With (or) From')]
                 # aspect = row[col.index('Aspect')]
                 # gene_name = row[col.index('DB Object Name')]
@@ -395,9 +458,8 @@ class WormBase(Source):
                 if is_not == 'NOT':
                     continue
 
-                eco_symbol = eco_symbol.strip()
                 eco_curie = None
-                if eco_symbol.strip() != '' and eco_symbol in self.gaf_eco:
+                if eco_symbol != '' and eco_symbol in self.gaf_eco:
                     eco_curie = self.gaf_eco[eco_symbol]
                 else:
                     LOG.warning(
@@ -510,29 +572,35 @@ class WormBase(Source):
                     break
 
     def process_rnai_phenotypes(self, limit=None):
-
-        raw = '/'.join((self.rawdir, self.files['rnai_pheno']['file']))
-
+        src_key = 'rnai_pheno'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         graph = self.graph
-        LOG.info("Processing RNAi phenotype associations")
         geno = Genotype(graph)
+        col = self.files[src_key]['columns']
         with open(raw, 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            # no header row to check
+            collen = len(col)
             for row in reader:
-                (
-                 gene_num,
-                 gene_alt_symbol,
-                 phenotype_label,
-                 phenotype_id,
-                 rnai_and_refs
-                ) = row
+                if len(row) != collen:
+                    LOG.error(
+                        'In %s line %i expected %i colums but got %s.',
+                        self.files[src_key]['file'], reader.line_num, collen, row)
+                    pass
+                gene_num = row[col.index('gene_num')]
+                gene_alt_symbol = row[col.index('gene_alt_symbol')]
+                # phenotype_label = row[col.index('phenotype_label')]
+                phenotype_id = row[col.index('phenotype_id')]
+                rnai_and_refs = row[col.index('rnai_and_refs')]
+
+                gene_curie = 'WormBase:' + gene_num
+
                 '''
 WBGene00001908	F17E9.9	locomotion variant	WBPhenotype:0000643	WBRNAi00025129|WBPaper00006395 WBRNAi00025631|WBPaper00006395
 WBGene00001908	F17E9.9	avoids bacterial lawn	WBPhenotype:0000402	WBRNAi00095640|WBPaper00040984
 WBGene00001908	F17E9.9	RAB-11 recycling endosome localization variant	WBPhenotype:0002107	WBRNAi00090830|WBPaper00041129
                 '''
-                gene_id = 'WormBase:'+gene_num
-                # refs = list()  # TODO unused
 
                 # the rnai_and_refs has this so that
                 '''
@@ -543,35 +611,36 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
 
                 rnai_sets = re.split(r' ', rnai_and_refs)
 
-                for s in rnai_sets:
-
+                for rnais in rnai_sets:
                     # get the rnai_id
-                    (rnai_num, ref_num) = re.split(r'\|', s)
-                    if len(re.split(r'\|', s)) > 2:
+                    pair = rnais.split('|')
+                    if len(pair) > 2:
                         LOG.warning(
-                            "There's an unexpected number of items in %s", s)
+                            "There's an unexpected number of items in %s", rnais)
+                    else:
+                        (rnai_num, ref_num) = pair
                     if rnai_num not in self.rnai_gene_map:
                         self.rnai_gene_map[rnai_num] = set()
 
                     # to use for looking up later
                     self.rnai_gene_map[rnai_num].add(gene_num)
 
-                    rnai_id = 'WormBase:'+rnai_num
+                    rnai_curie = 'WormBase:' + rnai_num
                     geno.addGeneTargetingReagent(
-                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id
+                        rnai_curie, None, self.globaltt['RNAi_reagent'], gene_curie
                     )
 
                     # make the "allele" of the gene
                     # that is targeted by the reagent
                     allele_id = self.make_reagent_targeted_gene_id(
                         gene_num, rnai_num)
-                    allele_label = gene_alt_symbol+'<'+rnai_num+'>'
+                    allele_label = gene_alt_symbol + '<' + rnai_num + '>'
                     geno.addReagentTargetedGene(
-                        rnai_id, gene_id, allele_id, allele_label
+                        rnai_curie, gene_curie, allele_id, allele_label
                     )
 
                     assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
-                    assoc.add_source('WormBase:'+ref_num)
+                    assoc.add_source('WormBase:' + ref_num)
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph()
 
@@ -579,70 +648,74 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                     break
 
     def process_pub_xrefs(self, limit=None):
-
-        raw = '/'.join((self.rawdir, self.files['pub_xrefs']['file']))
-
+        src_key = 'pub_xrefs'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         graph = self.graph
-
         model = Model(graph)
-        LOG.info("Processing publication xrefs")
-        line_counter = 0
+        col = self.files[src_key]['columns']
         with open(raw, 'r') as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-                (wb_ref, xref) = row
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
+                wb_ref = row[col.index('wb_ref')].strip()
+                xref = row[col.index('xref')].strip()[:-4]  # strips trailing '<BR>'
+
                 # WBPaper00000009 pmid8805<BR>
                 # WBPaper00000011 doi10.1139/z78-244<BR>
                 # WBPaper00000012 cgc12<BR>
 
-                ref_id = 'WormBase:'+wb_ref
-                xref_id = None
-                xref = re.sub(r'<BR>', '', xref)
-                xref = xref.strip()
-                if re.match(r'pmid', xref):
-                    xref_id = 'PMID:' + re.sub(r'pmid\s*', '', xref)
+                ref_curie = 'WormBase:' + wb_ref
+                dbxref_curie = None
+                if xref[:4] == 'pmid':
+                    dbxref_curie = 'PMID:' + xref[4:]
                     reference = Reference(
-                        graph, xref_id, self.globaltt['journal article'])
+                        graph, dbxref_curie, self.globaltt['journal article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
                     continue
-                elif re.match(r'doi', xref):
-                    xref_id = 'DOI:'+re.sub(r'doi', '', xref.strip())
-                    reference = Reference(graph, xref_id)
-                elif re.match(r'cgc', xref):
-                    # TODO not sure what to do here with cgc xrefs
-                    continue
+                elif xref[:3] == 'doi':
+                    dbxref_curie = 'DOI:' + xref[3:]
+                    reference = Reference(graph, dbxref_curie)
                 else:
                     # LOG.debug("Other xrefs like %s", xref)
                     continue
 
-                if xref_id is not None:
+                if dbxref_curie is not None:
                     reference.addRefToGraph()
-                    model.addSameIndividual(ref_id, xref_id)
+                    model.addSameIndividual(ref_curie, dbxref_curie)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
 
     def process_feature_loc(self, limit):
-
-        raw = '/'.join((self.rawdir, self.files['feature_loc']['file']))
+        src_key = 'feature_loc'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         graph = self.graph
         model = Model(graph)
-        LOG.info("Processing Feature location and attributes")
-        line_counter = 0
         geno = Genotype(graph)
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         strain_to_variant_map = {}
         build_num = self.version_num
-        build_id = 'WormBase:'+build_num
+        build_id = 'WormBase:' + build_num
+        col = self.files[src_key]['columns']
+
         with gzip.open(raw, 'rb') as csvfile:
-            filereader = csv.reader(
-                io.TextIOWrapper(csvfile, newline=""), delimiter='\t',
-                quotechar='\"')
-            for row in filereader:
+            reader = csv.reader(
+                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
+
+            for row in reader:
                 if re.match(r'\#', ''.join(row)):
                     continue
-                (chrom, db, feature_type_label, start, end, score, strand,
-                 phase, attributes) = row
+
+                chrom = row[col.index('seqid')]
+                # db = row[col.index('source')]
+                feature_type_label = row[col.index('type')]
+                start = row[col.index('start')]
+                # end = row[col.index('end')]
+                # score = row[col.index('score')]
+                strand = row[col.index('strand')]
+                # phase = row[col.index('phase')]
+                attributes = row[col.index('attributes')]
+
                 '''
  I	interpolated_pmap_position	gene	1	559768	.	.	.	ID=gmap:spe-13;gmap=spe-13;status=uncloned;Note=-21.3602 cM (+/- 1.84 cM)
  I	WormBase	gene	3747	3909	.	-	.	ID=Gene:WBGene00023193;Name=WBGene00023193;interpolated_map_position=-21.9064;sequence_name=Y74C9A.6;biotype=snoRNA;Alias=Y74C9A.6
@@ -662,17 +735,16 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                     # note biological_regions include balancers
                     # other options here: promoter, regulatory_region, reagent
                     continue
-                line_counter += 1
 
                 attribute_dict = {}
                 if attributes != '':
+                    attributes.replace('"', '')
                     attribute_dict = dict(
-                        item.split("=")for item in
-                        re.sub(r'"', '', attributes).split(";"))
+                        tuple(atv.split('=')) for atv in attributes.split(";"))
 
                 fid = flabel = desc = None
                 if 'ID' in attribute_dict:
-                    fid = attribute_dict.get('ID')
+                    fid = attribute_dict['ID']
                     if re.search(r'WB(Gene|Var|sf)', fid):
                         fid = re.sub(r'^\w+:WB', 'WormBase:WB', fid)
                     elif re.match(r'(gmap|landmark)', fid):
@@ -681,7 +753,7 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                         LOG.info('other identifier %s', fid)
                         fid = None
                 elif 'variation' in attribute_dict:
-                    fid = 'WormBase:'+attribute_dict.get('variation')
+                    fid = 'WormBase:' + attribute_dict['variation']
                     flabel = attribute_dict.get('public_name')
                     sub = attribute_dict.get('substitution')
                     ins = attribute_dict.get('insertion')
@@ -689,18 +761,19 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                     # variation=WBVar00604246;public_name=gk320600;strain=VC20384;substitution=C/T
                     desc = ''
                     if sub is not None:
-                        desc = 'substitution='+sub
+                        desc = 'substitution=' + sub
                     if ins is not None:
-                        desc = 'insertion='+ins
+                        desc = 'insertion=' + ins
 
                     # keep track of the strains with this variation,
                     # for later processing
                     strain_list = attribute_dict.get('strain')
                     if strain_list is not None:
-                        for s in re.split(r',', strain_list):
-                            if s.strip() not in strain_to_variant_map:
-                                strain_to_variant_map[s.strip()] = set()
-                            strain_to_variant_map[s.strip()].add(fid)
+                        for strn in strain_list.split(','):
+                            strn = strn.strip()
+                            if strn not in strain_to_variant_map:
+                                strain_to_variant_map[strn] = set()
+                            strain_to_variant_map[strn].add(fid)
 
                 # if feature_type_label == 'RNAi_reagent':
                     # Target=WBRNAi00096030 1 4942
@@ -716,7 +789,7 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
 
                 if fid is None:
                     if name is not None and re.match(r'WBsf', name):
-                        fid = 'WormBase:'+name
+                        fid = 'WormBase:' + name
                         name = None
                     else:
                         continue
@@ -764,7 +837,7 @@ WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBP
                 if note is not None and note != '':
                     model.addDescription(fid, note)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
 
                 # RNAi reagents:
@@ -773,7 +846,7 @@ I	RNAi_primary	RNAi_reagent	4184	10232	.	+	.	Target=WBRNAi00001601 1 6049 +;labo
 I	RNAi_primary	RNAi_reagent	4223	10147	.	+	.	Target=WBRNAi00033465 1 5925 +;laboratory=SV;history_name=MV_SV:mv_G_YK5052
 I	RNAi_primary	RNAi_reagent	5693	9391	.	+	.	Target=WBRNAi00066135 1 3699 +;laboratory=CH
                 '''
-                # TODO TF bindiing sites and network:
+                # TODO TF binding sites and network:
                 '''
 I	TF_binding_site_region	TF_binding_site	1861	2048	.	+	.	Name=WBsf292777;tf_id=WBTranscriptionFactor000025;tf_name=DAF-16
 I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=WBTranscriptionFactor000703;tf_name=DPL-1
@@ -783,7 +856,7 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         col = self.files[src_key]['columns']
         graph = self.graph
-        LOG.info("Processing disease models")
+        LOG.info("Processing: %s", self.files[src_key]['file'])
         with open(raw, 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             row = next(reader)
@@ -816,12 +889,12 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
                     continue
 
                 # WB	WBGene00000001	aap-1		DOID:2583	PMID:19029536	IEA	ENSEMBL:ENSG00000145675|OMIM:615214	D		Y110A7A.10	gene	taxon:6239	20150612	WB
-                gene_id = 'WormBase:'+gene_num
+                gene_id = 'WormBase:' + gene_num
 
                 assoc = G2PAssoc(
                     graph, self.name, gene_id, disease_id, self.globaltt['is model of']
                 )
-                ref = re.sub(r'WB_REF:', 'WormBase:', ref)
+                ref = ref.replace('WB_REF:', 'WormBase:')
                 if ref != '':
                     assoc.add_source(ref)
                 assoc.add_evidence(self.gaf_eco[eco_symbol])
@@ -851,28 +924,28 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
         :return:
 
         """
-
-        raw = '/'.join((self.rawdir, self.files['gene_interaction']['file']))
+        src_key = 'gene_interaction'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
 
         graph = self.graph
         model = Model(graph)
         LOG.info("Processing gene interaction associations")
-        line_counter = 0
 
         with gzip.open(raw, 'rb') as csvfile:
-            filereader = csv.reader(
-                io.TextIOWrapper(csvfile, newline=""), delimiter='\t',
-                quotechar="'")
+            reader = csv.reader(
+                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar="'")
 
-            for row in filereader:
-                line_counter += 1
+            for row in reader:
                 if re.match(r'#', ''.join(row)):
                     continue
 
-                (interaction_num, interaction_type, interaction_subtype,
-                 summary, citation) = row[0:5]
+                (interaction_num,
+                 interaction_type,
+                 interaction_subtype,
+                 summary,
+                 citation) = row[0:5]
                 # print(row)
-                interaction_id = 'WormBase:'+interaction_num
+                interaction_id = 'WormBase:' + interaction_num
 
                 # TODO deal with subtypes
                 interaction_type_id = None
@@ -893,8 +966,8 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
                         str(row))
                     continue
 
-                gene_a_id = 'WormBase:'+row[5]
-                gene_b_id = 'WormBase:'+row[8]
+                gene_a_id = 'WormBase:' + row[5]
+                gene_b_id = 'WormBase:' + row[8]
 
                 assoc = InteractionAssoc(
                     graph, self.name, gene_a_id, gene_b_id, interaction_type_id)
@@ -905,9 +978,9 @@ I	TF_binding_site_region	TF_binding_site	3403	4072	.	+	.	Name=WBsf331847;tf_id=W
                 if summary is not None and summary != '':
                     model.addDescription(assoc_id, summary)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
 
     @staticmethod
     def make_reagent_targeted_gene_id(gene_id, reagent_id):
-        return '_:'+'-'.join((gene_id, reagent_id))
+        return Source.make_id('-'.join((gene_id, reagent_id)), '_')
