@@ -14,7 +14,7 @@ WHERE {
   {
     GRAPH :biolink-model.ttl  { ?category skos:mappingRelation ?class . }
     GRAPH :monarch-slim.owl  {
-      ?type (a|rdfs:subClassOf|owl:equivalentClass|owl:sameAs|BFO:0000050)* ?class .
+      ?type (a|rdfs:subClassOf|owl:equivalentClass|^owl:equivalentClass|owl:sameAs|^owl:sameAs|BFO:0000050|^BFO:0000051)* ?class .
     }
   }
   UNION
