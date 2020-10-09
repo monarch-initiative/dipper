@@ -666,7 +666,7 @@ class OMIA(OMIMSource):
 
         gene_label = self.label_hash[gene_id]
         # some variant of gene_id has phenotype d
-        var = '_:' + gene_id.split(':')[-1] + 'VL'
+        var = self.make_id(gene_id.split(':')[-1] + 'VL', '_')
         geno.addAllele(var, 'some variant of ' + gene_label)
         geno.addAlleleOfGene(var, gene_id)
         geno.addAffectedLocus(var, gene_id)

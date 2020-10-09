@@ -536,7 +536,7 @@ class WormBase(Source):
                             # @kshefchek - removing this blank node
                             # in favor of simpler modeling, treat variant
                             # like an allele
-                            # vl_id = '_:'+'-'.join((gene_num, allele_num))
+                            # vl_id = make_id('+'-'.join((gene_num, allele_num)), '_')
                             # geno.addSequenceAlterationToVariantLocus(
                             #    allele_id, vl_id)
                             # geno.addAlleleOfGene(vl_id, gene_id)

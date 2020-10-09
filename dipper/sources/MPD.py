@@ -480,12 +480,14 @@ class MPD(Source):
         model = Model(graph)
         eco_id = self.globaltt['experimental phenotypic evidence']
         strain_label = self.idlabel_hash.get(strain_id)
-        # strain genotype
-        genotype_id = '_:' + '-'.join((re.sub(r':', '', strain_id), 'genotype'))
+        # strain genotype bnode
+        genotype_id = self.make_id(
+            '-'.join((re.sub(r':', '', strain_id), 'genotype')), '_')
         genotype_label = '[' + strain_label + ']'
 
-        sex_specific_genotype_id = '_:' + '-'.join(
-            (re.sub(r':', '', strain_id), sex, 'genotype'))
+        # bnode
+        sex_specific_genotype_id = self.make_id(
+            '-'.join((strain_id.replace(':', ''), sex, 'genotype')), '_')
         if strain_label is not None:
             sex_specific_genotype_label = strain_label + ' (' + sex + ')'
         else:

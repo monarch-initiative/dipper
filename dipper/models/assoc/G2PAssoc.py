@@ -1,5 +1,4 @@
 import logging
-import re
 
 from dipper.models.assoc.Association import Assoc
 
@@ -88,13 +87,16 @@ class G2PAssoc(Assoc):
         # is this kosher?
         Assoc.add_association_to_graph(self)
 
-        # make a blank stage
+        # make a blank stage bnode
         if self.start_stage_id or self.end_stage_id is not None:
-            stage_process_id = '-'.join((str(self.start_stage_id),
-                                         str(self.end_stage_id)))
-            stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
+            stage_process_str = '-'.join((
+                str(self.start_stage_id), str(self.end_stage_id)))
+            stage_process_id = self.make_id(stage_process_str.replace(':', ''), '_')
             self.model.addIndividualToGraph(
                 stage_process_id, None, self.globaltt['developmental_process']
+            )
+            self.graph.addTriple(
+                stage_process_id, self.globaltt['label'], stage_process_str
             )
 
             self.graph.addTriple(

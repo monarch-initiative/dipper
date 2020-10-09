@@ -810,7 +810,7 @@ SELECT  r._relationship_key as rel_key,
 
                 if self.test_mode is True and \
                         int(allele_key) not in self.test_keys.get('allele'):
-                        continue
+                    continue
                 #  so are allele_key ints or not?  -TEC
                 allele_id = self.idhash['allele'].get(allele_key)
                 if allele_id is None:
@@ -2315,7 +2315,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
         # these are just more blank node identifiers
-        iid = self.make_id('mgi' + prefix + 'key' + key, '_')
+        iid = Source.make_id('mgi' + prefix + 'key' + key, '_')
 
         return iid
 

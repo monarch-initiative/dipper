@@ -544,9 +544,9 @@ class AnimalQTLdb(Source):
                         geno.addAffectedLocus(qtl_id, gene_id)
 
                         if dbsnp_id is not None:
-                            # add the rsid as a seq alt of the gene_id
-                            vl_id = '_:' + re.sub(
-                                r':', '', gene_id) + '-' + peak_mark.strip()
+                            # add the rsid as a seq alt of the gene_id as a bnode
+                            vl_id = self.make_id(re.sub(
+                                r':', '', gene_id) + '-' + peak_mark.strip(), '_')
                             geno.addSequenceAlterationToVariantLocus(dbsnp_id, vl_id)
                             geno.addAffectedLocus(vl_id, gene_id)
 

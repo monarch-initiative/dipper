@@ -680,11 +680,10 @@ class ZFIN(Source):
                     list_of_targeted_genes += [targeted_gene_id]
                     # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
-                extrinsic_id = self.make_id(
-                    r':?_?', '', '-'.join(list_of_targeted_genes)). '_')
-                extrinsic_label = '; '.join(
+                extrinsic_id = self.make_id('-'.join(list_of_targeted_genes), '_')
+                extrinsic_label = '; '.join([
                     str(self.id_label_map.get(l))
-                    for l in list_of_targeted_genes)
+                    for l in list_of_targeted_genes])
                 self.id_label_map[extrinsic_id] = extrinsic_label
 
                 # add the parts
@@ -1036,8 +1035,7 @@ class ZFIN(Source):
                         allele1_id, vloci1)
                     geno.addAlleleOfGene(vloci1, gene_curie)
                     model.addIndividualToGraph(
-                        vloci1, vloci1_label, self.globaltt['variant_locus']
-                    )
+                        vloci1, vloci1_label, self.globaltt['variant_locus'])
                     if allele2_id is not None and allele2_id not in ['WT', '0', 'UN']:
                         vloci2 = self._make_variant_locus_id(
                             gene_curie, allele2_id)
@@ -1930,7 +1928,7 @@ class ZFIN(Source):
         transgene_part_id = '-'.join((
             construct_id, part_id, re.sub(r'\W+', '-', relationship)))
         transgene_part_id = re.sub(r'ZFIN:', '', transgene_part_id)
-        transgene_part_id = self.make_id(transgene_part_id, '_')
+        transgene_part_id = Source.make_id(transgene_part_id, '_')
 
         return transgene_part_id
 
@@ -2289,7 +2287,7 @@ class ZFIN(Source):
                 # if subcond_id != '':
                 #   env_component_id = '-'.join((env_component_id, subcond_id))
                 # make them blank nodes
-                # env_component_id = '_:' + env_component_id
+                # env_component_id = self.make_id(env_component_id, '_')  # bnode
                 # env_condition = condition.strip()
                 # env_component_label = condition_group + '[' + condition + ']'
                 # if description != '':
@@ -2901,7 +2899,7 @@ class ZFIN(Source):
         """
 
         varloci = '-'.join((gene_id, allele_id))
-        varloci = self.make_id(re.sub(r'(ZFIN)?:', '', varloci), '_')
+        varloci = Source.make_id(re.sub(r'(ZFIN)?:', '', varloci), '_')
 
         return varloci
 
@@ -3089,7 +3087,7 @@ class ZFIN(Source):
         targeted_gene_id = '-'.join((geneid, reagentid))
         # these are not zfin resolvable, so make BNodes
         targeted_gene_id = re.sub(r'(ZFIN)?:', '', targeted_gene_id)
-        targeted_gene_id = self.make_id(targeted_gene_id, '_')
+        targeted_gene_id = Source.make_id(targeted_gene_id, '_')
         return targeted_gene_id
 
     # #### SOME OLD (COBOL?) CODE #####

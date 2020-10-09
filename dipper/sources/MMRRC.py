@@ -391,7 +391,8 @@ class MMRRC(Source):
                     geno.addGenomicBackground(
                         bkgd_id, 'unspecified (' + strain + ')',
                         self.globaltt['unspecified_genomic_background'],
-                        "A placeholder for the unspecified genetic background for " + strain)
+                        "A placeholder for the unspecified genetic background for " +
+                        strain)
                     geno.addGenomicBackgroundToGenotype(
                         bkgd_id, genotype_id,
                         self.globaltt['unspecified_genomic_background'])
