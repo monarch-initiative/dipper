@@ -3,6 +3,7 @@ import re
 from dipper.models.Model import Model
 from dipper.models.Family import Family
 from dipper.graph.Graph import Graph
+from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
@@ -30,7 +31,7 @@ class Genotype():
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
-        return
+        self.gut = GraphUtils(self.curie_map)
 
     def addGenotype(
             self, genotype_id, genotype_label,
@@ -197,7 +198,7 @@ class Genotype():
         :param product_id:
         :param product_label:
         :param product_type:
-        :param sequence_category: bl category CURIE for sequence_id [blv.terms.Gene].value
+        :param sequence_category: bl category CURIE for seq_id [blv.terms.Gene].value
         :param product_category: biolink category CURIE for product_id
         :return:
 
@@ -691,7 +692,7 @@ class Genotype():
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = animal_id.replace(':', '')
         # bnode
-        animal_id = self.make_id(animal_id, '_')
+        animal_id = ':'.join(('_', self.gut.digest_id(animal_id)))
 
         animal_label = ' '.join((genotype_label, taxon_label))
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)

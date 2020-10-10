@@ -990,16 +990,21 @@ SELECT  r._relationship_key as rel_key,
                             self.globaltt['hemizygous insertion-linked'],
                             self.globaltt['hemizygous-x'],
                             self.globaltt['hemizygous-y'],
-                            self.globaltt['hemizygous']]:
+                            self.globaltt['hemizygous'],
+                    ]:
                         vslc_label += '0'
                     elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
                     elif zygosity_id == self.globaltt['indeterminate']:
                         vslc_label += '?'
+                    elif zygosity_id == self.globaltt['heteroplasmic']:
+                        vslc_label += '?'  # todo is there anything else to add here?
+                    elif zygosity_id == self.globaltt['homoplasmic']:
+                        vslc_label += '?'  # todo is there anything else to add here?
                     elif zygosity_id == self.globaltt['homozygous']:
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
-                    else:  # heteroplasmic,  homoplasmic,  FIXME add these if possible
+                    else:
                         LOG.info(
                             "A different kind of zygosity found is: %s",
                             self.globaltcid[zygosity_id])
@@ -2301,8 +2306,7 @@ SELECT  r._relationship_key as rel_key,
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
-    @staticmethod
-    def _make_internal_identifier(prefix, key):
+    def _make_internal_identifier(self, prefix, key):
         """
         This is a special MGI-to-MONARCH-ism.
         MGI tables have unique keys that we use here, but don't want to
@@ -2315,7 +2319,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
         # these are just more blank node identifiers
-        iid = Source.make_id('mgi' + prefix + 'key' + key, '_')
+        iid = self.make_id('mgi' + prefix + 'key' + key, '_')
 
         return iid
 
