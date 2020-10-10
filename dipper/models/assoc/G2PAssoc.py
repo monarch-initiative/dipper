@@ -1,6 +1,7 @@
 import logging
 
 from dipper.models.assoc.Association import Assoc
+from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
@@ -49,6 +50,7 @@ class G2PAssoc(Assoc):
 
         self.subject_category = entity_category
         self.object_category = phenotype_category
+        self.gut = GraphUtils(None)
 
         return
 
@@ -87,11 +89,12 @@ class G2PAssoc(Assoc):
         # is this kosher?
         Assoc.add_association_to_graph(self)
 
-        # make a blank stage bnode
+        # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:
             stage_process_str = '-'.join((
                 str(self.start_stage_id), str(self.end_stage_id)))
-            stage_process_id = self.make_id(stage_process_str.replace(':', ''), '_')
+            stage_process_id = ':'.join(  # bnode
+                ('_', self.gut.digest_id(stage_process_str)))
             self.model.addIndividualToGraph(
                 stage_process_id, None, self.globaltt['developmental_process']
             )

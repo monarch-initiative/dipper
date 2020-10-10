@@ -1,5 +1,6 @@
 import logging
 from dipper.graph.Graph import Graph
+from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
@@ -21,6 +22,8 @@ class Model():
 
         else:
             raise ValueError("{} is not a graph".format(graph))
+
+        self.gut = GraphUtils(None)  # self.curie_map
 
     def addTriple(
             self,
@@ -193,9 +196,9 @@ class Model():
             property_id_category=None,
             property_value_category=None
     ):
-        # make a blank node to hold the property restrictions
+        # make a bnode to hold the property restrictions
         uniq_str = '-'.join((property_id, property_value))
-        bnode = self.make_id(uniq_str, '_')
+        bnode = ':'.join(('_', self.gut.digest_id(uniq_str)))
 
         self.graph.addTriple(
             bnode, self.globaltt['type'], self.globaltt['restriction']
