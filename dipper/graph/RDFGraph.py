@@ -41,8 +41,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         # Can be removed when this is resolved
         # https://github.com/RDFLib/rdflib/issues/632
-        for pfx in ('OBO',):  # , 'ORPHA'):
-            self.bind(pfx, Namespace(self.curie_map[pfx]))
+		# 2020 oct. possibly fixed
+        # for pfx in ('OBO',):  # , 'ORPHA'):
+        #    self.bind(pfx, Namespace(self.curie_map[pfx]))
+
 
     def _make_category_triple(
             self, subject, category, predicate=blv.terms['category']
