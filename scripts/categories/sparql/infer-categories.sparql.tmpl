@@ -12,14 +12,14 @@ CONSTRUCT {
 WHERE {
   {
     GRAPH :class-category.ttl { ?type biolink:category ?category }
-    GRAPH :{DATASET} { ?sub a|rdfs:subClassOf|owl:equivalentClass|owl:sameAs ?type }
+    GRAPH :{DATASET} { ?sub a|rdfs:subClassOf|owl:equivalentClass|^owl:equivalentClass|owl:sameAs|^owl:sameAs ?type }
   }
   UNION
   {
     GRAPH :class-category.ttl { ?type biolink:category ?category }
     GRAPH :{DATASET} {
       ?obj a ?type .
-      ?sub owl:sameAs ?obj .
+      ?sub owl:sameAs|^owl:sameAs ?obj .
     }
   }
   UNION
