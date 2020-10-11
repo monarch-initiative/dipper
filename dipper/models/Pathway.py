@@ -1,6 +1,8 @@
 import logging
+
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
+from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
@@ -23,6 +25,7 @@ class Pathway():
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
+        self.gut = GraphUtils(self.curie_map)
 
     def addPathway(
             self, pathway_id, pathway_label, pathway_type=None, pathway_description=None
@@ -57,7 +60,8 @@ class Pathway():
         :return:
         """
         # bnode
-        gene_product = self.make_id(gene_id.replace(':', '') + 'product', '_')
+        gene_product = ':'.join((
+            '_', self.gut.digest_id(gene_id.replace(':', '') + 'product')))
         self.model.addIndividualToGraph(
             gene_product, None, self.globaltt['gene_product'])
         self.graph.addTriple(
