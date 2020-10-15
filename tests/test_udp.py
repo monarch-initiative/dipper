@@ -147,7 +147,7 @@ class UDPTestCase(unittest.TestCase):
             RO:0002162 NCBITaxon:9606 ;
             owl:sameAs dbSNP:rs11557757 .
 
-        <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> a GENO:0000000 ;
+        <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> a GENO:0000719 ;
             rdfs:label "patient_1 genotype" ;
             GENO:0000382 <https://monarchinitiative.org/.well-known/genid/b41e8da0787b45e24c4f> .
         """
