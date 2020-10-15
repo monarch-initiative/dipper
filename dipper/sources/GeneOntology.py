@@ -152,8 +152,13 @@ class GeneOntology(Source):
         #    # (http://current.geneontology.org/metadata/go-refs.json)
         #    'url': 'http://www.geneontology.org/doc/GO.references'
         # },
-        'id-map': {  # 8.5GB mapping file takes hours to DL ... maps UniProt to Ensembl
-            # replace w/ Ensembl rdf?
+
+        'idmapping_selected': {
+            # 9.7GB mapping file takes hours to DL ...
+            # maps UniProt to Ensembl & more (which we imostly gnore)
+            # replace w/ Ensembl rdf? --- no, current approach seems most canonical
+            # ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/
+            # idmapping/idmapping_selected.tab.gz
             'file': 'idmapping_selected.tab.gz',
             'url': FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
             # ftp://ftp.uniprot.org
@@ -492,11 +497,11 @@ class GeneOntology(Source):
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             LOG.info(
-                "Uniprot: %.2f%% of %i benefited from the mapping download",
+                "Uniprot: %.2f%% of %i benefited from the idmapping_selected download",
                 uniprot_per, uniprot_tot)
 
     def get_uniprot_entrez_id_map(self):
-        src_key = 'id-map'
+        src_key = 'idmapping_selected'
         taxon_digest = GraphUtils.digest_id(str(self.tax_ids))
         id_map = {}
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
