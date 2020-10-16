@@ -140,15 +140,21 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         impc.graph = RDFGraph(True)
         self.assertTrue(len(list(impc.graph)) == 0)
 
-        (phenotyping_center, colony) = self.test_set_1[2:4]
-        (project_fullname, pipeline_name, pipeline_stable_id,
-         procedure_stable_id, procedure_name, parameter_stable_id,
-         parameter_name) = self.test_set_1[12:19]
+        (phenotyping_center,
+         colony) = self.test_set_1[2:4]
+        (project_name,
+         project_fullname,
+         pipeline_name,
+         pipeline_stable_id,
+         procedure_stable_id,
+         procedure_name,
+         parameter_stable_id,
+         parameter_name) = self.test_set_1[11:19]
         (statistical_method, resource_name) = self.test_set_1[26:28]
 
         impc._add_study_provenance(
             phenotyping_center, colony,
-            project_fullname,
+            project_name,
             pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
@@ -164,7 +170,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 <https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
     rdfs:label "MEFW" .
 
-<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
+<https://monarchinitiative.org/.well-known/genid/b6f14f763c8d0629360e> a OBI:0000471 ;
     BFO:0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project>,
         IMPC-pipe:MGP_001 ;
     BFO:0000051 STATO:0000076,
@@ -176,7 +182,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
     rdfs:label "WTSI" .
 
 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
-    rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
+    rdfs:label "MGP" .
 
 <https://www.mousephenotype.org/impress/OntologyInfo?action=list&procID=MGP_XRY_001#IMPC_XRY_008_001> a owl:NamedIndividual ;
     rdfs:label "Number of ribs right (X-ray)" .
@@ -253,9 +259,9 @@ IMPC-proc:MGP_XRY_001 a owl:NamedIndividual ;
 
         # Some DRY violation with the above tests
         (phenotyping_center, colony) = self.test_set_N[2:4]
-        (project_fullname, pipeline_name, pipeline_stable_id,
+        (project_name,project_fullname, pipeline_name, pipeline_stable_id,
          procedure_stable_id, procedure_name, parameter_stable_id,
-         parameter_name) = self.test_set_N[12:19]
+         parameter_name) = self.test_set_N[11:19]
         (statistical_method, resource_name) = self.test_set_N[26:28]
 
         (p_value, percentage_change, effect_size) = self.test_set_N[23:26]
@@ -267,7 +273,7 @@ IMPC-proc:MGP_XRY_001 a owl:NamedIndividual ;
 
         # adding  study
         impc._add_study_provenance(
-            phenotyping_center, colony, project_fullname,
+            phenotyping_center, colony, project_name,
             pipeline_name,
             pipeline_stable_id,
             procedure_stable_id, procedure_name,

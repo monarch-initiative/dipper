@@ -1,5 +1,6 @@
 import csv
-import gzip
+# import gzip  # just till they stop taring single files again? ...
+import tarfile
 import re
 import logging
 import os
@@ -13,8 +14,11 @@ from dipper.models.Model import Model
 
 
 LOG = logging.getLogger(__name__)
+IMPC = 'ftp://ftp.ebi.ac.uk/pub/databases/impc'
 # Sometimes latest disappears
-IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
+# IMPCDL = IMPC + 'latest/csv'  # seems gone for good now
+# hope they restore a stable path to the current release ...fingers crossed
+IMPC_V12 = IMPC + '/all-data-releases/release-12.0/results'
 GITHUBRAW = 'https://raw.githubusercontent.com/'
 
 
@@ -62,9 +66,11 @@ class IMPC(Source):
     """
 
     files = {
-        'all': {
-            'file': 'ALL_genotype_phenotype.csv.gz',
-            'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz',
+        'g2p_assertions': {
+            # 'file': 'ALL_genotype_phenotype.csv.gz',  # pre v12.0
+            # 'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz',
+            'file': 'genotype-phenotype-assertions-ALL.csv.tgz',
+            'url': IMPC_V12 + '/genotype-phenotype-assertions-ALL.csv.tgz',
             'columns': [  # head -1 | tr ',' '\n' | sed "s|\(.*\)|'\1',|g"
                 'marker_accession_id',
                 'marker_symbol',
@@ -97,8 +103,8 @@ class IMPC(Source):
             ]
         },
         'checksum': {
-            'file': 'checksum.md5',
-            'url': IMPCDL + '/checksum.md5'
+            'file': 'genotype-phenotype-assertions-ALL.csv.tgz.md5',
+            'url': IMPC_V12 + '/genotype-phenotype-assertions-ALL.csv.tgz.md5',
         },
         'evidence': {  # manually isolated from their mysql data dump circa 2020 May
             'file': 'impc_evidence_stable_key.tsv',
@@ -159,12 +165,13 @@ class IMPC(Source):
         if self.test_only:
             self.test_mode = True
 
-        src_key = 'all'
+        src_key = 'g2p_assertions'
         self._process_data(src_key, limit)
         LOG.info("Finished parsing %s", self.files[src_key]['file'])
 
     def _process_data(self, src_key, limit=None):
 
+        # src_key = 'g2p_assertions'
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("Processing Data from %s", raw)
 
@@ -178,10 +185,17 @@ class IMPC(Source):
         # Add the taxon as a class
         taxon_id = self.globaltt['Mus musculus']
         model.addClassToGraph(taxon_id, None)
+        col = self.files[src_key]['columns']
 
         # with open(raw, 'r', encoding="utf8") as csvfile:
-        col = self.files['all']['columns']
-        with gzip.open(raw, 'rt') as csvfile:
+        # with gzip.open(raw, 'rt') as csvfile:
+
+        tarball = tarfile.open(raw, 'r:gz')
+        tarball.extractall(path=self.rawdir)
+        tarball.close()
+
+        halfbaked = self.rawdir + '/genotype-phenotype-assertions-ALL.csv'
+        with open(halfbaked, 'rt') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             row = next(reader)  # presumed header
             if not self.check_fileheader(col, row):
@@ -192,7 +206,7 @@ class IMPC(Source):
                 marker_accession_id = row[col.index('marker_accession_id')].strip()
                 marker_symbol = row[col.index('marker_symbol')].strip()
                 phenotyping_center = row[col.index('phenotyping_center')].strip()
-                colony_raw = row[col.index('colony_id')].strip()
+                colony_id = row[col.index('colony_id')].strip()
                 sex = row[col.index('sex')].strip()
                 zygosity = row[col.index('zygosity')].strip()
                 allele_accession_id = row[col.index('allele_accession_id')].strip()
@@ -200,8 +214,8 @@ class IMPC(Source):
                 # allele_name = row[col.index('allele_name')]
                 strain_accession_id = row[col.index('strain_accession_id')].strip()
                 strain_name = row[col.index('strain_name')].strip()
-                # project_name = row[col.index('project_name')]
-                project_fullname = row[col.index('project_fullname')].strip()
+                project_name = row[col.index('project_name')].strip()
+                # project_fullname = row[col.index('project_fullname')]  # gone in V12
                 pipeline_name = row[col.index('pipeline_name')].strip()
                 pipeline_stable_id = row[col.index('pipeline_stable_id')].strip()
                 procedure_stable_id = row[col.index('procedure_stable_id')].strip()
@@ -222,31 +236,23 @@ class IMPC(Source):
                     continue
 
                 # ##### cleanup some of the identifiers ######
-                zygosity = zygosity.strip()
                 zygosity_id = self.resolve(zygosity)
                 if zygosity_id == zygosity:
                     LOG.warning(
-                        "Zygosity '%s' unmapped. detting to indeterminate", zygosity)
+                        "Zygosity '%s' unmapped. setting to indeterminate", zygosity)
                     zygosity_id = self.globaltt['indeterminate']
 
-                # colony ids sometimes have <> in them, spaces,
-                # or other non-alphanumerics and break our system;
-                # replace these with underscores
-                # bnode
-                colony_id = self.make_id(colony_raw.replace(' ', '_'), '_')
-
                 if allele_accession_id[:4] != 'MGI:':
-                    # bnode
-                    allele_accession_id = self.make_id(
+                    allele_accession_id = self.make_id(  # bnode
                         'IMPC-' + allele_accession_id, '_')
-
-                if re.search(r'EUROCURATE', strain_accession_id):
-                    # the eurocurate links don't resolve at IMPC ... bnode
+                # the "IMPC-CURATE-" links don't resolve at IMPC ... bnode
+                if strain_accession_id[:12] == 'IMPC-CURATE-':
                     strain_accession_id = self.make_id(strain_accession_id, '_')
                 elif strain_accession_id[:4] != 'MGI:':
                     LOG.info(
-                        "Found a strange strain accession...%s", strain_accession_id)
-                    strain_accession_id = 'IMPC:' + strain_accession_id
+                        "Unknown Strain accession:\t%s", strain_accession_id)
+                    strain_accession_id = self.make_id(
+                        'IMPC:' + strain_accession_id, '_')
 
                 ######################
                 # first, add the marker and variant to the graph as with MGI,
@@ -258,18 +264,17 @@ class IMPC(Source):
 
                 # extract out what's within the <> to get the symbol
                 if re.match(r'.*<.*>', allele_symbol):
-                    sequence_alteration_name = re.match(
-                        r'.*<(.*)>', allele_symbol)
+                    sequence_alteration_name = re.match(r'.*<(.*)>', allele_symbol)
                     if sequence_alteration_name is not None:
                         sequence_alteration_name = sequence_alteration_name.group(1)
                 else:
                     sequence_alteration_name = allele_symbol
 
-                if marker_accession_id is not None and marker_accession_id == '':
+                if marker_accession_id == '':
                     LOG.warning("Marker unspecified on row %d", reader.line_num)
-                    marker_accession_id = None
+                    sequence_alteration_id = allele_accession_id
 
-                if marker_accession_id is not None:
+                else:  # if marker_accession_id is not None:
                     variant_locus_id = allele_accession_id
                     variant_locus_name = allele_symbol
                     variant_locus_type = self.globaltt['variant_locus']
@@ -280,15 +285,11 @@ class IMPC(Source):
                         variant_locus_id, variant_locus_name, variant_locus_type, None)
                     geno.addAlleleOfGene(variant_locus_id, marker_accession_id)
 
-                    # Tag bnode
-                    sequence_alteration_id = self.make_id(
-                        'seqalt' + re.sub(r':', '', allele_accession_id), '_')
+                    sequence_alteration_id = self.make_id(  # bnode
+                        'seqalt' + allele_accession_id, '_')
 
                     geno.addSequenceAlterationToVariantLocus(
                         sequence_alteration_id, variant_locus_id)
-
-                else:
-                    sequence_alteration_id = allele_accession_id
 
                 # IMPC contains targeted mutations with either gene traps,
                 # knockouts, insertion/intragenic deletions.
@@ -316,9 +317,14 @@ class IMPC(Source):
 
                 stem_cell_class = self.globaltt['embryonic stem cell line']
 
-                if colony_id is None:
-                    print(colony_raw, stem_cell_class, "\nline:\t", reader.line_num)
-                model.addIndividualToGraph(colony_id, colony_raw, stem_cell_class)
+                colony_label = '|'.join((colony_id, phenotyping_center))
+                colony_curie = self.make_id(colony_label, '_')
+                if colony_id is None or colony_id == '':
+                    LOG.warning(
+                        'missing colony_id for %s on line\t %i',
+                        stem_cell_class, reader.line_num)
+
+                model.addIndividualToGraph(colony_curie, colony_label, stem_cell_class)
 
                 # vslc of the colony has unknown zygosity
                 # note that we will define the allele
@@ -344,7 +350,7 @@ class IMPC(Source):
                     vslc_colony, allele_accession_id, None,
                     self.globaltt['indeterminate'], self.globaltt['has_variant_part'])
                 graph.addTriple(
-                    colony_id, self.globaltt['has_genotype'], colony_genotype_id
+                    colony_curie, self.globaltt['has_genotype'], colony_genotype_id
                 )
 
                 # ##########    BUILD THE ANNOTATED GENOTYPE    ##########
@@ -354,9 +360,9 @@ class IMPC(Source):
                 # (and is derived from a colony)
 
                 # this is a sex-agnostic genotype
-                genotype_id = self.make_id(
-                    (colony_id + phenotyping_center + zygosity + strain_accession_id))
-                geno.addSequenceDerivesFrom(genotype_id, colony_id)
+                genotype_id = self.make_id((
+                    colony_curie + phenotyping_center + zygosity + strain_accession_id))
+                geno.addSequenceDerivesFrom(genotype_id, colony_curie)
 
                 # build the VSLC of the sex-agnostic genotype
                 # based on the zygosity
@@ -387,7 +393,6 @@ class IMPC(Source):
                 # Add the VSLC
                 vslc_id = '-'.join(
                     (marker_accession_id, allele_accession_id, zygosity))
-                vslc_id = vslc_id.replace(':', '')
                 # bnode
                 vslc_id = self.make_id(vslc_id, '_')
                 model.addIndividualToGraph(
@@ -430,24 +435,18 @@ class IMPC(Source):
 
                     # make a phenotyping-center-specific strain
                     # to use as the background
-                    pheno_center_strain_label = strain_name + '-' + phenotyping_center \
-                        + '-' + colony_raw
-                    pheno_center_strain_id = '-'.join((
-                        re.sub(r':', '', genomic_background_id),
-                        re.sub(r'\s', '_', phenotyping_center),
-                        re.sub(r'\W+', '', colony_raw)))
-                    if not re.match(r'^_', pheno_center_strain_id):
-                        # Tag bnode
-                        pheno_center_strain_id = self.make_id(
-                            pheno_center_strain_id, '_')
+                    pheno_center_strain_label = '-'.join((
+                        strain_name, phenotyping_center, colony_id))
+                    pheno_center_strain_curie = self.make_id(  # bnode
+                        pheno_center_strain_label, '_')
 
                     geno.addGenotype(
-                        pheno_center_strain_id,
+                        pheno_center_strain_curie,
                         pheno_center_strain_label,
                         self.globaltt['genomic_background']
                     )
                     geno.addSequenceDerivesFrom(
-                        pheno_center_strain_id, genomic_background_id
+                        pheno_center_strain_curie, genomic_background_id
                     )
 
                     # Making genotype labels from the various parts,
@@ -457,17 +456,17 @@ class IMPC(Source):
                     genotype_name = \
                         genotype_name + ' [' + pheno_center_strain_label + ']'
                     geno.addGenomicBackgroundToGenotype(
-                        pheno_center_strain_id, genotype_id)
-                    geno.addTaxon(taxon_id, pheno_center_strain_id)
+                        pheno_center_strain_curie, genotype_id)
+                    geno.addTaxon(taxon_id, pheno_center_strain_curie)
                 # this is redundant, but i'll keep in in for now
-                geno.addSequenceDerivesFrom(genotype_id, colony_id)
+                geno.addSequenceDerivesFrom(genotype_id, colony_curie)
                 geno.addGenotype(genotype_id, genotype_name)
 
                 # Make the sex-qualified genotype,
                 # which is what the phenotype is associated with
                 sex_qualified_genotype_id = \
                     self.make_id((
-                        colony_id + phenotyping_center + zygosity +
+                        colony_curie + phenotyping_center + zygosity +
                         strain_accession_id + sex))
                 sex_qualified_genotype_label = genotype_name + ' (' + sex + ')'
 
@@ -496,7 +495,7 @@ class IMPC(Source):
                 # #############    BUILD THE G2P ASSOC    #############
                 # from an old email dated July 23 2014:
                 # Phenotypes associations are made to
-                # imits colony_id+center+zygosity+gender
+                # emits colony_curie+center+zygosity+gender
 
                 # sometimes phenotype ids are missing.  (about 711 early 2020)
                 if mp_term_id is None or mp_term_id == '':
@@ -509,8 +508,7 @@ class IMPC(Source):
                 # a procedure in a pipeline at a center and a parameter tested
 
                 assoc = G2PAssoc(
-                    graph, self.name, sex_qualified_genotype_id, mp_term_id
-                )
+                    graph, self.name, sex_qualified_genotype_id, mp_term_id)
                 assoc.add_evidence(eco_id)
                 # assoc.set_score(float(p_value))
 
@@ -540,7 +538,7 @@ class IMPC(Source):
                         '(p =', "{0}".format(p_value), ').'))
 
                 study_bnode = self._add_study_provenance(
-                    phenotyping_center, colony_raw, project_fullname, pipeline_name,
+                    phenotyping_center, colony_id, project_name, pipeline_name,
                     pipeline_stable_id, procedure_stable_id, procedure_name,
                     parameter_stable_id, parameter_name, statistical_method,
                     resource_name)
@@ -595,7 +593,7 @@ class IMPC(Source):
             self,
             phenotyping_center,
             colony,
-            project_fullname,
+            project_name,
             pipeline_name,
             pipeline_stable_id,
             procedure_stable_id,
@@ -606,17 +604,17 @@ class IMPC(Source):
             resource_name
     ):
         """
-        :param phenotyping_center: str, from self.files['all']
-        :param colony: str, from self.files['all']
-        :param project_fullname: str, from self.files['all']
-        :param pipeline_name: str, from self.files['all']
-        :param pipeline_stable_id: str, from self.files['all']
-        :param procedure_stable_id: str, from self.files['all']
-        :param procedure_name: str, from self.files['all']
-        :param parameter_stable_id: str, from self.files['all']
-        :param parameter_name: str, from self.files['all']
-        :param statistical_method: str, from self.files['all']
-        :param resource_name: str, from self.files['all']
+        :param phenotyping_center: str, from self.files['g2p_assertions']['columns']
+        :param colony: str, from self.files['g2p_assertions']
+        :param project_name: str, from self.files['g2p_assertions']
+        :param pipeline_name: str, from self.files['g2p_assertions']
+        :param pipeline_stable_id: str, from self.files['g2p_assertions']
+        :param procedure_stable_id: str, from self.files['g2p_assertions']
+        :param procedure_name: str, from self.files['g2p_assertions']
+        :param parameter_stable_id: str, from self.files['g2p_assertions']
+        :param parameter_name: str, from self.files['g2p_assertions']
+        :param statistical_method: str, from self.files['g2p_assertions']
+        :param resource_name: str, from self.files['g2p_assertions']
         :return: study bnode
         """
 
@@ -628,7 +626,7 @@ class IMPC(Source):
         study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
             phenotyping_center,
             colony,
-            project_fullname,
+            project_name,  # switched to from 'project_fullname'  2020  V12
             pipeline_stable_id,
             procedure_stable_id,
             parameter_stable_id,
@@ -656,7 +654,7 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
 
-        # logging.info("Adding Provenance for %s", project_fullname)
+        # logging.info("Adding Provenance for %s", project_name)
         model.addIndividualToGraph(parameter_curie, parameter_label)
         provenance_model.add_study_measure(
             study_bnode, parameter_curie, object_is_literal=False
@@ -684,17 +682,14 @@ class IMPC(Source):
         # self.graph
         model.addTriple(study_bnode, self.globaltt['part_of'], pipeline_curie)
 
-        if project_fullname in self.localtt:
-            project_fullname_id = self.localtt[project_fullname]
-        else:
-            project_fullname_id = self.resolve(project_fullname)
+        # as of V12 col 'project_fullname' became empty switched to 'project_name'
+        if project_name is not None and project_name != '':
+            for prj_nm in project_name.split(','):
+                project_name_id = self.localtt[prj_nm]
 
-        model.addIndividualToGraph(
-            project_fullname_id, project_fullname, self.globaltt['project']
-        )
-
-        # self.graph
-        model.addTriple(study_bnode, self.globaltt['part_of'], project_fullname_id)
+                model.addIndividualToGraph(
+                    project_name_id, project_name, self.globaltt['project'])
+                model.addTriple(study_bnode, self.globaltt['part_of'], project_name_id)
 
         return study_bnode
 
@@ -711,11 +706,11 @@ class IMPC(Source):
         :param assoc_id: assoc curie used to reify a
         genotype to phenotype association, generated in _process_data()
         :param eco_id: eco_id as curie, hardcoded in _process_data()
-        :param p_value: str, from self.files['all']
-        :param percentage_change: str, from self.files['all']
-        :param effect_size: str, from self.files['all']
-        :param study_bnode: str, from self.files['all']
-        :param phenotyping_center: str, from self.files['all']
+        :param p_value: str, from self.files['g2p_assertions']
+        :param percentage_change: str, from self.files['g2p_assertions']
+        :param effect_size: str, from self.files['g2p_assertions']
+        :param study_bnode: str, from self.files['g2p_assertions']
+        :param phenotyping_center: str, from self.files['g2p_assertions']
         :return: str, evidence_line_bnode as curie
         """
 
