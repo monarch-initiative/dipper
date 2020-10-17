@@ -8,7 +8,7 @@
 "female": "female intrinsic genotype"
 "both": "sex_qualified_genotype"
 "no_data": "intrinsic genotype"
-"no data": "intrinsic_genotype"  # fix  w 00000 -> 0007
+"no data": "intrinsic genotype"
 "not_considered": "unspecified"
 
 

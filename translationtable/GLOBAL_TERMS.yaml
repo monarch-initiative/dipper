@@ -255,7 +255,7 @@
 "unspecified_genomic_background": "GENO:0000649",
 "has_sex_agnostic_part": "GENO:0000650",
 "has_extent": "GENO:0000678",
-"intrinsic_genotype": "GENO:0000719",   # previously GENO:0000000  not  "intrinsic_genotype"
+"intrinsic genotype": "GENO:0000719",   # previously GENO:0000000  not  "intrinsic_genotype"
 "unspecified": "GENO:0000772",
 "pathogenic_for_condition": "GENO:0000840",
 "likely_pathogenic_for_condition": "GENO:0000841",
