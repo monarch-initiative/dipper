@@ -1,0 +1,361 @@
+New release of WormBase WS277
+
+WS277 was built by Michael Paulini (michael.paulini@wormbase.org)
+
+-==============================================================================-
+-========= FTP site structure =================================================-
+-==============================================================================-
+The WS277 build directory includes:
+species/ DIR              -  contains a sub dir for each WormBase species (G_SPECIES)
+species/G_SPECIES DIR     -  contains a sub dir for each NCBI genome sequencing BioProject (BIOPROJECT) for the species, with the following files:
+     - G_SPECIES.BIOPROJECT.WS277.genomic.fa.gz                  - Unmasked genomic DNA
+     - G_SPECIES.BIOPROJECT.WS277.genomic_masked.fa.gz           - Hard-masked (repeats replaced with Ns) genomic DNA
+     - G_SPECIES.BIOPROJECT.WS277.genomic_softmasked.fa.gz       - Soft-masked (repeats lower-cased) genomic DNA
+     - G_SPECIES.BIOPROJECT.WS277.protein.fa.gz                  - Current live protein set
+     - G_SPECIES.BIOPROJECT.WS277.CDS_transcripts.fa.gz          - Spliced cDNA sequence for the CDS portion of protein-coding transcripts
+     - G_SPECIES.BIOPROJECT.WS277.mRNA_transcripts.fa.gz         - Spliced cDNA sequence for the full-length (including UTRs) mRNA for transcripts
+     - G_SPECIES.BIOPROJECT.WS277.ncrna_transcripts.fa.gz        - Spliced cDNA sequence for non-coding RNA transcripts
+     - G_SPECIES.BIOPROJECT.WS277.pseudogenic_transcripts.fa.gz  - Spliced cDNA sequence for pseudogenic transcripts
+     - G_SPECIES.BIOPROJECT.WS277.transposon_transcripts.fa.gz   - Spliced cDNA sequence for mRNAs and pseudogenes located in Transposons
+     - G_SPECIES.BIOPROJECT.WS277.transposons.fa.gz              - DNA sequence of curated and predicted Transposons
+     - G_SPECIES.BIOPROJECT.WS277.transposon_cds.pep.gz          - Protein sequence of curated CDSs associated with Transposons
+     - G_SPECIES.BIOPROJECT.WS277.intergenic_sequences.fa.gz     - DNA sequence between pairs of adjacent genes
+     - G_SPECIES.BIOPROJECT.WS277.annotations.gff[2|3].gz        - Sequence features in either GFF2 or GFF3 format
+     - G_SPECIES.BIOPROJECT.WS277.protein_annotation.gff3.gz     - Sequence features in proteins in GFF3 format
+     - G_SPECIES.BIOPROJECT.WS277.canonical_geneset.gtf.gz       - Genes, transcripts and CDSs in GTF (GFF2) format
+     - G_SPECIES.BIOPROJECT.WS277.ests.fa.gz                     - ESTs and mRNA sequences extracted from the public databases
+     - G_SPECIES.BIOPROJECT.WS277.best_blastp_hits.txt.gz        - Best blastp matches to human, fly, yeast, and non-WormBase Uniprot proteins
+     - G_SPECIES.BIOPROJECT.WS277.*pep_package.tar.gz            - latest version of the [worm|brig|bren|rema|jap|ppa|brug]pep package (if updated since last release)
+     - annotation/                    - contains additional annotations:
+        - G_SPECIES.BIOPROJECT.WS277.confirmed_genes.txt.gz              - DNA sequences of all genes confirmed by EST &/or cDNA
+        - G_SPECIES.BIOPROJECT.WS277.cDNA2orf.txt.gz                     - Latest set of ORF connections to each cDNA (EST, OST, mRNA)
+        - G_SPECIES.BIOPROJECT.WS277.geneIDs.txtgz                       - list of all current gene identifiers with CGC & molecular names (when known)
+        - G_SPECIES.BIOPROJECT.WS277.PCR_product2gene.txt.gz             - Mappings between PCR products and overlapping Genes
+        - G_SPECIES.BIOPROJECT.WS277.*oligo_mapping.txt.gz               - Oligo array mapping files
+        - G_SPECIES.BIOPROJECT.WS277.knockout_consortium_alleles.xml.gz  - Table of Knockout Consortium alleles
+        - G_SPECIES.BIOPROJECT.WS277.SRA_gene_expression.tar.gz          - Tables of gene expression values computed from SRA RNASeq data
+        - G_SPECIES.BIOPROJECT.WS277.TSS.wig.tar.gz                      - Wiggle plot files of Transcription Start Sites from the papers WBPaper00042246, WBPaper00042529, WBPaper00042354
+        - G_SPECIES.BIOPROJECT.WS277.repeats.fa..gz                      - Latest version of the repeat library for the genome, suitable for use with RepeatMasker
+acedb DIR                -  Everything needed to generate a local copy of the The Primary database
+     - database.WS277.*.tar.gz   - compressed acedb database for new release
+     - models.wrm.WS277          - the latest database schema (also in above database files)
+     - WS277-WS276.dbcomp        - log file reporting difference from last release
+     - *Non_C_elegans_BLASTX/     - This directory contains the blastx data for non-elegans species
+                                                    (reduces the size of the main database)
+MULTI_SPECIES DIR - miscellaneous files with data for multiple species
+     - wormpep_clw.WS277.sql.bz2 - ClustalW protein multiple alignments
+ONTOLOGY DIR             - gene_associations, obo files for (phenotype GO anatomy) and associated association files
+
+
+Release notes on the web:
+-------------------------
+http://www.wormbase.org/about/release_schedule
+
+
+-=====================================================================================-
+-=========== C. elegans data summary =================================================-
+-=====================================================================================-
+
+Genome version
+--------------
+
+The version of the C. elegans reference genome included with this release is:
+
+Version Name: WBcel235
+INSDC accession: GCA_000002985.3
+UNSC name: ce11
+
+This version has been present in WormBase since release WS235
+
+
+C. elegans gene data (49191 genes in total)
+----------------------------------------------
+
+Protein-coding (19998 genes):
+  Curated description         5097    (25.5%)
+  Automated description      19823    (99.1%)
+  Human disease association   3574    (17.9%)
+  Approved Gene name         10391    (52.0%)
+  Reference                  11299    (56.5%)
+  RNAi results               18412    (92.1%)
+  Microarray results         19798    (99.0%)
+  Expression patterns        19435    (97.2%)
+  Variations                 19994   (100.0%)
+  Interaction data           15972    (79.9%)
+
+Non-coding RNA and pseudogene (27661 genes):
+  Curated description          219     (0.8%)
+  Automated description       6478    (23.4%)
+  Human disease association     28     (0.1%)
+  Approved Gene name         16523    (59.7%)
+  Reference                   5886    (21.3%)
+  RNAi results                 857     (3.1%)
+  Microarray results          2263     (8.2%)
+  Expression patterns          889     (3.2%)
+  Variations                 27622    (99.9%)
+  Interaction data             720     (2.6%)
+
+Uncloned (1532 genes):
+  Curated description          784    (51.2%)
+  Automated description        122     (8.0%)
+  Human disease association     10     (0.7%)
+  Approved Gene name          1531    (99.9%)
+  Reference                   1123    (73.3%)
+  RNAi results                   0     (0.0%)
+  Microarray results             0     (0.0%)
+  Expression patterns           19     (1.2%)
+  Variations                  1188    (77.5%)
+  Interaction data             137     (8.9%)
+
+
+
+Wormpep data set:
+----------------------------
+
+There are 28350 CDSs, from 19995 protein-coding loci
+
+The 28350 sequences contain 40370418 base pairs in total.
+
+Modified entries      6
+Deleted entries       3
+New entries           3
+Reappeared entries    0
+
+Net change  +0
+
+C. elegans Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed             23304 (82.2%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    4052 (14.3%)	Some, but not all exon bases are covered by transcript evidence
+Predicted               994 (3.5%)	No coverage by mRNA/EST/RNASeq evidence
+
+C. elegans Operons Stats
+------------------------
+Live Operons        1385
+Genes in Operons    3684
+
+C. elegans GO annotation status
+-------------------------------
+
+GO_codes - used for assigning evidence
+  IBA Inferred by Biological aspect of Ancestor
+  IC  Inferred by Curator
+  IDA Inferred from Direct Assay
+  IEA Inferred from Electronic Annotation
+  IEP Inferred from Expression Pattern
+  IGI Inferred from Genetic Interaction
+  IKR Inferred from Key Residues
+  IMP Inferred from Mutant Phenotype
+  IPI Inferred from Physical Interaction
+  IRD Inferred from Rapid Divergence
+  ISM Inferred from Sequence Model
+  ISO Inferred from Sequence Orthology
+  ISS Inferred from Sequence (or Structural) Similarity
+  NAS Non-traceable Author Statement
+  ND  No Biological Data available
+  RCA Inferred from Reviewed Computational Analysis
+  TAS Traceable Author Statement
+
+Number of gene<->GO_term associations    120915
+  Breakdown by annotation provider:
+    WormBase             18575
+    UniProt              48125
+    GO_Central           27615
+    InterPro             21405
+    GOC                   2688
+    IntAct                2317
+    SynGO                   37
+    CACAO                   36
+    ParkinsonsUK-UCL        31
+    MGI                     29
+    BHF-UCL                 24
+    HGNC-UCL                14
+    SGD                     11
+    CAFA                     7
+    ARUK-UCL                 1
+  Breakdown by evidence code:
+    IEA     64190
+      Interpro2GO 21406
+      Other       42784
+    non-IEA 56725
+      HDA     386
+      HEP     322
+      IBA   27620
+      IC      112
+      IDA    7453
+      IEP     173
+      IGI    4609
+      IKR       5
+      IMP    9329
+      IPI    4082
+      ISM       9
+      ISO       1
+      ISS    1843
+      NAS     181
+      ND      412
+      RCA      13
+      TAS     175
+
+Genes Stats:
+  Genes with GO_term connections  14036 
+    Non-IEA-only annotation             1249
+    IEA-only annotation                 5526
+    Both IEA and non-IEA annotations    7261
+
+GO_term Stats:
+  Distinct GO_terms connected to Genes   6798
+    Associated by non-IEA only               3946
+    Associated by IEA only                    680
+    Associated by both IEA and non-IEA       2172
+
+-=============================================================================-
+-=========== Other core species data summary =================================-
+-=============================================================================-
+
+Assembly versions
+----------------
+Brugia malayi                B_malayi-4.0              (project PRJNA10729, current since WS252)
+Caenorhabditis brenneri      C_brenneri-6.0.1b         (project PRJNA20035, current since WS227)
+Caenorhabditis briggsae      CB4                       (project PRJNA10731, current since WS254)
+Caenorhabditis japonica      C_japonica-7.0.1          (project PRJNA12591, current since WS227)
+Caenorhabditis remanei       C_remanei-15.0.1          (project PRJNA53967, current since WS185)
+Onchocerca volvulus          O_volvulus_Cameroon_v3    (project PRJEB513, current since WS241)
+Pristionchus pacificus       P_pacificus-El_Paco       (project PRJNA12644, current since WS263)
+Strongyloides ratti          S_ratti_ED321_v5_0_4      (project PRJEB125, current since WS247)
+Trichuris muris              T_muris-TMUE3.1           (project PRJEB126, current since WS264)
+
+Approved gene symbols
+---------------------
+Brugia malayi                 4393
+Caenorhabditis brenneri       8412
+Caenorhabditis briggsae       7774
+Caenorhabditis japonica       6802
+Caenorhabditis remanei        8335
+Onchocerca volvulus           3213
+Pristionchus pacificus        4430
+Strongyloides ratti            109
+Trichuris muris                  0
+
+Gene counts
+-----------
+Brugia malayi                11723 (10986 coding)
+Caenorhabditis brenneri      33291 (30705 coding)
+Caenorhabditis briggsae      23202 (21024 coding)
+Caenorhabditis japonica      32410 (29935 coding)
+Caenorhabditis remanei       84025 (82531 coding)
+Onchocerca volvulus          12605 (12109 coding)
+Pristionchus pacificus       26343 (26342 coding)
+Strongyloides ratti          12973 (12464 coding)
+Trichuris muris              15754 (14995 coding)
+
+Brugia malayi Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed              8151 (53.4%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    5743 (37.6%)	Some, but not all exon bases are covered by transcript evidence
+Predicted              1361 (8.9%)	No coverage by mRNA/EST/RNASeq evidence
+
+Caenorhabditis brenneri Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed              1593 (5.2%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    5706 (18.6%)	Some, but not all exon bases are covered by transcript evidence
+Predicted             23426 (76.2%)	No coverage by mRNA/EST/RNASeq evidence
+
+Caenorhabditis briggsae Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed             16526 (68.8%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    4559 (19.0%)	Some, but not all exon bases are covered by transcript evidence
+Predicted              2923 (12.2%)	No coverage by mRNA/EST/RNASeq evidence
+
+Caenorhabditis japonica Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed              9389 (26.1%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed   12176 (33.8%)	Some, but not all exon bases are covered by transcript evidence
+Predicted             14413 (40.1%)	No coverage by mRNA/EST/RNASeq evidence
+
+Caenorhabditis remanei Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed               962 (3.1%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    5665 (18.0%)	Some, but not all exon bases are covered by transcript evidence
+Predicted             24830 (78.9%)	No coverage by mRNA/EST/RNASeq evidence
+
+Onchocerca volvulus Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed              6186 (50.6%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    5581 (45.7%)	Some, but not all exon bases are covered by transcript evidence
+Predicted               457 (3.7%)	No coverage by mRNA/EST/RNASeq evidence
+
+Pristionchus pacificus Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed               382 (1.4%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    4992 (18.9%)	Some, but not all exon bases are covered by transcript evidence
+Predicted             21059 (79.7%)	No coverage by mRNA/EST/RNASeq evidence
+
+Strongyloides ratti Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed               877 (7.0%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    2342 (18.8%)	Some, but not all exon bases are covered by transcript evidence
+Predicted              9265 (74.2%)	No coverage by mRNA/EST/RNASeq evidence
+
+Trichuris muris Gene model confirmation status (based on the EST/mRNA/RNASeq evidence)
+------------------------------------------------------------
+Confirmed              6262 (41.8%)	Every base of every exon has transcription evidence (mRNA/EST/RNASeq)
+Partially_confirmed    3901 (26.0%)	Some, but not all exon bases are covered by transcript evidence
+Predicted              4832 (32.2%)	No coverage by mRNA/EST/RNASeq evidence
+
+
+-==============================================================================-
+-=========== News for this release ============================================-
+-==============================================================================-
+
+New data sets
+--------------
+
+C.elegans N2
+============
+Additional Nanopore Transcript data has been added.
+
+
+C.elegans VC2010
+================
+The VC2010 strain data includes gene annotation which has been manually curated to improve the coding gene structures lifted over from the N2 strain annotation. This process is substantially complete, with some work still to be done on chromosome X. The number of coding genes which do not map correctly has been reduced so far from around 400 down to 50 genes which cannot yet be located and 10 which appear to be Pseudogenes in VC2010. There are 20 genes which appear to be duplicated in N2 and have disappeared in VC2010. There have been 39 novel coding genes created.
+
+New/updated reference genomes
+------------------------------------
+
+Proposed Changes / Forthcoming Data
+------------------------------------
+
+
+Model Changes
+--------------
+
+Model changes for this release are documented here:
+
+http://wiki.wormbase.org/index.php/WS277_Models.wrm
+
+For more information mail help@wormbase.org
+
+-==============================================================================-
+-=========== Installation guide ===============================================-
+-==============================================================================-
+
+
+Quick installation guide for UNIX/Linux systems
+-----------------------------------------------
+
+1. Create a new directory to contain your copy of WormBase,
+	e.g. /users/yourname/wormbase
+
+2. Unpack and untar all of the database.*.tar.gz files into
+	this directory. You will need approximately 50-60 Gb of disk space.
+
+3. Obtain and install a suitable acedb binary for your system
+	(available from www.acedb.org).
+
+4. Use the acedb 'xace' program to open your database, e.g.
+	type 'xace /users/yourname/wormbase' at the command prompt.
+
+5. See the acedb website for more information about acedb and
+	using xace.
+
+____________  END _____________
