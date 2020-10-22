@@ -495,9 +495,9 @@ class MPD(Source):
 
         genotype_type = self.globaltt['sex_qualified_genotype']
         if sex == 'm':
-            genotype_type = self.globaltt['male_genotype']
+            genotype_type = self.globaltt['male intrinsic genotype']
         elif sex == 'f':
-            genotype_type = self.globaltt['female_genotype']
+            genotype_type = self.globaltt['female intrinsic genotype']
 
         # add the genotype to strain connection
         geno.addGenotype(

@@ -11,7 +11,7 @@ from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
-#       https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
+# https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
 # mapDwnLd36738TDWS.txt.gz
 AQDL = 'https://www.animalgenome.org/QTLdb'
 LOG = logging.getLogger(__name__)
@@ -65,40 +65,42 @@ class AnimalQTLdb(Source):
     ]
 
     qtl_columns = [  # columns in *_QTLdata.txt files
-        'qtl_id',
-        'qtl_symbol',
-        'trait_name',
-        'assotype',
-        'empty',
-        'chromosome',
-        'position_cm',
-        'range_cm',
-        'flankmark_a2',
-        'flankmark_a1',
-        'peak_mark',
-        'flankmark_b1',
-        'flankmark_b2',
-        'exp_id',
-        'model_id',
-        'test_base',
-        'psig_level',
-        'lod_score',
-        'ls_mean',
-        'p_values',
-        'f_statistics',
-        'variance',
-        'bayes_value',
-        'likelihood_ratio',
-        'trait_id',
-        'dom_effect',
-        'add_effect',
-        'pubmed_id',
-        'gene_id',
-        'gene_id_src',
-        'gene_id_type',
-        'empty2'
+        # see:  https://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/
+        'QTL_ID',        # Unique QTL ID at QTLdb, primary key
+        'QTL_symbol',    # Abbreviated name of QTL, usually represent the trait
+        'Trait_name',    # Trail name
+        'assotype',      # "QTL" data type, include "QTL", "Associations", "eQTL".
+        '(empty)',       #
+        'Chromosome',    # Chromosome number or name.
+        'Position_cm',   # Peak location of QTL.
+        'range_cm',      # Range of QTL locations, usually in the form of "12-43".
+        'FlankMark_A2',  # Name of flanking marker A2.
+        'FlankMark_A1',  # Name of flanking marker A1.
+        'Peak_Mark',     # Name of peak marker.
+        'FlankMark_B1',  # Name of flanking marker B1.
+        'FlankMark_B2',  # Name of flanking marker B2.
+        'Exp_ID',        # Experiment ID (foreign key).
+        'Model',         # Test model, e.g. "Paternally imprinted", "Maternally
+                         #          imprinted","Imprinted", "Sex-specific", "Epistatic",
+                         #          "Mendelian".
+        'testbase',      # Test base, e.g. "Genome-wise", "Chromosome-wise",
+                         #          "Comparison-wise", "Experiment-wise".
+        'siglevel',      # Test significance level, e.g. "Significant", "Suggestive".
+        'LOD_score',     # LOD score.
+        'LS_mean',       # LS means.
+        'P_values',      # P-value.
+        'F_Statistics',  # F-statistics.
+        'VARIANCE',      # Satistics varance.
+        'Bayes_value',   # Bayes value.
+        'LikelihoodR',   # Likelihood ratio.
+        'TRAIT_ID',      # Trait ID (foreign key).
+        'Dom_effect',    # Dominance effect.
+        'Add_effect',    # Additive effect.
+        'PUBMED_ID',     # Publication ID (foreign key), usually PubMed ID or "ISU" ID.
+        'geneID',        # gene ID
+        'geneIDsrc',     # gene ID source (database: NCBI GeneDB, Ensembl Gene, etc)
+        'geneIDtype',    # gene ID type (e.g. Candidate, eQTL, etc)
     ]
-
     gene_info_columns = [  # columns from *.gene_info.gz files
         'tax_id',
         'GeneID',
@@ -115,7 +117,7 @@ class AnimalQTLdb(Source):
         'Nomenclature_status',
         'Other_designations',
         'Modification_date',
-        'Feature_type'
+        'Feature_type',
     ]
 
     trait_mapping_columns = [  # columns in file 'trait_mappings'
@@ -127,16 +129,18 @@ class AnimalQTLdb(Source):
         'Species',
         'Class',
         'Type',
-        'QTL_Count'
+        'QTL_Count',
     ]
 
     files = {
-        # defaulting to this
         'cattle_bp': {
             'file': 'QTL_Btau_4.6.gff.txt.gz',
             'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz',
             'curie': 'cattleQTL',
             'columns': gff_columns,
+            # more cattle? gff available:
+            #   QTL_UMD_3.1.gff.txt.gz
+            #   QTL_ARS-UCD1.gff.txt.gz
         },
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
@@ -145,8 +149,8 @@ class AnimalQTLdb(Source):
             'columns': qtl_columns,
         },
         'chicken_bp': {
-            'file': 'QTL_GG_4.0.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz',
+            'file': 'QTL_GG_5.0.gff.txt.gz',
+            'url': AQDL + '/tmp/QTL_GG_5.0.gff.txt.gz',
             'curie': 'chickenQTL',
             'columns': gff_columns,
         },
@@ -157,8 +161,8 @@ class AnimalQTLdb(Source):
             'columns': qtl_columns,
         },
         'pig_bp': {
-            'file': 'QTL_SS_10.2.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz',
+            'file': 'QTL_SS_11.1.gff.txt.gz',
+            'url': AQDL + '/tmp/QTL_SS_11.1.gff.txt.gz',
             'curie': 'pigQTL',
             'columns': gff_columns,
         },
@@ -169,8 +173,8 @@ class AnimalQTLdb(Source):
             'columns': qtl_columns,
         },
         'sheep_bp': {
-            'file': 'QTL_OAR_3.1.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz',
+            'file': 'QTL_OAR_4.0.gff.txt.gz',
+            'url': AQDL + '/tmp/QTL_OAR_4.0.gff.txt.gz',
             'curie': 'sheepQTL',
             'columns': gff_columns,
         },
@@ -279,8 +283,6 @@ class AnimalQTLdb(Source):
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
 
-        return
-
     def parse(self, limit=None):
         """
 
@@ -318,18 +320,22 @@ class AnimalQTLdb(Source):
             self.gene_info = list()
             LOG.info('Ingesting %s', gene_info_file)
             with gzip.open(gene_info_file, 'rt') as gi_gz:
-                filereader = csv.reader(gi_gz, delimiter='\t')
+                reader = csv.reader(gi_gz, delimiter='\t')
                 # skipping header checking, b/c not all of these gene_info files have
                 # headers
                 col = self.files[src_key]['columns']
-                for row in filereader:
+                col_len = len(col)
+                for row in reader:
                     if row[0][0] == '#':
+                        # LOG.info(row)
                         continue
-                    if len(row) != len(col):
+                    if len(row) != col_len and ''.join(row[col_len:]) != '':
                         LOG.warning(
-                            "Problem parsing in %s row %s\n"
+                            "Problem parsing in %s row %i\n"
                             "got %s cols but expected %s",
-                            gene_info_file, row, len(row), len(col))
+                            gene_info_file, reader.line_num, len(row), col_len)
+                        LOG.info(row)
+
                     self.gene_info.append(row[col.index('GeneID')])
             LOG.info(
                 'Gene Info for %s has %i entries', common_name, len(self.gene_info))
@@ -370,7 +376,6 @@ class AnimalQTLdb(Source):
                     limit)
 
         LOG.info("Finished parsing")
-        return
 
     def _process_qtls_genetic_location(
             self, raw, src_key, txid, common_name, limit=None):
@@ -399,47 +404,46 @@ class AnimalQTLdb(Source):
             reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             # no header in these files, so no header checking
             col = self.files[src_key]['columns']
+            col_len = len(col)
             for row in reader:
-
-                if len(row) != len(self.qtl_columns):
+                if len(row) != col_len and ''.join(row[col_len:]) != '':
                     LOG.warning(
                         "Problem parsing %s line %i containing: \n%s\n"
                         "got %i cols but expected %i",
-                        raw, reader.line_num, row, len(row), len(col))
+                        raw, reader.line_num, row, len(row), col_len)
+                    # LOG.info(row)
                     continue
-                else:
-                    qtl_id = row[col.index('qtl_id')].strip()
-                    qtl_symbol = row[col.index('qtl_symbol')].strip()
-                    trait_name = row[col.index('trait_name')].strip()
-                    # assotype = row[col.index('assotype')].strip()
-                    # empty = row[col.index('empty')].strip()
-                    chromosome = row[col.index('chromosome')].strip()
-                    position_cm = row[col.index('position_cm')].strip()
-                    range_cm = row[col.index('range_cm')].strip()
-                    # flankmark_a2 = row[col.index('flankmark_a2')].strip()
-                    # flankmark_a1 = row[col.index('flankmark_a1')].strip()
-                    peak_mark = row[col.index('peak_mark')].strip()
-                    # flankmark_b1 = row[col.index('flankmark_b1')].strip()
-                    # flankmark_b2 = row[col.index('flankmark_b2')].strip()
-                    # exp_id = row[col.index('exp_id')].strip()
-                    # model_id = row[col.index('model_id')].strip()
-                    # test_base = row[col.index('test_base')].strip()
-                    # sig_level = row[col.index('sig_level')].strip()
-                    # lod_score = row[col.index('lod_score')].strip()
-                    # ls_mean = row[col.index('ls_mean')].strip()
-                    p_values = row[col.index('p_values')].strip()
-                    # f_statistics = row[col.index('f_statistics')].strip()
-                    # variance = row[col.index('variance')].strip()
-                    # bayes_value = row[col.index('bayes_value')].strip()
-                    # likelihood_ratio = row[col.index('likelihood_ratio')].strip()
-                    trait_id = row[col.index('trait_id')].strip()
-                    # dom_effect = row[col.index('dom_effect')].strip()
-                    # add_effect = row[col.index('add_effect')].strip()
-                    pubmed_id = row[col.index('pubmed_id')].strip()
-                    gene_id = row[col.index('gene_id')].strip()
-                    gene_id_src = row[col.index('gene_id_src')].strip()
-                    # gene_id_type = row[col.index('gene_id_type')].strip()
-                    # empty2 = row[col.index('empty2')].strip()
+
+                qtl_id = row[col.index('QTL_ID')].strip()
+                qtl_symbol = row[col.index('QTL_symbol')].strip()
+                trait_name = row[col.index('Trait_name')].strip()
+                # assotype = row[col.index('assotype')].strip()
+                chromosome = row[col.index('Chromosome')].strip()
+                position_cm = row[col.index('Position_cm')].strip()
+                range_cm = row[col.index('range_cm')].strip()
+                # flankmark_a2 = row[col.index('FlankMark_A2')].strip()
+                # flankmark_a1 = row[col.index('FlankMark_A1')].strip()
+                peak_mark = row[col.index('Peak_Mark')].strip()
+                # flankmark_b1 = row[col.index('FlankMark_B1')].strip()
+                # flankmark_b2 = row[col.index('FlankMark_B2')].strip()
+                # exp_id = row[col.index('Exp_ID')].strip()
+                # model_id = row[col.index('Model')].strip()
+                # test_base = row[col.index('testbase')].strip()
+                # sig_level = row[col.index('siglevel')].strip()
+                # lod_score = row[col.index('LOD_score')].strip()
+                # ls_mean = row[col.index('LS_mean')].strip()
+                p_values = row[col.index('P_values')].strip()
+                # f_statistics = row[col.index('F_Statistics')].strip()
+                # variance = row[col.index('VARIANCE')].strip()
+                # bayes_value = row[col.index('Bayes_value')].strip()
+                # likelihood_ratio = row[col.index('LikelihoodR')].strip()
+                trait_id = row[col.index('TRAIT_ID')].strip()
+                # dom_effect = row[col.index('Dom_effect')].strip()
+                # add_effect = row[col.index('Add_effect')].strip()
+                pubmed_id = row[col.index('PUBMED_ID')].strip()
+                gene_id = row[col.index('geneID')].strip()
+                gene_id_src = row[col.index('geneIDsrc')].strip()
+                # gene_id_type = row[col.index('geneIDtype')].strip()
 
                 if self.test_mode and int(qtl_id) not in self.test_ids:
                     continue
@@ -506,12 +510,10 @@ class AnimalQTLdb(Source):
                     dbsnp_id = 'dbSNP:' + peak_mark.strip()
 
                     model.addIndividualToGraph(
-                        dbsnp_id, None, self.globaltt['sequence_alteration']
-                    )
+                        dbsnp_id, None, self.globaltt['sequence_alteration'])
 
                     model.addXref(
-                        qtl_id, dbsnp_id, xref_category=blv.terms['SequenceVariant']
-                    )
+                        qtl_id, dbsnp_id, xref_category=blv.terms['SequenceVariant'])
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
                 gene_id = gene_id.strip(',')  # for "100157483,"  in pig_QTLdata.txt
@@ -554,8 +556,7 @@ class AnimalQTLdb(Source):
                 model.addClassToGraph(
                     trait_id,
                     trait_name,
-                    class_category=blv.terms['PhenotypicFeature']
-                )
+                    class_category=blv.terms['PhenotypicFeature'])
 
                 # Add publication
                 reference = None
@@ -565,16 +566,14 @@ class AnimalQTLdb(Source):
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
                     reference = Reference(
-                        graph, pub_id, self.globaltt['journal article']
-                    )
+                        graph, pub_id, self.globaltt['journal article'])
 
                 if reference is not None:
                     reference.addRefToGraph()
 
                 # make the association to the QTL
                 assoc = G2PAssoc(
-                    graph, self.name, qtl_id, trait_id, self.globaltt['is marker for']
-                )
+                    graph, self.name, qtl_id, trait_id, self.globaltt['is marker for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -630,7 +629,6 @@ class AnimalQTLdb(Source):
                     break
 
         LOG.info("Done with QTL genetic info")
-        return
 
     def _process_qtls_genomic_location(
             self, raw, src_key, txid, build_id, build_label, common_name, limit=None):
@@ -647,7 +645,6 @@ class AnimalQTLdb(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         geno = Genotype(graph)
         # assume that chrs get added to the genome elsewhere
 
@@ -658,29 +655,29 @@ class AnimalQTLdb(Source):
             reader = csv.reader(tsvfile, delimiter="\t")
             # no header in GFF, so no header checking
             col = self.files[src_key]['columns']
+            col_len = len(col)
             for row in reader:
-                line_counter += 1
-                if re.match(r'^#', ' '.join(row)):
+                if row[0][0] == '#':
+                    # LOG.info(row)
                     continue
 
-                if len(row) != len(col):
-                    LOG.warning("Problem parsing in %s row %s\n"
-                                "got %s cols but expected %s",
-                                raw, row, len(row), len(col))
+                if len(row) != col_len and ''.join(row[col_len:]) != '':
+                    LOG.warning(
+                        "Problem parsing in %s row %s\n"
+                        "got %s cols but expected %s",
+                        raw, reader.line_num, len(row), col_len)
+                    LOG.info(row)
                     continue
-                else:
-                    # Doing this non-positional mapping for consistency, but I'm not
-                    # sure we need to do this for GFF, since columns in GFF are probably
-                    # not going to change anytime soon.
-                    chromosome = row[col.index('SEQNAME')].strip()
-                    # qtl_source = row[col.index('SOURCE')].strip()
-                    # qtl_type = row[col.index('FEATURE')].strip()
-                    start_bp = row[col.index('START')].strip()
-                    stop_bp = row[col.index('END')].strip()
-                    # score = row[col.index('SCORE')].strip()
-                    strand = row[col.index('STRAND')].strip()
-                    # frame = row[col.index('FRAME')].strip()
-                    attr = row[col.index('ATTRIBUTE')].strip()
+
+                chromosome = row[col.index('SEQNAME')].strip()
+                # qtl_source = row[col.index('SOURCE')].strip()
+                # qtl_type = row[col.index('FEATURE')].strip()
+                start_bp = row[col.index('START')].strip()
+                stop_bp = row[col.index('END')].strip()
+                # score = row[col.index('SCORE')].strip()
+                strand = row[col.index('STRAND')].strip()
+                # frame = row[col.index('FRAME')].strip()
+                attr = row[col.index('ATTRIBUTE')].strip()
 
                 example = '''
 Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
@@ -779,12 +776,11 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 qtl_feature.addTaxonToFeature(taxon_curie)
                 qtl_feature.addFeatureToGraph()
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         # LOG.warning("Bad attribute flags in this file")  # what does this even mean??
         LOG.info("Done with QTL genomic mappings for %s", taxon_curie)
-        return
 
     def _process_trait_mappings(self, raw, src_key, limit=None):
         """
@@ -801,14 +797,14 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
             graph = self.graph
         model = Model(graph)
         col = self.files[src_key]['columns']
-
+        col_len = len(col)
         with open(raw, 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            header = next(reader, None)
-            self.check_fileheader(col, header, src_key)
+            row = next(reader, None)
+            self.check_fileheader(col, row, src_key)
             for row in reader:
                 # need to skip the last line
-                if len(row) != len(col):
+                if len(row) != col_len:
                     LOG.info("skipping line %d: %s", reader.line_num, '\t'.join(row))
                     continue
                 if limit is not None and reader.line_num > limit:

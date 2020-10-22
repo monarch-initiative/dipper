@@ -40,7 +40,7 @@ class Genotype():
     ):
         """
         If a genotype_type is not supplied,
-        we will default to 'intrinsic_genotype'
+        we will default to 'intrinsic genotype'
         :param genotype_id:
         :param genotype_label:
         :param genotype_type:
@@ -49,7 +49,7 @@ class Genotype():
 
         """
         if genotype_type is None:
-            genotype_type = self.globaltt['intrinsic_genotype']
+            genotype_type = self.globaltt['intrinsic genotype']
 
         self.model.addIndividualToGraph(
             genotype_id, genotype_label, genotype_type, genotype_description

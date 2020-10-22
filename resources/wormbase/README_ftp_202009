@@ -1,0 +1,86 @@
+Site Contents
+--------------------------------------
+
+species/
+   Core files and annotations for all species available
+   at WormBase (or of possible interest to WormBase users)
+   organized by species. Files previously available in genomes/
+   can be found here.  File names, paths, and contents are 
+   standardized and computable. Please see species/README for
+   details.
+
+      Look here for the most current and archival versions of:
+        - genomic fasta sequence
+        - genomic annotations in GFF2 or GFF3
+        - assembly versions
+        - commonly requests data sets by species
+     
+releases/
+   Core files for each WormBase release organized by WS release ID.
+
+      Check here if you are interested in downloading all the files
+      that comprise the current WormBase release, or any other
+      older releases.
+
+datasets-published/
+   Published datasets submitted to WormBase for distribution.
+
+datasets-wormbase/
+   WormBase-generated datasets and data dumps. Includes non-species
+   specific, cross-species, and general WormBase information. See
+   /pub/wormbase/species/*/annotations" for species-specific datasets.
+
+software
+   The software that drives WormBase, related libraries, and installation
+   documents.
+
+
+Computable Filenames/Paths/Contents
+--------------------------------------
+
+Doing large scale analyses across a large number of species? 
+Filenames and their locations are easily computable, and you
+won't be left scratching your head trying to figure out what
+all the "genome.seq" files are in your Downloads/ folder.
+
+Each filename has 
+     - the g_species of the source (if appropriate; eg c_elegans)
+     - the WS version (eg WS225)
+     - a brief content description (eg genomic_masked)
+     - the filetype as a suffix (eg .fa or .gff3)
+
+This structure makes processing en masse all the species hosted at
+WormBase easy.
+
+Fetching the most current version
+--------------------------------------
+We use extensive symlinking to make it easy to fetch the most 
+current version of a file. For example:
+
+The most current production release is always available at:
+
+    ftp://ftp.wormbase.org/pub/wormbase/releases/current-production-release
+
+The most current development release is always available at:
+
+    ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release
+
+In any directory, a symlink of the form:
+
+ G_SPECIES.canonical_bioproject.current.FILETYPE.FILETYPE.COMPRESSION 
+   eg c_elegans.canonical_bioproject.current.annotations.gff2.gz
+
+will lead to the most current version of the file.
+
+A quick note on file sizes
+--------------------------------------
+We make extensive use of symbolic links on the FTP site to provide easy and
+predictable access to files. Because of this, some files may look like they
+have a size of 0 bytes. This is merely a reflection of the use of these 
+symbolic links.
+
+--
+
+Need help? Contact:
+Todd Harris (todd@wormbase.org)
+25 May 2011

@@ -709,7 +709,7 @@ class ZFIN(Source):
                 intrinsic_type = self.globaltt['genomic_background']
             else:
                 intrinsic_rel = self.globaltt['has_variant_part']
-                intrinsic_type = self.globaltt['intrinsic_genotype']
+                intrinsic_type = self.globaltt['intrinsic genotype']
             geno.addGenotype(
                 intrinsic_genotype_id, intrinsic_genotype_label, intrinsic_type)
 
@@ -1251,7 +1251,7 @@ class ZFIN(Source):
                 # we DO NOT ADD THE LABEL here
                 # as it doesn't include the background
                 geno.addGenotype(
-                    genotype_curie, None, self.globaltt['intrinsic_genotype'])
+                    genotype_curie, None, self.globaltt['intrinsic genotype'])
 
                 # Add background to the intrinsic genotype
                 geno.addGenomicBackgroundToGenotype(bg_curie, genotype_curie)

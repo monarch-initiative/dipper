@@ -277,7 +277,7 @@ class Coriell(Source):
             foaf:page
              "https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?PgId=402&fam=2104&coll=GM"
 
-        genotype_id a intrinsic_genotype
+        genotype_id a <intrinsic genotype>
             GENO:has_alternate_part allelic_variant_id
             we don't necessarily know much about the genotype,
             other than the allelic variant. also there's the sex here
@@ -719,7 +719,7 @@ class Coriell(Source):
                     # only add the genotype if it has some parts
                     geno.addGenotype(
                         genotype_id, genotype_label,
-                        self.globaltt['intrinsic_genotype'])
+                        self.globaltt['intrinsic genotype'])
                     geno.addTaxon(taxon, genotype_id)
                     # add that the patient has the genotype
                     # TODO check if the genotype belongs to

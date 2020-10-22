@@ -262,7 +262,7 @@ class UDP(Source):
             genotype_label = "{0} genotype".format(patient)
             genotype.addGenotype(
                 intrinsic_geno_bnode, genotype_label,
-                model.globaltt['intrinsic_genotype'])
+                model.globaltt['intrinsic genotype'])
 
             self.graph.addTriple(
                 patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode

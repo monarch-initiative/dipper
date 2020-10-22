@@ -250,12 +250,12 @@
 "has_origin": "GENO:0000643",
 "karyotype_variation_complement": "GENO:0000644",
 "sex_qualified_genotype": "GENO:0000645",
-"male intrinsic genotype": "GENO:0000646",    # not "male_genotype"
-"female intrinsic genotype": "GENO:0000647",  # not "female_genotype"
+"male intrinsic genotype": "GENO:0000646",
+"female intrinsic genotype": "GENO:0000647",
 "unspecified_genomic_background": "GENO:0000649",
 "has_sex_agnostic_part": "GENO:0000650",
 "has_extent": "GENO:0000678",
-"intrinsic_genotype": "GENO:0000719",   # previously GENO:0000000  not  "intrinsic_genotype"
+"intrinsic genotype": "GENO:0000719",   # previously GENO:0000000  not  "intrinsic_genotype"
 "unspecified": "GENO:0000772",
 "pathogenic_for_condition": "GENO:0000840",
 "likely_pathogenic_for_condition": "GENO:0000841",
