@@ -15,9 +15,9 @@ with open(readme_path) as read_file:
 
 setup(
     name='dipper',
-    version='0.2.3',
-    author='Kent Shefchek',
-    author_email='kshefchek@gmail.com',
+    version='1.0.0',
+    author='The Monarch Initiative',
+    author_email='info@monarchinitiative.org',
     url='https://github.com/monarch-initiative/dipper',
     description='Library for transforming data from open genomic databases to RDF',
     packages=find_packages(),
