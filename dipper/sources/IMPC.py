@@ -473,9 +473,9 @@ class IMPC(Source):
                 sq_type_id = self.resolve(sex, False)
 
                 if sq_type_id == sex:
-                    sq_type_id = self.globaltt['intrinsic_genotype']
+                    sq_type_id = self.globaltt['intrinsic genotype']
                     LOG.warning(
-                        "Unknown sex qualifier %s, adding as intrinsic_genotype", sex)
+                        "Unknown sex qualifier %s, adding as 'intrinsic genotype'", sex)
 
                 geno.addGenotype(
                     sex_qualified_genotype_id, sex_qualified_genotype_label, sq_type_id)
