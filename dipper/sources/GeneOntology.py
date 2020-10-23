@@ -56,7 +56,7 @@ class GeneOntology(Source):
         'GO_ID',
         'DB:Reference',
         'Evidence Code',
-        'With (or) From',
+        'With (or) From',  # list possible w/pipe(or)  w/comma(and) +both
         'Aspect',
         'DB_Object_Name',
         'DB_Object_Synonym',
@@ -440,7 +440,7 @@ class GeneOntology(Source):
                 # in version 2.0, multiple values are separated by pipes
                 # where the pipe has been used to mean 'AND'
                 if eco_symbol == 'IMP' and with_or_from != '':
-                    withitems = with_or_from.split('|')
+                    withitems = re.split(r'[|,]', with_or_from)  # OR + AND
                     phenotypeid = go_id + 'PHENOTYPE'
                     # create phenotype associations
                     for itm in withitems:

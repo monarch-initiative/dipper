@@ -17,7 +17,7 @@
 'xml': 'http://www.w3.org/XML/1998/namespace'                       # Extensible Markup Language
 'xsd': 'http://www.w3.org/2001/XMLSchema#'                          # XML Schema Definition
 'owl': 'http://www.w3.org/2002/07/owl#'                             # Web Ontology Language
-'skos': 'https://www.w3.org/TR/skos-reference/#'                    # Simple Knowledge Organization System
+'skos': 'http://www.w3.org/2004/02/skos/core#'                      # Simple Knowledge Organization System
 # 'Annotation': 'http://www.w3.org/ns/oa#Annotation'                # Web annotation
 'schema': 'http://schema.org/'                                      # Schema.org "provides schemas for structured data on the Internet"
 
