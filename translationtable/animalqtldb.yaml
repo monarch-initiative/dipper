@@ -1,7 +1,5 @@
 ---
 # animalqtldb.yaml
-# note ncbi requests the curie_prefix:local_id of NCBI:txid1234
-# we could move closer the that  i.e.  NCBItxid:1234
 "chicken": "Gallus gallus"  # NCBITaxon:9031
 "pig": "Sus scrofa"         # NCBITaxon:9823
 "horse": "Equus caballus"   # NCBITaxon:9796
@@ -13,8 +11,8 @@
 # This is not yet confirmed, thus is not utilized.
 
 #    "chicken": "Wageningen-chicken"    # PMID:10645958
-#    "cattle": "USDA-MARC"          	# PMID:9074927
-#    "pig": "USDA-MARC"         		# PMID:8743988
+#    "cattle": "USDA-MARC"              # PMID:9074927
+#    "pig": "USDA-MARC"                 # PMID:8743988
 #    # -- this is an assumption
 #    "sheep": "Wageningen-sheep"        # PMID:11435411
 #    "horse": "Swinburne-Penedo"        # PMID:16314071 PMID:16093715
