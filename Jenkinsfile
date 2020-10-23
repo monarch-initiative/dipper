@@ -32,7 +32,7 @@ pipeline {
         ).trim()
 
         MONARCHIVE = 'monarch@monarch-archive:/var/www/data/$YYYYMM/'
-        DIPPERCACHE = 'https://archive.monarchinitiative.org/DipperCache'
+        DIPPERCACHE = 'http://monarch-archive.cgrb.oregonstate.local/DipperCache'
         MONARCH_DATA_FS = 'monarch@monarch-ttl-prod'
         DIPPER = "venv/bin/python dipper-etl.py --skip_tests --data_release_version $YYYYMM"
 
