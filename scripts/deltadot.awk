@@ -72,8 +72,8 @@ END{
             else {
                 diff = edge2[e] - edge1[e];
                 if(diff < 0)
-                    # diff = "<font color=\"" DROP "\">" diff "</font>" #  breaks svg
-                    edges[e "(" diff ")>, color=\"" DROP "\"];"]
+                    # diff = "<font color=\"" LESS "\">" diff "</font>" #  breaks svg
+                    edges[e "(" diff ")>, color=\"" LESS "\"];"]
                 else
                     edges[e "(" diff ")>, color=\"" DFLT "\"];"]
             }
