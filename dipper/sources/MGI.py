@@ -1118,7 +1118,9 @@ SELECT  r._relationship_key as rel_key,
 
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = self._make_internal_identifier('seqalt', allele_key)
+                    continue
+                    # nothing will ever connect w/these 350k bnode "individuals"
+                    # iseqalt_id = self._make_internal_identifier('seqalt', allele_key)
 
                 if self.test_mode and int(allele_key) \
                         not in self.test_keys.get('allele'):
@@ -1128,7 +1130,7 @@ SELECT  r._relationship_key as rel_key,
                 # for unlocated things; need to use hashmap
                 # map the sequence_alteration_type
 
-                seq_alt_type_id = self.resolve(mutation, False)
+                seq_alt_type_id = self.resolve(mutation, mandatory=False)
                 if seq_alt_type_id == mutation:
                     LOG.error("No mappjng found for seq alt '%s'", mutation)
                     LOG.info("Defaulting to 'sequence_alteration'")
