@@ -727,7 +727,10 @@ SELECT  r._relationship_key as rel_key,
                 # so that we can add the type later
                 # since we don't actually know
                 # if it's a reference or altered allele
-                altype = None  # temporary; we'll assign the type later
+                # altype = None  # temporary; we'll assign the type later
+
+                # set type to a parent term incase a more specific term is not found
+                altype = self.globaltt['allele']
 
                 # If we want to filter on preferred:
                 if preferred == '1':
@@ -1352,7 +1355,6 @@ SELECT  r._relationship_key as rel_key,
                 # add the ECO and citation information to the annot
                 model.addTriple(assoc_id, self.globaltt['has evidence'], evidence_id)
                 model.addTriple(assoc_id, self.globaltt['Source'], jnumid)
-
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
                 if qualifier == 'MP-Sex-Specificity' and qualifier_value in ('M', 'F'):
@@ -1581,8 +1583,13 @@ SELECT  r._relationship_key as rel_key,
                 line = line.rstrip("\n")
                 line_num += 1
 
-                (marker_key, organism_key, marker_status_key,
-                 symbol, name, latin_name, marker_type) = line.split('\t')
+                (marker_key,
+                 organism_key,
+                 marker_status_key,
+                 symbol,
+                 name,
+                 latin_name,
+                 marker_type) = line.split('\t')
 
                 if self.test_mode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
@@ -1844,7 +1851,7 @@ SELECT  r._relationship_key as rel_key,
         the internal marker id and the public mgiid.
         Also, add the equivalence statements between strains for MGI and JAX
         Triples:
-        <strain_id> a GENO:intrinsic_genotype
+        <strain_id> a GENO:intrinsic genotype
         <other_strain_id> a GENO:intrinsic_genotype
         <strain_id> owl:sameAs <other_strain_id>
 
@@ -1891,7 +1898,8 @@ SELECT  r._relationship_key as rel_key,
                 # get the hashmap of the identifiers
                 if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
-                    model.addIndividualToGraph(accid, None, tax_id)
+                    model.addIndividualToGraph(
+                        accid, self.globaltt['intrinsic genotype'], tax_id)
 
         # The following are the stock centers for the strains
         # (asterisk indicates complete)
@@ -2223,7 +2231,7 @@ SELECT  r._relationship_key as rel_key,
                             len(notehash[object_key][notetype]),
                             int(sequencenum)
                     ):
-                        notehash[object_key][notetype].append('')  # ??? I don't get it
+                        notehash[object_key][notetype].append('')
 
                 notehash[object_key][notetype][int(sequencenum) - 1] = note.strip()
 
@@ -2231,10 +2239,10 @@ SELECT  r._relationship_key as rel_key,
 
         line_num = 0
         for allele_key in notehash:
+            line_num += 1
             if self.test_mode is True:
                 if int(allele_key) not in self.test_keys.get('allele'):
                     continue
-            line_num += 1
             allele_id = self.idhash['allele'].get(allele_key)
             if allele_id is None:
                 continue
