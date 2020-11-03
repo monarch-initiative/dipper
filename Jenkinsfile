@@ -40,9 +40,10 @@ pipeline {
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
         MONARCH_DATA_DEST = "$MONARCH_DATA_FS:$DATA_DEST"
 
-        /* human, mouse, zebrafish, fly, worm */
-        COMMON_TAXON = "9606,10090,7955,7227,6239"
-        /* 10116 is rat and might be included if found relevent where it is now missing */
+        /* human, mouse, zebrafish, fly, worm, rat, budding yeast*/
+        COMMON_TAXON = "9606,10090,7955,7227,6239,10116,559292"
+        /* Once we add Pombase: 4896 */
+        /* Once we add Xenbase: 1802 */
 
     }
 
@@ -111,7 +112,7 @@ pipeline {
                                 sh '''
                                     SOURCE=ncbigene
                                     $DIPPER --sources $SOURCE \
-                                        --taxon $COMMON_TAXON,10116,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685,559292
+                                        --taxon $COMMON_TAXON,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                                 '''
                             }
@@ -197,7 +198,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=stringdb
-                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116 --version 11.0
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON --version 11.0
                             scp ./out/string.ttl ./out/string_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
@@ -213,7 +214,7 @@ pipeline {
                         sh '''
                             SOURCE=panther
                             mkdir -p raw/panther
-                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,8364,9615 --dest_fmt nt
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,9913,9031,9796,9823,8364,9615 --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
@@ -243,7 +244,7 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=bgee
-                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116 --version bgee_v14_0 --limit 20
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON --version bgee_v14_0 --limit 20
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
@@ -375,7 +376,7 @@ pipeline {
                         sh '''
                             SOURCE=go
                             $DIPPER --sources $SOURCE --dest_fmt nt --taxon \
-                                $COMMON_TAXON,10116,4896,5052,559292,5782,9031,9615,9823,9913
+                                $COMMON_TAXON,4896,9031,9615,9823,9913
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
