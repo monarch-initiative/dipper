@@ -38,9 +38,7 @@
 "group_category:1": "inborn errors of metabolism"    # "Inborn error of metabolism" (was DOID:0014667)
 "group_category:2": "Dwarfism"
 "group_category:3": "congenital heart disease"       # "Congenital heart disease" (was DOID:1682)
-# is this next too specific?
-# "group_category:4": "inherited bleeding disorder, platelet-type"  # "Inherited bleeding disorder"
-"group_category:4": "inherited blood coagulation disease"   # (was 'DOID:74')
+"group_category:4": "inherited bleeding disorder, platelet-type"   # (was 'DOID:74 / DOID:2214')
 "group_category:5": "lysosomal storage disease"      # "Lysosomal storage disease" (was 'DOID:3211')
 "group_category:6": "integumentary system disease"   # "Colour"  (was 'DOID:16')
 "group_category:7": "hereditary optic atrophy"       # "Progressive retinal atrophy (PRA)"  (was DOID:8466)
