@@ -77,8 +77,6 @@
 "Dataset": "dctypes:Dataset",
 # "Human Disease Ontology": "DOID:!!!",
 "disease": "DOID:4",
-"inherited blood coagulation disease": "DOID:2214",
-"blood platelet disease": "DOID:2218",
 # "Evidence Code Ontology": "ECO:!!!",
 "evidence": "ECO:0000000",
 "inference from background scientific knowledge": "ECO:0000001",
@@ -150,6 +148,7 @@
 "Hispanic": "EFO:0003169",
 "African": "EFO:0004561",
 "induced pluripotent stem cell": "EFO:0004905",  # "NCIT:C124144 ?"
+"strain": "EFO:0005135",   # "selectively maintained organism": "OBI:0001185"
 # "Environment Ontology": "ENVO:!!!",
 "environmental_system": "ENVO:01000254",
 # "Eeagle-i Resource Ontology": "ERO:!!!",
@@ -296,6 +295,7 @@
 "clique_leader": "MONARCH:cliqueLeader",
 # "MONarch Disease Ontology": "MONDO:!!!",
 "disease or disorder": "MONDO:0000001",
+"inherited bleeding disorder, platelet-type": "MONDO:0000009",
 "integumentary system disease": "MONDO:0002051",
 "lysosomal storage disease": "MONDO:0002561",
 "hereditary retinal dystrophy": "MONDO:0004589",
