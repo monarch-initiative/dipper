@@ -135,7 +135,7 @@ class OMIA(OMIMSource):
             gene_group['url'], '/'.join((self.ncbi.rawdir, gene_group['file'])), False)
 
     def parse(self, limit=None):
-        # names of tables to iterate - probably don't need all these:
+        # names of tables to iterate over - probably don't need all these:
         # Article_Breed, Article_Keyword, Article_Gene, Article_Keyword,
         # Article_People, Article_Phene, Articles, Breed, Breed_Phene,
         # Genes_gb, Group_Categories, Group_MPO, Inherit_Type, Keywords,
