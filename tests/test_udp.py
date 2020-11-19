@@ -90,7 +90,7 @@ class UDPTestCase(unittest.TestCase):
         triples = """
         <https://monarchinitiative.org/MONARCH_patient_1> a foaf:Person ;
             rdfs:label "patient_1" ;
-            RO:0002200 DOID:4,
+            RO:0002200 MONDO:0000001,
               HP:000001 .
         """
 
