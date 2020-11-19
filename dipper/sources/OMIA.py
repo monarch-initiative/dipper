@@ -484,12 +484,12 @@ class OMIA(OMIMSource):
         disease_id = self.resolve(group_category, False)
 
         if disease_id == 'group_category:None':
-            disease_id = self.globaltt['disease']
+            disease_id = self.globaltt['disease or disorder']
         elif disease_id == group_category:
             LOG.info(
                 "No disease superclass defined for %s:  %s  with parent %s",
                 omia_id, group_name, group_category)
-            disease_id = self.globaltt['disease']
+            disease_id = self.globaltt['disease or disorder']
         else:
             if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association

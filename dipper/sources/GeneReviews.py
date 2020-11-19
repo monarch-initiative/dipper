@@ -21,7 +21,7 @@ class GeneReviews(OMIMSource):
     in order to populate the definitions of the terms in the ontology.
     We define the GeneReviews items as classes that are either grouping classes
     over OMIM disease ids (gene ids are filtered out),
-    or are made as subclasses of DOID:4 (generic disease).
+    or are made as subclasses of MONDO:0000001 (generic disease).
 
     Note that GeneReviews
     [copyright policy](http://www.ncbi.nlm.nih.gov/books/NBK138602/)
@@ -228,7 +228,7 @@ class GeneReviews(OMIMSource):
                         model.addClassToGraph(omim_id, None)
                         model.addSubClass(omim_id, gr_id)
             # add this as a generic subclass  -- TEC: this is the job of inference
-            model.addSubClass(gr_id, self.globaltt['disease'])
+            model.addSubClass(gr_id, self.globaltt['disease or disorder'])
 
     def _get_titles(self, limit):
         """
