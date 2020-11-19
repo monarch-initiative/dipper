@@ -75,8 +75,6 @@
 "downloadURL": "dcat:downloadURL",
 #  "dublin core metadata types": "dctypes:!!!",
 "Dataset": "dctypes:Dataset",
-# "Human Disease Ontology": "DOID:!!!",
-"disease": "DOID:4",
 # "Evidence Code Ontology": "ECO:!!!",
 "evidence": "ECO:0000000",
 "inference from background scientific knowledge": "ECO:0000001",
