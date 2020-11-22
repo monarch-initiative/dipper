@@ -140,7 +140,7 @@ curie_map  could be
 OMIA": "http://omia.org/OMIA" instead of 'http://purl.obolibrary.org/obo/OMIA_'
 
 We get a gene in a species linked with an observable
-standrd monarch g2p type association.
+standard monarch g2p type association.
 
 
 # association's predicate  --

@@ -234,7 +234,7 @@ class KEGG(OMIMSource):
                 model.addClassToGraph(
                     disease_id, disease_name, class_category=blv.terms['Disease']
                 )
-                # not typing the diseases as DOID:4 yet because
+                # not typing the diseases as MONDO:0000001 yet because
                 # I don't want to bulk up the graph unnecessarily
 
                 if not self.test_mode and (
@@ -442,9 +442,9 @@ class KEGG(OMIMSource):
                             disease_label)
                         continue
                     # type this disease_id as a disease
-                    model.addClassToGraph(disease_id, disease_label,
-                                          class_category=blv.terms['Disease'])
-                    # , class_type=self.globaltt['disease'])
+                    model.addClassToGraph(
+                        disease_id, disease_label, class_category=blv.terms['Disease'])
+                    # , class_type=self.globaltt['disease or disorder'])
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
                     alt_label = self.label_hash[alt_locus_id]
