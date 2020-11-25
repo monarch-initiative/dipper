@@ -222,7 +222,7 @@
 'SGD_REF': 'https://www.yeastgenome.org/reference/'                             # Saccharomyces Genome Database Reference publications
 'TAIR': 'https://www.arabidopsis.org/servlets/TairObject?type=locus&id='        # The Arabidopsis Information Resource
 'VGNC': 'https://vertebrate.genenames.org/data/gene-symbol-report/#!/vgnc_id/'  # Vertebrate Gene Nomenclature Committee
-'WormBase': 'https://www.wormbase.org/get?name='                                # Caenorhabditis elegans Database (nematodes) ie WBGene00000001
+'WormBase': 'https://identifiers.org/wb/'                                       # Caenorhabditis elegans Database (nematodes) ie WBGene00000001
 'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
