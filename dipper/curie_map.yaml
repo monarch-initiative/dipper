@@ -78,7 +78,8 @@
 'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
 'OMIMPS': 'http://www.omim.org/phenotypicSeries/'                   # Online Mendelian Inheritance in Man (phenotypes)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
-'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology
+'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology, such as http://purl.obolibrary.org/obo/PATO_0000001
+'PATO.PROPERTY': 'http://purl.obolibrary.org/obo/pato#'             # Phenotypic Quality Ontology proerties, such as http://purl.obolibrary.org/obo/pato#reciprocal_of
 'PCO': 'http://purl.obolibrary.org/obo/PCO_'                        # Population and Community Ontology
 'PR': 'http://purl.obolibrary.org/obo/PR_'                          # Protein ontology
 'PW': 'http://purl.obolibrary.org/obo/PW_'                          # PathWay ontology
