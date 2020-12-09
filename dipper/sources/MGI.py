@@ -1194,13 +1194,19 @@ SELECT  r._relationship_key as rel_key,
                 object_key = row[col.index('_object_key')]
                 term_key = row[col.index('_term_key')]
                 qualifier_key = row[col.index('_qualifier_key')]
-                # qualifier,
+                qualifier = row[col.index('qualifier')]
                 # term,
                 accid = row[col.index('accid')]
 
                 if self.test_mode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
+                        
+                # qualifier of "norm" means the phenotype was measured but
+                # was normal, since we don't have negation or normal phenotypes
+                # modelled just yet, skip the row
+                if qualifier == 'norm':
+                    continue
 
                 # iassoc_id = self._make_internal_identifier('annot', annot_key)
                 # assoc_id = self.make_id(iassoc_id)
