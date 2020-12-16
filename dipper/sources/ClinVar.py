@@ -301,7 +301,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
     rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
     variant = Variant(id=rcv_variant_id)
 
-    if measure_set_type in ["Haplotype", "Phase unknown", "Distinct chromosomes"]:
+    if measure_set_type in ["Haplotype", "Phase unknown", "Distinct chromosomes", "Haplotype, single variant"]:
         variant.variant_type = measure_set_type
     elif measure_set_type == "Variant":
         # We will attempt to infer the type
