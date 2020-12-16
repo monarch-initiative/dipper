@@ -120,6 +120,7 @@
 "protein only": "protein_altering_variant"
 "CompoundHeterozygote": "compound heterozygous"
 "Haplotype": "haplotype"
+"Haplotype, single variant": "haplotype"
 "Phase unknown": "haplotype"
 "Distinct chromosomes": "mosaic"
 # ############################################################
