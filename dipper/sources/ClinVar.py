@@ -25,7 +25,7 @@
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    dipper/sources/ClinVar.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
