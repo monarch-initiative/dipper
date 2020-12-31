@@ -1136,13 +1136,13 @@ def parse():
 
                     # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv.variant.label>  .
 
-                    # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
+                    # <monarch_assoc><OBAN:association_has_object><rcv_disease_curie>  .
                     write_spo(
                         monarch_assoc, GLOBALTT['association has object'],
                         rcv_disease_curie, rcvtriples,
                         subject_category=blv.terms['Association'],
                         object_category=blv.terms['Disease'])
-                    # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
+                    # <rcv_disease_curie><rdfs:label><rcv_disease_label>  .
                     # medgen might not have a disease label
                     if condition.label is not None:
                         write_spo(
@@ -1383,10 +1383,15 @@ def parse():
                         else:
                             del rcvtriples[:]
                             continue
+                    else:
+                        del rcvtriples[:]
+                        continue
+
                     # if we have deleted the triples buffer then
                     # there is no point in continueing  (I don't think)
                     if not rcvtriples:
                         continue
+
                     # scv_assert_type = SCV_Assertion.find('./Assertion').get('Type')
                     # check scv_assert_type == 'variation to disease'?
                     # /SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
