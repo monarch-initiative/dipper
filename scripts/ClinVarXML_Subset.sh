@@ -1,5 +1,12 @@
 #! /bin/bash
 
+# 2020 DEPRECIATE.  (could still work on subsets)
+
+# note  ClinVar has gotten to big to to process without streaming on normal hardware
+# use the python element tree version instead of this
+# unless you have hundreds of gigs of ram
+
+
 # extract ClinVarSets containing specific RCV|SCV
 # not at all efficent, but does not need to be.
 # give a list of RCV|SCV identifiers and a dataset to find them in

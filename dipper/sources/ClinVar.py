@@ -21,7 +21,7 @@
         get a list of RCV    default CV_test_RCV.txt
         put the input files the raw directory
         write the test set back to the raw directory
-    ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
+    ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvar/ClinVarTestSet.xml.gz
 
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
@@ -30,7 +30,9 @@
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
 
-    python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
+    python3 ./scripts/add-properties2turtle.py \
+        --input ./out/ClinVarTestSet_`datestamp`.nt \
+        --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 """
 
@@ -41,7 +43,7 @@ import csv
 import hashlib
 import logging
 import argparse
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 from typing import List, Dict
 import yaml
 from dipper.models.ClinVarRecord import ClinVarRecord, Gene,\
@@ -83,9 +85,7 @@ CURIEMAP['_'] = 'https://monarchinitiative.org/.well-known/genid/'
 CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
 
 
-def make_spo(sub, prd, obj,
-             subject_category=None,
-             object_category=None):
+def make_spo(sub, prd, obj, subject_category=None, object_category=None):
     """
     Decorates the three given strings as a line of ntriples
     (also writes a triple for subj biolink:category and
@@ -100,13 +100,13 @@ def make_spo(sub, prd, obj,
         prd = 'rdf:type'
 
     try:
-        (subcuri, subid) = re.split(r':', sub)
+        (subcuri, subid) = sub.split(r':')
     except Exception:
         LOG.error("not a Subject Curie  '%s'", sub)
         raise ValueError
 
     try:
-        (prdcuri, prdid) = re.split(r':', prd)
+        (prdcuri, prdid) = prd.split(r':')
     except Exception:
         LOG.error("not a Predicate Curie  '%s'", prd)
         raise ValueError
@@ -115,12 +115,14 @@ def make_spo(sub, prd, obj,
 
     # object is a curie or bnode or literal [string|number] NOT None.
     assert (obj is not None), '"None" object for subject ' + sub + ' & pred ' + prd
+    # object is NOT empty.
+    assert (obj != ''), 'EMPTY object for subject ' + sub + ' & pred ' + prd
 
     if sub is None:
         LOG.error("make_spo() was passed sub of None!")
         return ""
-    if obj is None:
-        LOG.error("make_spo() was passed obj of None")
+    if obj is None or obj == '':
+        LOG.error("make_spo() was passed obj of None/empty")
         return ""
 
     objcuri = None
@@ -142,8 +144,9 @@ def make_spo(sub, prd, obj,
     else:
         # Literals may not contain the characters ", LF, CR '\'
         # except in their escaped forms. internal quotes as well.
+        # for downstream sanity any control chars should be escaped
         obj = obj.strip('"').replace('\\', '\\\\').replace('"', '\'')
-        obj = obj.replace('\n', '\\n').replace('\r', '\\r')
+        obj = obj.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
         objt = '"' + obj + '"'
 
     # allow unexpanded bnodes in subject
@@ -154,7 +157,7 @@ def make_spo(sub, prd, obj,
             subjt = '<' + subjt + '>'
     else:
         raise ValueError(
-            "Cant work with: <{}> {} , <{}> {}, {}".format(
+            "Can not work with: <{}> {} , <{}> {}, {}".format(
                 subcuri, subid, prdcuri, prdid, objt))
 
     triples = subjt + ' <' + CURIEMAP[prdcuri] + prdid.strip() + '> ' + objt + " .\n"
@@ -222,9 +225,9 @@ def write_spo(sub, prd, obj, triples, subject_category=None, object_category=Non
     """
         write triples to a buffer in case we decide to drop them
     """
-    triples.append(make_spo(sub, prd, obj,
-                            subject_category=subject_category,
-                            object_category=object_category))
+    triples.append(make_spo(
+        sub, prd, obj,
+        subject_category=subject_category, object_category=object_category))
 
 
 def scv_link(scv_sig, rcv_trip):
@@ -294,14 +297,21 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
     :param rcv_acc: str rcv accession
     :return: Variant object
     """
-    rcv_variant_id = measure_set.get('ID')
+    rcv_variant_id = measure_set.get('ID')      # Short integer accession
+    # rcv_variant_acc = measure_set.get('Acc')  # Long namespaced-zeropadded identifier
     measure_set_type = measure_set.get('Type')
 
     # Create Variant object
     rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
     variant = Variant(id=rcv_variant_id)
 
-    if measure_set_type in ["Haplotype", "Phase unknown", "Distinct chromosomes", "Haplotype, single variant"]:
+    if measure_set_type in [
+            "Haplotype",
+            "Phase unknown",
+            "Distinct chromosomes",
+            "Haplotype, single variant",
+            # "Variant",  # see below
+    ]:
         variant.variant_type = measure_set_type
     elif measure_set_type == "Variant":
         # We will attempt to infer the type
@@ -317,8 +327,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         if allele_name is not None:
             rcv_allele_label = allele_name.text
         # else:
-        #    LOG.warning(
-        #       rcv_acc + " VARIANT MISSING LABEL")
+        #    LOG.warning(rcv_acc + " VARIANT MISSING LABEL")
 
         allele_type = rcv_measure.get('Type').strip()
 
@@ -360,7 +369,7 @@ def process_measure_set(measure_set, rcv_acc) -> Variant:
         rcv_allele_rels = rcv_measure.findall('./MeasureRelationship')
 
         if rcv_allele_rels is None:  # try letting them all through
-            LOG.info(ET.tostring(rcv_measure).decode('utf-8'))
+            LOG.info(ElementTree.tostring(rcv_measure).decode('utf-8'))
         else:
             for measure in rcv_allele_rels:
                 allele_rel_type = measure.get('Type').strip()
@@ -403,6 +412,10 @@ def resolve(label):
     in order of preference
     return g(f(x))|f(x)|g(x) | x
     TODO consider returning x on fall through
+
+    # the decendent resolve(label) function in Source.py
+    # should be used instead and this f(x) removed
+
     : return label's mapping
 
     '''
@@ -429,8 +442,9 @@ def allele_to_triples(allele, triples) -> None:
     :return: None
     """
 
-    write_spo(allele.id, GLOBALTT['type'], resolve(allele.variant_type), triples,
-              subject_category=blv.terms['SequenceVariant'])
+    write_spo(
+        allele.id, GLOBALTT['type'], resolve(allele.variant_type), triples,
+        subject_category=blv.terms['SequenceVariant'])
     write_spo(allele.id, GLOBALTT['in taxon'], GLOBALTT['Homo sapiens'], triples)
     if allele.label is not None:
         write_spo(allele.id, GLOBALTT['label'], allele.label, triples)
@@ -674,7 +688,7 @@ def parse():
     # INPUT
     argparser.add_argument(
         '-f', '--filename', default=files['f1']['file'],
-        help="input filename. default: '" + files['f1']['file'] + "'")
+        help="gziped .xml input filename. default: '" + files['f1']['file'] + "'")
 
     argparser.add_argument(
         '-m', '--mapfile', default=files['f2']['file'],
@@ -685,14 +699,12 @@ def parse():
         help="path to input file. default: '" + RPATH + '/raw/' + INAME + "'")
 
     argparser.add_argument(
-        '-l', "--localtt",
-        help="'spud'\t'potato'   default: " +
-        RPATH + '/translationtable/' + INAME + '.yaml')
+        '-l', "--localtt", default=LOCAL_TT_PATH,
+        help="'spud'\t'potato'   default: " + LOCAL_TT_PATH)
 
     argparser.add_argument(
-        '-g', "--globaltt",
-        help="'potato'\t'PREFIX:p123'   default: " +
-        RPATH + '/translationtable/GLOBAL_TERM.yaml')
+        '-g', "--globaltt", default=GLOBAL_TT_PATH,
+        help="'potato'\t'PREFIX:p123'   default: " + GLOBAL_TT_PATH)
 
     # output '/dev/stdout' would be my first choice
     argparser.add_argument(
@@ -709,8 +721,8 @@ def parse():
 
     args = argparser.parse_args()
 
-    basename = re.sub(r'\.xml.gz$', '', args.filename)
-    filename = args.inputdir + '/' + args.filename
+    basename = re.sub(r'\.xml.gz$', '', args.filename)  #
+    filename = args.inputdir + '/' + args.filename      # gziped xml input file
     mapfile = args.inputdir + '/' + args.mapfile
 
     # be sure I/O paths exist
@@ -738,8 +750,8 @@ def parse():
     output = args.destination + '/' + args.output
 
     # catch and release input for future study
-    reject = args.inputdir + '/' + basename + '_reject.xml'
-    # ignore = args.inputdir + '/' + basename + '_ignore.txt'  # unused
+    reject = RPATH + '/' + basename + '_reject.xml'
+    # ignore = args.inputdir + '/' + INAME + '_ignore.txt'  # unused
     try:
         os.remove(reject)
     except FileNotFoundError:
@@ -810,7 +822,8 @@ def parse():
     # main loop over xml
     # taken in chunks composed of ClinVarSet stanzas
     with gzip.open(filename, 'rt') as clinvar_fh:
-        tree = ET.iterparse(clinvar_fh)  # w/o specifing events it defaults to 'end'
+        # w/o specifing events it defaults to 'end'
+        tree = ElementTree.iterparse(clinvar_fh)
         for event, element in tree:
             if element.tag != 'ClinVarSet':
                 ReleaseSet = element
@@ -1007,20 +1020,19 @@ def parse():
             # check that no members of rcv.genovar are none
             # and that at least one condition has an id and db
             if [1 for member in vars(rcv.genovar) if member is None] \
-                    or not [
-                        1 for condition in rcv.conditions
-                        if condition.id is not None and
-                        condition.database is not None]:
+                or not [
+                    1 for condition in rcv.conditions
+                    if condition.id is not None and condition.database is not None]:
                 LOG.info('%s is under specified. SKIPPING', rcv_acc)
                 rjct_cnt += 1
                 # Write this Clinvar set out so we can know what we are missing
                 print(
                     # minidom.parseString(
-                    #    ET.tostring(
+                    #    ElementTree.tostring(
                     #        ClinVarSet)).toprettyxml(
                     #           indent="   "), file=reject)
                     #  too slow. doubles time
-                    ET.tostring(ClinVarSet).decode('utf-8'), file=reject)
+                    ElementTree.tostring(ClinVarSet).decode('utf-8'), file=reject)
                 ClinVarSet.clear()
                 continue
 
@@ -1124,13 +1136,13 @@ def parse():
 
                     # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv.variant.label>  .
 
-                    # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
+                    # <monarch_assoc><OBAN:association_has_object><rcv_disease_curie>  .
                     write_spo(
                         monarch_assoc, GLOBALTT['association has object'],
                         rcv_disease_curie, rcvtriples,
                         subject_category=blv.terms['Association'],
                         object_category=blv.terms['Disease'])
-                    # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
+                    # <rcv_disease_curie><rdfs:label><rcv_disease_label>  .
                     # medgen might not have a disease label
                     if condition.label is not None:
                         write_spo(
@@ -1327,7 +1339,7 @@ def parse():
 
                     scv_significance = scv_geno = None
                     SCV_Description = ClinicalSignificance.find('./Description')
-                    if SCV_Description is not None:
+                    if SCV_Description not in ['not provided', None]:
                         scv_significance = SCV_Description.text.strip()
                         scv_geno = resolve(scv_significance)
                         unkwn = 'has_uncertain_significance_for_condition'
@@ -1371,10 +1383,15 @@ def parse():
                         else:
                             del rcvtriples[:]
                             continue
+                    else:
+                        del rcvtriples[:]
+                        continue
+
                     # if we have deleted the triples buffer then
                     # there is no point in continueing  (I don't think)
                     if not rcvtriples:
                         continue
+
                     # scv_assert_type = SCV_Assertion.find('./Assertion').get('Type')
                     # check scv_assert_type == 'variation to disease'?
                     # /SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
