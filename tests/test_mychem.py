@@ -40,7 +40,7 @@ class TestMyChemParser(unittest.TestCase):
             rdfs:subClassOf CHEBI:23367 .
 
         SNOMED:386761002 rdfs:label "Local anesthesia" ;
-            rdfs:subClassOf DOID:4 .
+            rdfs:subClassOf MONDO:0000001 .
 
         UNII:46U771ERWK biolink:category biolink:ChemicalSubstance .
         SNOMED:386761002 biolink:category biolink:Disease .

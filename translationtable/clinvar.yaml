@@ -97,6 +97,7 @@
 "Uncertain significance, Affects": "has_uncertain_significance_for_condition"
 "Uncertain significance, other": "has_uncertain_significance_for_condition"
 "Uncertain significance, risk factor": "has_uncertain_significance_for_condition"
+"Likely pathogenic, Affects": "likely_pathogenic_for_condition"
 # "": ""
 # ##  Variant (Subject) Sequence Types
 # ############################################################
@@ -120,6 +121,7 @@
 "protein only": "protein_altering_variant"
 "CompoundHeterozygote": "compound heterozygous"
 "Haplotype": "haplotype"
+"Haplotype, single variant": "haplotype"
 "Phase unknown": "haplotype"
 "Distinct chromosomes": "mosaic"
 # ############################################################

@@ -727,7 +727,10 @@ SELECT  r._relationship_key as rel_key,
                 # so that we can add the type later
                 # since we don't actually know
                 # if it's a reference or altered allele
-                altype = None  # temporary; we'll assign the type later
+                # altype = None  # temporary; we'll assign the type later
+
+                # set type to a parent term incase a more specific term is not found
+                altype = self.globaltt['allele']
 
                 # If we want to filter on preferred:
                 if preferred == '1':
@@ -1118,7 +1121,9 @@ SELECT  r._relationship_key as rel_key,
 
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = self._make_internal_identifier('seqalt', allele_key)
+                    continue
+                    # nothing will ever connect w/these 350k bnode "individuals"
+                    # iseqalt_id = self._make_internal_identifier('seqalt', allele_key)
 
                 if self.test_mode and int(allele_key) \
                         not in self.test_keys.get('allele'):
@@ -1128,7 +1133,7 @@ SELECT  r._relationship_key as rel_key,
                 # for unlocated things; need to use hashmap
                 # map the sequence_alteration_type
 
-                seq_alt_type_id = self.resolve(mutation, False)
+                seq_alt_type_id = self.resolve(mutation, mandatory=False)
                 if seq_alt_type_id == mutation:
                     LOG.error("No mappjng found for seq alt '%s'", mutation)
                     LOG.info("Defaulting to 'sequence_alteration'")
@@ -1189,13 +1194,19 @@ SELECT  r._relationship_key as rel_key,
                 object_key = row[col.index('_object_key')]
                 term_key = row[col.index('_term_key')]
                 qualifier_key = row[col.index('_qualifier_key')]
-                # qualifier,
+                qualifier = row[col.index('qualifier')]
                 # term,
                 accid = row[col.index('accid')]
 
                 if self.test_mode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
+                        
+                # qualifier of "norm" means the phenotype was measured but
+                # was normal, since we don't have negation or normal phenotypes
+                # modelled just yet, skip the row
+                if qualifier == 'norm':
+                    continue
 
                 # iassoc_id = self._make_internal_identifier('annot', annot_key)
                 # assoc_id = self.make_id(iassoc_id)
@@ -1350,7 +1361,6 @@ SELECT  r._relationship_key as rel_key,
                 # add the ECO and citation information to the annot
                 model.addTriple(assoc_id, self.globaltt['has evidence'], evidence_id)
                 model.addTriple(assoc_id, self.globaltt['Source'], jnumid)
-
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
                 if qualifier == 'MP-Sex-Specificity' and qualifier_value in ('M', 'F'):
@@ -1579,8 +1589,13 @@ SELECT  r._relationship_key as rel_key,
                 line = line.rstrip("\n")
                 line_num += 1
 
-                (marker_key, organism_key, marker_status_key,
-                 symbol, name, latin_name, marker_type) = line.split('\t')
+                (marker_key,
+                 organism_key,
+                 marker_status_key,
+                 symbol,
+                 name,
+                 latin_name,
+                 marker_type) = line.split('\t')
 
                 if self.test_mode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
@@ -1842,7 +1857,7 @@ SELECT  r._relationship_key as rel_key,
         the internal marker id and the public mgiid.
         Also, add the equivalence statements between strains for MGI and JAX
         Triples:
-        <strain_id> a GENO:intrinsic_genotype
+        <strain_id> a GENO:intrinsic genotype
         <other_strain_id> a GENO:intrinsic_genotype
         <strain_id> owl:sameAs <other_strain_id>
 
@@ -1889,7 +1904,8 @@ SELECT  r._relationship_key as rel_key,
                 # get the hashmap of the identifiers
                 if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
-                    model.addIndividualToGraph(accid, None, tax_id)
+                    model.addIndividualToGraph(
+                        accid, self.globaltt['intrinsic genotype'], tax_id)
 
         # The following are the stock centers for the strains
         # (asterisk indicates complete)
@@ -2221,7 +2237,7 @@ SELECT  r._relationship_key as rel_key,
                             len(notehash[object_key][notetype]),
                             int(sequencenum)
                     ):
-                        notehash[object_key][notetype].append('')  # ??? I don't get it
+                        notehash[object_key][notetype].append('')
 
                 notehash[object_key][notetype][int(sequencenum) - 1] = note.strip()
 
@@ -2229,10 +2245,10 @@ SELECT  r._relationship_key as rel_key,
 
         line_num = 0
         for allele_key in notehash:
+            line_num += 1
             if self.test_mode is True:
                 if int(allele_key) not in self.test_keys.get('allele'):
                     continue
-            line_num += 1
             allele_id = self.idhash['allele'].get(allele_key)
             if allele_id is None:
                 continue

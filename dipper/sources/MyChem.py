@@ -162,7 +162,7 @@ class MyChem(Source):
                 model.addTriple(
                     subject_id=indication['snomed_id'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['disease'],
+                    obj=self.globaltt['disease or disorder'],
                     subject_category=blv.terms['Disease'])
                 model.addLabel(
                     subject_id=indication['snomed_id'], label=indication['snomed_name'],

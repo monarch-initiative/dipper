@@ -19,10 +19,11 @@ LOG = logging.getLogger(__name__)
 IPATH = re.split(r'/', os.path.realpath(__file__))
 (INAME, DOTPY) = re.split(r'\.', IPATH[-1].lower())
 RPATH = '/' + '/'.join(IPATH[1:-2])
+FTP = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml'
 files = {
     'f1': {
         'file': 'ClinVarFullRelease_00-latest.xml.gz',
-        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'}
+        'url': '/'.join((FTP, 'ClinVarFullRelease_00-latest.xml.gz'))}
 }
 
 # handle arguments for IO
@@ -34,21 +35,21 @@ ARGPARSER.add_argument(
     help="input filename. default: '" + files['f1']['file'] + "'")
 
 ARGPARSER.add_argument(
-    '-i', '--inputdir', default=RPATH + '/raw/clinvarxml_alpha',
-    help="input path. default: '" + RPATH + '/raw/clinvarxml_alpha' "'")
+    '-i', '--inputdir', default=RPATH + '/raw/clinvar',
+    help="input path. default: '" + RPATH + '/raw/clinvar' "'")
 
 # OUTPUT
 ARGPARSER.add_argument(
-    '-d', "--destination", default=RPATH + '/raw/clinvarxml_alpha',
-    help='output path. default: "' + RPATH + '/raw/clinvarxml_alpha')
+    '-d', "--destination", default=RPATH + '/raw/clinvar',
+    help='output path. default: "' + RPATH + '/raw/clinvar')
 
 ARGPARSER.add_argument(
     '-o', "--output", default=INAME + '.xml',
     help='file name to write to')
 
 ARGPARSER.add_argument(
-    '-t', "--testfile", default=RPATH + '/raw/test/testid.txt',
-    help='file of IDs to capture')
+    '-t', "--testfile", default=RPATH + '/raw/test/clinvar_curie.txt',
+    help='file w/list of CURIEs to capture')
 
 ARGS = ARGPARSER.parse_args()
 
@@ -56,10 +57,10 @@ FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
 OUTPUT = ARGS.destination + '/' + ARGS.output
 
-VARIANT = []
-DISEASE = []
-GENE = []
-RCV = []
+VARIANT = []    # VCV
+DISEASE = []    # OMIM ...
+GENE = []       # NCBIGene  ...
+RCV = []        #
 
 with open(ARGS.testfile) as f:
     for line in f:
@@ -67,7 +68,7 @@ with open(ARGS.testfile) as f:
         if line != "":
             (prfx, lcl_id) = re.split(r':', line, 2)
             #
-            if prfx == 'ClinVar':
+            if prfx in ['RCV', 'ClinVar']:
                 RCV.append(lcl_id.strip())
 
             elif prfx == 'ClinVarVariant':
@@ -125,7 +126,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
         RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
         if RCV_MeasureSet is None:
-            #GenotypeSet
+            # GenotypeSet
             continue
         else:
             for rms in RCV_MeasureSet:

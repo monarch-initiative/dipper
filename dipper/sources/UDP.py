@@ -613,7 +613,8 @@ class UDP(Source):
             model.addPerson(patient_curie, patient_id)
 
             self.graph.addTriple(
-                patient_curie, self.globaltt['has phenotype'], self.globaltt['disease'])
+                patient_curie, self.globaltt['has phenotype'],
+                self.globaltt['disease or disorder'])
             if present == 'yes':
                 self.graph.addTriple(
                     patient_curie, self.globaltt['has phenotype'], hpo_curie)

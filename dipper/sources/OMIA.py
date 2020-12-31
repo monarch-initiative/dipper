@@ -135,7 +135,7 @@ class OMIA(OMIMSource):
             gene_group['url'], '/'.join((self.ncbi.rawdir, gene_group['file'])), False)
 
     def parse(self, limit=None):
-        # names of tables to iterate - probably don't need all these:
+        # names of tables to iterate over - probably don't need all these:
         # Article_Breed, Article_Keyword, Article_Gene, Article_Keyword,
         # Article_People, Article_Phene, Articles, Breed, Breed_Phene,
         # Genes_gb, Group_Categories, Group_MPO, Inherit_Type, Keywords,
@@ -484,12 +484,12 @@ class OMIA(OMIMSource):
         disease_id = self.resolve(group_category, False)
 
         if disease_id == 'group_category:None':
-            disease_id = self.globaltt['disease']
+            disease_id = self.globaltt['disease or disorder']
         elif disease_id == group_category:
             LOG.info(
                 "No disease superclass defined for %s:  %s  with parent %s",
                 omia_id, group_name, group_category)
-            disease_id = self.globaltt['disease']
+            disease_id = self.globaltt['disease or disorder']
         else:
             if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association
