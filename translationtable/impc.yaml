@@ -76,3 +76,4 @@
 "Linear Model Using Generalized Least Squares framework, GLS, not including Weight": "generalized least squares estimation"
 "Linear Model Using Generalized Least Squares framework, GLS, including Weight": "generalized least squares estimation"
 "Reference Range Plus Test framework; quantile = 0.95 (Tails probability = 0.025)": "statistical model"
+"Binomial distribution probability": "statistical model"
