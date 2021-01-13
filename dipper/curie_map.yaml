@@ -124,7 +124,7 @@
 'MPD-assay': 'https://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='  # Mouse Phenome Database assay
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'                       # PubMed Identifier
 'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'                         # PubMed Central Identifier
-'NCBIBSgene': 'http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=' 		  # NCBI BookShelf Gene book citation
+'NCBIBSgene': 'http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part='         # NCBI BookShelf Gene book citation
 'AspGD_REF': 'http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid='  # Aspergillus DB citation
 
 'AQTLPub': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='  # Animal Quantitative Trait Locus Publication
@@ -154,7 +154,7 @@
 # organisms and genome builds
 #                                                                       # National Center for Biotechnology Information
 'NCBIAssembly': 'https://www.ncbi.nlm.nih.gov/assembly?term='           #   Assembly  e.g. GRCh38
-'NCBIGenome': 'https://www.ncbi.nlm.nih.gov/genome/'                    #   Genome	  e.g. 51  (for human)
+'NCBIGenome': 'https://www.ncbi.nlm.nih.gov/genome/'                    #   Genome    e.g. 51  (for human)
 'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon     e.g. 9606
 'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'         # Local IRI for Online Inheritance In Animal breeds
 'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz golden path
