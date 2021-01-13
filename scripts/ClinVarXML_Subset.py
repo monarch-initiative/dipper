@@ -3,6 +3,10 @@
 '''
     Isolate subset of ClinVar XML for a TestSet based on Various IDs
 
+        - RCV  ClinVar:RCV000123456
+        - VCV  ClinVarVariant:13659
+
+
 '''
 import os
 import re
@@ -10,7 +14,7 @@ import re
 import gzip
 import logging
 import argparse
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 
 
 LOG = logging.getLogger(__name__)
@@ -57,18 +61,19 @@ FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
 OUTPUT = ARGS.destination + '/' + ARGS.output
 
-VARIANT = []    # VCV
-DISEASE = []    # OMIM ...
-GENE = []       # NCBIGene  ...
-RCV = []        #
+VARIANT = []    # ClinVarVariant:13659     (not VCV000013659)
+DISEASE = []    # OMIM: ...
+GENE = []       # NCBIGene:  ...
+RCV = []        # ClinVar:RCV000783093
+
+LOG.warning("Reading curies from %s", ARGS.testfile)
 
 with open(ARGS.testfile) as f:
     for line in f:
         line = line.partition('#')[0].strip()  # no comment
         if line != "":
             (prfx, lcl_id) = re.split(r':', line, 2)
-            #
-            if prfx in ['RCV', 'ClinVar']:
+            if prfx == 'ClinVar':
                 RCV.append(lcl_id.strip())
 
             elif prfx == 'ClinVarVariant':
@@ -90,7 +95,7 @@ LOG.warning('VARIANT has ' + str(len(VARIANT)))
 # taken in chunks composed of ClinVarSet stanzas
 
 with gzip.open(FILENAME, 'rt') as fh:
-    tree = ET.iterparse(fh, events=('start', 'end'))
+    tree = ElementTree.iterparse(fh, events=('start', 'end'))
     # event, root = iter(tree).next()
     for event, element in tree:
         if event == 'start' and element.tag == 'ReleaseSet':
@@ -104,31 +109,45 @@ with gzip.open(FILENAME, 'rt') as fh:
         # Clinvar sets to keep based on the inclusion of some identifier
         # it could be a ClinVarVariant ID or a RCV or an OMIM or a NCBIGene
         keep = False
+        rcv_acc = rcv_variant = None
 
         # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/MeasureSet/@ID
+        # these look like '13659'   (not VCV000013659)
         RCVAssertion = ClinVarSet.find('./ReferenceClinVarAssertion')
 
         # rcv_variants are not unique to a single ClinVarSet
-        # rcv_variant = int(RCVAssertion.find('./MeasureSet').get('ID'))
+        RCVAMeaSet = RCVAssertion.find('./MeasureSet')
+        if RCVAMeaSet is not None:
+            rcv_variant = RCVAMeaSet.get('ID')
+        if rcv_variant is not None and rcv_variant in VARIANT:
+            keep = True
+            continue
 
+        # ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/ClinVarAccession/@Acc
+        # these look like 'RCV000783093'
         rcv_acc = RCVAssertion.find('./ClinVarAccession').get('Acc')
+
+        if rcv_acc is not None and rcv_acc in RCV:
+            keep = True
+            continue
 
         # Disease
         for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                 for RCV_TraitXRef in RCV_Trait.findall('XRef[@DB="OMIM"]'):
                     rcv_disease_id = RCV_TraitXRef.get('ID')
-                    if not keep and rcv_disease_id is not None \
-                            and rcv_disease_id in DISEASE:
-                        LOG.warning(rcv_disease_id + ' in DISEASE')
+                    if rcv_disease_id is not None and rcv_disease_id in DISEASE:
+                        LOG.warning(
+                            'Keeping %s for DISEASE %s', rcv_acc, rcv_disease_id)
                         keep = True
+                        continue
         # Gene
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
         RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
         if RCV_MeasureSet is None:
             # GenotypeSet
-            continue
-        else:
+            pass
+        elif not keep:  # no point in searchingif we are keeping already
             for rms in RCV_MeasureSet:
                 RCV_Measure = rms.findall('./Measure')
                 RCV_MRel = rms.find('./MeasureRelationship')
@@ -140,20 +159,20 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 and rcv_ncbigene_id in GENE:
                             LOG.warning(rcv_ncbigene_id + ' in GENE')
                             keep = True
+                            continue
 
         # check if we caught anything
-        if not (keep or rcv_acc in RCV):  # or rcv_variant in VARIANT):
-            ClinVarSet.clear()  # can not clear itself
+        if not keep:
+            ClinVarSet.clear()  # clinvar set can not clear itself
             ReleaseSet.remove(ClinVarSet)
-        else:
-            print(rcv_acc)
+
 
 print('writing to: ' + OUTPUT)
 
 # for people to look at
 with open(OUTPUT, 'wb') as output:
-    output.write(ET.tostring(ReleaseSet))
+    output.write(ElementTree.tostring(ReleaseSet))
 
 # to feed to dipper
 with gzip.open(OUTPUT + '.gz', 'wb') as output:
-    output.write(ET.tostring(ReleaseSet))
+    output.write(ElementTree.tostring(ReleaseSet))
