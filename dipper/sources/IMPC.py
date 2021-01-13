@@ -1,6 +1,5 @@
 import csv
-# import gzip  # just till they stop taring single files again? ...
-import tarfile
+import gzip
 import re
 import logging
 import os
@@ -18,7 +17,8 @@ IMPC = 'ftp://ftp.ebi.ac.uk/pub/databases/impc'
 # Sometimes latest disappears
 # IMPCDL = IMPC + 'latest/csv'  # seems gone for good now
 # hope they restore a stable path to the current release ...fingers crossed
-IMPC_V12 = IMPC + '/all-data-releases/release-12.0/results'
+# IMPCREL = IMPC + '/all-data-releases/release-12.0/results'
+IMPCREL = IMPC + '/all-data-releases/latest/results'
 GITHUBRAW = 'https://raw.githubusercontent.com/'
 
 
@@ -69,8 +69,9 @@ class IMPC(Source):
         'g2p_assertions': {
             # 'file': 'ALL_genotype_phenotype.csv.gz',  # pre v12.0
             # 'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz',
-            'file': 'genotype-phenotype-assertions-ALL.csv.tgz',
-            'url': IMPC_V12 + '/genotype-phenotype-assertions-ALL.csv.tgz',
+            # 'file': 'genotype-phenotype-assertions-ALL.csv.tgz',
+            'file': 'genotype-phenotype-assertions-ALL.csv.gz',
+            'url': IMPCREL + '/genotype-phenotype-assertions-ALL.csv.tgz',
             'columns': [  # head -1 | tr ',' '\n' | sed "s|\(.*\)|'\1',|g"
                 'marker_accession_id',
                 'marker_symbol',
@@ -104,7 +105,7 @@ class IMPC(Source):
         },
         'checksum': {
             'file': 'genotype-phenotype-assertions-ALL.csv.tgz.md5',
-            'url': IMPC_V12 + '/genotype-phenotype-assertions-ALL.csv.tgz.md5',
+            'url': IMPCREL + '/genotype-phenotype-assertions-ALL.csv.tgz.md5',
         },
         'evidence': {  # manually isolated from their mysql data dump circa 2020 May
             'file': 'impc_evidence_stable_key.tsv',
@@ -187,15 +188,15 @@ class IMPC(Source):
         model.addClassToGraph(taxon_id, None)
         col = self.files[src_key]['columns']
 
+        # various (recuring) macinations as they evolve
         # with open(raw, 'r', encoding="utf8") as csvfile:
-        # with gzip.open(raw, 'rt') as csvfile:
+        # tarball = tarfile.open(raw, 'r:gz')
+        # tarball.extractall(path=self.rawdir)
+        # tarball.close()
+        # halfbaked = self.rawdir + '/genotype-phenotype-assertions-ALL.csv'
+        # with open(halfbaked, 'rt') as csvfile:
 
-        tarball = tarfile.open(raw, 'r:gz')
-        tarball.extractall(path=self.rawdir)
-        tarball.close()
-
-        halfbaked = self.rawdir + '/genotype-phenotype-assertions-ALL.csv'
-        with open(halfbaked, 'rt') as csvfile:
+        with gzip.open(raw, 'rt') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             row = next(reader)  # presumed header
             if not self.check_fileheader(col, row):
