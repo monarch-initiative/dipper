@@ -13,3 +13,4 @@
 "NAS": "author statement without traceable support used in manual assertion"  #  "ECO:0000303"
 "IPM": "inference from phenotype manipulation evidence"  #  "ECO:0005612"
 "IEP": "expression evidence used in manual assertion"  #  "ECO:0000270"
+"IPI": "physical interaction evidence used in manual assertion"  #  "ECO:0000353"
