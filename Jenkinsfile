@@ -116,21 +116,6 @@ pipeline {
                                 '''
                             }
                         }
-                        stage("OMIA") {
-                            when {
-                                anyOf {
-                                    expression { env.RUN_ALL != null }
-                                    expression { env.OMIA != null }
-                                }
-                            }
-                            steps {
-                                sh '''
-                                    SOURCE=omia
-                                    $DIPPER --sources $SOURCE
-                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
-                                '''
-                            }
-                        }
                         stage("HGNC") {
                             when {
                                 anyOf {
@@ -156,6 +141,21 @@ pipeline {
                             steps {
                                 sh '''
                                     SOURCE=kegg
+                                    $DIPPER --sources $SOURCE
+                                    scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
+                                '''
+                            }
+                        }
+                        stage("OMIA") {
+                            when {
+                                anyOf {
+                                    expression { env.RUN_ALL != null }
+                                    expression { env.OMIA != null }
+                                }
+                            }
+                            steps {
+                                sh '''
+                                    SOURCE=omia
                                     $DIPPER --sources $SOURCE
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                                 '''
