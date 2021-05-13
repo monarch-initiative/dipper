@@ -95,6 +95,7 @@
 'VT': 'http://purl.obolibrary.org/obo/VT_'                          # Vertebrate Trait Ontology
 'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_'        # WormBase Phenotypes (nematode)
 'XCO': 'http://purl.obolibrary.org/obo/XCO_'                        # Experimental Conditions Ontology
+'XPO': 'http://purl.obolibrary.org/obo/XPO_'                          # Xenopus Phenotype Ontology
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'                        # Zebrafish Anatomy Ontology
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'                        # Zebrafish Staging
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'                          # Zebrafish Phenotype Ontology
@@ -224,7 +225,7 @@
 'TAIR': 'https://www.arabidopsis.org/servlets/TairObject?type=locus&id='        # The Arabidopsis Information Resource
 'VGNC': 'https://vertebrate.genenames.org/data/gene-symbol-report/#!/vgnc_id/'  # Vertebrate Gene Nomenclature Committee
 'WormBase': 'https://www.wormbase.org/get?name='                                # Caenorhabditis elegans Database (nematodes) ie WBGene00000001
-'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
+'Xenbase': 'http://identifiers.org/xenbase/'                                    # Xenopus Database (frog)
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
 # proteins (and protein/macromolecular complexes)

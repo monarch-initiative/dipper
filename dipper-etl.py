@@ -58,6 +58,7 @@ def main():
         'sgd': 'SGD',
         'mychem': 'MyChem',
         'ebi': 'EBIGene2Phen',
+        'xenbase': 'Xenbase'
     }
 
     parser = argparse.ArgumentParser(

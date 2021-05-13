@@ -40,9 +40,9 @@ pipeline {
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
         MONARCH_DATA_DEST = "$MONARCH_DATA_FS:$DATA_DEST"
 
-        /* human, mouse, zebrafish, fly, worm */
-        COMMON_TAXON = "9606,10090,7955,7227,6239"
-        /* 10116 is rat and might be included if found relevent where it is now missing */
+        /* human, mouse, zebrafish, fly, worm, frog */
+        COMMON_TAXON = "9606,10090,7955,7227,6239,8355,8364"
+        /* 10116 is rat and might be included if found relevant where it is now missing */
 
     }
 
@@ -660,6 +660,21 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ucscbands
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
+                        '''
+                    }
+                }
+                stage("Xenbase") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.XENBASE != null }
+                        }
+                    }
+                    steps {
+                        sh '''
+                            SOURCE=xenbase
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
