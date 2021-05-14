@@ -14,3 +14,4 @@
 "IPM": "inference from phenotype manipulation evidence"  #  "ECO:0005612"
 "IEP": "expression evidence used in manual assertion"  #  "ECO:0000270"
 "IPI": "physical interaction evidence used in manual assertion"  #  "ECO:0000353"
+"IGI": "genetic interaction evidence used in manual assertion"  # "ECO:0000316"

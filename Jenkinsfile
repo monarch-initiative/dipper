@@ -40,9 +40,9 @@ pipeline {
         DATA_DEST = "${env.RELEASE ? '/var/www/data/dev/' : '/var/www/data/experimental/'}"
         MONARCH_DATA_DEST = "$MONARCH_DATA_FS:$DATA_DEST"
 
-        /* human, mouse, zebrafish, fly, worm */
-        COMMON_TAXON = "9606,10090,7955,7227,6239"
-        /* 10116 is rat and might be included if found relevent where it is now missing */
+        /* human, mouse, zebrafish, fly, worm, frog */
+        COMMON_TAXON = "9606,10090,7955,7227,6239,8364"
+        /* 10116 is rat and might be included if found relevant where it is now missing */
 
     }
 
@@ -111,7 +111,7 @@ pipeline {
                                 sh '''
                                     SOURCE=ncbigene
                                     $DIPPER --sources $SOURCE \
-                                        --taxon $COMMON_TAXON,10116,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685,559292
+                                        --taxon $COMMON_TAXON,10116,28377,3702,9913,9615,9031,44689,9796,9544,13616,9258,9598,9823,4896,31033,8364,9685,559292,8355
                                     scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                                 '''
                             }
@@ -213,7 +213,7 @@ pipeline {
                         sh '''
                             SOURCE=panther
                             mkdir -p raw/panther
-                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,8364,9615 --dest_fmt nt
+                            $DIPPER --sources $SOURCE --taxon $COMMON_TAXON,10116,9913,9031,9796,9823,9615 --dest_fmt nt
                             scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
                     }
@@ -660,6 +660,21 @@ pipeline {
                     steps {
                         sh '''
                             SOURCE=ucscbands
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
+                        '''
+                    }
+                }
+                stage("Xenbase") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.XENBASE != null }
+                        }
+                    }
+                    steps {
+                        sh '''
+                            SOURCE=xenbase
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl $MONARCH_DATA_DEST
                         '''
