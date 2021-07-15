@@ -12,7 +12,7 @@ CONSTRUCT {
 }
 WHERE {
   {
-    GRAPH :biolink-model.ttl  { ?category skos:mappingRelation ?class . }
+    GRAPH :biolink-model.ttl  { ?category skos:exactMatch ?class . }
     GRAPH :monarch-slim.owl  {
       ?type (a|rdfs:subClassOf|owl:equivalentClass|^owl:equivalentClass|owl:sameAs|^owl:sameAs|BFO:0000050|^BFO:0000051)* ?class .
     }
