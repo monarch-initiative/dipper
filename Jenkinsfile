@@ -55,8 +55,7 @@ pipeline {
             steps {
                 dir('./config') {
                     git(
-                        url: 'https://github.com/monarch-initiative/configs.git',
-                        credentialsId: 'c36e48af-8e33-4977-be25-0555ebb4275a',
+                        url: 'git@github.com:monarch-initiative/configs.git',
                         branch: 'master'
                     )
                     sh '''
