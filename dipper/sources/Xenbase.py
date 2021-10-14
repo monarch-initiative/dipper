@@ -38,8 +38,8 @@ class Xenbase(Source):
 
     files = {
         'g2p_assertions': {
-            'file': 'xb_xpo_spo_v20210511b.csv',
-            'url': DIPPER_CACHE + 'xb_xpo_spo_v20210511b.csv',
+            'file': 'xb_xpo_spo_v_v1.tab',
+            'url': DIPPER_CACHE + 'xb_xpo_spo_v_v1.tab',
             'columns': OBAN_COLS
         },
         'orthologs': {  # Not ingesting this yet since it appears to be from another source
@@ -119,7 +119,7 @@ class Xenbase(Source):
         LOG.info("Processing Gene to XPO associations")
 
         with open(raw, 'r', encoding="utf8") as csvfile:
-            reader = csv.reader(csvfile)
+            reader = csv.reader(csvfile, delimiter='\t')
 
             # File has headers
             row = next(reader)
@@ -142,16 +142,15 @@ class Xenbase(Source):
                 #is_defined_by = row[columns.index('IS_DEFINED_BY')]
                 #qualifier = row[columns.index('QUALIFIER')]
 
-                gene_curie = 'Xenbase:' + gene
                 relation_curie = relation.replace('_', ':')
 
-                geno.addGene(gene_curie, gene_label)
-                geno.addTaxon(gene_taxon, gene_curie)
+                geno.addGene(gene, gene_label)
+                geno.addTaxon(gene_taxon, gene)
 
                 assoc = G2PAssoc(
                     self.graph,
                     self.name,
-                    entity_id=gene_curie,
+                    entity_id=gene,
                     phenotype_id=phenotype_curie,
                     rel=relation_curie
                 )
