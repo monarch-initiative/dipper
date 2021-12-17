@@ -3,16 +3,16 @@ MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 
 # Monarch release version
-ARCHIVE ?= https://archive.monarchinitiative.org/beta
+ARCHIVE ?= https://archive.monarchinitiative.org/latest
 
 WGET = /usr/bin/wget --timestamping --no-verbose
 
 JENA = http://archive.apache.org/dist/jena/binaries/apache-jena-3.15.0.tar.gz
 ROBOT_JAR = https://github.com/ontodev/robot/releases/latest/download/robot.jar
 
-BIOLINK_MODEL = https://raw.githubusercontent.com/kshefchek/biolink-model/mappings-for-monarch/biolink-model.ttl
+BIOLINK_MODEL = https://raw.githubusercontent.com/biolink/biolink-model/master/biolink-model.owl.ttl
 MONARCH_OWL = http://purl.obolibrary.org/obo/upheno/monarch.owl
-MONARCH_OWL_MERGED = https://data.monarchinitiative.org/owl/monarch-merged.owl
+MONARCH_OWL_MERGED = https://archive.monarchinitiative.org/latest/owl/monarch-merged.owl
 
 ROBOT := java -jar robot/robot.jar
 ARQ := jena/apache-jena-3.15.0/bin/arq
