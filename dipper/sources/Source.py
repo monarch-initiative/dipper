@@ -175,7 +175,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=False):
+    def write(self, fmt='turtle', stream=None, write_metadata_in_main_graph=True):
         """
         This convenience method will write out all of the graphs
             associated with the source.

@@ -29,14 +29,14 @@ set -o pipefail
     chmod g+rw ./ntriples/*.nt
 
     # Scigraph requires the RDF data files be self-declared as OWL ontologies
-    p="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
-    o="<http://www.w3.org/2002/07/owl#Ontology>"
-    (
-        cd ntriples
-        for nt in *.nt; do
-            echo "<https://archive.monarchinitiative.org/#${nt%%.nt}> $p $o ." >> "$nt"
-        done
-    )
+    # p="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+    # o="<http://www.w3.org/2002/07/owl#Ontology>"
+    # (
+    #     cd ntriples
+    #     for nt in *.nt; do
+    #         echo "<https://archive.monarchinitiative.org/#${nt%%.nt}> $p $o ." >> "$nt"
+    #     done
+    # )
 
     # compress the ntriples as machine readable shouldn't care (& humans can use zcat)
     tar -czf ntriples_"$YYYYMM.tgz" ntriples/
