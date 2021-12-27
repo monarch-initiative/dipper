@@ -62,7 +62,6 @@ def make_property_graph(properties, args):
         OBO + '/sepio.owl',
         OBO + '/geno.owl',
         OBO + '/iao.owl',
-        OBO + '/ero.owl',
         OBO + '/pco.owl',
         OBO + '/xco.owl',
         OBO + '/ro.owl',

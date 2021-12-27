@@ -68,7 +68,6 @@ class GraphUtils:
             OBO + '/sepio.owl',
             OBO + '/geno.owl',
             OBO + '/iao.owl',
-            OBO + '/ero.owl',
             OBO + '/pco.owl',
             OBO + '/xco.owl',
             OBO + '/ro.owl',
