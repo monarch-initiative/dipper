@@ -10,7 +10,7 @@ from dipper.models.Model import Model
 LOG = logging.getLogger(__name__)
 
 STRING = 'https://string-db.org'
-STRING_DWN = STRING + "/download"
+STRING_DWN = "https://stringdb-static.org/download"
 STRING_MAP = STRING + '/mapping_files/entrez'
 DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239', '4932', '10116']
 # https://string-db.org/cgi/access.pl?footer_active_subpage=archive
