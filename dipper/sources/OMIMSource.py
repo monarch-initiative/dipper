@@ -18,7 +18,7 @@ class OMIMSource(Source):
 
     populates two dicts
         one for omims which are replaced
-        one for our interpertation of an omims type as an ontology term.
+        one for our interpretation of an omims type as an ontology term.
 
     These dicts are to be used to guide the treatment of omims found in ingests.
 
